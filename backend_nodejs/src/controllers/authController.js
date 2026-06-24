@@ -1,0 +1,29 @@
+const authService = require("../services/authService");
+const logger = require("../config/logger");
+
+async function login(req, res) {
+  try {
+    const { username, password } = req.body;
+    const { token, user } = await authService.login(username, password);
+    res.json({ token, user });
+  } catch (e) {
+    logger.error(`Erro login: ${e.message}`);
+    res.status(401).json({ error: e.message });
+  }
+}
+
+async function register(req, res) {
+  try {
+    const { username, email, password, role } = req.body;
+    const newUser = await authService.register(username, email, password, role);
+    res.status(201).json(newUser);
+  } catch (e) {
+    logger.error(`Erro registro: ${e.message}`);
+    res.status(500).json({ error: "Erro ao criar usuário" });
+  }
+}
+
+module.exports = {
+  login,
+  register,
+};

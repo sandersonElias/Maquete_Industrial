@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Maquete Truck Telemetry",
+    "slug": "maquete-truck-telemetry",
+    "version": "2.0.0",
+    "orientation": "landscape",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.seuusuario.maquetetruck",
+      "permissions": [
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "ACCESS_FINE_LOCATION",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.seuusuario.maquetetruck"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "311033c2-f012-4d7c-9698-1ea73377d29b"
+      }
+    }
+  }
+}

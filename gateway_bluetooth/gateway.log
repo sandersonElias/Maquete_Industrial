@@ -1,0 +1,14 @@
+[2026-06-23T16:20:38.778Z] INFO: ========================================
+[2026-06-23T16:20:38.780Z] INFO:   GATEWAY BLUETOOTH - Maquete Industrial
+[2026-06-23T16:20:38.780Z] INFO:   ID: gateway-rpi-01
+[2026-06-23T16:20:38.780Z] INFO: ========================================
+[2026-06-23T16:20:38.781Z] INFO: Conectando ao backend ws://localhost:4000/gateway
+[2026-06-23T16:20:38.804Z] WARN: Dispositivo TRUCK_T01 não encontrado. Tentando reconectar...
+[2026-06-23T16:20:38.806Z] WARN: Dispositivo FERROVIA_SW não encontrado. Tentando reconectar...
+[2026-06-23T16:58:19.733Z] INFO: ========================================
+[2026-06-23T16:58:19.734Z] INFO:   GATEWAY BLUETOOTH - Maquete Industrial
+[2026-06-23T16:58:19.734Z] INFO:   ID: gateway-rpi-01
+[2026-06-23T16:58:19.735Z] INFO: ========================================
+[2026-06-23T16:58:19.736Z] INFO: Conectando ao backend ws://localhost:4000/gateway
+[2026-06-23T16:58:19.763Z] WARN: Dispositivo TRUCK_T01 não encontrado. Tentando reconectar...
+[2026-06-23T16:58:19.764Z] WARN: Dispositivo FERROVIA_SW não encontrado. Tentando reconectar...
