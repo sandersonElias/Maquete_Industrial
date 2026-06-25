@@ -14,13 +14,14 @@ require("dotenv").config();
 
 // === CONFIGURACAO ===
 const CONFIG = {
-  backendWsUrl: process.env.BACKEND_WS_URL,
-  backendApiUrl: process.env.BACKEND_API_URL,
+  backendWsUrl: process.env.BACKEND_WS_URL || "http://localhost:4000",
+  backendApiUrl: process.env.BACKEND_API_URL || "http://localhost:4000/api",
   apiKey: process.env.GATEWAY_API_KEY || "default_key",
   gatewayId: process.env.GATEWAY_ID || "gateway-rpi-01",
   reconnectInterval: parseInt(process.env.RECONNECT_INTERVAL) || 5000,
   heartbeatInterval: parseInt(process.env.HEARTBEAT_INTERVAL) || 3000,
   serialBaud: parseInt(process.env.SERIAL_BAUD) || 9600,
+  simulationMode: process.env.SIMULATION_MODE === "true" || true,
 };
 
 // === LOGGER ===
@@ -49,15 +50,18 @@ class BluetoothDevice {
     this.connected = false;
     this.reconnectTimer = null;
     this.lastSeen = null;
+    this.simTimer = null;
   }
 
   async connect() {
     try {
-      // No Raspberry Pi, HC-05 aparece como /dev/rfcomm0, rfcomm1, etc.
-      // Ou pode ser descoberto dinamicamente
       const portPath = await this.findSerialPort();
 
       if (!portPath) {
+        if (CONFIG.simulationMode) {
+          this.startSimulation();
+          return true;
+        }
         logger.warn(
           `Dispositivo ${this.name} não encontrado. Tentando reconectar...`,
         );
@@ -84,7 +88,6 @@ class BluetoothDevice {
         this.lastSeen = Date.now();
         logger.info(`✅ Conectado a ${this.name} em ${portPath}`);
 
-        // Notificar back-end
         notifyBackend("device:connected", {
           deviceName: this.name,
           macAddress: this.macAddress,
@@ -92,19 +95,15 @@ class BluetoothDevice {
           port: portPath,
         });
 
-        this.parser.on("data", (data) => {
-          this.handleIncomingData(data);
-        });
-
+        this.parser.on("data", (data) => this.handleIncomingData(data));
         this.port.on("close", () => {
           logger.warn(`Conexão fechada com ${this.name}`);
           this.connected = false;
           this.scheduleReconnect();
         });
-
-        this.port.on("error", (err) => {
-          logger.error(`Erro na porta ${this.name}: ${err.message}`);
-        });
+        this.port.on("error", (err) =>
+          logger.error(`Erro na porta ${this.name}: ${err.message}`),
+        );
       });
 
       return true;
@@ -115,22 +114,34 @@ class BluetoothDevice {
     }
   }
 
+  startSimulation() {
+    if (this.connected) return;
+    this.connected = true;
+    this.lastSeen = Date.now();
+    logger.info(`🛠️ MODO SIMULAÇÃO: ${this.name} ativado virtualmente.`);
+
+    // Simular dados vindo do Arduino a cada 10 segundos
+    this.simTimer = setInterval(() => {
+      let mockData = "";
+      if (this.type === "ferrovia") {
+        const id = Math.floor(Math.random() * 4) + 1;
+        const angle = Math.random() > 0.5 ? 0 : 180;
+        mockData = `STATUS|SWITCH|${id}|${angle}|${Date.now()}`;
+      } else {
+        mockData = `STATUS|TRUCK|LOADED|${Math.floor(Math.random() * 100)}`;
+      }
+      this.handleIncomingData(mockData);
+    }, 10000);
+  }
+
   async findSerialPort() {
-    // Estrategia: listar portas seriais e procurar por rfcomm
-    const { SerialPort: SP } = require("serialport");
-    const ports = await SP.list();
-
-    // No RPi com HC-05 emparelhado, geralmente aparece como /dev/rfcommX
-    const rfcommPorts = ports.filter((p) => p.path.includes("rfcomm"));
-
-    if (rfcommPorts.length > 0) {
-      // Tentar associar por ordem ou por descricao
-      // Simplificacao: retorna o primeiro rfcomm disponivel
-      // Em producao, usar nome do dispositivo ou MAC para mapear
-      return rfcommPorts[0].path;
+    try {
+      const ports = await SerialPort.list();
+      const rfcommPorts = ports.filter((p) => p.path.includes("rfcomm"));
+      return rfcommPorts.length > 0 ? rfcommPorts[0].path : null;
+    } catch (e) {
+      return null;
     }
-
-    return null;
   }
 
   handleIncomingData(data) {
@@ -140,39 +151,42 @@ class BluetoothDevice {
     this.lastSeen = Date.now();
     logger.debug(`[${this.name}] RX: ${trimmed}`);
 
-    // Encaminhar para back-end via WebSocket
-    if (wsClient && wsClient.readyState === WebSocket.OPEN) {
-      wsClient.send(
-        JSON.stringify({
-          type: "device:data",
-          gatewayId: CONFIG.gatewayId,
-          deviceName: this.name,
-          data: trimmed,
-          timestamp: Date.now(),
-        }),
-      );
+    // CORREÇÃO: Usando Socket.io Client corretamente
+    if (wsClient && wsClient.connected) {
+      wsClient.emit("device:data", {
+        gatewayId: CONFIG.gatewayId,
+        deviceName: this.name,
+        data: trimmed,
+        timestamp: Date.now(),
+      });
     }
   }
 
   sendCommand(command) {
-    if (!this.connected || !this.port) {
+    if (!this.connected) {
       logger.error(`Não é possível enviar comando. ${this.name} desconectado.`);
       return false;
     }
 
+    if (CONFIG.simulationMode && !this.port) {
+      logger.info(`[SIMULAÇÃO] ${this.name} recebeu: ${command}`);
+      // Simular resposta ACK
+      setTimeout(() => {
+        this.handleIncomingData(`ACK|${command.replace("CMD|", "")}`);
+      }, 500);
+      return true;
+    }
+
     const cmd = command.endsWith("\n") ? command : command + "\n";
     this.port.write(cmd, (err) => {
-      if (err) {
-        logger.error(`Erro ao enviar para ${this.name}: ${err.message}`);
-      } else {
-        logger.info(`[${this.name}] TX: ${command}`);
-      }
+      if (err) logger.error(`Erro ao enviar para ${this.name}: ${err.message}`);
+      else logger.info(`[${this.name}] TX: ${command}`);
     });
     return true;
   }
 
   scheduleReconnect() {
-    if (this.reconnectTimer) return;
+    if (this.reconnectTimer || this.connected) return;
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       logger.info(`Tentando reconectar ${this.name}...`);
@@ -181,22 +195,18 @@ class BluetoothDevice {
   }
 
   disconnect() {
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
-    if (this.port) {
-      this.port.close();
-    }
+    if (this.simTimer) clearInterval(this.simTimer);
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    if (this.port) this.port.close();
     this.connected = false;
   }
 }
 
 // === GERENCIADOR DE DISPOSITIVOS ===
 const devices = new Map();
+let wsClient = null;
 
 function initDevices() {
-  // Ferrovia (4 switches em 1 Arduino)
   const ferrovia = new BluetoothDevice(
     "FERROVIA_SW",
     process.env.BT_DEVICE_FERROVIA || "98:D3:31:FD:15:F5",
@@ -205,7 +215,6 @@ function initDevices() {
   devices.set("ferrovia", ferrovia);
   ferrovia.connect();
 
-  // Caminhao 01
   const truck01 = new BluetoothDevice(
     "TRUCK_T01",
     process.env.BT_DEVICE_TRUCK01 || "98:D3:31:FD:15:A1",
@@ -215,77 +224,36 @@ function initDevices() {
   truck01.connect();
 }
 
-// === CLIENTE WEBSOCKET (BACK-END) ===
-let wsClient = null;
-let wsReconnectTimer = null;
-
 function connectToBackend() {
   logger.info(`Conectando ao backend ${CONFIG.backendWsUrl}`);
-
   wsClient = io(CONFIG.backendWsUrl, {
     transports: ["websocket"],
+    reconnection: true,
   });
 
   wsClient.on("connect", () => {
-    logger.info(`Conectado ao backend (${wsClient.id})`);
-
+    logger.info(`✅ Conectado ao backend (${wsClient.id})`);
     wsClient.emit("gateway:register", {
       gatewayId: CONFIG.gatewayId,
       apiKey: CONFIG.apiKey,
     });
   });
 
-  wsClient.on("gateway:registered", (data) => {
-    logger.info(`Gateway registrado com sucesso`);
-
-    sendGatewayStatus();
-  });
-
-  wsClient.on("command", (payload) => {
-    handleCommand(payload);
-  });
-
-  wsClient.on("disconnect", () => {
-    logger.warn("Backend desconectado");
-  });
-}
-
-function scheduleWsReconnect() {
-  if (wsReconnectTimer) return;
-  wsReconnectTimer = setTimeout(() => {
-    wsReconnectTimer = null;
-    connectToBackend();
-  }, CONFIG.reconnectInterval);
-}
-
-function handleBackendMessage(msg) {
-  logger.info(`Comando do back-end: ${msg.type}`);
-
-  switch (msg.type) {
-    case "command":
-      handleCommand(msg.payload);
-      break;
-    case "ping":
-      wsClient.send(
-        JSON.stringify({ type: "pong", gatewayId: CONFIG.gatewayId }),
-      );
-      break;
-    case "request:status":
-      sendGatewayStatus();
-      break;
-    default:
-      logger.warn(`Tipo de mensagem desconhecido: ${msg.type}`);
-  }
+  wsClient.on("command", (payload) => handleCommand(payload));
+  wsClient.on("disconnect", () => logger.warn("❌ Backend desconectado"));
+  wsClient.on("connect_error", (err) =>
+    logger.error(`Erro de conexão backend: ${err.message}`),
+  );
 }
 
 function handleCommand(payload) {
   const { target, cmd, switchId, angle, action } = payload;
-
   let device = null;
+
   if (target === "ferrovia" || target === "FERROVIA_SW") {
     device = devices.get("ferrovia");
   } else if (target.startsWith("TRUCK")) {
-    device = devices.get("truck01"); // ou mapear dinamicamente
+    device = devices.get("truck01");
   }
 
   if (!device) {
@@ -293,41 +261,32 @@ function handleCommand(payload) {
     return;
   }
 
-  // Construir comando serial
   let serialCmd;
   if (cmd === "SWITCH") {
-    if (angle !== undefined) {
+    if (angle !== undefined)
       serialCmd = `CMD|SWITCH|${switchId}|ANGLE|${angle}`;
-    } else if (action) {
-      serialCmd = `CMD|SWITCH|${switchId}|SET|${action}`;
-    }
+    else if (action) serialCmd = `CMD|SWITCH|${switchId}|SET|${action}`;
   } else {
     serialCmd = cmd;
   }
 
-  if (serialCmd) {
-    device.sendCommand(serialCmd);
-  }
+  if (serialCmd) device.sendCommand(serialCmd);
 }
 
 function sendGatewayStatus() {
-  if (!wsClient || wsClient.readyState !== WebSocket.OPEN) return;
-
-  wsClient.send(
-    JSON.stringify({
-      type: "gateway:status",
-      gatewayId: CONFIG.gatewayId,
-      devices: Array.from(devices.values()).map((d) => ({
-        name: d.name,
-        connected: d.connected,
-        lastSeen: d.lastSeen,
-      })),
-      timestamp: Date.now(),
-    }),
-  );
+  if (!wsClient || !wsClient.connected) return;
+  wsClient.emit("gateway:status", {
+    gatewayId: CONFIG.gatewayId,
+    devices: Array.from(devices.values()).map((d) => ({
+      name: d.name,
+      connected: d.connected,
+      lastSeen: d.lastSeen,
+      isSimulated: CONFIG.simulationMode && !d.port,
+    })),
+    timestamp: Date.now(),
+  });
 }
 
-// === NOTIFICACAO HTTP (FALLBACK) ===
 async function notifyBackend(eventType, data) {
   try {
     await axios.post(
@@ -337,39 +296,28 @@ async function notifyBackend(eventType, data) {
         gatewayId: CONFIG.gatewayId,
         data,
       },
-      {
-        headers: { "x-api-key": CONFIG.apiKey },
-      },
+      { headers: { "x-api-key": CONFIG.apiKey } },
     );
   } catch (e) {
     logger.error(`Falha ao notificar back-end: ${e.message}`);
   }
 }
 
-// === HEARTBEAT DO GATEWAY ===
+// Heartbeat
 setInterval(() => {
-  if (wsClient && wsClient.readyState === WebSocket.OPEN) {
-    sendGatewayStatus();
-  }
-
-  // Verificar conexoes BT
-  devices.forEach((device) => {
-    if (!device.connected && !device.reconnectTimer) {
-      device.connect();
-    }
-  });
+  sendGatewayStatus();
 }, CONFIG.heartbeatInterval);
 
-// === INICIALIZACAO ===
+// Inicialização
 logger.info("========================================");
-logger.info("  GATEWAY BLUETOOTH - Maquete Industrial");
-logger.info(`  ID: ${CONFIG.gatewayId}`);
+logger.info(" GATEWAY BLUETOOTH - Maquete Industrial");
+logger.info(` ID: ${CONFIG.gatewayId}`);
+logger.info(` MODO SIMULAÇÃO: ${CONFIG.simulationMode}`);
 logger.info("========================================");
 
 initDevices();
 connectToBackend();
 
-// === GRACEFUL SHUTDOWN ===
 process.on("SIGINT", () => {
   logger.info("Encerrando gateway...");
   devices.forEach((d) => d.disconnect());

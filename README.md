@@ -16,11 +16,13 @@ maquete_industrial/
 ## 🚀 Início Rápido
 
 ### 1. Banco de Dados (PostgreSQL)
+
 ```bash
 psql -U postgres -f backend_nodejs/schema.sql
 ```
 
 ### 2. Back-end
+
 ```bash
 cd backend_nodejs
 npm install
@@ -30,6 +32,7 @@ npm start
 ```
 
 ### 3. Gateway Bluetooth (Raspberry Pi)
+
 ```bash
 cd gateway_bluetooth
 npm install
@@ -39,6 +42,7 @@ npm start
 ```
 
 ### 4. Dashboard
+
 ```bash
 cd dashboard_react
 npm install
@@ -47,6 +51,7 @@ npm start
 ```
 
 ### 5. App React Native
+
 ```bash
 cd app_react_native
 npm install
@@ -55,6 +60,7 @@ npx expo start
 ```
 
 ### 6. Arduino
+
 - Abra `firmware_arduino_ferrovia/ferrovia_firmware.ino` no Arduino IDE
 - Conecte o HC-05 (TX->D10, RX->D11 via divisor de tensão)
 - Conecte os 4 servos SG90 (D3, D5, D6, D9)
@@ -62,30 +68,33 @@ npx expo start
 
 ## 🔌 Pinagem Arduino Ferrovia
 
-| Componente | Pino Arduino |
-|------------|-------------|
-| Servo Switch 1 | D3 |
-| Servo Switch 2 | D5 |
-| Servo Switch 3 | D6 |
-| Servo Switch 4 | D9 |
-| HC-05 TX | D10 (SoftwareSerial RX) |
-| HC-05 RX | D11 (SoftwareSerial TX) |
-| GND comum | GND |
-| VCC Servos | Fonte 5V externa |
-| VCC HC-05 | 5V |
+| Componente     | Pino Arduino            |
+| -------------- | ----------------------- |
+| Servo Switch 1 | D3                      |
+| Servo Switch 2 | D5                      |
+| Servo Switch 3 | D6                      |
+| Servo Switch 4 | D9                      |
+| HC-05 TX       | D10 (SoftwareSerial RX) |
+| HC-05 RX       | D11 (SoftwareSerial TX) |
+| GND comum      | GND                     |
+| VCC Servos     | Fonte 5V externa        |
+| VCC HC-05      | 5V                      |
 
 ## 📡 Protocolo Serial
 
 ### Comando (Gateway → Arduino)
+
 ```
 CMD|SWITCH|<id>|<acao>|<valor>
 ```
+
 - `CMD|SWITCH|1|SET|LEFT` - Mover switch 1 para esquerda
 - `CMD|SWITCH|2|ANGLE|90` - Mover switch 2 para 90°
 - `CMD|SWITCH|3|STATUS` - Solicitar status
 - `CMD|SWITCH|4|RESET` - Resetar para centro
 
 ### Resposta (Arduino → Gateway)
+
 ```
 ACK|SWITCH|<id>|<estado>
 STATUS|SWITCH|<id>|<angulo>|<estado>|<timestamp>
@@ -101,13 +110,13 @@ ERR|<codigo_erro>
 
 ## 📊 Funcionalidades
 
-| Módulo | Funcionalidades |
-|--------|----------------|
-| **Ferrovia** | Controle de 4 switches, mapa esquemático, botão de emergência, ACK em tempo real |
-| **Mina** | Mapa cartesiano com caminhões, telemetria (posição, carga, bateria), buffer offline |
-| **Porto** | Lista de navios, ETA, status de carga, docas |
-| **Aeroporto** | Lista de aeronaves, ETA, portões, status de carga |
-| **Relatórios** | Exportação CSV/XLSX/PDF, filtros por data |
+| Módulo         | Funcionalidades                                                                     |
+| -------------- | ----------------------------------------------------------------------------------- |
+| **Ferrovia**   | Controle de 4 switches, mapa esquemático, botão de emergência, ACK em tempo real    |
+| **Mina**       | Mapa cartesiano com caminhões, telemetria (posição, carga, bateria), buffer offline |
+| **Porto**      | Lista de navios, ETA, status de carga, docas                                        |
+| **Aeroporto**  | Lista de aeronaves, ETA, portões, status de carga                                   |
+| **Relatórios** | Exportação CSV/XLSX/PDF, filtros por data                                           |
 
 ## 🛠️ Tecnologias
 
