@@ -21,7 +21,7 @@ const CONFIG = {
   reconnectInterval: parseInt(process.env.RECONNECT_INTERVAL) || 5000,
   heartbeatInterval: parseInt(process.env.HEARTBEAT_INTERVAL) || 3000,
   serialBaud: parseInt(process.env.SERIAL_BAUD) || 9600,
-  simulationMode: process.env.SIMULATION_MODE === "true" || true,
+  simulationMode: process.env.SIMULATION_MODE === "true",
 };
 
 // === LOGGER ===
@@ -170,9 +170,22 @@ class BluetoothDevice {
 
     if (CONFIG.simulationMode && !this.port) {
       logger.info(`[SIMULAÇÃO] ${this.name} recebeu: ${command}`);
-      // Simular resposta ACK
+      // Simular resposta ACK com formato correto
       setTimeout(() => {
-        this.handleIncomingData(`ACK|${command.replace("CMD|", "")}`);
+        const parts = command.split("|");
+        // parts: CMD|SWITCH|<id>|<action>|<value>
+        const switchId = parts[2];
+        const action = parts[3];
+        const value = parts[4];
+
+        let ackState;
+        if (action === "SET") ackState = value;        // LEFT, RIGHT, CENTER
+        else if (action === "ANGLE") ackState = `ANGLE_${value}`;
+        else if (action === "RESET") ackState = "RESET";
+        else if (action === "STATUS") ackState = "STATUS";
+        else ackState = "UNKNOWN";
+
+        this.handleIncomingData(`ACK|SWITCH|${switchId}|${ackState}`);
       }, 500);
       return true;
     }
