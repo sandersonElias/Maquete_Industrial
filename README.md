@@ -1,21 +1,59 @@
-# 🏭 Maquete Industrial - Sistema Integrado
+# Maquete Industrial - Sistema Integrado
 
 Sistema completo de monitoramento e controle para maquete industrial com 4 módulos: Ferrovia, Mineradora, Porto Logístico e Aeroporto Logístico.
 
-## 📁 Estrutura do Projeto
+## Arquitetura
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│  Dashboard  │◄───►│   Backend    │◄───►│   Gateway   │──► Arduino
+│  React/CRA  │  WS │  Express +   │  WS │  Node.js +  │   BT/Serial
+│  Tailwind   │     │  PostgreSQL  │     │  SerialPort │
+└─────────────┘     │  + Redis     │     └─────────────┘
+                    └──────┬───────┘
+                           │ WS/HTTP
+                    ┌──────┴───────┐
+                    │ App React    │
+                    │ Native/Expo  │
+                    └──────────────┘
+```
+
+## Estrutura do Projeto
 
 ```
 maquete_industrial/
-├── firmware_arduino_ferrovia/   # Sketch Arduino (4 servos SG90 + HC-05)
-├── gateway_bluetooth/             # Gateway Node.js para Raspberry Pi
 ├── backend_nodejs/              # API REST + WebSocket (Express + Socket.IO)
-├── dashboard_react/             # Dashboard React.js (painéis dos 4 módulos)
-└── app_react_native/            # App React Native (telemetria + controle)
+│   └── src/
+│       ├── config/              # Configurações (DB, Redis, Logger)
+│       ├── controllers/         # Handlers das rotas
+│       ├── services/            # Lógica de negócio
+│       ├── routes/              # Definição de rotas Express
+│       ├── middlewares/         # Auth JWT + API Key
+│       ├── sockets/             # Eventos Socket.IO
+│       ├── jobs/                # Tarefas agendadas (timeout)
+│       └── utils/               # Validações
+├── dashboard_react/             # Dashboard React.js
+│   └── src/
+│       ├── pages/               # 6 páginas (Overview, Ferrovia, Mina, Porto, Aeroporto, Relatórios)
+│       ├── components/          # Sidebar, Header
+│       └── contexts/            # AuthContext, SocketContext
+├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi)
+├── app_react_native/            # App React Native (Expo)
+├── firmware_arduino_ferrovia/   # Arduino - 4 servos SG90 + HC-05
+└── firmware_arduino_caminho_basculante/  # Arduino - carrinho basculante RC
 ```
 
-## 🚀 Início Rápido
+## Início Rápido
 
-### 1. Banco de Dados (PostgreSQL)
+### Pré-requisitos
+
+- Node.js 18+
+- PostgreSQL 14+
+- Redis 6+
+- Arduino IDE (para firmware)
+- Expo CLI (para app mobile)
+
+### 1. Banco de Dados
 
 ```bash
 psql -U postgres -f backend_nodejs/schema.sql
@@ -26,19 +64,18 @@ psql -U postgres -f backend_nodejs/schema.sql
 ```bash
 cd backend_nodejs
 npm install
-# Edite .env com suas configurações
-npm run migrate
-npm start
+cp .env.exemplo .env   # Configure as variáveis
+npm run migrate         # Dados iniciais (seed)
+npm run dev             # Porta 4000
 ```
 
-### 3. Gateway Bluetooth (Raspberry Pi)
+### 3. Gateway Bluetooth (Raspberry Pi ou PC com dongle)
 
 ```bash
 cd gateway_bluetooth
 npm install
-# Emparelhe os HC-05 via bluetoothctl
-# Edite .env com o IP do servidor
-npm start
+cp .env.exemplo .env   # Configure BACKEND_WS_URL, SIMULATION_MODE
+npm start               # SIMULATION_MODE=true para desenvolvimento sem hardware
 ```
 
 ### 4. Dashboard
@@ -46,8 +83,8 @@ npm start
 ```bash
 cd dashboard_react
 npm install
-# Crie .env.local: REACT_APP_API_URL=http://localhost:3000
-npm start
+cp .env.exemplo .env   # REACT_APP_API_URL=http://localhost:4000
+npm start               # Porta 3000
 ```
 
 ### 5. App React Native
@@ -55,77 +92,140 @@ npm start
 ```bash
 cd app_react_native
 npm install
-# Edite API_BASE_URL no App.js para o IP do servidor
+# Edite API_BASE_URL e WS_URL em App.js para o IP do servidor
 npx expo start
 ```
 
 ### 6. Arduino
 
-- Abra `firmware_arduino_ferrovia/ferrovia_firmware.ino` no Arduino IDE
-- Conecte o HC-05 (TX->D10, RX->D11 via divisor de tensão)
-- Conecte os 4 servos SG90 (D3, D5, D6, D9)
-- Carregue o sketch
+- Abra o sketch correspondente no Arduino IDE
+- Para ferrovia: `firmware_arduino_ferrovia/ferrovia_firmware.ino`
+- Para caminhão: `firmware_arduino_caminho_basculante/caminhao_basculante_firmware.ino`
+- Conecte o HC-05 e carregue o sketch
 
-## 🔌 Pinagem Arduino Ferrovia
+## Variáveis de Ambiente
 
-| Componente     | Pino Arduino            |
-| -------------- | ----------------------- |
-| Servo Switch 1 | D3                      |
-| Servo Switch 2 | D5                      |
-| Servo Switch 3 | D6                      |
-| Servo Switch 4 | D9                      |
-| HC-05 TX       | D10 (SoftwareSerial RX) |
-| HC-05 RX       | D11 (SoftwareSerial TX) |
-| GND comum      | GND                     |
-| VCC Servos     | Fonte 5V externa        |
-| VCC HC-05      | 5V                      |
+Cada módulo possui um arquivo `.env.exemplo`. Copie para `.env` e preencha:
 
-## 📡 Protocolo Serial
+| Módulo    | Arquivo                   | Variáveis Principais                                                                                    |
+| --------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Backend   | `backend_nodejs/.env`     | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `REDIS_URL`, `JWT_SECRET`, `GATEWAY_API_KEY` |
+| Gateway   | `gateway_bluetooth/.env`  | `BACKEND_WS_URL`, `BACKEND_API_URL`, `GATEWAY_API_KEY`, `BT_DEVICE_FERROVIA`, `SIMULATION_MODE`         |
+| Dashboard | `dashboard_react/.env`    | `REACT_APP_API_URL=http://localhost:4000`                                                               |
+| App       | `app_react_native/App.js` | `API_BASE_URL`, `WS_URL` (hardcoded, editar direto no código)                                           |
 
-### Comando (Gateway → Arduino)
+## Protocolo de Comunicação
+
+### Serial (Gateway ↔ Arduino)
 
 ```
-CMD|SWITCH|<id>|<acao>|<valor>
+CMD|SWITCH|<id>|SET|LEFT       # Mover switch para esquerda
+CMD|SWITCH|<id>|SET|RIGHT      # Mover switch para direita
+CMD|SWITCH|<id>|SET|CENTER     # Mover switch para centro
+CMD|SWITCH|<id>|ANGLE|90       # Mover switch para ângulo específico
+CMD|SWITCH|<id>|STATUS         # Solicitar status
+CMD|SWITCH|<id>|RESET          # Resetar para centro
+
+ACK|SWITCH|<id>|<estado>       # Resposta do Arduino
+STATUS|SWITCH|<id>|<angulo>|<estado>|<timestamp>  # Heartbeat
+ERR|<codigo_erro>              # Erro
 ```
 
-- `CMD|SWITCH|1|SET|LEFT` - Mover switch 1 para esquerda
-- `CMD|SWITCH|2|ANGLE|90` - Mover switch 2 para 90°
-- `CMD|SWITCH|3|STATUS` - Solicitar status
-- `CMD|SWITCH|4|RESET` - Resetar para centro
+### Socket.IO (Backend ↔ Dashboard/App)
 
-### Resposta (Arduino → Gateway)
+| Evento             | Direção             | Payload                                            |
+| ------------------ | ------------------- | -------------------------------------------------- |
+| `authenticate`     | Dashboard → Backend | `{ token }`                                        |
+| `authenticated`    | Backend → Dashboard | `{ success, error? }`                              |
+| `gateway:register` | Gateway → Backend   | `{ gatewayId, apiKey }`                            |
+| `command`          | Backend → Gateway   | `{ target, cmd, switchId, action, angle }`         |
+| `switch:update`    | Backend → Dashboard | `{ switchId, state, timestamp }`                   |
+| `switch:status`    | Backend → Dashboard | `{ switchId, angle, state, timestamp }`            |
+| `truck:telemetry`  | Backend → Dashboard | `{ truckId, x, y, speed, load, battery, heading }` |
+| `gateway:status`   | Backend → Dashboard | `{ gatewayId, devices[], timestamp }`              |
+| `device:data`      | Gateway → Backend   | `{ gatewayId, deviceName, data, timestamp }`       |
 
-```
-ACK|SWITCH|<id>|<estado>
-STATUS|SWITCH|<id>|<angulo>|<estado>|<timestamp>
-ERR|<codigo_erro>
-```
+## API REST (Backend)
 
-## 🔐 Segurança
+Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header `Authorization: Bearer <jwt>`.
 
-- JWT para autenticação de usuários (dashboard + app)
-- API Key para gateway (`GATEWAY_API_KEY`)
-- TLS em produção (configurar nginx/caddy)
-- Rate limiting nas APIs
+| Método | Rota                        | Descrição                       | Auth    |
+| ------ | --------------------------- | ------------------------------- | ------- |
+| POST   | `/api/auth/login`           | Login (retorna JWT)             | Não     |
+| POST   | `/api/auth/register`        | Criar usuário                   | Não     |
+| GET    | `/api/health`               | Health check (PG + Redis)       | Não     |
+| GET    | `/api/ferrovia/status`      | Status dos 4 switches           | JWT     |
+| POST   | `/api/ferrovia/switch`      | Enviar comando ao switch        | JWT     |
+| GET    | `/api/trucks`               | Listar caminhões                | JWT     |
+| POST   | `/api/trucks/:id/telemetry` | Enviar telemetria               | JWT     |
+| POST   | `/api/trucks/:id/command`   | Enviar comando ao caminhão      | JWT     |
+| POST   | `/api/locomotive/position`  | Registrar posição da locomotiva | JWT     |
+| GET    | `/api/port/ships`           | Listar navios                   | JWT     |
+| GET    | `/api/airport/airplanes`    | Listar aeronaves                | JWT     |
+| POST   | `/api/reports/export`       | Gerar relatório                 | JWT     |
+| POST   | `/api/gateway/notify`       | Notificação do gateway          | API Key |
 
-## 📊 Funcionalidades
+## Comandos do Caminhão
 
-| Módulo         | Funcionalidades                                                                     |
-| -------------- | ----------------------------------------------------------------------------------- |
-| **Ferrovia**   | Controle de 4 switches, mapa esquemático, botão de emergência, ACK em tempo real    |
-| **Mina**       | Mapa cartesiano com caminhões, telemetria (posição, carga, bateria), buffer offline |
-| **Porto**      | Lista de navios, ETA, status de carga, docas                                        |
-| **Aeroporto**  | Lista de aeronaves, ETA, portões, status de carga                                   |
-| **Relatórios** | Exportação CSV/XLSX/PDF, filtros por data                                           |
+| Comando | Ação             |
+| ------- | ---------------- |
+| `F`     | Frente           |
+| `B`     | Ré               |
+| `S`     | Parar            |
+| `L`     | Virar esquerda   |
+| `R`     | Virar direita    |
+| `C`     | Centro (direção) |
+| `U`     | Subir caçamba    |
+| `D`     | Descer caçamba   |
+| `X`     | Parar caçamba    |
 
-## 🛠️ Tecnologias
+## Pinagem Arduino
 
-- **Front-end**: React.js, Tailwind CSS, Socket.IO Client, Recharts
-- **Back-end**: Node.js, Express, Socket.IO, PostgreSQL, Redis
-- **Gateway**: Node.js, SerialPort, WebSocket
-- **Mobile**: React Native (Expo), Axios, Socket.IO Client
-- **Hardware**: Arduino, HC-05, SG90
+### Ferrovia (4 Servos + HC-05)
 
-## 📄 Licença
+| Componente            | Pino                 |
+| --------------------- | -------------------- |
+| Servo Switch 1        | D3                   |
+| Servo Switch 2        | D5                   |
+| Servo Switch 3        | D6                   |
+| Servo Switch 4        | D9                   |
+| HC-05 TX → Arduino RX | D10 (SoftwareSerial) |
+| HC-05 RX ← Arduino TX | D11 (SoftwareSerial) |
+| GND comum             | GND                  |
+| VCC Servos            | Fonte 5V externa     |
+| VCC HC-05             | 5V                   |
 
-Projeto acadêmico/institucional.
+### Caminhão Basculante (2 Servos + Motor DC)
+
+| Componente    | Pino |
+| ------------- | ---- |
+| Servo Direção | D5   |
+| Servo Caçamba | D6   |
+| Motor DC IN1  | D7   |
+| Motor DC IN2  | D8   |
+
+## Stack Tecnológica
+
+| Camada       | Tecnologias                                                       |
+| ------------ | ----------------------------------------------------------------- |
+| Frontend Web | React 18, Tailwind CSS, Socket.IO Client, Recharts, Lucide Icons  |
+| Backend      | Node.js, Express, Socket.IO, PostgreSQL, Redis, JWT, bcryptjs     |
+| Gateway      | Node.js, SerialPort, Socket.IO Client, Winston                    |
+| Mobile       | React Native (Expo SDK 49), Axios, Socket.IO Client, AsyncStorage |
+| Hardware     | Arduino, Servos SG90, HC-05 Bluetooth, Motor DC                   |
+
+## Tema Visual
+
+Paleta de cores compartilhada entre Dashboard e App:
+
+| Cor     | Código    | Uso                              |
+| ------- | --------- | -------------------------------- |
+| Glow    | `#00FFB2` | Destaques, indicadores positivos |
+| Dark    | `#0D0F14` | Fundo principal                  |
+| Surface | `#161B26` | Superfícies elevadas             |
+| Card    | `#1C2333` | Cards e painéis                  |
+| Border  | `#252D40` | Bordas                           |
+| Accent  | `#3D9EFF` | Botões, links, switches LEFT     |
+| Warning | `#FFB800` | Alertas, bateria média           |
+| Danger  | `#FF4560` | Erros, bateria baixa, stop       |
+| Purple  | `#A855F7` | Switches RIGHT, caçamba          |
