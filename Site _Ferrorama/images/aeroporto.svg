@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Aeroporto de carga">
+  <rect width="800" height="500" fill="#0a0e14"/>
+  <rect x="0" y="350" width="800" height="150" fill="#1a222d"/>
+  <line x1="100" y1="350" x2="700" y2="350" stroke="#64748b" stroke-width="4"/>
+  <path d="M350 200 L420 280 L380 280 L400 320 L320 260 L360 260 Z" fill="#cbd5e1"/>
+  <rect x="550" y="300" width="120" height="50" fill="#141b24" stroke="#004a8f"/>
+  <text x="400" y="440" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="16">Aeroporto  images/aeroporto.jpg</text>
+</svg>
