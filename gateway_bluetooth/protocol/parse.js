@@ -44,10 +44,10 @@ function parseIncomingData(raw) {
       type: "status",
       device: "truck",
       x: parseInt(parts[3]),
-      y: parseInt(parts[5]),
-      load: parseInt(parts[7]),
-      battery: parseInt(parts[9]),
-      timestamp: parseInt(parts[11]),
+      y: parseInt(parts[4]),
+      load: parseInt(parts[6]),
+      battery: parseInt(parts[8]),
+      timestamp: parseInt(parts[10]),
     };
   }
 
