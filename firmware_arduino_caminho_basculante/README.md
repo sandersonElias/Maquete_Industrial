@@ -1,13 +1,13 @@
 # Firmware Arduino - Caminhão Basculante
 
-Controle RC de um carrinho basculante via Bluetooth (HC-05) com motor DC e 2 servos.
+Controle RC de um carrinho basculante via Bluetooth (HC-05) com 3 servos.
 
 ## Hardware
 
 - Arduino Uno/Nano
-- 1x Servo de Direção
-- 1x Servo de Caçamba
-- 1x Motor DC (L298N ou direto)
+- 1x Servo de Direção (SG-90)
+- 1x Servo de Caçamba (SG-90)
+- 1x Servo de Motor - Rotação Contínua (SG-90 ou similar)
 - 1x Módulo Bluetooth HC-05
 
 ## Pinagem
@@ -16,11 +16,9 @@ Controle RC de um carrinho basculante via Bluetooth (HC-05) com motor DC e 2 ser
 |------------|-------------|--------|
 | Servo Direção | D5 | Controle de direção (45°-135°) |
 | Servo Caçamba | D6 | Subir/descer caçamba (0°-90°) |
-| Motor IN1 | D7 | Sentido horário |
-| Motor IN2 | D8 | Sentido anti-horário |
+| Servo Motor | D7 | Rotação contínua (0°=ré, 90°=parado, 180°=frente) |
 | HC-05 TX/RX | Serial (0/1) | Comunicação Bluetooth |
-| VCC Servos | 5V externa | Fonte dedicada |
-| VCC Motor | Externo | Bateria do carrinho |
+| VCC Servos | 5V externa | Fonte dedicada (mínimo 1A para 3 servos) |
 
 **Importante**: O sketch usa a Serial padrão (pins 0/1) para o HC-05. Desconecte o HC-05 ao carregar o sketch.
 
@@ -30,9 +28,9 @@ Recebe caracteres únicos via Serial (Bluetooth):
 
 | Comando | Ação | Detalhes |
 |---------|------|----------|
-| `F` | Frente | IN1=HIGH, IN2=LOW |
-| `B` | Ré | IN1=LOW, IN2=HIGH |
-| `S` | Parar | IN1=LOW, IN2=LOW |
+| `F` | Frente | Servo motor → 180° (velocidade máx.) |
+| `B` | Ré | Servo motor → 0° (velocidade máx.) |
+| `S` | Parar | Servo motor → 90° (neutro) |
 | `L` | Esquerda | Servo direção → 135° |
 | `R` | Direita | Servo direção → 45° |
 | `C` | Centro | Servo direção → 90° |
@@ -41,11 +39,21 @@ Recebe caracteres únicos via Serial (Bluetooth):
 
 ## Funcionamento
 
+### Servo de Rotação Contínua
+
+O servo de motor usa rotação contínua (diferente de um servo padrão):
+
+| Posição | Comportamento |
+|---------|---------------|
+| 0° | Velocidade máxima ré |
+| 90° | Parado (neutro) |
+| 180° | Velocidade máxima frente |
+| Valores intermediários | Velocidade proporcional |
+
 ### Setup
 1. Inicializa Serial a 9600 baud
-2. Configura pinos do motor (OUTPUT)
-3. Conecta os 2 servos
-4. Posiciona direção no centro (90°) e caçamba baixa (0°)
+2. Conecta os 3 servos
+3. Posiciona direção no centro (90°), caçamba baixa (0°) e motor parado (90°)
 
 ### Loop
 1. Verifica se há dados na Serial
@@ -60,9 +68,20 @@ Recebe caracteres únicos via Serial (Bluetooth):
 - Valores fixos: 45° (direita), 90° (centro), 135° (esquerda)
 - Ajustar conforme o mecanismo físico do carrinho
 
+## Consumo de Energia
+
+| Componente | Corrente típica |
+|------------|----------------|
+| Servo SG-90 (cada) | ~150mA |
+| HC-05 | ~40mA |
+| Arduino Uno | ~50mA |
+| **Total** | **~540mA** |
+
+Use uma fonte externa de **mínimo 1A** para alimentar os 3 servos + Arduino.
+
 ## Sketch: `caminhao_basculante_firmware.ino`
 
-Arquivo único com 110 linhas. Contém:
-- Definições de pinos
+Arquivo único com ~100 linhas. Contém:
+- Definições de pinos (3 servos)
 - Variáveis de estado (ângulo direção, ângulo caçamba, comando)
-- Funções auxiliares: `pararMotor()`, `subirCacamba()`, `descerCacamba()`
+- Funções auxiliares: `subirCacamba()`, `descerCacamba()`

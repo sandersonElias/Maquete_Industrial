@@ -3,7 +3,10 @@
  *  CÓDIGO OFICIAL - CARRINHO BASCULANTE RC (BLUETOOTH)
  * ============================================================
  *  Este código recebe comandos via Bluetooth (HC-05) para
- *  controlar o carrinho.
+ *  controlar o carrinho com 3 servos:
+ *    - Servo de Direção (D5)
+ *    - Servo de Caçamba (D6)
+ *    - Servo de Motor - Rotação Contínua (D7)
  *  
  *  IMPORTANTE: Desconecte os pinos RX/TX do HC-05 ao carregar
  *  este código para o Arduino.
@@ -15,12 +18,12 @@
 // Definição dos Pinos
 const int PIN_SERVO_DIR = 5;
 const int PIN_SERVO_BUCKET = 6;
-const int PIN_MOTOR_IN1 = 7;
-const int PIN_MOTOR_IN2 = 8;
+const int PIN_SERVO_MOTOR = 7;
 
 // Objetos Servo
 Servo servoDirecao;
 Servo servoCacamba;
+Servo servoMotor;
 
 // Variáveis de Estado
 int anguloDirecao = 90; // Centro
@@ -31,18 +34,15 @@ void setup() {
   // Inicializa Serial (Bluetooth) a 9600 baud rate
   Serial.begin(9600);
 
-  // Configura Pinos do Motor
-  pinMode(PIN_MOTOR_IN1, OUTPUT);
-  pinMode(PIN_MOTOR_IN2, OUTPUT);
-  pararMotor();
-
   // Configura Servos
   servoDirecao.attach(PIN_SERVO_DIR);
   servoCacamba.attach(PIN_SERVO_BUCKET);
+  servoMotor.attach(PIN_SERVO_MOTOR);
 
   // Posição Inicial
   servoDirecao.write(anguloDirecao);
   servoCacamba.write(anguloCacamba);
+  servoMotor.write(90); // Motor parado (neutro)
 }
 
 void loop() {
@@ -51,17 +51,15 @@ void loop() {
     comando = Serial.read();
 
     switch (comando) {
-      // --- MOVIMENTAÇÃO (MOTOR DC) ---
+      // --- MOVIMENTAÇÃO (SERVO ROTAÇÃO CONTÍNUA) ---
       case 'F': // Frente
-        digitalWrite(PIN_MOTOR_IN1, HIGH);
-        digitalWrite(PIN_MOTOR_IN2, LOW);
+        servoMotor.write(180); // Velocidade máxima frente
         break;
       case 'B': // Ré
-        digitalWrite(PIN_MOTOR_IN1, LOW);
-        digitalWrite(PIN_MOTOR_IN2, HIGH);
+        servoMotor.write(0);   // Velocidade máxima ré
         break;
       case 'S': // Parar
-        pararMotor();
+        servoMotor.write(90);  // Neutro = parado
         break;
 
       // --- DIREÇÃO (SERVO 1) ---
@@ -84,11 +82,6 @@ void loop() {
         break;
     }
   }
-}
-
-void pararMotor() {
-  digitalWrite(PIN_MOTOR_IN1, LOW);
-  digitalWrite(PIN_MOTOR_IN2, LOW);
 }
 
 void subirCacamba() {
