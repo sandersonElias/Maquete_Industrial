@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ferrorama — Maquete Ferroviária com Automação</title>
+  <meta name="description" content="Documentação do Ferrorama: maquete ferroviária em escala HO com mina, trem, caminhões 3D, porto e central Arduino. Projeto escolar de mineração e logística.">
+  <meta name="author" content="Projeto Ferrorama">
+  <meta name="theme-color" content="#004a8f">
+  <link rel="canonical" href="index.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Ferrorama — Maquete Ferroviária com Automação">
+  <meta property="og:description" content="Da mina ao porto: documentação completa da maquete ferroviária com Arduino, impressão 3D e automação industrial.">
+  <meta property="og:image" content="images/og-cover.svg">
+  <meta property="og:url" content="index.html">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ferrorama — Maquete Ferroviária">
+  <meta name="twitter:description" content="Documentação do projeto escolar: mina, trem, caminhões 3D e central de controle.">
+  <meta name="twitter:image" content="images/og-cover.svg">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "Ferrorama — Maquete Ferroviária com Automação",
+    "description": "Documentação técnica de maquete em escala HO simulando extração de minério, transporte ferroviário e exportação portuária com Arduino.",
+    "inLanguage": "pt-BR",
+    "author": { "@type": "Organization", "name": "Projeto Ferrorama" },
+    "about": ["Modelismo ferroviário", "Mineração", "Arduino", "Impressão 3D"],
+    "image": "images/og-cover.svg"
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Ir para o conteúdo principal</a>
+  <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <div class="sidebar-brand">
+        <h1>Ferro<span>rama</span></h1>
+        <p class="subtitle">Mineração · Siderurgia · Modelismo</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#inicio" class="nav-link active" data-section="inicio">
+        <span class="nav-num">—</span>
+        <span class="nav-text">Início</span>
+      </a>
+      <a href="#montagem" class="nav-link" data-section="montagem">
+        <span class="nav-num">00</span>
+        <span class="nav-text">Montagem</span>
+      </a>
+      <a href="#maquete" class="nav-link" data-section="maquete">
+        <span class="nav-num">01</span>
+        <span class="nav-text">Maquete</span>
+      </a>
+      <a href="#codigo" class="nav-link" data-section="codigo">
+        <span class="nav-num">02</span>
+        <span class="nav-text">Código e automação</span>
+      </a>
+      <a href="#porto-aeroporto" class="nav-link" data-section="porto-aeroporto">
+        <span class="nav-num">03</span>
+        <span class="nav-text">Porto e aeroporto</span>
+      </a>
+      <a href="#mina" class="nav-link" data-section="mina">
+        <span class="nav-num">04</span>
+        <span class="nav-text">Mina de ferro</span>
+      </a>
+      <a href="#controle" class="nav-link" data-section="controle">
+        <span class="nav-num">05</span>
+        <span class="nav-text">Central de controle</span>
+      </a>
+      <a href="#contato" class="nav-link" data-section="contato">
+        <span class="nav-num">06</span>
+        <span class="nav-text">Contato</span>
+      </a>
+    </nav>
+
+    <footer class="sidebar-footer">
+      <p>Projeto escolar · Feira de ciências</p>
+    </footer>
+  </aside>
+
+  <main class="content" id="main-content">
+    <!-- Início -->
+    <section id="inicio" class="section active">
+      <header class="hero">
+        <div class="hero-media">
+          <picture>
+            <source srcset="images/montagem-geral.webp" type="image/webp">
+            <source srcset="images/montagem-geral.jpg" type="image/jpeg">
+            <img src="images/montagem-geral.png" alt="" loading="eager" decoding="async" width="1200" height="500">
+          </picture>
+        </div>
+        <div class="hero-content">
+          <p class="page-label">Projeto escolar · Escala HO</p>
+          <h2>Maquete ferroviária com automação</h2>
+          <p class="page-lead">Documentação da construção, programação e operação do ferrorama — da extração na mina até a exportação pelo porto.</p>
+        </div>
+      </header>
+
+      <dl class="spec-bar">
+        <div class="spec-item">
+          <dt>Base</dt>
+          <dd>120 × 80 cm</dd>
+        </div>
+        <div class="spec-item">
+          <dt>Módulos</dt>
+          <dd>5 áreas</dd>
+        </div>
+        <div class="spec-item">
+          <dt>Caminhões</dt>
+          <dd>3 un. · PLA</dd>
+        </div>
+        <div class="spec-item">
+          <dt>Controle</dt>
+          <dd>Arduino Mega</dd>
+        </div>
+      </dl>
+
+      <div class="home-grid">
+        <a href="#montagem" class="home-card" data-section="montagem">
+          <span class="home-card-num">00</span>
+          <h3>Montagem</h3>
+          <p>Trem, mina, caminhões 3D e construção da maquete.</p>
+        </a>
+        <a href="#maquete" class="home-card" data-section="maquete">
+          <span class="home-card-num">01</span>
+          <h3>Maquete</h3>
+          <p>Fotos reais da construção do ferrorama na sala de aula.</p>
+        </a>
+        <a href="#codigo" class="home-card" data-section="codigo">
+          <span class="home-card-num">02</span>
+          <h3>Código & Automação</h3>
+          <p>Como os caminhões se movem e como o trem funciona.</p>
+        </a>
+        <a href="#porto-aeroporto" class="home-card" data-section="porto-aeroporto">
+          <span class="home-card-num">03</span>
+          <h3>Porto & Aeroporto</h3>
+          <p>Transporte e exportação dos materiais.</p>
+        </a>
+        <a href="#mina" class="home-card" data-section="mina">
+          <span class="home-card-num">04</span>
+          <h3>Mina de Ferro</h3>
+          <p>O que é uma mina e como reproduzimos na maquete.</p>
+        </a>
+        <a href="#controle" class="home-card" data-section="controle">
+          <span class="home-card-num">05</span>
+          <h3>Área de Controle</h3>
+          <p>Central que coordena todo o sistema.</p>
+        </a>
+        <a href="#contato" class="home-card" data-section="contato">
+          <span class="home-card-num">06</span>
+          <h3>Contato</h3>
+          <p>Envie dúvidas sobre o projeto.</p>
+        </a>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Sobre o Projeto</h3>
+        <p class="block-intro">O Ferrorama simula toda a cadeia produtiva do minério de ferro e carvão — da extração na mina até a exportação pelo porto ou aeroporto — integrando modelismo ferroviário, impressão 3D e programação em Arduino.</p>
+        <div class="objectives-grid">
+          <div class="objective-item">
+            <strong>Objetivo principal</strong>
+            <p>Demonstrar como materiais brutos percorrem diferentes modos de transporte até chegar ao mercado internacional.</p>
+          </div>
+          <div class="objective-item">
+            <strong>Aprendizado técnico</strong>
+            <p>Combinar física (motores, sensores), modelismo e lógica de programação em um único projeto integrado.</p>
+          </div>
+          <div class="objective-item">
+            <strong>Contexto real</strong>
+            <p>Relacionar a maquete com a economia brasileira, onde o minério de ferro é um dos principais produtos de exportação.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Mapa da Maquete</h3>
+        <p class="block-intro">Visão esquemática de como os módulos se conectam na base de MDF.</p>
+        <div class="maquete-map">
+          <div class="map-zone map-mina">Mina</div>
+          <div class="map-arrow" aria-hidden="true"></div>
+          <div class="map-zone map-caminhoes">Caminhões</div>
+          <div class="map-arrow" aria-hidden="true"></div>
+          <div class="map-zone map-trem">Trem</div>
+          <div class="map-split">
+            <div class="map-branch">
+              <div class="map-arrow map-arrow-down" aria-hidden="true"></div>
+              <div class="map-zone map-porto">Porto</div>
+            </div>
+            <div class="map-branch">
+              <div class="map-arrow map-arrow-down" aria-hidden="true"></div>
+              <div class="map-zone map-aeroporto">Aeroporto</div>
+            </div>
+          </div>
+          <div class="map-control">Central de controle</div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Perguntas Frequentes</h3>
+        <div class="accordion">
+          <details class="accordion-item">
+            <summary>Qual escala foi usada na maquete?</summary>
+            <p>Utilizamos escala HO (1:87) para trilhos, locomotiva e vagões. Os caminhões foram impressos em escala compatível (~1:87) e o aeroporto usa aviões em escala 1:500.</p>
+          </details>
+          <details class="accordion-item">
+            <summary>Quanto tempo levou para montar tudo?</summary>
+            <p>A construção física levou cerca de 6 semanas: 2 semanas para a base e paisagismo, 2 para trilhos e eletrônica, e 2 para impressão 3D, testes e acabamento final.</p>
+          </details>
+          <details class="accordion-item">
+            <summary>É possível controlar cada parte separadamente?</summary>
+            <p>Sim. A central possui modo manual (cada subsistema independente) e modo automático (sequência completa mina → caminhões → trem → porto/aeroporto).</p>
+          </details>
+          <details class="accordion-item">
+            <summary>Precisa de computador para funcionar?</summary>
+            <p>Não. Após carregar o código no Arduino, a maquete funciona de forma autônoma. O computador é usado apenas para programar, ajustar parâmetros e monitorar via porta serial.</p>
+          </details>
+        </div>
+      </div>
+
+      <footer class="site-footer">
+        <p>Ferrorama — documentação do projeto escolar</p>
+        <p class="footer-note">Fotos reais: coloque JPG ou WebP em <code>images/</code> (mesmos nomes dos SVG).</p>
+      </footer>
+    </section>
+
+    <!-- Seção 0: Montagem -->
+    <section id="montagem" class="section">
+      <div class="section-header">
+        <span class="section-number">00</span>
+        <h2>Montagem da Maquete</h2>
+        <p class="section-desc">Como foi construída a maquete, peça por peça</p>
+      </div>
+
+      <div class="card-grid">
+        <article class="card card-featured">
+          <div class="card-image">
+            <picture>
+              <source srcset="images/montagem-geral.webp" type="image/webp">
+              <source srcset="images/montagem-geral.jpg" type="image/jpeg">
+              <img src="images/montagem-geral.svg" alt="Visão geral da maquete do ferrorama" loading="lazy" decoding="async" width="800" height="500">
+            </picture>
+          </div>
+          <div class="card-body">
+            <h3>Visão Geral</h3>
+            <p>A maquete foi montada sobre uma base de MDF de 1,20 × 0,80 m, com trilhos em escala HO. Cada elemento — mina, porto, aeroporto e vias — foi posicionado para simular uma cadeia logística real de extração até exportação.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-image">
+            <picture>
+              <source srcset="images/trem.webp" type="image/webp">
+              <source srcset="images/trem.jpg" type="image/jpeg">
+              <img src="images/trem.svg" alt="Trem da maquete nos trilhos" loading="lazy" decoding="async" width="800" height="500">
+            </picture>
+          </div>
+          <div class="card-body">
+            <h3>O Trem</h3>
+            <p>Locomotiva elétrica em escala HO com vagões basculantes para carvão e minério de ferro. Os trilhos formam um circuito fechado com desvios controlados por servomotores, permitindo rotas diferentes para carga e descarga.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-image">
+            <picture>
+              <source srcset="images/mina.webp" type="image/webp">
+              <source srcset="images/mina.jpg" type="image/jpeg">
+              <img src="images/mina.svg" alt="Mina de ferro e carvão na maquete" loading="lazy" decoding="async" width="800" height="500">
+            </picture>
+          </div>
+          <div class="card-body">
+            <h3>Mina de Ferro e Carvão</h3>
+            <p>A mina foi construída com espuma expandida esculpida, pintura acrílica e detalhes em palitos e areia. Dois poços representam a extração de ferro e carvão, com esteira simulada que "alimenta" os vagões do trem.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-image">
+            <picture>
+              <source srcset="images/caminhoes-3d.webp" type="image/webp">
+              <source srcset="images/caminhoes-3d.jpg" type="image/jpeg">
+              <img src="images/caminhoes-3d.svg" alt="Caminhões impressos em 3D" loading="lazy" decoding="async" width="800" height="500">
+            </picture>
+          </div>
+          <div class="card-body">
+            <h3>Caminhões (Impressão 3D)</h3>
+            <p>Os caminhões basculantes foram modelados no Tinkercad e impressos em PLA na impressora 3D da escola. Cada caminhão recebeu um motor DC micro com redução, montado na base oculta por baixo da pista.</p>
+            <ul class="feature-list">
+              <li>Material: PLA branco e cinza</li>
+              <li>Tempo de impressão: ~4 h por unidade</li>
+              <li>Motor: gearmotor 3 V com eixo de 6 mm</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+
+      <div class="callout">
+        <strong>Materiais utilizados</strong>
+        <p>MDF, trilhos HO, espuma, acrílico, fios, Arduino, sensores IR, servomotores, PLA para impressão 3D e tinta acrílica para acabamento paisagístico.</p>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Cronograma de Construção</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <span class="timeline-week">Semana 1–2</span>
+            <strong>Base e estrutura</strong>
+            <p>Corte do MDF, pintura do terreno, fixação dos trilhos e planejamento das áreas (mina, porto, aeroporto).</p>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-week">Semana 3</span>
+            <strong>Paisagismo e mina</strong>
+            <p>Escultura da mina em espuma, aplicação de grama sintética, riachos com resina e detalhes rochosos.</p>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-week">Semana 4</span>
+            <strong>Impressão 3D</strong>
+            <p>Modelagem no Tinkercad, impressão dos caminhões, lixamento, pintura e encaixe dos motores na base.</p>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-week">Semana 5</span>
+            <strong>Eletrônica</strong>
+            <p>Montagem dos circuitos, soldagem, testes de motores, sensores IR e servomotores dos desvios.</p>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-week">Semana 6</span>
+            <strong>Integração e testes</strong>
+            <p>Programação final, ajustes de velocidade, montagem do painel de controle e ensaios do modo automático.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Especificações Técnicas</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>Especificação</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Base</td>
+                <td>MDF 15 mm · 120 × 80 cm</td>
+                <td>Pintada com tinta acrílica marrom/verde</td>
+              </tr>
+              <tr>
+                <td>Trilhos</td>
+                <td>Escala HO · código 100</td>
+                <td>Circuito oval com 2 desvios</td>
+              </tr>
+              <tr>
+                <td>Locomotiva</td>
+                <td>Elétrica HO · 12 V DC</td>
+                <td>3 vagões basculantes</td>
+              </tr>
+              <tr>
+                <td>Caminhões</td>
+                <td>PLA · ~8 cm cada</td>
+                <td>3 unidades com motor próprio</td>
+              </tr>
+              <tr>
+                <td>Mina</td>
+                <td>Espuma + acrílico</td>
+                <td>2 poços (ferro e carvão)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Processo de Impressão 3D dos Caminhões</h3>
+        <div class="steps-grid">
+          <div class="step-card">
+            <span class="step-num">1</span>
+            <strong>Modelagem</strong>
+            <p>Desenho da carroceria basculante e chassi no Tinkercad, com furo para eixo do motor.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">2</span>
+            <strong>Impressão</strong>
+            <p>PLA a 210 °C, camada de 0,2 mm, preenchimento 20%. Suportes apenas na caçamba.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">3</span>
+            <strong>Acabamento</strong>
+            <p>Lixamento leve, pintura spray cinza e detalhes à mão (faróis, para-choque).</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">4</span>
+            <strong>Montagem</strong>
+            <p>Motor colado na base oculta; caminhão encaixado sobre o eixo com silicone.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-note">
+        <strong>Desafio superado</strong>
+        <p>Os caminhões derrapavam nas curvas da pista. Resolvemos colando tiras de borracha no eixo e aumentando o peso com chumbo fundido dentro da carroceria.</p>
+      </div>
+
+      <nav class="section-nav" aria-label="Navegação entre seções">
+        <a href="#inicio" class="section-nav-btn" data-section="inicio">← Início</a>
+        <a href="#maquete" class="section-nav-btn section-nav-next" data-section="maquete">Maquete →</a>
+      </nav>
+    </section>
+
+    <!-- Seção 1: Maquete — galeria fotográfica -->
+    <section id="maquete" class="section">
+      <div class="section-header">
+        <span class="section-number">01</span>
+        <h2>A Maquete</h2>
+        <p class="section-desc">Registro fotográfico da montagem do ferrorama na sala de aula</p>
+      </div>
+
+      <div class="card-grid photo-gallery">
+        <article class="card card-featured">
+          <div class="card-image">
+            <img src="images/maquete-montagem-2.png" alt="Visão geral da maquete ferroviária montada sobre mesas cobertas com papel kraft, com trilhos em circuito e equipe trabalhando ao redor" loading="lazy" decoding="async" width="1200" height="675">
+          </div>
+          <div class="card-body">
+            <h3>Visão geral do circuito</h3>
+            <p>O layout foi montado sobre mesas unidas e cobertas com papel kraft, formando a base provisória da maquete. Os trilhos em escala HO criam um circuito com desvios, trechos elevados e acessórios como semáforos e passagem de nível — tudo montado de forma colaborativa pela turma.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-image">
+            <img src="images/maquete-montagem-1.png" alt="Detalhe dos trilhos com guindaste laranja, painel de controle amarelo e estudantes programando ao fundo" loading="lazy" decoding="async" width="800" height="450">
+          </div>
+          <div class="card-body">
+            <h3>Detalhes e automação</h3>
+            <p>Além dos trilhos, a maquete integra elementos de automação: sensores, motores e um painel de controle embutido na via. Ao fundo, a equipe trabalha no código e nos ajustes eletrônicos que coordenam o funcionamento do trem.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-image">
+            <img src="images/maquete-montagem-3.png" alt="Equipe observando a maquete com tablet sobre a mesa e vagões posicionados nos trilhos" loading="lazy" decoding="async" width="800" height="450">
+          </div>
+          <div class="card-body">
+            <h3>Trabalho em equipe</h3>
+            <p>A construção envolveu toda a turma do terceirão: uns cuidaram da parte física dos trilhos e suportes, outros da programação e testes. O tablet na mesa era usado para monitorar sensores e ajustar parâmetros em tempo real.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Etapas visíveis nas fotos</h3>
+        <div class="steps-grid">
+          <div class="step-card">
+            <span class="step-num">1</span>
+            <strong>Base e trilhos</strong>
+            <p>Mesas niveladas, papel kraft como terreno e fixação dos trilhos com suportes de cartão para trechos elevados.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">2</span>
+            <strong>Acessórios</strong>
+            <p>Semáforos, passagem de nível, guindaste e vagões posicionados para simular uma operação logística real.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">3</span>
+            <strong>Integração</strong>
+            <p>Conexão dos circuitos eletrônicos, testes com locomotiva e programação via Arduino e laptops.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Projeto escolar</strong>
+        <p>Estas fotos documentam a fase de prototipagem e montagem do Ferrorama — antes da transferência definitiva para a base de MDF e do acabamento paisagístico final descritos na seção de Montagem.</p>
+      </div>
+
+      <nav class="section-nav" aria-label="Navegação entre seções">
+        <a href="#montagem" class="section-nav-btn" data-section="montagem">← Montagem</a>
+        <a href="#codigo" class="section-nav-btn section-nav-next" data-section="codigo">Código & Automação →</a>
+      </nav>
+    </section>
+
+    <!-- Seção 2: Código -->
+    <section id="codigo" class="section">
+      <div class="section-header">
+        <span class="section-number">02</span>
+        <h2>Código & Automação</h2>
+        <p class="section-desc">Como os caminhões se locomovem e como o trem funciona</p>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="tab-caminhoes" role="tab">Caminhões</button>
+        <button class="tab-btn" data-tab="tab-trem" role="tab">Trem</button>
+        <button class="tab-btn" data-tab="tab-desvios" role="tab">Desvios</button>
+      </div>
+
+      <div id="tab-caminhoes" class="tab-panel active">
+      <div class="two-col">
+        <div class="col-text">
+          <h3>Locomoção dos Caminhões</h3>
+          <p>Cada caminhão possui um motor DC controlado por um driver L298N conectado ao Arduino. O movimento segue uma pista guia; sensores infravermelhos (IR) nas extremidades detectam quando o veículo chega ao fim e invertem a direção automaticamente.</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span>Arduino — Caminhão</span>
+              <span class="code-lang">C++</span>
+            </div>
+            <pre><code>const int motorA = 5, motorB = 6;
+const int sensorEsq = 2, sensorDir = 3;
+
+void setup() {
+  pinMode(motorA, OUTPUT);
+  pinMode(motorB, OUTPUT);
+  pinMode(sensorEsq, INPUT);
+  pinMode(sensorDir, INPUT);
+}
+
+void loop() {
+  if (digitalRead(sensorDir) == LOW) {
+    // Fim da pista — inverte
+    analogWrite(motorA, 0);
+    analogWrite(motorB, 180);
+    delay(500);
+  } else {
+    analogWrite(motorA, 180);
+    analogWrite(motorB, 0);
+  }
+}</code></pre>
+          </div>
+
+          <h3>Lógica de inversão</h3>
+          <p>Quando o sensor IR detecta a borda preta da pista (sinal LOW), o motor inverte por 500 ms antes de retomar. Isso evita que o caminhão saia dos trilhos guia nas extremidades.</p>
+        </div>
+
+        <div class="col-visual">
+          <div class="card">
+            <div class="card-image">
+              <picture>
+                <source srcset="images/arduino.webp" type="image/webp">
+                <source srcset="images/arduino.jpg" type="image/jpeg">
+                <img src="images/arduino.svg" alt="Placa Arduino e sensores na maquete" loading="lazy" decoding="async" width="800" height="500">
+              </picture>
+            </div>
+            <div class="card-body">
+              <h3>Hardware</h3>
+              <p>Arduino Mega, L298N, sensores IR TCRT5000, servomotores SG90 e fonte 12 V regulada para 5 V.</p>
+            </div>
+          </div>
+
+          <div class="flow-diagram">
+            <h4>Fluxo de controle</h4>
+            <div class="flow-steps">
+              <div class="flow-step"><span>1</span> Sensor detecta posição</div>
+              <div class="flow-arrow">↓</div>
+              <div class="flow-step"><span>2</span> Arduino processa sinal</div>
+              <div class="flow-arrow">↓</div>
+              <div class="flow-step"><span>3</span> Motor / servomotor responde</div>
+              <div class="flow-arrow">↓</div>
+              <div class="flow-step"><span>4</span> Ciclo se repete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div id="tab-trem" class="tab-panel">
+        <div class="two-col">
+          <div class="col-text">
+            <h3>Controle da Locomotiva</h3>
+            <p>O trem é acionado por um motor DC na locomotiva, com velocidade regulada por PWM no pino 9. Reed switches nas estações de carga pausam o trem por 3 segundos enquanto os vagões são "carregados".</p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>Arduino — Trem</span>
+                <span class="code-lang">C++</span>
+              </div>
+              <pre><code>const int pinoMotorTrem = 9;
+const int sensorEstacao = 4;
+
+void loop() {
+  analogWrite(pinoMotorTrem, 200);
+
+  if (digitalRead(sensorEstacao) == LOW) {
+    analogWrite(pinoMotorTrem, 0);
+    delay(3000);
+  }
+}</code></pre>
+            </div>
+            <p>O sensor magnético detecta um ímã colado no vagão. Quando o trem passa pela estação da mina ou do porto, o ímã aciona o reed switch e dispara a parada programada.</p>
+          </div>
+          <div class="col-visual">
+            <div class="card">
+              <div class="card-image">
+                <picture>
+                  <source srcset="images/trem-circuito.webp" type="image/webp">
+                  <source srcset="images/trem-circuito.jpg" type="image/jpeg">
+                  <img src="images/trem-circuito.svg" alt="Circuito do trem" loading="lazy" decoding="async" width="800" height="500">
+                </picture>
+              </div>
+              <div class="card-body">
+                <h3>Estações de parada</h3>
+                <p>2 pontos: estação da mina (carga) e estação do porto (descarga). Cada uma com reed switch e LED indicador.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-desvios" class="tab-panel">
+        <div class="two-col">
+          <div class="col-text">
+            <h3>Desvios Ferroviários</h3>
+            <p>Dois desvios SG90 definem se o trem segue para o porto ou para o ramal do aeroporto. O ângulo padrão é 0° (porto); ao receber sinal da central, move para 90° (aeroporto).</p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>Arduino — Servomotor desvio</span>
+                <span class="code-lang">C++</span>
+              </div>
+              <pre><code>#include &lt;Servo.h&gt;
+Servo desvioPorto;
+
+void setup() {
+  desvioPorto.attach(10);
+  desvioPorto.write(0);
+}
+
+void irParaAeroporto() {
+  desvioPorto.write(90);
+  delay(800);
+}</code></pre>
+            </div>
+          </div>
+          <div class="col-visual">
+            <div class="flow-diagram">
+              <h4>Decisão de rota</h4>
+              <div class="flow-steps">
+                <div class="flow-step"><span>1</span> Central recebe comando</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step"><span>2</span> Servomotor gira agulha</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step"><span>3</span> Trem segue ramal escolhido</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Mapa de Pinos (Arduino Mega)</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pino</th>
+                <th>Função</th>
+                <th>Componente</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>2, 3</td><td>Entrada digital</td><td>Sensores IR caminhão 1</td></tr>
+              <tr><td>4</td><td>Entrada digital</td><td>Reed switch estação mina</td></tr>
+              <tr><td>5, 6</td><td>Saída PWM</td><td>Motor caminhão 1 (L298N)</td></tr>
+              <tr><td>7, 8</td><td>Saída PWM</td><td>Motor caminhão 2 (L298N)</td></tr>
+              <tr><td>9</td><td>Saída PWM</td><td>Motor locomotiva</td></tr>
+              <tr><td>10, 11</td><td>Saída PWM</td><td>Servomotores desvios</td></tr>
+              <tr><td>12–17</td><td>Entrada digital</td><td>Botões do painel</td></tr>
+              <tr><td>A4, A5</td><td>I2C</td><td>Display LCD 16×2</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Lista de Componentes Eletrônicos</h3>
+        <div class="chip-list">
+          <span class="chip">1× Arduino Mega</span>
+          <span class="chip">2× Driver L298N</span>
+          <span class="chip">4× Sensor IR TCRT5000</span>
+          <span class="chip">2× Servo SG90</span>
+          <span class="chip">2× Reed switch</span>
+          <span class="chip">1× LCD 16×2 I2C</span>
+          <span class="chip">6× Botões push</span>
+          <span class="chip">1× Fonte 12 V 3 A</span>
+          <span class="chip">Protoboard + jumpers</span>
+        </div>
+      </div>
+
+      <div class="callout callout-note">
+        <strong>Dica de programação</strong>
+        <p>Evite usar <code>delay()</code> longo no loop principal quando vários motores rodam ao mesmo tempo. Preferimos flags e <code>millis()</code> para não travar os outros subsistemas durante pausas do trem.</p>
+      </div>
+
+      <nav class="section-nav" aria-label="Navegação entre seções">
+        <a href="#maquete" class="section-nav-btn" data-section="maquete">← Maquete</a>
+        <a href="#porto-aeroporto" class="section-nav-btn section-nav-next" data-section="porto-aeroporto">Porto & Aeroporto →</a>
+      </nav>
+    </section>
+
+    <!-- Seção 3: Porto e Aeroporto -->
+    <section id="porto-aeroporto" class="section">
+      <div class="section-header">
+        <span class="section-number">03</span>
+        <h2>Porto & Aeroporto</h2>
+        <p class="section-desc">Transporte e exportação dos materiais extraídos</p>
+      </div>
+
+      <div class="card-grid card-grid-2">
+        <article class="card card-large">
+          <div class="card-image card-image-tall">
+            <picture>
+              <source srcset="images/porto.webp" type="image/webp">
+              <source srcset="images/porto.jpg" type="image/jpeg">
+              <img src="images/porto.svg" alt="Porto na maquete para exportação de minério" loading="lazy" decoding="async" width="800" height="500">
+            </picture>
+          </div>
+          <div class="card-body">
+            <h3>Porto</h3>
+            <p>Após o trem descarregar minério e carvão nos silos do porto, guindastes articulados (feitos com palitos e fio) simulam a carga em navios-carga. O porto representa a etapa de exportação marítima — principal via para ferro e carvão no comércio internacional.</p>
+            <p>Na maquete, LEDs vermelhos indicam "navio atracado" e um motor linear move a esteira do cais, sugerindo o fluxo contínuo de mercadoria embarcada.</p>
+          </div>
+        </article>
+
+        <article class="card card-large">
+          <div class="card-image card-image-tall">
+            <picture>
+              <source srcset="images/aeroporto.webp" type="image/webp">
+              <source srcset="images/aeroporto.jpg" type="image/jpeg">
+              <img src="images/aeroporto.svg" alt="Aeroporto de carga na maquete" loading="lazy" decoding="async" width="800" height="500">
+            </picture>
+          </div>
+          <div class="card-body">
+            <h3>Aeroporto de carga</h3>
+            <p>O aeroporto complementa o porto como rota alternativa de transporte. Aviões cargueiros em miniatura (escala 1:500) representam o envio rápido de materiais de alto valor ou peças urgentes.</p>
+            <p>Na maquete, caminhões levam carga do trem até o terminal aéreo; um LED piscante simula pista ativa e decolagem programada via temporizador no Arduino.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="logistics-flow">
+        <h3>Cadeia logística simulada</h3>
+        <div class="logistics-steps">
+          <div class="logistics-item">
+            <span class="logistics-label">Mina</span>
+          </div>
+          <div class="logistics-line"></div>
+          <div class="logistics-item">
+            <span class="logistics-label">Caminhões</span>
+          </div>
+          <div class="logistics-line"></div>
+          <div class="logistics-item">
+            <span class="logistics-label">Trem</span>
+          </div>
+          <div class="logistics-line"></div>
+          <div class="logistics-item">
+            <span class="logistics-label">Porto</span>
+          </div>
+          <div class="logistics-line"></div>
+          <div class="logistics-item">
+            <span class="logistics-label">Aeroporto</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Porto vs. Aeroporto — Quando usar cada um?</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Critério</th>
+                <th>Porto</th>
+                <th>Aeroporto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Volume transportado</td>
+                <td>Alto (milhões de toneladas)</td>
+                <td>Baixo (cargas especiais)</td>
+              </tr>
+              <tr>
+                <td>Custo</td>
+                <td>Menor por tonelada</td>
+                <td>Muito maior</td>
+              </tr>
+              <tr>
+                <td>Velocidade</td>
+                <td>Semanas (marítimo)</td>
+                <td>Horas (aéreo)</td>
+              </tr>
+              <tr>
+                <td>Na maquete</td>
+                <td>Rota padrão do trem</td>
+                <td>Rota alternativa via desvio</td>
+              </tr>
+              <tr>
+                <td>Material típico</td>
+                <td>Minério de ferro, carvão</td>
+                <td>Amostras, peças urgentes</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Exportação no Brasil</h3>
+        <div class="objectives-grid">
+          <div class="objective-item">
+            <strong>2º maior exportador</strong>
+            <p>O Brasil é um dos maiores exportadores mundiais de minério de ferro, principalmente para China, Japão e Europa.</p>
+          </div>
+          <div class="objective-item">
+            <strong>Porto de Tubarão</strong>
+            <p>Um dos maiores terminais de minério do mundo, em Vitória (ES) — referência para nossa maquete portuária.</p>
+          </div>
+          <div class="objective-item">
+            <strong>Ferrovia Vitória–Minas</strong>
+            <p>EFVM liga as minas de Minas Gerais ao litoral — inspirou o circuito ferroviário da maquete.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Referência</strong>
+        <p>Um navio Valemax pode carregar até 400 mil toneladas de minério — equivalente a cerca de 4 mil vagões de trem. Na maquete, LEDs indicam carga contínua no cais.</p>
+      </div>
+
+      <nav class="section-nav" aria-label="Navegação entre seções">
+        <a href="#codigo" class="section-nav-btn" data-section="codigo">← Código & Automação</a>
+        <a href="#mina" class="section-nav-btn section-nav-next" data-section="mina">Mina de Ferro →</a>
+      </nav>
+    </section>
+
+    <!-- Seção 4: Mina de Ferro -->
+    <section id="mina" class="section">
+      <div class="section-header">
+        <span class="section-number">04</span>
+        <h2>Mina de Ferro</h2>
+        <p class="section-desc">O que é uma mina e como funciona na realidade e na maquete</p>
+      </div>
+
+      <div class="two-col reverse">
+        <div class="col-visual">
+          <div class="card">
+            <div class="card-image">
+              <picture>
+                <source srcset="images/mina-real.webp" type="image/webp">
+                <source srcset="images/mina-real.jpg" type="image/jpeg">
+                <img src="images/mina-real.svg" alt="Mina de ferro a céu aberto" loading="lazy" decoding="async" width="800" height="500">
+              </picture>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-image">
+              <picture>
+                <source srcset="images/mina-maquete.webp" type="image/webp">
+                <source srcset="images/mina-maquete.jpg" type="image/jpeg">
+                <img src="images/mina-maquete.svg" alt="Detalhe da mina na maquete" loading="lazy" decoding="async" width="800" height="500">
+              </picture>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-text">
+          <h3>O que é uma mina de ferro?</h3>
+          <p>Uma mina de ferro é uma instalação onde o minério de ferro — rocha rica em óxido de ferro (hematita ou magnetita) — é extraído do subsolo ou a céu aberto. O minério passa por britagem, separação magnética e pelletização antes de ser transportado ao aço.</p>
+
+          <h3>Tipos de mineração</h3>
+          <div class="mini-cards">
+            <div class="mini-card">
+              <strong>A céu aberto</strong>
+              <p>Grandes crateras escavadas com caminhões fora de estrada. Comum no Brasil (Minas Gerais, Pará).</p>
+            </div>
+            <div class="mini-card">
+              <strong>Subterrânea</strong>
+              <p>Túneis e galerias abaixo da superfície. Usada quando o minério está em profundidade.</p>
+            </div>
+          </div>
+
+          <h3>Na nossa maquete</h3>
+          <p>Reproduzimos uma mina a céu aberto com dois poços: um para ferro (tom avermelhado) e outro para carvão (tom escuro). Uma esteira motorizada leva o material até os caminhões 3D, que por sua vez entregam ao trem — espelhando a logística real de uma operação integrada.</p>
+
+          <div class="stats-row">
+            <div class="stat">
+              <span class="stat-value">~67%</span>
+              <span class="stat-label">Ferro no minério brasileiro (média)</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">400M+</span>
+              <span class="stat-label">Ton/ano exportadas (Brasil)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Do minério ao aço — Etapas do processo</h3>
+        <div class="process-chain">
+          <div class="process-step">
+            <span class="process-num">1</span>
+            <strong>Extração</strong>
+            <p>Perfuração, detonação e escavação do minério.</p>
+          </div>
+          <div class="process-step">
+            <span class="process-num">2</span>
+            <strong>Britagem</strong>
+            <p>Fragmentação da rocha em pedaços menores.</p>
+          </div>
+          <div class="process-step">
+            <span class="process-num">3</span>
+            <strong>Beneficiamento</strong>
+            <p>Separação magnética do ferro da ganga.</p>
+          </div>
+          <div class="process-step">
+            <span class="process-num">4</span>
+            <strong>Transporte</strong>
+            <p>Trem ou caminhão até porto ou siderúrgica.</p>
+          </div>
+          <div class="process-step">
+            <span class="process-num">5</span>
+            <strong>Alto-forno</strong>
+            <p>Minério + carvão → ferro-gusa → aço.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Ferro vs. Carvão na maquete</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Aspecto</th>
+                <th>Minério de Ferro</th>
+                <th>Carvão Mineral</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cor na maquete</td>
+                <td>Tom avermelhado / ferrugem</td>
+                <td>Preto / cinza escuro</td>
+              </tr>
+              <tr>
+                <td>Função</td>
+                <td>Matéria-prima do aço</td>
+                <td>Combustível do alto-forno</td>
+              </tr>
+              <tr>
+                <td>Poço na mina</td>
+                <td>Poço principal (maior)</td>
+                <td>Poço secundário</td>
+              </tr>
+              <tr>
+                <td>Transporte</td>
+                <td>Vagão basculante 1 e 2</td>
+                <td>Vagão basculante 3</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="callout callout-note">
+        <strong>Sustentabilidade</strong>
+        <p>Na vida real, mineradoras investem em recuperação de áreas degradadas e redução de emissões. Na maquete, representamos isso com uma faixa verde de reflorestamento ao redor da mina.</p>
+      </div>
+
+      <nav class="section-nav" aria-label="Navegação entre seções">
+        <a href="#porto-aeroporto" class="section-nav-btn" data-section="porto-aeroporto">← Porto & Aeroporto</a>
+        <a href="#controle" class="section-nav-btn section-nav-next" data-section="controle">Área de Controle →</a>
+      </nav>
+    </section>
+
+    <!-- Seção 5: Área de Controle -->
+    <section id="controle" class="section">
+      <div class="section-header">
+        <span class="section-number">05</span>
+        <h2>Área de Controle Geral</h2>
+        <p class="section-desc">Central que coordena trem, caminhões, porto e aeroporto</p>
+      </div>
+
+      <div class="control-layout">
+        <div class="control-panel-visual">
+          <div class="card">
+            <div class="card-image">
+              <picture>
+                <source srcset="images/controle.webp" type="image/webp">
+                <source srcset="images/controle.jpg" type="image/jpeg">
+                <img src="images/controle.svg" alt="Painel de controle da maquete" loading="lazy" decoding="async" width="800" height="500">
+              </picture>
+            </div>
+          </div>
+
+          <div class="panel-mockup">
+            <div class="panel-header">CENTRAL FERRORAMA</div>
+            <div class="panel-grid">
+              <div class="panel-item active">
+                <span class="panel-led green"></span>
+                <span>Trem — Em operação</span>
+              </div>
+              <div class="panel-item">
+                <span class="panel-led green"></span>
+                <span>Caminhão 1 — Ida</span>
+              </div>
+              <div class="panel-item">
+                <span class="panel-led yellow"></span>
+                <span>Caminhão 2 — Carga</span>
+              </div>
+              <div class="panel-item">
+                <span class="panel-led green"></span>
+                <span>Porto — Embarque</span>
+              </div>
+              <div class="panel-item">
+                <span class="panel-led red"></span>
+                <span>Aeroporto — Standby</span>
+              </div>
+              <div class="panel-item">
+                <span class="panel-led green"></span>
+                <span>Mina — Extraindo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-info">
+          <h3>Como funciona a central</h3>
+          <p>A área de controle concentra um Arduino Mega conectado a todos os subsistemas. Botões físicos e um display LCD 16×2 permitem ligar/desligar cada módulo, ajustar velocidade do trem e acionar sequências automáticas.</p>
+
+          <div class="control-features">
+            <div class="control-feature">
+              <div>
+                <strong>Botões de modo</strong>
+                <p>Manual (cada elemento independente) ou automático (sequência completa mina → porto).</p>
+              </div>
+            </div>
+            <div class="control-feature">
+              <div>
+                <strong>Display LCD</strong>
+                <p>Mostra status em tempo real: posição do trem, estado dos caminhões e alertas.</p>
+              </div>
+            </div>
+            <div class="control-feature">
+              <div>
+                <strong>Alimentação centralizada</strong>
+                <p>Fonte 12 V com barramento de distribuição; fusíveis individuais por circuito.</p>
+              </div>
+            </div>
+            <div class="control-feature">
+              <div>
+                <strong>Comunicação serial</strong>
+                <p>Monitor serial no PC para debug e logs de eventos durante demonstrações.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span>Modo automático — sequência</span>
+              <span class="code-lang">C++</span>
+            </div>
+            <pre><code>void modoAutomatico() {
+  iniciarMina();
+  aguardarCarga();
+  liberarCaminhoes();
+  aguardarTrem();
+  acionarPorto();
+  if (cargaUrgente) acionarAeroporto();
+  exibirStatus("Ciclo completo");
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Modos de Operação</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Modo</th>
+                <th>Descrição</th>
+                <th>Quando usar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Manual</td>
+                <td>Cada botão liga/desliga um subsistema</td>
+                <td>Demonstrações, testes, manutenção</td>
+              </tr>
+              <tr>
+                <td>Automático</td>
+                <td>Sequência completa mina → exportação</td>
+                <td>Apresentações e feiras de ciências</td>
+              </tr>
+              <tr>
+                <td>Emergência</td>
+                <td>Botão vermelho para todos os motores</td>
+                <td>Imprevistos ou superaquecimento</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Arquitetura do Sistema</h3>
+        <div class="architecture-diagram">
+          <div class="arch-layer">
+            <span class="arch-label">Interface</span>
+            <div class="arch-items">
+              <span>Botões</span>
+              <span>LCD 16×2</span>
+              <span>LEDs status</span>
+            </div>
+          </div>
+          <div class="arch-connector">↕</div>
+          <div class="arch-layer arch-main">
+            <span class="arch-label">Controlador</span>
+            <div class="arch-items">
+              <span>Arduino Mega</span>
+            </div>
+          </div>
+          <div class="arch-connector">↕</div>
+          <div class="arch-layer">
+            <span class="arch-label">Atuadores & Sensores</span>
+            <div class="arch-items">
+              <span>Motores DC</span>
+              <span>Servos</span>
+              <span>IR / Reed</span>
+              <span>Esteiras</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Checklist antes de ligar</h3>
+        <ul class="checklist">
+          <li>Trilhos livres de objetos e fios soltos</li>
+          <li>Desvios alinhados na posição correta</li>
+          <li>Fonte 12 V conectada e fusíveis ok</li>
+          <li>Caminhões encaixados na pista guia</li>
+          <li>Código carregado e monitor serial testado</li>
+          <li>Botão de emergência acessível</li>
+        </ul>
+      </div>
+
+      <div class="content-block">
+        <h3 class="block-title">Glossário Rápido</h3>
+        <div class="glossary-grid">
+          <div class="glossary-item"><strong>HO</strong><p>Escala 1:87, padrão em modelismo ferroviário.</p></div>
+          <div class="glossary-item"><strong>L298N</strong><p>Driver que controla motores DC com Arduino.</p></div>
+          <div class="glossary-item"><strong>PWM</strong><p>Modulação de largura de pulso — controla velocidade.</p></div>
+          <div class="glossary-item"><strong>Reed switch</strong><p>Sensor magnético de proximidade.</p></div>
+          <div class="glossary-item"><strong>PLA</strong><p>Plástico biodegradável usado na impressão 3D.</p></div>
+          <div class="glossary-item"><strong>DCC</strong><p>Digital Command Control — controle digital de trens.</p></div>
+        </div>
+      </div>
+
+      <nav class="section-nav" aria-label="Navegação entre seções">
+        <a href="#mina" class="section-nav-btn" data-section="mina">← Mina de Ferro</a>
+        <a href="#contato" class="section-nav-btn section-nav-next" data-section="contato">Contato →</a>
+      </nav>
+    </section>
+
+    <!-- Seção 6: Contato -->
+    <section id="contato" class="section">
+      <div class="section-header">
+        <span class="section-number">06</span>
+        <h2>Contato</h2>
+        <p class="section-desc">Dúvidas sobre o projeto, feira de ciências ou visitação da maquete</p>
+      </div>
+
+      <div id="form-feedback" class="form-feedback" role="status" aria-live="polite" hidden></div>
+
+      <form class="contact-form" id="contactForm" action="https://formsubmit.co/seu-email@escola.edu.br" method="POST" novalidate>
+        <input type="hidden" name="_subject" value="Contato — Site Ferrorama">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_template" value="table">
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+        <input type="hidden" name="_next" id="formNext" value="">
+
+        <div class="form-row">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Seu nome">
+        </div>
+        <div class="form-row">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" required autocomplete="email" placeholder="seu@email.com">
+        </div>
+        <div class="form-row">
+          <label for="mensagem">Mensagem</label>
+          <textarea id="mensagem" name="mensagem" rows="5" required placeholder="Escreva sua dúvida ou comentário sobre o Ferrorama…"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Enviar mensagem</button>
+        <p class="form-note">Altere o e-mail de destino em <code>index.html</code> (campo action do formulário).</p>
+      </form>
+
+      <nav class="section-nav" aria-label="Navegação entre seções">
+        <a href="#controle" class="section-nav-btn" data-section="controle">← Central de controle</a>
+        <a href="#inicio" class="section-nav-btn section-nav-next" data-section="inicio">Voltar ao Início →</a>
+      </nav>
+    </section>
+  </main>
+
+  <button type="button" class="back-to-top" id="backToTop" aria-label="Voltar ao topo" hidden>↑</button>
+
+  <script src="script.js"></script>
+</body>
+</html>

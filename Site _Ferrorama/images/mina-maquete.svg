@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Detalhe da mina na maquete">
+  <rect width="800" height="500" fill="#0a0e14"/>
+  <rect x="100" y="200" width="600" height="180" rx="8" fill="#1a222d" stroke="#2a3444"/>
+  <path d="M200 380 L350 220 L500 380" fill="#2a1810" stroke="#e87722"/>
+  <circle cx="400" cy="260" r="30" fill="#141b24" stroke="#64748b"/>
+  <text x="400" y="440" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="16">Mina maquete  images/mina-maquete.jpg</text>
+</svg>
