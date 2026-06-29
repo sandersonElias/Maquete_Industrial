@@ -1,7 +1,7 @@
 // gateway_bluetooth/index.js
 
 const { CONFIG, logger } = require("./config");
-const { DeviceManager } = require("./devices/index.js");
+const { DeviceManager } = require("./devices");
 const { SimulationManager } = require("./simulation");
 const { connectToBackend, sendGatewayStatus, notifyBackend } = require("./socket");
 const { startHealthServer } = require("./health");
