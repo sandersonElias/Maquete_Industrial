@@ -393,3 +393,40 @@
 {"level":"info","message":"GET /api/ferrovia/status","timestamp":"2026-06-23T16:53:20.486Z"}
 {"level":"info","message":"GET /favicon.ico","timestamp":"2026-06-23T16:53:20.646Z"}
 {"level":"info","message":"GET /api/health","timestamp":"2026-06-23T16:54:24.845Z"}
+{"level":"info","message":"========================================","timestamp":"2026-06-24T13:19:51.258Z"}
+{"level":"info","message":"  SERVIDOR MAQUETE INDUSTRIAL","timestamp":"2026-06-24T13:19:51.260Z"}
+{"level":"info","message":"  Porta: 4000","timestamp":"2026-06-24T13:19:51.261Z"}
+{"level":"info","message":"========================================","timestamp":"2026-06-24T13:19:51.261Z"}
+{"level":"info","message":"PostgreSQL conectado","timestamp":"2026-06-24T13:19:51.432Z"}
+{"level":"info","message":"========================================","timestamp":"2026-06-24T13:20:53.717Z"}
+{"level":"info","message":"  SERVIDOR MAQUETE INDUSTRIAL","timestamp":"2026-06-24T13:20:53.720Z"}
+{"level":"info","message":"  Porta: 4000","timestamp":"2026-06-24T13:20:53.720Z"}
+{"level":"info","message":"========================================","timestamp":"2026-06-24T13:20:53.720Z"}
+{"level":"info","message":"PostgreSQL conectado","timestamp":"2026-06-24T13:20:53.892Z"}
+{"level":"info","message":"Redis conectado","timestamp":"2026-06-24T13:20:53.894Z"}
+{"level":"info","message":"POST /api/auth/login","timestamp":"2026-06-24T13:32:02.342Z"}
+{"level":"info","message":"Socket conectado: 9zyY6m_MhH-I9753AAAB","timestamp":"2026-06-24T13:32:02.575Z"}
+{"level":"info","message":"Cliente conectado: 9zyY6m_MhH-I9753AAAB","timestamp":"2026-06-24T13:32:02.577Z"}
+{"level":"info","message":"Autenticação Socket: 9zyY6m_MhH-I9753AAAB","timestamp":"2026-06-24T13:32:02.608Z"}
+{"level":"info","message":"Dashboard autenticado: admin","timestamp":"2026-06-24T13:32:02.621Z"}
+{"level":"info","message":"Socket desconectado: 9zyY6m_MhH-I9753AAAB","timestamp":"2026-06-24T13:32:49.094Z"}
+{"level":"info","message":"Cliente desconectado: 9zyY6m_MhH-I9753AAAB","timestamp":"2026-06-24T13:32:49.095Z"}
+{"level":"info","message":"POST /api/auth/login","timestamp":"2026-06-24T13:40:20.817Z"}
+{"level":"info","message":"Socket conectado: u5yuF-8_PboWe2vgAAAD","timestamp":"2026-06-24T13:40:21.030Z"}
+{"level":"info","message":"Cliente conectado: u5yuF-8_PboWe2vgAAAD","timestamp":"2026-06-24T13:40:21.032Z"}
+{"level":"info","message":"Autenticação Socket: u5yuF-8_PboWe2vgAAAD","timestamp":"2026-06-24T13:40:21.053Z"}
+{"level":"info","message":"Dashboard autenticado: admin","timestamp":"2026-06-24T13:40:21.058Z"}
+{"level":"info","message":"Socket desconectado: u5yuF-8_PboWe2vgAAAD","timestamp":"2026-06-24T13:41:14.092Z"}
+{"level":"info","message":"Cliente desconectado: u5yuF-8_PboWe2vgAAAD","timestamp":"2026-06-24T13:41:14.093Z"}
+{"level":"info","message":"POST /api/auth/login","timestamp":"2026-06-24T14:05:05.605Z"}
+{"level":"info","message":"Socket conectado: B6BSeRTbV-3mGHtKAAAF","timestamp":"2026-06-24T14:05:05.836Z"}
+{"level":"info","message":"Cliente conectado: B6BSeRTbV-3mGHtKAAAF","timestamp":"2026-06-24T14:05:05.837Z"}
+{"level":"info","message":"Autenticação Socket: B6BSeRTbV-3mGHtKAAAF","timestamp":"2026-06-24T14:05:05.861Z"}
+{"level":"info","message":"Dashboard autenticado: admin","timestamp":"2026-06-24T14:05:05.869Z"}
+{"level":"info","message":"Socket desconectado: B6BSeRTbV-3mGHtKAAAF","timestamp":"2026-06-24T14:07:35.306Z"}
+{"level":"info","message":"Cliente desconectado: B6BSeRTbV-3mGHtKAAAF","timestamp":"2026-06-24T14:07:35.307Z"}
+{"level":"info","message":"POST /api/auth/login","timestamp":"2026-06-24T14:22:01.216Z"}
+{"level":"info","message":"Socket conectado: x6mYp3h9nWNQTPH_AAAH","timestamp":"2026-06-24T14:22:01.430Z"}
+{"level":"info","message":"Cliente conectado: x6mYp3h9nWNQTPH_AAAH","timestamp":"2026-06-24T14:22:01.431Z"}
+{"level":"info","message":"Autenticação Socket: x6mYp3h9nWNQTPH_AAAH","timestamp":"2026-06-24T14:22:01.494Z"}
+{"level":"info","message":"Dashboard autenticado: admin","timestamp":"2026-06-24T14:22:01.505Z"}
