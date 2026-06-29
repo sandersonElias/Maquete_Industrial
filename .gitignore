@@ -1,0 +1,8 @@
+# Runtime logs
+*.log
+
+# MiMoCode internal
+.mimocode/
+
+# Compose docs
+docs/compose/
