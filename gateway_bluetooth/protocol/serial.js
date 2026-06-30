@@ -17,11 +17,25 @@ function encodeSwitchCommand(switchId, action, value) {
 }
 
 function encodeTruckCommand(action) {
-  const validActions = ["F", "B", "S", "L", "R", "C", "U", "D", "X"];
-  if (!validActions.includes(action)) {
-    return null;
+  // Comandos simples (legado)
+  const simpleActions = ["F", "B", "S", "L", "R", "C", "U", "D", "X"];
+  if (simpleActions.includes(action)) {
+    return action;
   }
-  return action;
+
+  // Comandos compostos (motor + direção)
+  const compoundActions = ["FL", "FR", "BL", "BR"];
+  if (compoundActions.includes(action)) {
+    return action;
+  }
+
+  // Comandos de LED
+  const ledActions = ["HH", "TI", "TO", "TX"];
+  if (ledActions.includes(action)) {
+    return action;
+  }
+
+  return null;
 }
 
 module.exports = { encodeSwitchCommand, encodeTruckCommand };

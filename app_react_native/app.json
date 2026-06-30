@@ -2,10 +2,10 @@
   "expo": {
     "name": "Maquete Truck Telemetry",
     "slug": "maquete-truck-telemetry",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "orientation": "landscape",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "android": {
       "package": "com.seuusuario.maquetetruck",
       "permissions": [
@@ -21,10 +21,14 @@
     "ios": {
       "bundleIdentifier": "com.seuusuario.maquetetruck"
     },
+    "plugins": [
+      "expo-dev-client"
+    ],
     "extra": {
       "eas": {
-        "projectId": "311033c2-f012-4d7c-9698-1ea73377d29b"
+        "projectId": "5c41f07b-a775-4ad3-bd99-a99fd6aa45c6"
       }
-    }
+    },
+    "owner": "sandersoelias"
   }
 }

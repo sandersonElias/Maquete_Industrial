@@ -3,7 +3,15 @@ function isValidSwitchAction(action) {
 }
 
 function isValidTruckCommand(command) {
-  return ["F", "B", "S", "L", "R", "C", "U", "D", "X"].includes(command);
+  const valid = [
+    // Comandos simples (legado)
+    "F", "B", "S", "L", "R", "C", "U", "D", "X",
+    // Comandos compostos (motor + direção)
+    "FL", "FR", "BL", "BR",
+    // Comandos de LED
+    "HH", "TI", "TO", "TX"
+  ];
+  return valid.includes(command);
 }
 
 module.exports = {
