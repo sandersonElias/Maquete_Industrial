@@ -86,7 +86,12 @@ app.get("/api/health", healthController.getHealth);
 // API Routes
 // =========================
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+}), authRoutes);
 
 app.use("/api/ferrovia", ferroviaRoutes);
 
@@ -128,24 +133,8 @@ app.use((err, req, res, next) => {
 });
 
 // =========================
-// Socket.IO
+// Socket.IO (handlers em sockets/index.js via setupSockets)
 // =========================
-
-io.on("connection", (socket) => {
-  logger.info(`Socket conectado: ${socket.id}`);
-
-  socket.on("authenticate", (data) => {
-    logger.info(`Autenticação Socket: ${socket.id}`);
-
-    socket.emit("authenticated", {
-      success: true,
-    });
-  });
-
-  socket.on("disconnect", () => {
-    logger.info(`Socket desconectado: ${socket.id}`);
-  });
-});
 
 // =========================
 // Exportações

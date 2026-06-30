@@ -1,5 +1,5 @@
 const { app, server, io } = require("./app");
-const { PORT, NODE_ENV } = require("./config");
+const { PORT } = require("./config");
 const logger = require("./config/logger");
 const pool = require("./config/db");
 const redisClient = require("./config/redis");
@@ -31,15 +31,6 @@ async function testConnections() {
 }
 
 testConnections();
-
-if (NODE_ENV !== "production") {
-  setInterval(() => {
-    io.emit("teste", {
-      mensagem: "Socket funcionando",
-      horario: new Date().toISOString(),
-    });
-  }, 5000);
-}
 
 // Inicialização do Servidor
 server.listen(PORT, () => {
