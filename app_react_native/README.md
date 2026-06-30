@@ -1,120 +1,127 @@
-# App React Native
+# App React Native - Controle RC Bluetooth
 
-Aplicativo mobile para telemetria e controle remoto do caminhão basculante.
+Aplicativo mobile para controle remoto do caminhão basculante via Bluetooth (HC-05).
 
 ## Stack
 
 - Expo SDK 49
 - React Native 0.72
-- Axios (HTTP)
-- Socket.IO Client (tempo real)
-- AsyncStorage (persistência local)
-- NetInfo (detecção de rede)
-- Bluetooth Classic (fallback local)
+- react-native-bluetooth-classic (conexão BT direta)
+- react-native-gesture-handler (DPad com gestos)
 
 ## Estrutura
 
 ```
 app_react_native/
-├── App.js           # Código completo (tudo em um arquivo, ~817 linhas)
-├── app.json         # Configuração Expo
-├── package.json
-└── .expo/
+├── App.js                          # Entry point
+├── app.json                        # Configuração Expo
+├── eas.json                        # Configuração EAS Build
+├── src/
+│   ├── bluetooth/
+│   │   ├── BluetoothProvider.jsx   # Context de Bluetooth (conexão, envio)
+│   │   └── useBluetooth.js        # Hook para acessar o context
+│   ├── components/
+│   │   ├── DPad.jsx                # Controle direcional com gestos
+│   │   ├── BucketControls.jsx      # Botões subir/descer caçamba
+│   │   ├── LightingControls.jsx    # Faróis e setas
+│   │   ├── CommandMonitor.jsx      # Exibe último comando enviado
+│   │   ├── DevicePickerModal.jsx   # Modal de seleção de dispositivo BT
+│   │   └── Header.jsx             # Header com status de conexão
+│   ├── screens/
+│   │   └── ControlScreen.jsx       # Tela principal de controle
+│   ├── constants/
+│   │   └── theme.js                # Paleta de cores e constantes
+│   └── protocol/
+│       └── commands.js             # Mapeamento de comandos e encoding
+└── package.json
+```
+
+## Como Rodar
+
+### Pré-requisitos
+- Android Studio (para build local)
+- Celular com depuração USB ativada
+- HC-05 pareado no celular
+
+### Build e instalação
+
+```bash
+npm install
+npx expo prebuild --clean    # Gera pasta android/
+npx expo run:android          # Compila e instala no celular
+```
+
+### Para cada novo build após mudanças no código JS:
+
+```bash
+npx expo run:android          # Hot reload automático
+```
+
+### Para mudanças nativas (permissões, plugins):
+
+```bash
+npx expo prebuild --clean
+npx expo run:android
 ```
 
 ## Comandos
 
-```bash
-npm install              # Instalar dependências
-npx expo start           # Iniciar Expo
-npx expo start --android # Rodar no Android
-npx expo start --ios     # Rodar no iOS
-```
+### Movimentação (DPad com gestos)
 
-## Configuração
+O DPad usa PanResponder para detectar arrastos. Comandos são enviados durante o gesto e `SC` (parada total) ao soltar.
 
-Edite as constantes em `App.js` (linhas 43-44):
+| Gesto | Comando | Ação |
+|-------|---------|------|
+| Arrastar para cima | `F` | Frente |
+| Arrastar para baixo | `B` | Ré |
+| Arrastar para esquerda | `L` | Esquerda |
+| Arrastar para direita | `R` | Direita |
+| Cima + esquerda | `FL` | Frente + Esquerda |
+| Cima + direita | `FR` | Frente + Direita |
+| Baixo + esquerda | `BL` | Ré + Esquerda |
+| Baixo + direita | `BR` | Ré + Direita |
+| Soltar | `SC` | Parar motor + centro |
 
-```javascript
-const API_BASE_URL = "http://192.168.1.100:3000/api"; // IP do backend
-const WS_URL = "http://192.168.1.100:3000";            // IP do backend
-const TRUCK_ID = "T01";                                 // ID do caminhão
-```
-
-## Funcionalidades
-
-### Autenticação
-- Login com usuário/senha via `POST /api/auth/login`
-- JWT armazenado em `AsyncStorage`
-- Sessão persistente (verifica token ao abrir o app)
-- Logout limpa token e desconecta Socket
-
-### Telemetria
-- Envia dados a cada 1 segundo via `POST /api/trucks/:id/telemetry`
-- Dados enviados: posição (delta X/Y), velocidade, carga, bateria, heading
-- Posição acumulada localmente (delta → posição absoluta)
-- Toggle para ligar/desligar telemetria
-
-### Controle RC
+### Caçamba
 
 | Botão | Comando | Ação |
 |-------|---------|------|
-| ▲ | `F` | Frente |
-| ▼ | `B` | Ré |
-| STOP | `S` | Parar motor |
-| ◀ | `L` | Virar esquerda |
-| ▶ | `R` | Virar direita |
-| SUBIR | `U` | Levantar caçamba |
-| DESCER | `D` | Abaixar caçamba |
+| ▲ SUBIR | `U` | Levantar caçamba (0° → 90°) |
+| ▼ DESCER | `D` | Abaixar caçamba (90° → 0°) |
+| Soltar | `X` | Parar caçamba |
 
-- Botões são `onPressIn`/`onPressOut` (press-and-hold)
-- Comando enviado via `POST /api/trucks/:id/command`
-- Fallback para Bluetooth local se API falhar
+### Iluminação
 
-### Buffer Offline
-- Quando sem conexão, telemetria é armazenada em buffer (máximo 100 itens)
-- Ao reconectar, envia buffer em lote via `flushOfflineBuffer()`
-- Se envio falhar, recoloca no buffer
+| Botão | Comando | Ação |
+|-------|---------|------|
+| FARÓIS | `HH` | Toggle faróis (ligar/desligar) |
+| ◀ | `TI` | Seta esquerda ligar |
+| ■ | `TX` | Desligar setas |
+| ▶ | `TO` | Seta direita ligar |
 
-### Bluetooth Fallback
-- Conexão direta com HC-05 quando não há Wi-Fi/4G
-- Usa `react-native-bluetooth-classic`
-- Procura dispositivos pareados com nome "TRUCK" ou "HC-05"
-- Permissões Android 12+: `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`
-- Comandos enviados como caracteres únicos (F/B/S/L/R/C/U/D/X)
+## Throttle (Controle de Fluxo)
 
-### Socket.IO
-- Conecta ao backend para receber comandos remotos do operador
-- Evento `command`: executa comando recebido do dashboard
-- Status de conexão exibido na header (API Online/Offline)
+Para evitar overflow do buffer serial do Arduino (64 bytes), o app implementa throttle em duas camadas:
 
-## Tela de Login
+1. **DPad**: 100ms entre comandos do mesmo tipo
+2. **BluetoothProvider**: 80ms entre envios
 
-- Card centralizado com tema escuro
-- Campos: Usuário, Senha
-- Botão "ENTRAR"
-- Exibe IP do servidor como hint
+Isso garante que o Arduino processe cada comando antes de receber o próximo.
 
-## Tela Principal
+## Pinagem Arduino
 
-### Header
-- ID do truck (T01)
-- Status de conexão: API Online/Offline + BT Online/Offline
-- Botão "SAIR"
+| Componente | Pino | Função |
+|------------|------|--------|
+| Servo Direção | D5 | 45°-135° |
+| Servo Caçamba | D6 | 0°-90° |
+| Servo Motor | D7 | Rotação contínua (0°=ré, 90°=parado, 180°=frente) |
+| Farol Esquerdo | D2 | LED |
+| Farol Direito | D3 | LED |
+| Seta Esquerda | D8 | LED |
+| Seta Direita | D9 | LED |
+| HC-05 TX→RX | 0/1 | Serial padrão 9600 baud |
 
-### Painel de Telemetria
-- Grid de 6 valores: POS X, POS Y, VELOCIDADE, BATERIA, CARGA, BUFFER
-- Toggle ON/OFF da telemetria
-
-### Controles
-- **Tração**: Botões ▲ (frente) e ▼ (ré) com estado "FRENTE"/"RÉ"/"STOP"
-- **Centro**: Controle da caçamba (SUBIR/DESCER), botão STOP, monitor de último comando
-- **Direção**: Botões ◀ (esquerda) e ▶ (direita) com estado "ESQ"/"DIR"/"CENTRO"
-
-### Painel Bluetooth
-- Botão CONECTAR/DESCONECTAR BT
-- Indicador de estado
-- Texto explicativo: "Use quando sem conexão Wi-Fi/4G"
+**Importante**: Desconecte o HC-05 dos pinos 0/1 ao carregar o sketch via Arduino IDE.
 
 ## Paleta de Cores
 
@@ -131,16 +138,11 @@ const TRUCK_ID = "T01";                                 // ID do caminhão
 | `C.stop` | `#FF2D55` | Botão stop |
 | `C.bucket` | `#A855F7` | Controle caçamba |
 
-## APIs Chamadas
+## Diagnóstico
 
-| Método | Endpoint | Quando |
-|--------|----------|--------|
-| POST | `/api/auth/login` | Login |
-| POST | `/api/trucks/:id/telemetry` | A cada 1s |
-| POST | `/api/trucks/:id/command` | Ao pressionar botão |
+Para verificar se os comandos estão chegando ao Arduino:
 
-## Requisitos
-
-- Android 6.0+ (Bluetooth permissões)
-- iOS 13+ (Expo)
-- Rede local com acesso ao backend (mesmo Wi-Fi)
+1. Conecte o Arduino ao PC via USB
+2. Abra o Serial Monitor (Arduino IDE) a 9600 baud
+3. Envie comandos pelo app
+4. Deve aparecer: `RX: <comando>` e `ACK|TRUCK|<comando>|OK`

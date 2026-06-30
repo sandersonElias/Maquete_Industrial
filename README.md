@@ -87,14 +87,16 @@ cp .env.exemplo .env   # REACT_APP_API_URL=http://localhost:4000
 npm start               # Porta 3000
 ```
 
-### 5. App React Native
+### 5. App React Native (controle BT do caminhão)
 
 ```bash
 cd app_react_native
 npm install
-# Edite API_BASE_URL e WS_URL em App.js para o IP do servidor
-npx expo start
+npx expo prebuild --clean   # Gera pasta android/
+npx expo run:android         # Compila e instala no celular
 ```
+
+> O app se conecta diretamente ao HC-05 via Bluetooth. Pareie o celular com o HC-05 antes de abrir o app.
 
 ### 6. Arduino
 
@@ -167,17 +169,38 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 
 ## Comandos do Caminhão
 
+### Movimentação (simples ou compostos)
+
+| Comando | Ação                |
+| ------- | ------------------- |
+| `F`     | Frente              |
+| `B`     | Ré                  |
+| `S`     | Parar motor         |
+| `L`     | Virar esquerda      |
+| `R`     | Virar direita       |
+| `C`     | Centro (direção)    |
+| `FL`    | Frente + Esquerda   |
+| `FR`    | Frente + Direita    |
+| `BL`    | Ré + Esquerda       |
+| `BR`    | Ré + Direita        |
+| `SC`    | Parada total (motor + direção) |
+
+### Caçamba
+
 | Comando | Ação             |
 | ------- | ---------------- |
-| `F`     | Frente           |
-| `B`     | Ré               |
-| `S`     | Parar            |
-| `L`     | Virar esquerda   |
-| `R`     | Virar direita    |
-| `C`     | Centro (direção) |
 | `U`     | Subir caçamba    |
 | `D`     | Descer caçamba   |
 | `X`     | Parar caçamba    |
+
+### Iluminação
+
+| Comando | Ação                  |
+| ------- | --------------------- |
+| `HH`    | Toggle faróis         |
+| `TI`    | Seta esquerda ligar   |
+| `TO`    | Seta direita ligar    |
+| `TX`    | Desligar setas        |
 
 ## Pinagem Arduino
 
@@ -195,14 +218,18 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | VCC Servos            | Fonte 5V externa     |
 | VCC HC-05             | 5V                   |
 
-### Caminhão Basculante (2 Servos + Motor DC)
+### Caminhão Basculante (3 Servos + 4 LEDs)
 
-| Componente    | Pino |
-| ------------- | ---- |
-| Servo Direção | D5   |
-| Servo Caçamba | D6   |
-| Motor DC IN1  | D7   |
-| Motor DC IN2  | D8   |
+| Componente      | Pino | Função                        |
+| --------------- | ---- | ----------------------------- |
+| Servo Direção   | D5   | Controle de direção (45°-135°) |
+| Servo Caçamba   | D6   | Subir/descer (0°-90°)         |
+| Servo Motor     | D7   | Rotação contínua (0°-180°)    |
+| Farol Esquerdo  | D2   | LED farol esquerdo            |
+| Farol Direito   | D3   | LED farol direito             |
+| Seta Esquerda   | D8   | LED seta esquerda             |
+| Seta Direita    | D9   | LED seta direita              |
+| HC-05 TX→RX     | 0/1  | Serial padrão (9600 baud)     |
 
 ## Stack Tecnológica
 
