@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import toast from "react-hot-toast";
@@ -18,50 +18,47 @@ export function SocketProvider({ children }) {
       autoConnect: true,
     });
 
-    newSocket.on("connect", () => {
-      console.log("Socket conectado:", newSocket.id);
+    const onConnect = () => {
       setConnected(true);
       newSocket.emit("authenticate", { token });
-    });
+    };
 
-    newSocket.on("connect_error", (err) => {
-      console.error(err);
+    const onConnectError = () => {
       toast.error("Erro ao conectar ao servidor");
-    });
+    };
 
-    newSocket.on("authenticated", (data) => {
-      console.log("Autenticado:", data);
+    const onAuthenticated = (data) => {
       if (data.success) {
         toast.success("Conectado em tempo real");
       }
-    });
+    };
 
-    newSocket.on("switch:update", (data) => {
-      toast.success(`Switch ${data.switchId}: ${data.state}`);
-    });
-
-    newSocket.on("truck:telemetry", (data) => {
-      console.log("Telemetria recebida:", data);
-    });
-
-    newSocket.on("gateway:status", (data) => {
+    const onGatewayStatus = (data) => {
       if (!data.data.connected) {
         toast.error(`Gateway ${data.gatewayId} desconectado!`);
       }
-    });
+    };
 
-    newSocket.on("disconnect", () => {
+    const onDisconnect = () => {
       setConnected(false);
-      toast.error("Desconectado do servidor");
-    });
+    };
 
-    newSocket.on("teste", (data) => {
-      console.log("EVENTO TESTE:", data);
-    });
+    newSocket.on("connect", onConnect);
+    newSocket.on("connect_error", onConnectError);
+    newSocket.on("authenticated", onAuthenticated);
+    newSocket.on("gateway:status", onGatewayStatus);
+    newSocket.on("disconnect", onDisconnect);
 
     setSocket(newSocket);
 
-    return () => newSocket.close();
+    return () => {
+      newSocket.off("connect", onConnect);
+      newSocket.off("connect_error", onConnectError);
+      newSocket.off("authenticated", onAuthenticated);
+      newSocket.off("gateway:status", onGatewayStatus);
+      newSocket.off("disconnect", onDisconnect);
+      newSocket.close();
+    };
   }, [user]);
 
   return (

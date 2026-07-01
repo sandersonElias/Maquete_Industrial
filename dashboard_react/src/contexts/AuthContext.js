@@ -13,7 +13,8 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem("token");
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      setUser(JSON.parse(localStorage.getItem("user") || "{}"));
+      const stored = localStorage.getItem("user");
+      setUser(stored ? JSON.parse(stored) : null);
     }
     setLoading(false);
   }, []);
