@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Train, Truck, Ship, Plane, AlertTriangle, Activity, Wifi, WifiOff } from 'lucide-react';
 import axios from 'axios';
 import { useSocket } from '../contexts/SocketContext';
@@ -34,6 +35,7 @@ const StatusCard = ({ title, icon: Icon, color, status, count, alerts, onClick }
 
 export default function Overview() {
   const { socket, connected } = useSocket();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     switches: { online: 0, alerts: 0 },
     trucks: { online: 0, alerts: 0 },
@@ -68,12 +70,6 @@ export default function Overview() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const navigateTo = (path) => {
-    window.location.hash = '';
-    window.history.pushState({}, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   return (
@@ -129,7 +125,7 @@ export default function Overview() {
               status="online"
               count={`${stats.switches.online}/4 switches`}
               alerts={stats.switches.alerts}
-              onClick={() => navigateTo('/ferrovia')}
+              onClick={() => navigate('/ferrovia')}
             />
             <StatusCard
               title="Mina"
@@ -138,7 +134,7 @@ export default function Overview() {
               status="online"
               count={`${stats.trucks.online} caminhão(ões)`}
               alerts={stats.trucks.alerts}
-              onClick={() => navigateTo('/mina')}
+              onClick={() => navigate('/mina')}
             />
             <StatusCard
               title="Porto"
@@ -147,7 +143,7 @@ export default function Overview() {
               status="online"
               count={`${stats.ships.online} navio(s)`}
               alerts={stats.ships.alerts}
-              onClick={() => navigateTo('/porto')}
+              onClick={() => navigate('/porto')}
             />
             <StatusCard
               title="Aeroporto"
@@ -156,7 +152,7 @@ export default function Overview() {
               status="online"
               count={`${stats.airplanes.online} aeronave(s)`}
               alerts={stats.airplanes.alerts}
-              onClick={() => navigateTo('/aeroporto')}
+              onClick={() => navigate('/aeroporto')}
             />
           </>
         )}

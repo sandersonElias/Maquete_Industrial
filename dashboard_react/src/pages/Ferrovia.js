@@ -110,15 +110,15 @@ const RailwayMap = ({ switches }) => {
           <line x1="30" y1="100" x2="770" y2="100" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8" />
 
           {/* Trilhos laterais dos switches */}
-          <line x1="180" y1="100" x2="150" y2="60" stroke="#2D3748" strokeWidth="3" />
-          <line x1="180" y1="100" x2="150" y2="140" stroke="#2D3748" strokeWidth="3" />
-          <line x1="380" y1="100" x2="350" y2="60" stroke="#2D3748" strokeWidth="3" />
-          <line x1="380" y1="100" x2="350" y2="140" stroke="#2D3748" strokeWidth="3" />
-          <line x1="580" y1="100" x2="550" y2="60" stroke="#2D3748" strokeWidth="3" />
-          <line x1="580" y1="100" x2="550" y2="140" stroke="#2D3748" strokeWidth="3" />
+          {[150, 350, 550, 720].map((sx, i) => (
+            <g key={`track-${i}`}>
+              <line x1={sx + 20} y1={100} x2={sx} y2={60} stroke="#2D3748" strokeWidth="3" />
+              <line x1={sx + 20} y1={100} x2={sx} y2={140} stroke="#2D3748" strokeWidth="3" />
+            </g>
+          ))}
 
           {/* Switches com glow */}
-          {[200, 400, 600].map((cx, i) => {
+          {[170, 370, 570, 740].map((cx, i) => {
             const sw = switches[i];
             const color = getSwitchColor(sw);
             return (
@@ -136,19 +136,6 @@ const RailwayMap = ({ switches }) => {
               </g>
             );
           })}
-
-          {/* Switch 4 */}
-          {switches[3] && (
-            <g>
-              {switches[3].is_moving && (
-                <circle cx={750} cy={100} r="16" fill={getSwitchColor(switches[3])} opacity="0.2">
-                  <animate attributeName="r" values="12;20;12" dur="1s" repeatCount="indefinite" />
-                </circle>
-              )}
-              <circle cx={750} cy={100} r="8" fill={getSwitchColor(switches[3])} stroke="#1C2333" strokeWidth="2" />
-              <text x={750} y={78} textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="600">SW4</text>
-            </g>
-          )}
 
           {/* Locomotiva */}
           <rect x="280" y="88" width="40" height="24" rx="6" fill="#FFB800" opacity="0.9" />
