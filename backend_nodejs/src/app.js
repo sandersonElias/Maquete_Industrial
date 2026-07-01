@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const { v4: uuidv4 } = require("uuid");
 
 const { CORS_ORIGIN } = require("./config");
 const logger = require("./config/logger");
@@ -32,6 +33,7 @@ const locomotiveRoutes = require("./routes/locomotiveRoutes")(io);
 const portAirportRoutes = require("./routes/portAirportRoutes");
 const reportRoutes = require("./routes/reportRoutes")(io);
 const gatewayRoutes = require("./routes/gatewayRoutes")(io);
+const alertRoutes = require("./routes/alertRoutes")(io);
 
 // =========================
 // Middlewares
@@ -68,11 +70,14 @@ app.use(
 );
 
 // =========================
-// Logs
+// Correlation ID + Logs
 // =========================
 
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.originalUrl}`);
+  const correlationId = req.headers["x-correlation-id"] || uuidv4();
+  req.correlationId = correlationId;
+  res.setHeader("X-Correlation-Id", correlationId);
+  logger.info(`${req.method} ${req.originalUrl}`, { correlationId });
   next();
 });
 
@@ -106,6 +111,8 @@ app.use("/api/airport", portAirportRoutes);
 app.use("/api/reports", reportRoutes);
 
 app.use("/api/gateway", gatewayRoutes);
+
+app.use("/api/alerts", alertRoutes);
 
 // =========================
 // 404

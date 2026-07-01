@@ -8,26 +8,38 @@ async function getSwitchStatus() {
 }
 
 async function handleSwitchCommand(switchId, action, angle, userId) {
-  const cmdResult = await pool.query(
-    `INSERT INTO commands (switch_id, command_type, action, angle, issued_by, status)
-     VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`,
-    [switchId, action ? "SET" : "ANGLE", action, angle, userId],
-  );
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  const command = cmdResult.rows[0];
-  const targetAngle =
-    angle !== undefined
-      ? angle
-      : action === "LEFT"
-        ? 0
-        : action === "RIGHT"
-          ? 180
-          : 90;
+    const cmdResult = await client.query(
+      `INSERT INTO commands (switch_id, command_type, action, angle, issued_by, status)
+       VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`,
+      [switchId, action ? "SET" : "ANGLE", action, angle, userId],
+    );
 
-  await pool.query(
-    "UPDATE switches SET target_angle = $1, is_moving = TRUE, last_command_at = NOW() WHERE switch_id = $2",
-    [targetAngle, switchId],
-  );
+    const command = cmdResult.rows[0];
+    const targetAngle =
+      angle !== undefined
+        ? angle
+        : action === "LEFT"
+          ? 0
+          : action === "RIGHT"
+            ? 180
+            : 90;
+
+    await client.query(
+      "UPDATE switches SET target_angle = $1, is_moving = TRUE, last_command_at = NOW() WHERE switch_id = $2",
+      [targetAngle, switchId],
+    );
+
+    await client.query("COMMIT");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
 
   await setRedisJson(`switch:${switchId}:pending`, 30, {
     commandId: command.id,
@@ -41,7 +53,7 @@ async function handleSwitchCommand(switchId, action, angle, userId) {
 
 async function updateSwitchStatus(switchId, state) {
   await pool.query(
-    "UPDATE switches SET current_state = $1, last_command_at = NOW() WHERE switch_id = $2",
+    "UPDATE switches SET current_state = $1, is_moving = FALSE, last_command_at = NOW() WHERE switch_id = $2",
     [state, switchId],
   );
   await pool.query(
@@ -78,6 +90,12 @@ async function markTimedOutCommands() {
      RETURNING id, switch_id`,
     [COMMAND_TIMEOUT_MS],
   );
+  for (const row of result.rows) {
+    await pool.query(
+      "UPDATE switches SET is_moving = FALSE WHERE switch_id = $1",
+      [row.switch_id],
+    );
+  }
   return result.rows;
 }
 

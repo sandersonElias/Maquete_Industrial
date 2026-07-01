@@ -5,12 +5,15 @@ module.exports = (io) => {
     io,
   );
   const authenticateToken = require("../middlewares/authenticateToken");
+  const validate = require("../middlewares/validate");
+  const { locomotivePositionSchema } = require("../utils/validation");
 
   const router = express.Router();
 
   router.post(
     "/position",
     authenticateToken,
+    validate(locomotivePositionSchema),
     locomotiveController.postLocomotivePosition,
   );
 

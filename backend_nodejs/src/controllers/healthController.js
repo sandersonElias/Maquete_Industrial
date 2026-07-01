@@ -1,30 +1,40 @@
 const pool = require("../config/db");
 const redisClient = require("../config/redis");
-const { PORT } = require("../config");
+const { PORT, NODE_ENV } = require("../config");
+const pkg = require("../../package.json");
 
 async function getHealth(req, res) {
   const health = {
     status: "ok",
+    version: pkg.version,
+    environment: NODE_ENV,
+    uptime: Math.floor(process.uptime()),
     port: Number(PORT),
-    postgres: false,
-    redis: redisClient.isOpen,
+    services: {
+      postgres: { status: "unknown" },
+      redis: { status: redisClient.isOpen ? "connected" : "disconnected" },
+    },
     timestamp: new Date().toISOString(),
   };
 
   try {
     await pool.query("SELECT 1");
-    health.postgres = true;
+    health.services.postgres.status = "connected";
   } catch (e) {
     health.status = "degraded";
-    health.postgresError = e.message;
+    health.services.postgres.status = "error";
+    health.services.postgres.error = e.message;
   }
 
   try {
-    if (redisClient.isOpen) await redisClient.ping();
+    if (redisClient.isOpen) {
+      await redisClient.ping();
+      health.services.redis.status = "connected";
+    }
   } catch (e) {
     health.status = "degraded";
-    health.redis = false;
-    health.redisError = e.message;
+    health.services.redis.status = "error";
+    health.services.redis.error = e.message;
   }
 
   res.status(health.status === "ok" ? 200 : 503).json(health);

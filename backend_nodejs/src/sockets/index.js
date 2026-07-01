@@ -13,6 +13,14 @@ module.exports = (io) => {
     logger.info(`Cliente conectado: ${socket.id}`);
 
     socket.on("authenticate", (data) => {
+      if (!data || !data.token) {
+        socket.emit("authenticated", {
+          success: false,
+          error: "Token não fornecido",
+        });
+        return;
+      }
+
       try {
         const decoded = jwt.verify(data.token, JWT_SECRET);
         socket.userId = decoded.id;
@@ -22,14 +30,20 @@ module.exports = (io) => {
         socket.emit("authenticated", { success: true });
         logger.info(`Dashboard autenticado: ${decoded.username}`);
       } catch (e) {
-        socket.emit("authenticated", {
-          success: false,
-          error: "Token inválido",
-        });
+        if (e.name === "TokenExpiredError") {
+          socket.emit("authenticated", { success: false, error: "Token expirado" });
+        } else {
+          socket.emit("authenticated", { success: false, error: "Token inválido" });
+        }
       }
     });
 
     socket.on("gateway:register", (data) => {
+      if (!data || !data.apiKey) {
+        socket.emit("gateway:error", { error: "API Key não fornecida" });
+        return;
+      }
+
       if (data.apiKey !== GATEWAY_API_KEY) {
         socket.emit("gateway:error", { error: "API Key inválida" });
         return;
@@ -42,11 +56,11 @@ module.exports = (io) => {
     });
 
     socket.on("gateway:data", (data) => {
-      handleGatewayData(data, io);
+      handleGatewayData(data, io, socket);
     });
 
     socket.on("device:data", (data) => {
-      handleGatewayData(data, io);
+      handleGatewayData(data, io, socket);
     });
 
     socket.on("disconnect", () => {
@@ -57,7 +71,12 @@ module.exports = (io) => {
   });
 };
 
-async function handleGatewayData(data, io) {
+async function handleGatewayData(data, io, socket) {
+  if (!socket.gatewayId) {
+    logger.warn(`Dados ignorados de socket não registrado: ${socket.id}`);
+    return;
+  }
+
   try {
     const { deviceName, data: rawData } = data;
 
@@ -66,10 +85,20 @@ async function handleGatewayData(data, io) {
       return;
     }
 
+    const parts = rawData.split("|");
+    if (parts.length < 3) {
+      logger.warn(`Protocolo invalido: ${rawData}`);
+      return;
+    }
+
     if (rawData.startsWith("ACK|SWITCH")) {
-      const parts = rawData.split("|");
       const switchId = parseInt(parts[2]);
       const state = parts[3];
+
+      if (isNaN(switchId) || switchId < 1 || switchId > 4) {
+        logger.warn(`switchId invalido no ACK: ${parts[2]}`);
+        return;
+      }
 
       await ferroviaService.updateSwitchStatus(switchId, state);
 
@@ -81,10 +110,14 @@ async function handleGatewayData(data, io) {
     }
 
     if (rawData.startsWith("STATUS|SWITCH")) {
-      const parts = rawData.split("|");
       const switchId = parseInt(parts[2]);
       const angle = parseInt(parts[3]);
       const state = parts[4];
+
+      if (isNaN(switchId) || switchId < 1 || switchId > 4) {
+        logger.warn(`switchId invalido no STATUS: ${parts[2]}`);
+        return;
+      }
 
       await ferroviaService.updateSwitchAngleAndState(switchId, angle, state);
 
