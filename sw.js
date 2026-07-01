@@ -1,4 +1,4 @@
-const CACHE = 'ferrorama-v1';
+const CACHE = 'ferrorama-v2';
 const ASSETS = [
   './',
   './index.html',
