@@ -1,8 +1,8 @@
 require("dotenv").config();
 
 const defaultDevices = [
-  { name: "FERROVIA_SW", mac: "98:D3:31:FD:15:F5", type: "ferrovia" },
-  { name: "TRUCK_T01", mac: "98:D3:31:FD:15:A1", type: "truck" },
+  { name: "FERROVIA_SW", mac: process.env.BT_DEVICE_FERROVIA || "98:D3:31:FD:15:F5", type: "ferrovia" },
+  { name: "TRUCK_T01", mac: process.env.BT_DEVICE_TRUCK01 || "98:D3:31:FD:15:A1", type: "truck" },
 ];
 
 let devices = defaultDevices;
@@ -19,15 +19,15 @@ const CONFIG = {
   backendApiUrl: process.env.BACKEND_API_URL || "http://localhost:4000/api",
   apiKey: process.env.GATEWAY_API_KEY || "default_key",
   gatewayId: process.env.GATEWAY_ID || "gateway-rpi-01",
-  reconnectInterval: parseInt(process.env.RECONNECT_INTERVAL) || 5000,
-  heartbeatInterval: parseInt(process.env.HEARTBEAT_INTERVAL) || 3000,
-  serialBaud: parseInt(process.env.SERIAL_BAUD) || 9600,
+  reconnectInterval: parseInt(process.env.RECONNECT_INTERVAL, 10) || 5000,
+  heartbeatInterval: parseInt(process.env.HEARTBEAT_INTERVAL, 10) || 3000,
+  serialBaud: parseInt(process.env.SERIAL_BAUD, 10) || 9600,
   simulationMode: process.env.SIMULATION_MODE === "true",
-  healthPort: parseInt(process.env.HEALTH_PORT) || 3001,
+  healthPort: parseInt(process.env.HEALTH_PORT, 10) || 3001,
   devices,
   simulation: {
-    ferroviaInterval: parseInt(process.env.SIM_FERROVIA_INTERVAL) || 10000,
-    truckInterval: parseInt(process.env.SIM_TRUCK_INTERVAL) || 2000,
+    ferroviaInterval: parseInt(process.env.SIM_FERROVIA_INTERVAL, 10) || 10000,
+    truckInterval: parseInt(process.env.SIM_TRUCK_INTERVAL, 10) || 2000,
   },
 };
 

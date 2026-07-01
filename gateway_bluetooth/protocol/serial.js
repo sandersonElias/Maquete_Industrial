@@ -1,10 +1,12 @@
 // gateway_bluetooth/protocol/serial.js
 
 function encodeSwitchCommand(switchId, action, value) {
-  if (action === "ANGLE" && value !== undefined) {
-    return `CMD|SWITCH|${switchId}|ANGLE|${value}`;
+  if (action === "ANGLE") {
+    const angle = parseInt(value, 10);
+    if (isNaN(angle) || angle < 0 || angle > 180) return null;
+    return `CMD|SWITCH|${switchId}|ANGLE|${angle}`;
   }
-  if (action === "SET" && value) {
+  if (action === "SET" && value !== undefined && value !== null) {
     return `CMD|SWITCH|${switchId}|SET|${value}`;
   }
   if (action === "STATUS") {

@@ -127,7 +127,23 @@ class BluetoothDeviceBase {
     try {
       const ports = await SerialPort.list();
       const rfcommPorts = ports.filter((p) => p.path.includes("rfcomm"));
-      return rfcommPorts.length > 0 ? rfcommPorts[0].path : null;
+
+      if (rfcommPorts.length === 0) return null;
+      if (rfcommPorts.length === 1) return rfcommPorts[0].path;
+
+      // Try to match by MAC address in pnpId or serialNumber
+      if (this.macAddress) {
+        const macNormalized = this.macAddress.replace(/:/g, "").toLowerCase();
+        const match = rfcommPorts.find((p) => {
+          const pnpId = (p.pnpId || "").toLowerCase().replace(/:/g, "");
+          const serial = (p.serialNumber || "").toLowerCase().replace(/:/g, "");
+          return pnpId.includes(macNormalized) || serial.includes(macNormalized);
+        });
+        if (match) return match.path;
+      }
+
+      // Fallback: return first available
+      return rfcommPorts[0].path;
     } catch (e) {
       return null;
     }

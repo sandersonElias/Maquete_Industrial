@@ -1,5 +1,10 @@
 // gateway_bluetooth/protocol/parse.js
 
+function safeInt(value, fallback) {
+  const n = parseInt(value, 10);
+  return isNaN(n) ? fallback : n;
+}
+
 function parseIncomingData(raw) {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -11,7 +16,7 @@ function parseIncomingData(raw) {
     return {
       type: "ack",
       device: "switch",
-      id: parseInt(parts[2]),
+      id: safeInt(parts[2], 0),
       state: parts[3],
     };
   }
@@ -21,10 +26,10 @@ function parseIncomingData(raw) {
     return {
       type: "status",
       device: "switch",
-      id: parseInt(parts[2]),
-      angle: parseInt(parts[3]),
+      id: safeInt(parts[2], 0),
+      angle: safeInt(parts[3], 0),
       state: parts[4],
-      timestamp: parseInt(parts[5]),
+      timestamp: safeInt(parts[5], 0),
     };
   }
 
@@ -43,11 +48,11 @@ function parseIncomingData(raw) {
     return {
       type: "status",
       device: "truck",
-      x: parseInt(parts[3]),
-      y: parseInt(parts[4]),
-      load: parseInt(parts[6]),
-      battery: parseInt(parts[8]),
-      timestamp: parseInt(parts[10]),
+      x: safeInt(parts[3], 0),
+      y: safeInt(parts[4], 0),
+      load: safeInt(parts[6], 0),
+      battery: safeInt(parts[8], 0),
+      timestamp: safeInt(parts[10], 0),
     };
   }
 

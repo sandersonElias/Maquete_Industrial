@@ -17,14 +17,6 @@ function connectToBackend(deviceManager) {
     });
   });
 
-  wsClient.on("reconnect", () => {
-    logger.info("Reconectado ao backend, re-registrando...");
-    wsClient.emit("gateway:register", {
-      gatewayId: CONFIG.gatewayId,
-      apiKey: CONFIG.apiKey,
-    });
-  });
-
   wsClient.on("command", (payload) => handleCommand(payload, deviceManager));
   wsClient.on("disconnect", () => logger.warn("Backend desconectado"));
   wsClient.on("connect_error", (err) =>
@@ -44,8 +36,21 @@ function handleCommand(payload, deviceManager) {
   }
 
   if (cmd === "SWITCH") {
-    device.sendSwitchCommand(switchId, action || "SET", angle);
+    if (device.type !== "ferrovia") {
+      logger.warn(`Comando SWITCH enviado para device nao-ferrovia: ${device.name}`);
+      return;
+    }
+    const id = parseInt(switchId, 10);
+    if (isNaN(id) || id < 1 || id > 4) {
+      logger.warn(`switchId invalido: ${switchId}`);
+      return;
+    }
+    device.sendSwitchCommand(id, action || "SET", angle);
   } else if (cmd === "TRUCK" || device.type === "truck") {
+    if (device.type !== "truck") {
+      logger.warn(`Comando TRUCK enviado para device nao-truck: ${device.name}`);
+      return;
+    }
     device.sendTruckCommand(action);
   } else {
     logger.warn(`Comando desconhecido: ${cmd}`);

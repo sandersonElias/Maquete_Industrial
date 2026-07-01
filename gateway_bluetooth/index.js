@@ -2,7 +2,6 @@
 
 const { CONFIG, logger } = require("./config");
 const { DeviceManager } = require("./devices");
-const { SimulationManager } = require("./simulation");
 const { connectToBackend, sendGatewayStatus, notifyBackend } = require("./socket");
 const { startHealthServer } = require("./health");
 
@@ -31,11 +30,6 @@ const onDataEvent = (event, data) => {
 
 const deviceManager = new DeviceManager(onDataEvent);
 deviceManager.init();
-
-if (CONFIG.simulationMode) {
-  const simManager = new SimulationManager(deviceManager);
-  simManager.startAll();
-}
 
 wsClient = connectToBackend(deviceManager);
 startHealthServer(deviceManager);

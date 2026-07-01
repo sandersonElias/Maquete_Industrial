@@ -26,6 +26,14 @@ function startHealthServer(deviceManager) {
     }
   });
 
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      logger.error(`Porta ${CONFIG.healthPort} em uso. Health check indisponivel.`);
+    } else {
+      logger.error(`Erro no health server: ${err.message}`);
+    }
+  });
+
   server.listen(CONFIG.healthPort, () => {
     logger.info(`Health check em http://localhost:${CONFIG.healthPort}/health`);
   });
