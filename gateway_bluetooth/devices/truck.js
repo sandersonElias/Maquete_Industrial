@@ -49,7 +49,13 @@ class TruckDevice extends BluetoothDeviceBase {
       this.position.y = Math.max(0, Math.min(100, this.position.y));
 
       this.load = Math.max(0, Math.min(100, this.load + Math.floor(Math.random() * 10) - 5));
-      this.battery = Math.max(0, this.battery - 1);
+
+      // Battery: drain randomly, recharge slowly
+      if (Math.random() > 0.3) {
+        this.battery = Math.max(0, this.battery - 1);
+      } else if (this.battery < 100) {
+        this.battery = Math.min(100, this.battery + 2);
+      }
 
       const mockData = `STATUS|TRUCK|POS|${this.position.x}|${this.position.y}|LOAD|${this.load}|BAT|${this.battery}|TS|${Date.now()}`;
       this.handleIncomingData(mockData);
