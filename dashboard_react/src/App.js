@@ -13,6 +13,7 @@ import Relatorios from './pages/Relatorios';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
+import { SupabaseRealtimeProvider } from './contexts/SupabaseRealtimeContext';
 
 const Background3D = React.lazy(() => import('./components/Background3D'));
 
@@ -39,7 +40,8 @@ function AppContent() {
 
   return (
     <SocketProvider>
-      <div className="flex h-screen bg-maquete-dark relative">
+      <SupabaseRealtimeProvider>
+        <div className="flex h-screen bg-maquete-dark relative">
         {/* 3D Background */}
         <Suspense fallback={null}>
           <Background3D />
@@ -77,6 +79,7 @@ function AppContent() {
           },
         }}
       />
+      </SupabaseRealtimeProvider>
     </SocketProvider>
   );
 }

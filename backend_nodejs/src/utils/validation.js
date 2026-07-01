@@ -10,8 +10,14 @@ const TRUCK_COMMANDS = [
 const SWITCH_ACTIONS = ["LEFT", "RIGHT", "CENTER"];
 
 const loginSchema = Joi.object({
-  username: Joi.string().min(3).max(50).required(),
+  username: Joi.string().min(3).max(50).optional(),
+  email: Joi.string().email().max(100).optional(),
   password: Joi.string().min(6).max(100).required(),
+}).custom((value, helpers) => {
+  if (!value.username && !value.email) {
+    return helpers.message("Username ou email obrigatorio");
+  }
+  return value;
 });
 
 const registerSchema = Joi.object({

@@ -25,4 +25,6 @@ module.exports = {
   DB_USER: process.env.DB_USER,
   DB_PASSWORD: process.env.DB_PASSWORD,
   REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
 };
