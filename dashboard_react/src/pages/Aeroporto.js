@@ -47,30 +47,32 @@ export default function Aeroporto() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold">Aeroporto Logístico</h2>
-        <p className="text-sm text-gray-500">Monitoramento de aeronaves e cargas aéreas</p>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent">
+          Aeroporto Logístico
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Monitoramento de aeronaves e cargas aéreas</p>
       </div>
 
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-maquete-surface border border-maquete-border rounded-xl p-6 animate-pulse">
+            <div key={i} className="bg-maquete-surface/60 border border-maquete-border rounded-xl p-6 animate-pulse">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-maquete-card rounded-lg" />
+                <div className="w-12 h-12 bg-maquete-card rounded-xl" />
                 <div className="flex-1">
                   <div className="w-24 h-5 bg-maquete-card rounded mb-1" />
                   <div className="w-16 h-3 bg-maquete-card rounded" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="h-20 bg-maquete-card rounded-lg" />
-                <div className="h-20 bg-maquete-card rounded-lg" />
+                <div className="h-20 bg-maquete-card rounded-xl" />
+                <div className="h-20 bg-maquete-card rounded-xl" />
               </div>
             </div>
           ))}
         </div>
       ) : airplanes.length === 0 ? (
-        <div className="bg-maquete-surface border border-maquete-border rounded-xl p-12 text-center">
+        <div className="bg-maquete-card/60 border border-maquete-border rounded-xl p-12 text-center backdrop-blur-sm">
           <Plane size={48} className="mx-auto mb-4 text-gray-600 opacity-50" />
           <p className="text-gray-400">Nenhuma aeronave registrada</p>
           <p className="text-xs text-gray-600 mt-1">Adicione aeronaves pelo backend</p>
@@ -78,14 +80,21 @@ export default function Aeroporto() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {airplanes.map(plane => (
-            <div key={plane.id} className="bg-maquete-surface border border-maquete-border rounded-xl p-6 hover:border-maquete-border transition-all">
+            <div key={plane.id} className="bg-maquete-card/80 backdrop-blur-sm border border-maquete-border rounded-xl p-6 transition-all duration-300 hover:border-blue-500/30 hover:shadow-lg group"
+              style={{
+                transform: 'perspective(600px) rotateX(1deg)',
+                boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
+              }}
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 bg-blue-500/15 rounded-lg border border-blue-500/20 ${isAnimated(plane.status) ? 'animate-pulse' : ''}`}>
+                  <div className={`relative p-3 bg-blue-500/15 rounded-xl border border-blue-500/20 ${isAnimated(plane.status) ? 'animate-pulse' : ''}`}
+                    style={{ boxShadow: '0 0 20px rgba(59,130,246,0.1)' }}
+                  >
                     <Plane size={24} className="text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{plane.flight_number}</h3>
+                    <h3 className="font-semibold text-lg text-white">{plane.flight_number}</h3>
                     <p className="text-xs text-gray-500 font-mono">{plane.id}</p>
                   </div>
                 </div>
@@ -95,19 +104,19 @@ export default function Aeroporto() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-maquete-card rounded-lg p-3">
-                  <div className="flex items-center gap-1.5 text-gray-500 text-[10px] uppercase tracking-wider mb-1">
+                <div className="bg-maquete-surface/80 rounded-xl p-3 border border-maquete-border/50">
+                  <div className="flex items-center gap-1.5 text-gray-500 text-[10px] uppercase tracking-wider mb-1.5">
                     <Package size={12} />
                     <span>Carga</span>
                   </div>
-                  <p className="font-medium text-sm">{plane.cargo_type || 'N/A'}</p>
+                  <p className="font-medium text-sm text-white">{plane.cargo_type || 'N/A'}</p>
                 </div>
-                <div className="bg-maquete-card rounded-lg p-3">
-                  <div className="flex items-center gap-1.5 text-gray-500 text-[10px] uppercase tracking-wider mb-1">
+                <div className="bg-maquete-surface/80 rounded-xl p-3 border border-maquete-border/50">
+                  <div className="flex items-center gap-1.5 text-gray-500 text-[10px] uppercase tracking-wider mb-1.5">
                     <Gauge size={12} />
                     <span>Peso</span>
                   </div>
-                  <p className="font-medium text-sm">{plane.cargo_weight?.toLocaleString() || 'N/A'} kg</p>
+                  <p className="font-medium text-sm text-white">{plane.cargo_weight?.toLocaleString() || 'N/A'} kg</p>
                 </div>
               </div>
 
@@ -127,6 +136,9 @@ export default function Aeroporto() {
                   </div>
                 )}
               </div>
+
+              {/* Bottom accent */}
+              <div className="mt-4 h-0.5 rounded-full bg-gradient-to-r from-blue-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
           ))}
         </div>

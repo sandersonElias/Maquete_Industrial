@@ -13,8 +13,13 @@ const TruckMarker = ({ truck }) => (
     }}
   >
     <div className="relative group">
-      <Truck size={28} className="text-maquete-warning drop-shadow-lg" />
-      <div className="absolute -bottom-9 left-1/2 transform -translate-x-1/2 bg-maquete-surface border border-maquete-border rounded-lg px-2.5 py-1 whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="relative">
+        <Truck size={28} className="text-maquete-warning drop-shadow-lg" />
+        {truck.status === 'active' && (
+          <div className="absolute -inset-2 rounded-full border border-maquete-warning/30 animate-ping opacity-30" />
+        )}
+      </div>
+      <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-maquete-surface/95 backdrop-blur-sm border border-maquete-border rounded-xl px-3 py-2 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100">
         <p className="text-xs font-bold text-white">{truck.name}</p>
         <p className="text-[10px] text-gray-400">{truck.current_load}kg | {truck.battery_level}%</p>
       </div>
@@ -26,9 +31,9 @@ const DPadButton = ({ icon: Icon, direction, onCommand, disabled }) => (
   <button
     onClick={() => onCommand(direction)}
     disabled={disabled}
-    className="w-10 h-10 flex items-center justify-center bg-maquete-card border border-maquete-border rounded-lg hover:bg-maquete-accent/15 hover:border-maquete-accent/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+    className="w-11 h-11 flex items-center justify-center bg-maquete-card/80 border border-maquete-border rounded-xl hover:bg-maquete-accent/15 hover:border-maquete-accent/40 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-[0_0_15px_rgba(61,158,255,0.15)] active:scale-95"
   >
-    <Icon size={16} className="text-gray-400" />
+    <Icon size={16} className="text-gray-400 group-hover:text-maquete-accent" />
   </button>
 );
 
@@ -47,16 +52,32 @@ const TruckCard = ({ truck, onCommand }) => {
     }
   };
 
+  const getBatteryColor = (level) => {
+    if (level > 50) return 'from-maquete-glow to-green-400';
+    if (level > 20) return 'from-maquete-warning to-yellow-400';
+    return 'from-maquete-danger to-red-400';
+  };
+
   return (
-    <div className="bg-maquete-card border border-maquete-border rounded-xl p-5 hover:border-maquete-border transition-all">
+    <div className="bg-maquete-card/80 backdrop-blur-sm border border-maquete-border rounded-xl p-5 transition-all duration-300 hover:border-maquete-border/60 hover:shadow-lg group"
+      style={{
+        transform: 'perspective(600px) rotateX(1deg)',
+        boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${truck.status === 'active' ? 'bg-maquete-warning' : 'bg-gray-600'}`}>
+          <div className={`relative w-11 h-11 rounded-xl flex items-center justify-center ${truck.status === 'active' ? 'bg-maquete-warning' : 'bg-gray-600'}`}
+            style={{ boxShadow: truck.status === 'active' ? '0 0 20px rgba(255,184,0,0.3)' : 'none' }}
+          >
             <Truck size={18} className="text-white" />
+            {truck.status === 'active' && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-maquete-card animate-pulse" />
+            )}
           </div>
           <div>
-            <h3 className="font-semibold text-sm">{truck.name}</h3>
-            <p className="text-xs text-gray-500">{truck.id}</p>
+            <h3 className="font-semibold text-sm text-white">{truck.name}</h3>
+            <p className="text-xs text-gray-500 font-mono">{truck.id}</p>
           </div>
         </div>
         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -80,12 +101,14 @@ const TruckCard = ({ truck, onCommand }) => {
         <div className="flex items-center gap-3">
           <Package size={14} className="text-maquete-purple shrink-0" />
           <div className="flex-1">
-            <div className="flex justify-between text-xs mb-1">
+            <div className="flex justify-between text-xs mb-1.5">
               <span className="text-gray-500">Carga</span>
-              <span className="text-white">{truck.current_load}/{truck.max_load}kg</span>
+              <span className="text-white font-medium">{truck.current_load}/{truck.max_load}kg</span>
             </div>
-            <div className="h-1 bg-maquete-surface rounded-full overflow-hidden">
-              <div className="h-full bg-maquete-purple rounded-full transition-all" style={{ width: `${(truck.current_load / truck.max_load) * 100}%` }} />
+            <div className="h-2 bg-maquete-surface rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-maquete-purple to-maquete-accent rounded-full transition-all duration-500"
+                style={{ width: `${(truck.current_load / truck.max_load) * 100}%`, boxShadow: '0 0 10px rgba(168,85,247,0.3)' }}
+              />
             </div>
           </div>
         </div>
@@ -93,25 +116,24 @@ const TruckCard = ({ truck, onCommand }) => {
         <div className="flex items-center gap-3">
           <Battery size={14} className="text-maquete-glow shrink-0" />
           <div className="flex-1">
-            <div className="flex justify-between text-xs mb-1">
+            <div className="flex justify-between text-xs mb-1.5">
               <span className="text-gray-500">Bateria</span>
-              <span className="text-white">{truck.battery_level}%</span>
+              <span className="text-white font-medium">{truck.battery_level}%</span>
             </div>
-            <div className="h-1 bg-maquete-surface rounded-full overflow-hidden">
-              <div className={`h-full rounded-full transition-all ${
-                truck.battery_level > 50 ? 'bg-maquete-glow' :
-                truck.battery_level > 20 ? 'bg-maquete-warning' : 'bg-maquete-danger'
-              }`} style={{ width: `${truck.battery_level}%` }} />
+            <div className="h-2 bg-maquete-surface rounded-full overflow-hidden">
+              <div className={`h-full bg-gradient-to-r ${getBatteryColor(truck.battery_level)} rounded-full transition-all duration-500`}
+                style={{ width: `${truck.battery_level}%` }}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Controles D-Pad */}
-      <div className="border-t border-maquete-border pt-3">
-        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Controles</p>
-        <div className="flex items-center justify-center gap-1">
-          <div className="grid grid-cols-3 gap-1">
+      {/* D-Pad Controls */}
+      <div className="border-t border-maquete-border pt-4">
+        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-3">Controles</p>
+        <div className="flex items-center justify-center gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
             <div />
             <DPadButton icon={ArrowUp} direction="F" onCommand={sendCmd} disabled={cmdLoading} />
             <div />
@@ -126,7 +148,7 @@ const TruckCard = ({ truck, onCommand }) => {
             <button
               onClick={() => sendCmd('D')}
               disabled={cmdLoading}
-              className="w-10 h-10 flex items-center justify-center bg-maquete-purple/15 border border-maquete-purple/30 rounded-lg hover:bg-maquete-purple/25 transition-all disabled:opacity-30"
+              className="w-11 h-11 flex items-center justify-center bg-maquete-purple/15 border border-maquete-purple/30 rounded-xl hover:bg-maquete-purple/25 transition-all duration-200 disabled:opacity-30 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] active:scale-95"
               title="Descarregar"
             >
               <Package size={16} className="text-maquete-purple" />
@@ -174,14 +196,23 @@ export default function Mina() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold">Mina</h2>
-        <p className="text-sm text-gray-500">Monitoramento e controle dos caminhões basculantes</p>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-maquete-warning to-yellow-300 bg-clip-text text-transparent">
+          Mina
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Monitoramento e controle dos caminhões basculantes</p>
       </div>
 
-      {/* Mapa */}
-      <div className="bg-maquete-surface border border-maquete-border rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Mapa da Área</h3>
-        <div className="relative h-80 bg-maquete-card rounded-lg border border-maquete-border overflow-hidden">
+      {/* Map */}
+      <div className="bg-maquete-card/60 backdrop-blur-sm border border-maquete-border rounded-xl overflow-hidden"
+        style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }}
+      >
+        <div className="px-6 py-4 border-b border-maquete-border">
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+            <Navigation size={14} className="text-maquete-warning" />
+            Mapa da Área
+          </h3>
+        </div>
+        <div className="relative h-80 bg-maquete-dark p-4">
           <div className="absolute inset-0 opacity-5" style={{
             backgroundImage: 'linear-gradient(#4A5568 1px, transparent 1px), linear-gradient(90deg, #4A5568 1px, transparent 1px)',
             backgroundSize: '40px 40px'
@@ -197,7 +228,7 @@ export default function Mina() {
               </div>
             </div>
           )}
-          <div className="absolute bottom-3 left-3 bg-maquete-surface/90 border border-maquete-border rounded-lg px-3 py-2">
+          <div className="absolute bottom-3 left-3 bg-maquete-surface/90 backdrop-blur-sm border border-maquete-border rounded-xl px-3 py-2">
             <div className="flex items-center gap-2 text-xs">
               <Truck size={14} className="text-maquete-warning" />
               <span className="text-gray-400">Caminhão Basculante</span>
@@ -210,9 +241,9 @@ export default function Mina() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-maquete-card border border-maquete-border rounded-xl p-5 animate-pulse">
+            <div key={i} className="bg-maquete-card/60 border border-maquete-border rounded-xl p-5 animate-pulse">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-maquete-surface rounded-lg" />
+                <div className="w-11 h-11 bg-maquete-surface rounded-xl" />
                 <div className="flex-1">
                   <div className="w-24 h-4 bg-maquete-surface rounded mb-1" />
                   <div className="w-16 h-3 bg-maquete-surface rounded" />
@@ -227,7 +258,7 @@ export default function Mina() {
           ))}
         </div>
       ) : trucks.length === 0 ? (
-        <div className="bg-maquete-surface border border-maquete-border rounded-xl p-12 text-center">
+        <div className="bg-maquete-card/60 border border-maquete-border rounded-xl p-12 text-center backdrop-blur-sm">
           <Truck size={48} className="mx-auto mb-4 text-gray-600 opacity-50" />
           <p className="text-gray-400">Nenhum caminhão encontrado</p>
           <p className="text-xs text-gray-600 mt-1">Verifique a conexão com o backend</p>

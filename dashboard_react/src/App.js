@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import axios from 'axios';
@@ -14,7 +14,8 @@ import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
 
-// Axios interceptor para 401
+const Background3D = React.lazy(() => import('./components/Background3D'));
+
 axios.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -38,21 +39,29 @@ function AppContent() {
 
   return (
     <SocketProvider>
-      <div className="flex h-screen bg-maquete-dark">
-        <Sidebar isOpen={sidebarOpen} />
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-          <main className="flex-1 overflow-y-auto p-6">
-            <Routes>
-              <Route path="/" element={<Overview />} />
-              <Route path="/ferrovia" element={<Ferrovia />} />
-              <Route path="/mina" element={<Mina />} />
-              <Route path="/porto" element={<Porto />} />
-              <Route path="/aeroporto" element={<Aeroporto />} />
-              <Route path="/relatorios" element={<Relatorios />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </main>
+      <div className="flex h-screen bg-maquete-dark relative">
+        {/* 3D Background */}
+        <Suspense fallback={null}>
+          <Background3D />
+        </Suspense>
+
+        {/* Main Layout */}
+        <div className="relative z-10 flex w-full h-full">
+          <Sidebar isOpen={sidebarOpen} />
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+            <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <main className="flex-1 overflow-y-auto p-6 relative">
+              <Routes>
+                <Route path="/" element={<Overview />} />
+                <Route path="/ferrovia" element={<Ferrovia />} />
+                <Route path="/mina" element={<Mina />} />
+                <Route path="/porto" element={<Porto />} />
+                <Route path="/aeroporto" element={<Aeroporto />} />
+                <Route path="/relatorios" element={<Relatorios />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
+          </div>
         </div>
       </div>
       <Toaster
@@ -63,6 +72,8 @@ function AppContent() {
             background: '#1C2333',
             color: '#e8eef8',
             border: '1px solid #252D40',
+            borderRadius: '12px',
+            backdropFilter: 'blur(10px)',
           },
         }}
       />
