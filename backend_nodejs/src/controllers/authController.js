@@ -18,6 +18,9 @@ async function register(req, res) {
     res.status(201).json(newUser);
   } catch (e) {
     logger.error(`Erro registro: ${e.message}`);
+    if (e.code === "23505") {
+      return res.status(409).json({ error: "Usuário ou email já existe" });
+    }
     res.status(500).json({ error: "Erro ao criar usuário" });
   }
 }
