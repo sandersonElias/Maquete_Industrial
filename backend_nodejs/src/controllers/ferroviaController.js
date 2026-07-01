@@ -1,5 +1,4 @@
 const ferroviaService = require("../services/ferroviaService");
-const { isValidSwitchAction } = require("../utils/validation");
 const logger = require("../config/logger");
 
 module.exports = (io) => ({
@@ -17,16 +16,8 @@ module.exports = (io) => ({
     try {
       const { switchId, action, angle } = req.body;
 
-      if (!switchId || switchId < 1 || switchId > 4) {
-        return res.status(400).json({ error: "switchId inválido (1-4)" });
-      }
-
-      if (action && !isValidSwitchAction(action)) {
-        return res.status(400).json({ error: "action invalida" });
-      }
-
-      if (!action && (angle === undefined || angle < 0 || angle > 180)) {
-        return res.status(400).json({ error: "angle invalido (0-180)" });
+      if (!Number.isInteger(switchId) || switchId < 1 || switchId > 4) {
+        return res.status(400).json({ error: "switchId inválido (deve ser 1-4)" });
       }
 
       const command = await ferroviaService.handleSwitchCommand(

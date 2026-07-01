@@ -1,5 +1,4 @@
 const trucksService = require("../services/trucksService");
-const { isValidTruckCommand } = require("../utils/validation");
 const logger = require("../config/logger");
 
 module.exports = (io) => ({
@@ -50,10 +49,6 @@ module.exports = (io) => ({
     try {
       const { id } = req.params;
       const { command } = req.body;
-
-      if (!isValidTruckCommand(command)) {
-        return res.status(400).json({ error: "Comando do caminhao invalido" });
-      }
 
       const truckCommand = await trucksService.sendTruckCommand(
         id,

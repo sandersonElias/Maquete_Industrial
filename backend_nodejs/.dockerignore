@@ -1,9 +1,10 @@
 node_modules
+npm-debug.log
 .env
 .env.*
 reports/*.csv
 reports/*.xlsx
 reports/*.pdf
-reports/
-server.log
-gateway.log
+.git
+.gitignore
+README.md
