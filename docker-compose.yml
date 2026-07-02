@@ -76,7 +76,7 @@ services:
       dockerfile: Dockerfile
     container_name: maquete-gateway
     environment:
-      - BACKEND_WS_URL=http://backend:4000/gateway
+      - BACKEND_WS_URL=http://backend:4000
       - BACKEND_API_URL=http://backend:4000/api
       - GATEWAY_API_KEY=${GATEWAY_API_KEY:-chave_api}
       - GATEWAY_ID=${GATEWAY_ID:-gateway-01}
