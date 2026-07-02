@@ -10,14 +10,14 @@
  *    STATUS|SWITCH|<id>|<angulo>|<estado>|<ts>\n
  *  
  *  Pinos Servos:
- *    - Servo 1 (SwitchId 1): D3
- *    - Servo 2 (SwitchId 2): D5
- *    - Servo 3 (SwitchId 3): D6
- *    - Servo 4 (SwitchId 4): D9
+ *    - Servo 1 (SwitchId 1): D2
+ *    - Servo 2 (SwitchId 2): D3
+ *    - Servo 3 (SwitchId 3): D4
+ *    - Servo 4 (SwitchId 4): D5
  *  
  *  Pinos LEDs (Indicador de Direcao):
- *    - Divisao 1: Esquerda=D2, Direita=D4
- *    - Divisao 2: Esquerda=D7, Direita=D8
+ *    - Divisao 1: Esquerda=D6, Direita=D7
+ *    - Divisao 2: Esquerda=D8, Direita=D9
  *    - Divisao 3: Esquerda=D10, Direita=D11
  *    - Divisao 4: Esquerda=D12, Direita=D13
  *  
@@ -33,13 +33,13 @@
 
 // === CONFIGURACAO ===
 const int NUM_SWITCHES = 4;
-const int SERVO_PINS[NUM_SWITCHES] = {3, 5, 6, 9};
+const int SERVO_PINS[NUM_SWITCHES] = {2, 3, 4, 5};
 
 // === PINOS DOS LEDS (INDICADOR DE DIRECAO) ===
 // LED Esquerda aceso = Locomotiva vai para linha esquerda
 // LED Direita aceso = Locomotiva vai para linha direita
-const int LED_LEFT[NUM_SWITCHES] = {2, 7, 10, 12};
-const int LED_RIGHT[NUM_SWITCHES] = {4, 8, 11, 13};
+const int LED_LEFT[NUM_SWITCHES] = {6, 8, 10, 12};
+const int LED_RIGHT[NUM_SWITCHES] = {7, 9, 11, 13};
 
 const int BAUD_BT = 9600;
 const unsigned long HEARTBEAT_INTERVAL = 5000; // ms
@@ -100,7 +100,7 @@ void updateLEDs() {
 void setup() {
   Serial.begin(BAUD_BT);
 
-  Serial.println(F("=== FERROVIA FIRMWARE v3.1 ==="));
+  Serial.println(F("=== FERROVIA FIRMWARE v3.2 ==="));
   Serial.println(F("Inicializando servos..."));
 
   inputBuffer.reserve(MAX_BUFFER);
