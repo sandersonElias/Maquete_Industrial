@@ -1,4 +1,4 @@
-﻿const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const { JWT_SECRET, SUPABASE_JWT_SECRET } = require("../config");
 
 function authenticateToken(req, res, next) {

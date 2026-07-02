@@ -1,4 +1,4 @@
-﻿const authService = require("../services/authService");
+const authService = require("../services/authService");
 const supabase = require("../config/supabase");
 const logger = require("../config/logger");
 
