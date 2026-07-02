@@ -6,7 +6,16 @@ async function login(req, res) {
   try {
     const { email, password, username } = req.body;
 
-    // Se supabase esta configurado, usar Supabase Auth
+    // Tentar login local primeiro (mais rapido e confiavel)
+    try {
+      const { token, user } = await authService.login(username || email, password);
+      return res.json({ token, user });
+    } catch (localErr) {
+      // Login local falhou - tentar Supabase se configurado
+      logger.info(`Login local falhou: ${localErr.message}`);
+    }
+
+    // Fallback: tentar Supabase Auth
     if (supabase && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_ANON_KEY !== "SEU_ANON_KEY_AQUI") {
       const loginEmail = email || `${username}@maquete.local`;
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -40,9 +49,8 @@ async function login(req, res) {
       });
     }
 
-    // Fallback: login local com JWT proprio
-    const { token, user } = await authService.login(username || email, password);
-    res.json({ token, user });
+    // Nenhum metodo de auth funcionou
+    return res.status(401).json({ error: "Credenciais invalidas" });
   } catch (e) {
     logger.error(`Erro login: ${e.message}`);
     res.status(401).json({ error: e.message });
@@ -53,7 +61,18 @@ async function register(req, res) {
   try {
     const { username, email, password, role } = req.body;
 
-    // Se supabase esta configurado, registrar via Supabase Auth
+    // Registrar local primeiro
+    try {
+      const newUser = await authService.register(username, email, password, role);
+      return res.status(201).json(newUser);
+    } catch (localErr) {
+      logger.info(`Registro local falhou: ${localErr.message}`);
+      if (localErr.code === "23505") {
+        return res.status(409).json({ error: "Usuario ou email ja existe" });
+      }
+    }
+
+    // Fallback: tentar Supabase
     if (supabase && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_ANON_KEY !== "SEU_ANON_KEY_AQUI") {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -68,7 +87,6 @@ async function register(req, res) {
         return res.status(400).json({ error: error.message });
       }
 
-      // Registrar no banco local tambem
       const pool = require("../config/db");
       const result = await pool.query(
         "INSERT INTO users (id, username, email, password_hash, role) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING RETURNING id, username, role",
@@ -78,9 +96,7 @@ async function register(req, res) {
       return res.status(201).json(result.rows[0] || { username, role: role || "operator" });
     }
 
-    // Fallback: registro local
-    const newUser = await authService.register(username, email, password, role);
-    res.status(201).json(newUser);
+    res.status(500).json({ error: "Erro ao criar usuario" });
   } catch (e) {
     logger.error(`Erro registro: ${e.message}`);
     if (e.code === "23505") {
@@ -91,9 +107,6 @@ async function register(req, res) {
 }
 
 async function logout(req, res) {
-  // Logout e Stateless - o client deve descartar o token.
-  // Supabase invalida tokens no client com supabase.auth.signOut().
-  // Nao e possivel invalidar JWT server-side sem service_role key.
   res.json({ message: "Logout realizado" });
 }
 
