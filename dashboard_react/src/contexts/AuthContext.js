@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+﻿import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { supabase, isSupabaseConfigured } from "../config/supabase";
 
@@ -12,33 +12,40 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      // Se Supabase esta configurado, verificar sessao
-      if (isSupabaseConfigured && supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          axios.defaults.headers.common["Authorization"] = `Bearer ${session.access_token}`;
-          const stored = localStorage.getItem("user");
-          setUser(stored ? JSON.parse(stored) : null);
-
-          // Escutar mudancas de auth
-          supabase.auth.onAuthStateChange((_event, newSession) => {
-            if (newSession) {
-              axios.defaults.headers.common["Authorization"] = `Bearer ${newSession.access_token}`;
-            } else {
-              delete axios.defaults.headers.common["Authorization"];
-              setUser(null);
-              localStorage.removeItem("user");
+      try {
+        // Verificar sessao Supabase ativa
+        if (isSupabaseConfigured && supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            axios.defaults.headers.common["Authorization"] = `Bearer ${session.access_token}`;
+            const stored = localStorage.getItem("user");
+            if (stored) {
+              setUser(JSON.parse(stored));
             }
-          });
+
+            supabase.auth.onAuthStateChange((_event, newSession) => {
+              if (newSession) {
+                axios.defaults.headers.common["Authorization"] = `Bearer ${newSession.access_token}`;
+              } else {
+                delete axios.defaults.headers.common["Authorization"];
+                setUser(null);
+                localStorage.removeItem("user");
+              }
+            });
+          }
+        } else {
+          // Auth local via token
+          const token = localStorage.getItem("token");
+          if (token) {
+            axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+            const stored = localStorage.getItem("user");
+            if (stored) {
+              setUser(JSON.parse(stored));
+            }
+          }
         }
-      } else {
-        // Fallback: auth local
-        const token = localStorage.getItem("token");
-        if (token) {
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          const stored = localStorage.getItem("user");
-          setUser(stored ? JSON.parse(stored) : null);
-        }
+      } catch (e) {
+        console.error("Erro ao inicializar auth:", e);
       }
       setLoading(false);
     };
@@ -47,36 +54,26 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (username, password) => {
-    // Se Supabase esta configurado, usar Supabase Auth
-    if (isSupabaseConfigured && supabase) {
-      const email = username.includes("@") ? username : `${username}@maquete.local`;
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // Buscar dados do usuario via API
-      axios.defaults.headers.common["Authorization"] = `Bearer ${data.session.access_token}`;
-      const res = await axios.get(`${API_URL}/api/auth/me`);
-      const userData = res.data.user;
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
-      return userData;
-    }
-
-    // Fallback: auth local
+    // Sempre tentar login via backend (ele decide se usa Supabase ou local)
     const res = await axios.post(`${API_URL}/api/auth/login`, {
       username,
       password,
     });
-    const { token, user: userData } = res.data;
-    localStorage.setItem("token", token);
+    const { token, refreshToken, user: userData } = res.data;
+
+    // Se o backend retornou um token Supabase, configurar sessao
+    if (refreshToken && isSupabaseConfigured && supabase) {
+      await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: refreshToken,
+      });
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      localStorage.setItem("token", token);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+
     localStorage.setItem("user", JSON.stringify(userData));
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     setUser(userData);
     return userData;
   }, []);
