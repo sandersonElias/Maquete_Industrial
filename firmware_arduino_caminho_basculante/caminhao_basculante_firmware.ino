@@ -80,7 +80,7 @@ void setup() {
   servoCacamba.attach(PIN_SERVO_BUCKET);
   servoMotor.attach(PIN_SERVO_MOTOR);
 
-  // Posição inicial
+  // Posição inicial (centro = 90°)
   servoDirecao.write(90);
   servoCacamba.write(0);
   servoMotor.write(90); // Motor parado
@@ -222,11 +222,11 @@ void atualizarMotor() {
 
 void atualizarDirecao() {
   if (estadoDirecao == 'L') {
-    servoDirecao.write(135); // Esquerda
+    servoDirecao.write(120); 
   } else if (estadoDirecao == 'R') {
-    servoDirecao.write(45);  // Direita
+    servoDirecao.write(60);
   } else {
-    servoDirecao.write(90);  // Centro
+    servoDirecao.write(90);
   }
 }
 

@@ -6,3 +6,16 @@
 
 # Compose docs
 docs/
+
+# Environment files (sensitive data)
+.env
+.env.local
+.env.production
+backend_nodejs/.env
+gateway_bluetooth/.env
+dashboard_react/.env
+app_react_native/.env
+
+# Docker volumes
+postgres_data/
+redis_data/
