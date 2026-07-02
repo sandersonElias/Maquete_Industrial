@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿const CACHE = 'ferrorama-v3';
+=======
+const CACHE = 'ferrorama-v3';
+>>>>>>> feat/dev-Marco
 const ASSETS = [
   './',
   './index.html',
