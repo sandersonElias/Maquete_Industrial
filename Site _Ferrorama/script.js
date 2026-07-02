@@ -4,8 +4,6 @@
   const navLinks = document.querySelectorAll('.nav-link, .home-card, .section-nav-btn');
   const sections = document.querySelectorAll('.section');
   const backToTop = document.getElementById('backToTop');
-  const contactForm = document.getElementById('contactForm');
-  const formFeedback = document.getElementById('form-feedback');
 
   const sectionTitles = {
     inicio: 'Ferrorama — Documentação',
@@ -15,7 +13,6 @@
     'porto-aeroporto': 'Porto e aeroporto — Ferrorama',
     mina: 'Mina de ferro — Ferrorama',
     controle: 'Central de controle — Ferrorama',
-    contato: 'Contato — Ferrorama',
   };
 
   function showSection(id) {
@@ -77,46 +74,6 @@
       document.getElementById(tabId)?.classList.add('active');
     });
   });
-
-  if (contactForm) {
-    const formNext = document.getElementById('formNext');
-    if (formNext) {
-      formNext.value = `${location.origin}${location.pathname}#contato?enviado=1`;
-    }
-
-    contactForm.addEventListener('submit', (event) => {
-      const nome = contactForm.querySelector('#nome');
-      const email = contactForm.querySelector('#email');
-      const mensagem = contactForm.querySelector('#mensagem');
-      let valid = true;
-
-      [nome, email, mensagem].forEach((field) => {
-        field.classList.remove('field-error');
-        if (!field.validity.valid) {
-          field.classList.add('field-error');
-          valid = false;
-        }
-      });
-
-      if (!valid) {
-        event.preventDefault();
-        if (formFeedback) {
-          formFeedback.hidden = false;
-          formFeedback.className = 'form-feedback form-feedback-error';
-          formFeedback.textContent = 'Preencha todos os campos corretamente antes de enviar.';
-        }
-      }
-    });
-  }
-
-  if (location.search.includes('enviado=1') || location.hash.includes('enviado=1')) {
-    showSection('contato');
-    if (formFeedback) {
-      formFeedback.hidden = false;
-      formFeedback.className = 'form-feedback form-feedback-success';
-      formFeedback.textContent = 'Mensagem enviada com sucesso. Obrigado pelo contato!';
-    }
-  }
 
   window.addEventListener('scroll', () => {
     if (backToTop) {
