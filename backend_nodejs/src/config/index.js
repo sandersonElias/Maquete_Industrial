@@ -1,4 +1,4 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -6,7 +6,7 @@ const requiredInProduction = ["JWT_SECRET", "GATEWAY_API_KEY", "DB_HOST", "DB_NA
 if (isProduction) {
   for (const key of requiredInProduction) {
     if (!process.env[key]) {
-      throw new Error(`Variável obrigatória não definida em produção: ${key}`);
+      throw new Error(`Variavel obrigatoria nao definida em producao: ${key}`);
     }
   }
 }
@@ -27,4 +27,5 @@ module.exports = {
   REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
   SUPABASE_URL: process.env.SUPABASE_URL,
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET,
 };

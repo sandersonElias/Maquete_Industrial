@@ -1,15 +1,20 @@
-FROM node:20-alpine AS builder
+﻿FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copiar dependências
+# Build args para variaveis de ambiente do React (build time)
+ARG REACT_APP_API_URL=http://localhost:4000
+ARG REACT_APP_SUPABASE_URL
+ARG REACT_APP_SUPABASE_ANON_KEY
+
+# Copiar dependencias
 COPY package*.json ./
 RUN npm install
 
-# Copiar código fonte
+# Copiar codigo fonte
 COPY . .
 
-# Build de produção
+# Build de producao (CRA usa REACT_APP_* no build time)
 RUN npm run build
 
 # Stage 2: Servir com nginx

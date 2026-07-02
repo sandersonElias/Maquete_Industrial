@@ -1,4 +1,4 @@
-const authService = require("../services/authService");
+﻿const authService = require("../services/authService");
 const supabase = require("../config/supabase");
 const logger = require("../config/logger");
 
@@ -91,18 +91,10 @@ async function register(req, res) {
 }
 
 async function logout(req, res) {
-  try {
-    if (supabase && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_ANON_KEY !== "SEU_ANON_KEY_AQUI") {
-      const authHeader = req.headers["authorization"];
-      const token = authHeader && authHeader.split(" ")[1];
-      if (token) {
-        await supabase.auth.admin.signOut(token);
-      }
-    }
-    res.json({ message: "Logout realizado" });
-  } catch (e) {
-    res.json({ message: "Logout realizado" });
-  }
+  // Logout e Stateless - o client deve descartar o token.
+  // Supabase invalida tokens no client com supabase.auth.signOut().
+  // Nao e possivel invalidar JWT server-side sem service_role key.
+  res.json({ message: "Logout realizado" });
 }
 
 async function me(req, res) {
