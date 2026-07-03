@@ -1,115 +1,119 @@
-# Firmware Arduino - Caminhão Basculante
+# Firmware Arduino - Caminhï¿½o Basculante
 
 Controle RC de um carrinho basculante via Bluetooth (HC-05) com 3 servos + 4 LEDs.
 
 ## Hardware
 
 - Arduino Uno/Nano
-- 1x Servo de Direção (SG-90)
-- 1x Servo de Caçamba (SG-90)
-- 1x Servo de Motor - Rotação Contínua (SG-90 ou similar)
-- 4x LEDs (2 faróis + 2 setas)
-- 1x Módulo Bluetooth HC-05
-- Fonte externa 5V (mínimo 1A)
+- 1x Servo de Direï¿½ï¿½o (SG-90)
+- 1x Servo de Caï¿½amba (SG-90)
+- 1x Servo de Motor - Rotaï¿½ï¿½o Contï¿½nua (SG-90 ou similar)
+- 4x LEDs (2 farï¿½is + 2 setas)
+- 1x Mï¿½dulo Bluetooth HC-05
+- Fonte externa 5V (mï¿½nimo 1A)
+
+### Imagem do Circuito
+
+![Diagrama de Ligaï¿½ï¿½es Caminhï¿½o Basculante](images/diagrama_caminhao.svg)
 
 ## Pinagem
 
 ### Servos
 
-| Componente | Pino Arduino | Função | Faixa |
-|------------|-------------|--------|-------|
-| Servo Direção | D5 | Controle de direção | 45°-135° |
-| Servo Caçamba | D6 | Subir/descer caçamba | 0°-90° |
-| Servo Motor | D7 | Rotação contínua | 0°=ré, 90°=parado, 180°=frente |
+| Componente    | Pino Arduino | Funï¿½ï¿½o               | Faixa                          |
+| ------------- | ------------ | -------------------- | ------------------------------ |
+| Servo Direï¿½ï¿½o | D5           | Controle de direï¿½ï¿½o  | 45ï¿½-135ï¿½                       |
+| Servo Caï¿½amba | D6           | Subir/descer caï¿½amba | 0ï¿½-90ï¿½                         |
+| Servo Motor   | D7           | Rotaï¿½ï¿½o contï¿½nua     | 0ï¿½=rï¿½, 90ï¿½=parado, 180ï¿½=frente |
 
 ### LEDs
 
-| Componente | Pino Arduino | Função |
-|------------|-------------|--------|
-| Farol Esquerdo | D2 | Iluminação frontal |
-| Farol Direito | D3 | Iluminação frontal |
-| Seta Esquerda | D8 | Indicador de direção |
-| Seta Direita | D9 | Indicador de direção |
+| Componente     | Pino Arduino | Funï¿½ï¿½o               |
+| -------------- | ------------ | -------------------- |
+| Farol Esquerdo | D2           | Iluminaï¿½ï¿½o frontal   |
+| Farol Direito  | D3           | Iluminaï¿½ï¿½o frontal   |
+| Seta Esquerda  | D8           | Indicador de direï¿½ï¿½o |
+| Seta Direita   | D9           | Indicador de direï¿½ï¿½o |
 
 ### Bluetooth
 
-| Componente | Pino Arduino | Observação |
-|------------|-------------|------------|
-| HC-05 TX ? RX | D0 | Serial RX |
-| HC-05 RX ? TX | D1 | Serial TX |
+| Componente    | Pino Arduino | Observaï¿½ï¿½o |
+| ------------- | ------------ | ---------- |
+| HC-05 TX ? RX | D0           | Serial RX  |
+| HC-05 RX ? TX | D1           | Serial TX  |
 
-### Alimentação
+### Alimentaï¿½ï¿½o
 
-| Componente | Alimentação | Observação |
-|------------|-------------|------------|
-| Arduino | USB ou 7-12V | Vin ou USB |
-| Servos | 5V externa | NÃO usar do Arduino (muita corrente) |
-| HC-05 | 5V | Pode usar do Arduino |
-| LEDs | 5V via resistores | Pode usar do Arduino |
-| GND comum | GND | Arduino + servos + HC-05 |
+| Componente | Alimentaï¿½ï¿½o       | Observaï¿½ï¿½o                           |
+| ---------- | ----------------- | ------------------------------------ |
+| Arduino    | USB ou 7-12V      | Vin ou USB                           |
+| Servos     | 5V externa        | Nï¿½O usar do Arduino (muita corrente) |
+| HC-05      | 5V                | Pode usar do Arduino                 |
+| LEDs       | 5V via resistores | Pode usar do Arduino                 |
+| GND comum  | GND               | Arduino + servos + HC-05             |
 
 **Importante**: Desconecte os pinos RX/TX do HC-05 ao carregar o sketch via USB.
 
-## Diagrama de Ligações
+## Diagrama de Ligaï¿½ï¿½es
 
 ```
                     Arduino Uno
                     +-----------+
-                    ¦      D0   ¦---- HC-05 TX (RX Serial)
-                    ¦      D1   ¦---- HC-05 RX (TX Serial)
-                    ¦      D2   ¦---- Farol Esquerdo (LED)
-                    ¦      D3   ¦---- Farol Direito (LED)
-              Servo ¦      D4   ¦
-              Motor ¦      D5   ¦---- Servo Direção
-              Servo ¦      D6   ¦---- Servo Caçamba
-              Servo ¦      D7   ¦---- Servo Motor
-              Dir.  ¦      D8   ¦---- Seta Esquerda (LED)
-              Cac.  ¦      D9   ¦---- Seta Direita (LED)
-                    ¦      D10  ¦
-                    ¦      D11  ¦
-                    ¦      D12  ¦
-                    ¦      D13  ¦
-                    ¦           ¦
-                    ¦      5V   ¦---- VCC HC-05
-                    ¦      GND  ¦---- GND Comum
-                    ¦      Vin  ¦---- Alimentação externa 7-12V
+                    ï¿½      D0   ï¿½---- HC-05 TX (RX Serial)
+                    ï¿½      D1   ï¿½---- HC-05 RX (TX Serial)
+                    ï¿½      D2   ï¿½---- Farol Esquerdo (LED)
+                    ï¿½      D3   ï¿½---- Farol Direito (LED)
+              Servo ï¿½      D4   ï¿½
+              Motor ï¿½      D5   ï¿½---- Servo Direï¿½ï¿½o
+              Servo ï¿½      D6   ï¿½---- Servo Caï¿½amba
+              Servo ï¿½      D7   ï¿½---- Servo Motor
+              Dir.  ï¿½      D8   ï¿½---- Seta Esquerda (LED)
+              Cac.  ï¿½      D9   ï¿½---- Seta Direita (LED)
+                    ï¿½      D10  ï¿½
+                    ï¿½      D11  ï¿½
+                    ï¿½      D12  ï¿½
+                    ï¿½      D13  ï¿½
+                    ï¿½           ï¿½
+                    ï¿½      5V   ï¿½---- VCC HC-05
+                    ï¿½      GND  ï¿½---- GND Comum
+                    ï¿½      Vin  ï¿½---- Alimentaï¿½ï¿½o externa 7-12V
                     +-----------+
 ```
 
 ## Protocolo de Comandos
 
-### Movimentação (simples ou compostos)
+### Movimentaï¿½ï¿½o (simples ou compostos)
 
-| Comando | Ação | Detalhes |
-|---------|------|----------|
-| `F` | Frente | Servo motor ? 180° |
-| `B` | Ré | Servo motor ? 0° |
-| `S` | Parar motor | Servo motor ? 90° |
-| `L` | Esquerda | Servo direção ? 120° |
-| `R` | Direita | Servo direção ? 60° |
-| `C` | Centro | Servo direção ? 90° |
-| `FL` | Frente + Esquerda | Motor + direção simultâneos |
-| `FR` | Frente + Direita | Motor + direção simultâneos |
-| `BL` | Ré + Esquerda | Motor + direção simultâneos |
-| `BR` | Ré + Direita | Motor + direção simultâneos |
-| `SC` | Parada total | Motor para + direção centro |
+| Comando | Aï¿½ï¿½o              | Detalhes                    |
+| ------- | ----------------- | --------------------------- |
+| `F`     | Frente            | Servo motor ? 180ï¿½          |
+| `B`     | Rï¿½                | Servo motor ? 0ï¿½            |
+| `S`     | Parar motor       | Servo motor ? 90ï¿½           |
+| `L`     | Esquerda          | Servo direï¿½ï¿½o ? 120ï¿½        |
+| `R`     | Direita           | Servo direï¿½ï¿½o ? 60ï¿½         |
+| `C`     | Centro            | Servo direï¿½ï¿½o ? 90ï¿½         |
+| `FL`    | Frente + Esquerda | Motor + direï¿½ï¿½o simultï¿½neos |
+| `FR`    | Frente + Direita  | Motor + direï¿½ï¿½o simultï¿½neos |
+| `BL`    | Rï¿½ + Esquerda     | Motor + direï¿½ï¿½o simultï¿½neos |
+| `BR`    | Rï¿½ + Direita      | Motor + direï¿½ï¿½o simultï¿½neos |
+| `SC`    | Parada total      | Motor para + direï¿½ï¿½o centro |
 
-### Caçamba
+### Caï¿½amba
 
-| Comando | Ação | Detalhes |
-|---------|------|----------|
-| `U` | Subir | Caçamba 0° ? 90° (não-bloqueante) |
-| `D` | Descer | Caçamba 90° ? 0° (não-bloqueante) |
-| `X` | Parar | Congela caçamba na posição atual |
+| Comando | Aï¿½ï¿½o   | Detalhes                          |
+| ------- | ------ | --------------------------------- |
+| `U`     | Subir  | Caï¿½amba 0ï¿½ ? 90ï¿½ (nï¿½o-bloqueante) |
+| `D`     | Descer | Caï¿½amba 90ï¿½ ? 0ï¿½ (nï¿½o-bloqueante) |
+| `X`     | Parar  | Congela caï¿½amba na posiï¿½ï¿½o atual  |
 
-### Iluminação
+### Iluminaï¿½ï¿½o
 
-| Comando | Ação |
-|---------|------|
-| `HH` | Toggle faróis (ligar/desligar) |
-| `TI` | Seta esquerda ligar |
-| `TO` | Seta direita ligar |
-| `TX` | Desligar todas as setas |
+| Comando | Aï¿½ï¿½o                           |
+| ------- | ------------------------------ |
+| `HH`    | Toggle farï¿½is (ligar/desligar) |
+| `TI`    | Seta esquerda ligar            |
+| `TO`    | Seta direita ligar             |
+| `TX`    | Desligar todas as setas        |
 
 ### Respostas
 
@@ -120,64 +124,69 @@ ACK|TRUCK|<comando>|OK
 ## Funcionamento
 
 ### Setup
+
 1. Inicializa Serial (9600 baud) e Bluetooth
 2. Configura pinos dos LEDs como OUTPUT
 3. Conecta os 3 servos
-4. Posição inicial: direção centro (90°), caçamba baixa (0°), motor parado (90°)
+4. Posiï¿½ï¿½o inicial: direï¿½ï¿½o centro (90ï¿½), caï¿½amba baixa (0ï¿½), motor parado (90ï¿½)
 5. LEDs desligados
 
 ### Loop (a cada ciclo)
-1. **Processa Bluetooth**: Lê caracteres, monta string, processa ao receber `\n`
-2. **Atualiza caçamba**: Move 1 grau por ciclo (a cada 15ms) - não-bloqueante
 
-### Caçamba Não-Bloqueante
+1. **Processa Bluetooth**: Lï¿½ caracteres, monta string, processa ao receber `\n`
+2. **Atualiza caï¿½amba**: Move 1 grau por ciclo (a cada 15ms) - nï¿½o-bloqueante
 
-A caçamba usa `millis()` ao invés de `delay()`, permitindo que o Arduino processe novos comandos BT enquanto a caçamba se move:
+### Caï¿½amba Nï¿½o-Bloqueante
+
+A caï¿½amba usa `millis()` ao invï¿½s de `delay()`, permitindo que o Arduino processe novos comandos BT enquanto a caï¿½amba se move:
 
 - Move 1 grau a cada 15ms
-- Não bloqueia o `loop()`
+- Nï¿½o bloqueia o `loop()`
 - Pode ser interrompida a qualquer momento (comando `X`)
 
 ### Comandos Compostos
 
 O firmware suporta comandos de 1 ou 2 caracteres:
-- **1º caractere**: motor (F/B/S) ou direção (L/R/C)
-- **2º caractere**: direção (L/R/C) — opcional
 
-Exemplo: `FL` = motor frente + direção esquerda
+- **1ï¿½ caractere**: motor (F/B/S) ou direï¿½ï¿½o (L/R/C)
+- **2ï¿½ caractere**: direï¿½ï¿½o (L/R/C) ï¿½ opcional
+
+Exemplo: `FL` = motor frente + direï¿½ï¿½o esquerda
 
 ### Debug Serial
 
 O firmware imprime no Serial Monitor (9600 baud):
-- `=== CAMINHAO BASCULANTE v2.0 ===` — mensagem de boot
-- `RX: <comando>` — comando recebido
-- `ACK|TRUCK|<comando>|OK` — confirmação enviada
+
+- `=== CAMINHAO BASCULANTE v2.0 ===` ï¿½ mensagem de boot
+- `RX: <comando>` ï¿½ comando recebido
+- `ACK|TRUCK|<comando>|OK` ï¿½ confirmaï¿½ï¿½o enviada
 
 ## Consumo de Energia
 
-| Componente | Corrente típica |
-|------------|----------------|
-| Servo SG-90 (cada) | ~150mA |
-| HC-05 | ~40mA |
-| Arduino Uno | ~50mA |
-| LEDs (4x) | ~80mA |
-| **Total** | **~620mA** |
+| Componente         | Corrente tï¿½pica |
+| ------------------ | --------------- |
+| Servo SG-90 (cada) | ~150mA          |
+| HC-05              | ~40mA           |
+| Arduino Uno        | ~50mA           |
+| LEDs (4x)          | ~80mA           |
+| **Total**          | **~620mA**      |
 
-Use uma fonte externa de **mínimo 1A** para alimentar os 3 servos + Arduino.
+Use uma fonte externa de **mï¿½nimo 1A** para alimentar os 3 servos + Arduino.
 
 ## Sketch: `caminhao_basculante_firmware.ino`
 
-Arquivo com ~280 linhas. Contém:
-- Definições de pinos e constantes
-- Variáveis de estado (motor, direção, caçamba, LEDs)
-- Função `setup()` — inicialização dos componentes
-- Função `loop()` — processamento BT + atualização caçamba
-- Função `executarComando()` — parser de comandos
-- Funções de atualização: `atualizarMotor()`, `atualizarDirecao()`, `atualizarLEDs()`
-- Função `atualizarCacamba()` — movimentação não-bloqueante
-- Função `enviarACK()` — confirmação de comandos
+Arquivo com ~280 linhas. Contï¿½m:
 
-## Versão
+- Definiï¿½ï¿½es de pinos e constantes
+- Variï¿½veis de estado (motor, direï¿½ï¿½o, caï¿½amba, LEDs)
+- Funï¿½ï¿½o `setup()` ï¿½ inicializaï¿½ï¿½o dos componentes
+- Funï¿½ï¿½o `loop()` ï¿½ processamento BT + atualizaï¿½ï¿½o caï¿½amba
+- Funï¿½ï¿½o `executarComando()` ï¿½ parser de comandos
+- Funï¿½ï¿½es de atualizaï¿½ï¿½o: `atualizarMotor()`, `atualizarDirecao()`, `atualizarLEDs()`
+- Funï¿½ï¿½o `atualizarCacamba()` ï¿½ movimentaï¿½ï¿½o nï¿½o-bloqueante
+- Funï¿½ï¿½o `enviarACK()` ï¿½ confirmaï¿½ï¿½o de comandos
 
-- **v2.0** - Comandos compostos (motor + direção) + LEDs
-- **v1.0** - Versão inicial
+## Versï¿½o
+
+- **v2.0** - Comandos compostos (motor + direï¿½ï¿½o) + LEDs
+- **v1.0** - Versï¿½o inicial

@@ -13,7 +13,7 @@ Controle de 4 switches de ferrovia via Bluetooth (HC-05) com movimenta��o su
 
 ## Diagrama de Liga��es
 
-### Imagem do Circuito (Tinkercad)
+### Imagem do Circuito
 
 ![Diagrama de Liga��es Ferrorama](images/diagrama_ferrorama.svg)
 
