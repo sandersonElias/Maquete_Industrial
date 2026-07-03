@@ -89,10 +89,6 @@
         <span class="nav-num">05</span>
         <span class="nav-text">Central de controle</span>
       </a>
-      <a href="#contato" class="nav-link" data-section="contato">
-        <span class="nav-num">06</span>
-        <span class="nav-text">Contato</span>
-      </a>
     </nav>
 
     <footer class="sidebar-footer">
@@ -163,11 +159,6 @@
           <span class="home-card-num">05</span>
           <h3>Área de Controle</h3>
           <p>Central que coordena todo o sistema.</p>
-        </a>
-        <a href="#contato" class="home-card" data-section="contato">
-          <span class="home-card-num">06</span>
-          <h3>Contato</h3>
-          <p>Envie dúvidas sobre o projeto.</p>
         </a>
       </div>
 
@@ -1136,45 +1127,6 @@ void irParaAeroporto() {
 
       <nav class="section-nav" aria-label="Navegação entre seções">
         <a href="#mina" class="section-nav-btn" data-section="mina">← Mina de Ferro</a>
-        <a href="#contato" class="section-nav-btn section-nav-next" data-section="contato">Contato →</a>
-      </nav>
-    </section>
-
-    <!-- Seção 6: Contato -->
-    <section id="contato" class="section">
-      <div class="section-header">
-        <span class="section-number">06</span>
-        <h2>Contato</h2>
-        <p class="section-desc">Dúvidas sobre o projeto, feira de ciências ou visitação da maquete</p>
-      </div>
-
-      <div id="form-feedback" class="form-feedback" role="status" aria-live="polite" hidden></div>
-
-      <form class="contact-form" id="contactForm" action="https://formsubmit.co/seu-email@escola.edu.br" method="POST" novalidate>
-        <input type="hidden" name="_subject" value="Contato — Site Ferrorama">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_template" value="table">
-        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
-        <input type="hidden" name="_next" id="formNext" value="">
-
-        <div class="form-row">
-          <label for="nome">Nome</label>
-          <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Seu nome">
-        </div>
-        <div class="form-row">
-          <label for="email">E-mail</label>
-          <input type="email" id="email" name="email" required autocomplete="email" placeholder="seu@email.com">
-        </div>
-        <div class="form-row">
-          <label for="mensagem">Mensagem</label>
-          <textarea id="mensagem" name="mensagem" rows="5" required placeholder="Escreva sua dúvida ou comentário sobre o Ferrorama…"></textarea>
-        </div>
-        <button type="submit" class="btn-primary">Enviar mensagem</button>
-        <p class="form-note">Altere o e-mail de destino em <code>index.html</code> (campo action do formulário).</p>
-      </form>
-
-      <nav class="section-nav" aria-label="Navegação entre seções">
-        <a href="#controle" class="section-nav-btn" data-section="controle">← Central de controle</a>
         <a href="#inicio" class="section-nav-btn section-nav-next" data-section="inicio">Voltar ao Início →</a>
       </nav>
     </section>
