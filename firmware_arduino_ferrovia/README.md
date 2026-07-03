@@ -1,6 +1,6 @@
 # Firmware Arduino - Ferrovia
 
-Controle de 4 switches de ferrovia via Bluetooth (HC-05) com movimentação suave de servos SG90 e indicadores de direção (LEDs).
+Controle de 4 switches de ferrovia via Bluetooth (HC-05) com movimentaï¿½ï¿½o suave de servos SG90 e indicadores de direï¿½ï¿½o (LEDs).
 
 ## Hardware
 
@@ -8,98 +8,107 @@ Controle de 4 switches de ferrovia via Bluetooth (HC-05) com movimentação suave 
 - 4x Servos SG90
 - 8x LEDs (4 verdes + 4 vermelhos)
 - 8x Resistores 200O
-- 1x Módulo Bluetooth HC-05
+- 1x Mï¿½dulo Bluetooth HC-05
 - Fonte externa 5V para servos
+
+## Diagrama de Ligaï¿½ï¿½es
+
+### Imagem do Circuito (Tinkercad)
+
+![Diagrama de Ligaï¿½ï¿½es Ferrorama](images/diagrama_ferrorama.svg)
+
+> **Instruï¿½ï¿½o:** Salve a imagem do Tinkercad como `diagrama_ferrorama.svg` na pasta `images/` deste diretï¿½rio.
+
+### Diagrama em Texto
+
+```
+                    Arduino Uno
+                    +-----------+
+                    ï¿½      D0   ï¿½---- HC-05 TX (RX Serial)
+                    ï¿½      D1   ï¿½---- HC-05 RX (TX Serial)
+              Servo ï¿½      D2   ï¿½---- Servo 1
+              Div 1 ï¿½      D3   ï¿½---- Servo 2
+              Servo ï¿½      D4   ï¿½---- Servo 3
+              Div 2 ï¿½      D5   ï¿½---- Servo 4
+              LED   ï¿½      D6   ï¿½---- LED Verde Div 1 (Esquerda)
+              Div 1 ï¿½      D7   ï¿½---- LED Vermelho Div 1 (Direita)
+              LED   ï¿½      D8   ï¿½---- LED Verde Div 2 (Esquerda)
+              Div 2 ï¿½      D9   ï¿½---- LED Vermelho Div 2 (Direita)
+              LED   ï¿½      D10  ï¿½---- LED Verde Div 3 (Esquerda)
+              Div 3 ï¿½      D11  ï¿½---- LED Vermelho Div 3 (Direita)
+              LED   ï¿½      D12  ï¿½---- LED Verde Div 4 (Esquerda)
+              Div 4 ï¿½      D13  ï¿½---- LED Vermelho Div 4 (Direita)
+                    ï¿½           ï¿½
+                    ï¿½      5V   ï¿½---- VCC HC-05
+                    ï¿½      GND  ï¿½---- GND Comum
+                    ï¿½      Vin  ï¿½---- Alimentaï¿½ï¿½o externa 7-12V
+                    +-----------+
+```
 
 ## Pinagem
 
 ### Servos (D2 a D5)
 
-| Componente | Pino Arduino | Observação |
-|------------|-------------|------------|
-| Servo Switch 1 | D2 | |
-| Servo Switch 2 | D3 | |
-| Servo Switch 3 | D4 | |
-| Servo Switch 4 | D5 | |
+| Componente     | Pino Arduino | Observaï¿½ï¿½o |
+| -------------- | ------------ | ---------- |
+| Servo Switch 1 | D2           | Divisï¿½o 1  |
+| Servo Switch 2 | D3           | Divisï¿½o 2  |
+| Servo Switch 3 | D4           | Divisï¿½o 3  |
+| Servo Switch 4 | D5           | Divisï¿½o 4  |
 
-### LEDs Indicador de Direção (D6 a D13)
+### LEDs Indicador de Direï¿½ï¿½o (D6 a D13)
 
-Cada divisão tem 2 LEDs que indicam para qual linha a locomotiva vai seguir:
+Cada divisï¿½o tem 2 LEDs que indicam para qual linha a locomotiva vai seguir:
 
-| Divisão | LED Esquerda (Verde) | LED Direita (Vermelho) |
-|---------|---------------------|------------------------|
-| 1 | D6 | D7 |
-| 2 | D8 | D9 |
-| 3 | D10 | D11 |
-| 4 | D12 | D13 |
+| Divisï¿½o | LED Esquerda (Verde) | LED Direita (Vermelho) |
+| ------- | -------------------- | ---------------------- |
+| 1       | D6                   | D7                     |
+| 2       | D8                   | D9                     |
+| 3       | D10                  | D11                    |
+| 4       | D12                  | D13                    |
 
 **Circuito de cada LED:**
+
 ```
 Pino Arduino ? Resistor 200O ? Anodo (+) LED ? Catodo (-) ? GND
 ```
 
-### Bluetooth
+### Bluetooth (HC-05)
 
-| Componente | Pino Arduino | Observação |
-|------------|-------------|------------|
-| HC-05 TX ? RX | D0 | Serial RX |
-| HC-05 RX ? TX | D1 | Serial TX |
+| Componente    | Pino Arduino | Observaï¿½ï¿½o |
+| ------------- | ------------ | ---------- |
+| HC-05 TX ? RX | D0           | Serial RX  |
+| HC-05 RX ? TX | D1           | Serial TX  |
 
-### Alimentação
+### Alimentaï¿½ï¿½o
 
-| Componente | Alimentação | Observação |
-|------------|-------------|------------|
-| Arduino | USB ou 7-12V | Vin ou USB |
-| Servos | 5V externa | NÃO usar do Arduino (muita corrente) |
-| HC-05 | 5V | Pode usar do Arduino |
-| LEDs | 5V via resistores | Pode usar do Arduino |
-| GND comum | GND | Arduino + servos + HC-05 + LEDs |
+| Componente | Alimentaï¿½ï¿½o       | Observaï¿½ï¿½o                           |
+| ---------- | ----------------- | ------------------------------------ |
+| Arduino    | USB ou 7-12V      | Vin ou USB                           |
+| Servos     | 5V externa        | Nï¿½O usar do Arduino (muita corrente) |
+| HC-05      | 5V                | Pode usar do Arduino                 |
+| LEDs       | 5V via resistores | Pode usar do Arduino                 |
+| GND comum  | GND               | Arduino + servos + HC-05 + LEDs      |
 
 **Importante**: Desconecte os pinos RX/TX do HC-05 ao carregar o sketch via USB.
 
-## Diagrama de Ligações
+## Configuraï¿½ï¿½o
 
-```
-                    Arduino Uno
-                    +-----------+
-                    ¦      D0   ¦---- HC-05 TX (RX Serial)
-                    ¦      D1   ¦---- HC-05 RX (TX Serial)
-              Servo ¦      D2   ¦---- Servo 1
-              Div 1 ¦      D3   ¦---- Servo 2
-              Servo ¦      D4   ¦---- Servo 3
-              Div 2 ¦      D5   ¦---- Servo 4
-              LED   ¦      D6   ¦---- LED Verde Div 1 (Esquerda)
-              Div 1 ¦      D7   ¦---- LED Vermelho Div 1 (Direita)
-              LED   ¦      D8   ¦---- LED Verde Div 2 (Esquerda)
-              Div 2 ¦      D9   ¦---- LED Vermelho Div 2 (Direita)
-              LED   ¦      D10  ¦---- LED Verde Div 3 (Esquerda)
-              Div 3 ¦      D11  ¦---- LED Vermelho Div 3 (Direita)
-              LED   ¦      D12  ¦---- LED Verde Div 4 (Esquerda)
-              Div 4 ¦      D13  ¦---- LED Vermelho Div 4 (Direita)
-                    ¦           ¦
-                    ¦      5V   ¦---- VCC HC-05 + LEDs (via resistores)
-                    ¦      GND  ¦---- GND Comum
-                    ¦      Vin  ¦---- Alimentação externa 7-12V
-                    +-----------+
-```
-
-## Configuração
-
-Constantes no início do sketch:
+Constantes no inï¿½cio do sketch:
 
 ```cpp
 // Servos (D2 a D5)
 const int NUM_SWITCHES = 4;
 const int SERVO_PINS[] = {2, 3, 4, 5};
 
-// LEDs Indicador de Direção (D6 a D13)
+// LEDs Indicador de Direï¿½ï¿½o (D6 a D13)
 const int LED_LEFT[] = {6, 8, 10, 12};   // Verde - linha esquerda
 const int LED_RIGHT[] = {7, 9, 11, 13};  // Vermelho - linha direita
 
 // Bluetooth
 const int BAUD_BT = 9600;
 
-// Movimentação
+// Movimentaï¿½ï¿½o
 const unsigned long HEARTBEAT_INTERVAL = 5000; // 5 segundos
 const int ANGLE_LEFT = 0;
 const int ANGLE_RIGHT = 180;
@@ -107,33 +116,33 @@ const int ANGLE_CENTER = 90;
 const int MOVE_DELAY = 15;  // ms entre passos do servo
 ```
 
-## Indicadores de Direção (LEDs)
+## Indicadores de Direï¿½ï¿½o (LEDs)
 
-### Lógica
+### Lï¿½gica
 
-| Ângulo do Servo | LED Esquerda | LED Direita | Significado |
-|-----------------|--------------|-------------|-------------|
-| LEFT (0°) | ? Aceso | ? Apagado | Locomotiva vai para linha esquerda |
-| RIGHT (180°) | ? Apagado | ? Aceso | Locomotiva vai para linha direita |
-| CENTER (90°) | ? Apagado | ? Apagado | Neutro (ambas as linhas disponíveis) |
+| ï¿½ngulo do Servo | LED Esquerda | LED Direita | Significado                          |
+| --------------- | ------------ | ----------- | ------------------------------------ |
+| LEFT (0ï¿½)       | ? Aceso      | ? Apagado   | Locomotiva vai para linha esquerda   |
+| RIGHT (180ï¿½)    | ? Apagado    | ? Aceso     | Locomotiva vai para linha direita    |
+| CENTER (90ï¿½)    | ? Apagado    | ? Apagado   | Neutro (ambas as linhas disponï¿½veis) |
 
 ### Funcionamento
 
-- Quando o servo move para **LEFT (0°)**: LED Verde (esquerda) acende
-- Quando o servo move para **RIGHT (180°)**: LED Vermelho (direita) acende
-- Quando o servo está em **CENTER (90°)**: Ambos os LEDs apagam
+- Quando o servo move para **LEFT (0ï¿½)**: LED Verde (esquerda) acende
+- Quando o servo move para **RIGHT (180ï¿½)**: LED Vermelho (direita) acende
+- Quando o servo estï¿½ em **CENTER (90ï¿½)**: Ambos os LEDs apagam
 
 ## Protocolo de Comandos
 
 ### Recebido (via Bluetooth Serial)
 
 ```
-CMD|SWITCH|<id>|SET|LEFT       # Switch para esquerda (0°)
-CMD|SWITCH|<id>|SET|RIGHT      # Switch para direita (180°)
-CMD|SWITCH|<id>|SET|CENTER     # Switch para centro (90°)
-CMD|SWITCH|<id>|ANGLE|<0-180>  # Switch para ângulo específico
+CMD|SWITCH|<id>|SET|LEFT       # Switch para esquerda (0ï¿½)
+CMD|SWITCH|<id>|SET|RIGHT      # Switch para direita (180ï¿½)
+CMD|SWITCH|<id>|SET|CENTER     # Switch para centro (90ï¿½)
+CMD|SWITCH|<id>|ANGLE|<0-180>  # Switch para ï¿½ngulo especï¿½fico
 CMD|SWITCH|<id>|STATUS         # Solicitar status do switch
-CMD|SWITCH|<id>|RESET          # Resetar para centro (90°)
+CMD|SWITCH|<id>|RESET          # Resetar para centro (90ï¿½)
 ```
 
 - `<id>`: 1 a 4
@@ -142,56 +151,60 @@ CMD|SWITCH|<id>|RESET          # Resetar para centro (90°)
 ### Enviado (respostas)
 
 ```
-ACK|SWITCH|<id>|<estado>                    # Confirmação
+ACK|SWITCH|<id>|<estado>                    # Confirmaï¿½ï¿½o
 STATUS|SWITCH|<id>|<angulo>|<estado>|<ts>   # Status completo
 ```
 
-### Estados possíveis
+### Estados possï¿½veis
 
-| Estado | Condição |
-|--------|----------|
-| `LEFT` | Ângulo <= 10° |
-| `RIGHT` | Ângulo >= 170° |
-| `CENTER` | Ângulo entre 85° e 95° |
-| `TRANSITION` | Qualquer outro ângulo |
+| Estado       | Condiï¿½ï¿½o               |
+| ------------ | ---------------------- |
+| `LEFT`       | ï¿½ngulo <= 10ï¿½          |
+| `RIGHT`      | ï¿½ngulo >= 170ï¿½         |
+| `CENTER`     | ï¿½ngulo entre 85ï¿½ e 95ï¿½ |
+| `TRANSITION` | Qualquer outro ï¿½ngulo  |
 
 ## Funcionamento
 
 ### Setup
+
 1. Inicializa Serial (debug) e Bluetooth
-2. Conecta os 4 servos e move para posição central (90°)
+2. Conecta os 4 servos e move para posiï¿½ï¿½o central (90ï¿½)
 3. Inicializa pinos dos LEDs como OUTPUT
 4. Envia status de todos os switches
 
 ### Loop (a cada ciclo)
-1. **Processa Bluetooth**: Lê caracteres, monta string, processa ao receber `\n`
-2. **Atualiza servos**: Move 1 grau por ciclo (a cada 15ms) até atingir o alvo
-3. **Atualiza LEDs**: Acende LED correspondente à direção do desvio
+
+1. **Processa Bluetooth**: Lï¿½ caracteres, monta string, processa ao receber `\n`
+2. **Atualiza servos**: Move 1 grau por ciclo (a cada 15ms) atï¿½ atingir o alvo
+3. **Atualiza LEDs**: Acende LED correspondente ï¿½ direï¿½ï¿½o do desvio
 4. **Heartbeat**: Envia status de todos os switches a cada 5 segundos
 
-### Movimentação Suave
-- Servos NÃO pulam direto para o ângulo alvo
+### Movimentaï¿½ï¿½o Suave
+
+- Servos Nï¿½O pulam direto para o ï¿½ngulo alvo
 - Movem 1 grau por `MOVE_DELAY` (15ms)
-- Exemplo: mover de 90° para 0° = 90 passos × 15ms = 1.35 segundos
+- Exemplo: mover de 90ï¿½ para 0ï¿½ = 90 passos ï¿½ 15ms = 1.35 segundos
 - Quando atinge o alvo, envia `STATUS` com o estado final
 
 ## Sketch: `ferrovia_firmware.ino`
 
-Arquivo com ~300 linhas. Contém:
-- Definições de pinos e constantes (servos + LEDs)
-- Struct `SwitchState` (currentAngle, targetAngle, moving, lastMove)
-- Função `setupLEDs()` — inicialização dos pinos dos LEDs
-- Função `updateLEDs()` — atualização dos LEDs baseado no ângulo
-- Função `processBluetooth()` — leitura serial
-- Função `processCommand()` — parser e execução
-- Função `updateServos()` — movimentação suave
-- Funções de envio: `sendAck()`, `sendStatus()`, `sendStatusAll()`
+Arquivo com ~300 linhas. Contï¿½m:
 
-## Versão
+- Definiï¿½ï¿½es de pinos e constantes (servos + LEDs)
+- Struct `SwitchState` (currentAngle, targetAngle, moving, lastMove)
+- Funï¿½ï¿½o `setupLEDs()` ï¿½ inicializaï¿½ï¿½o dos pinos dos LEDs
+- Funï¿½ï¿½o `updateLEDs()` ï¿½ atualizaï¿½ï¿½o dos LEDs baseado no ï¿½ngulo
+- Funï¿½ï¿½o `processBluetooth()` ï¿½ leitura serial
+- Funï¿½ï¿½o `processCommand()` ï¿½ parser e execuï¿½ï¿½o
+- Funï¿½ï¿½o `updateServos()` ï¿½ movimentaï¿½ï¿½o suave
+- Funï¿½ï¿½es de envio: `sendAck()`, `sendStatus()`, `sendStatusAll()`
+
+## Versï¿½o
 
 - **v3.2** - Pinagem reorganizada (servos D2-D5, LEDs D6-D13)
-- **v3.1** - Indicador de direção com LEDs (2 por desvio)
-- **v3.0** - Sistema de semáforo com LEDs
-- **v2.2** - Movimentação suave de servos
-- **v2.0** - Comunicação Bluetooth
-- **v1.0** - Versão inicial
+- **v3.1** - Indicador de direï¿½ï¿½o com LEDs (2 por desvio)
+- **v3.0** - Sistema de semï¿½foro com LEDs
+- **v2.2** - Movimentaï¿½ï¿½o suave de servos
+- **v2.0** - Comunicaï¿½ï¿½o Bluetooth
+- **v1.0** - Versï¿½o inicial
