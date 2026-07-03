@@ -2,11 +2,11 @@ require("dotenv").config();
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const requiredInProduction = ["JWT_SECRET", "GATEWAY_API_KEY", "DB_HOST", "DB_NAME", "DB_USER", "DB_PASSWORD"];
+const requiredInProduction = ["JWT_SECRET", "GATEWAY_API_KEY", "DATABASE_URL"];
 if (isProduction) {
   for (const key of requiredInProduction) {
     if (!process.env[key]) {
-      throw new Error(`Variável obrigatória não definida em produção: ${key}`);
+      throw new Error(`Variavel obrigatoria nao definida em producao: ${key}`);
     }
   }
 }
@@ -19,12 +19,6 @@ module.exports = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || (isProduction ? "" : "*"),
   COMMAND_TIMEOUT_MS: parseInt(process.env.COMMAND_TIMEOUT_MS || "30000", 10),
   NODE_ENV: process.env.NODE_ENV || "development",
-  DB_HOST: process.env.DB_HOST,
-  DB_PORT: process.env.DB_PORT,
-  DB_NAME: process.env.DB_NAME,
-  DB_USER: process.env.DB_USER,
-  DB_PASSWORD: process.env.DB_PASSWORD,
-  REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
-  SUPABASE_URL: process.env.SUPABASE_URL,
-  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  // Database - PostgreSQL na nuvem (Supabase)
+  DATABASE_URL: process.env.DATABASE_URL,
 };

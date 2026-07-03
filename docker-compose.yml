@@ -1,42 +1,4 @@
 services:
-  # PostgreSQL com PostGIS
-  postgres:
-    image: postgis/postgis:14-3.4-alpine
-    container_name: maquete-postgres
-    environment:
-      POSTGRES_DB: ${DB_NAME:-maquete_industrial}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend_nodejs/schema.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - maquete-network
-
-  # Redis
-  redis:
-    image: redis:7-alpine
-    container_name: maquete-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - maquete-network
-
   # Backend (API + WebSocket)
   backend:
     build:
@@ -46,24 +8,15 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - DB_HOST=${DB_HOST:-postgres}
-      - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME:-maquete_industrial}
-      - DB_USER=${DB_USER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD:-postgres}
-      # DATABASE_URL não definido - usa DB_HOST, DB_PORT, etc.
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      # PostgreSQL na nuvem (Supabase)
+      - DATABASE_URL=${DATABASE_URL}
+      # Configuracoes gerais
       - JWT_SECRET=${JWT_SECRET:-chave_secreta}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
       - GATEWAY_API_KEY=${GATEWAY_API_KEY:-chave_api}
       - PORT=${PORT:-4000}
       - NODE_ENV=${NODE_ENV:-development}
       - LOG_LEVEL=${LOG_LEVEL:-info}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - ./backend_nodejs/reports:/app/reports
     networks:
@@ -99,13 +52,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:4000}
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://backend:4000}
     networks:
       - maquete-network
-
-volumes:
-  postgres_data:
-  redis_data:
 
 networks:
   maquete-network:
