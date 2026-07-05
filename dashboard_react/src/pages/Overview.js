@@ -4,7 +4,6 @@ import { Train, Truck, Ship, Plane, AlertTriangle, Activity, Wifi, WifiOff, Zap,
 import axios from 'axios';
 import { useSocket } from '../contexts/SocketContext';
 import toast from 'react-hot-toast';
-import Card3D from '../components/Card3D';
 
 const STATE_COLORS = {
   CENTER: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' },
@@ -23,7 +22,7 @@ const FerroviaCard = ({ switches, onClick }) => {
   const moving = switches.some(s => s.is_moving);
 
   return (
-    <Card3D glowColor="#3D9EFF" onClick={onClick} className="cursor-pointer">
+    <div onClick={onClick} className="cursor-pointer">
       <div className="bg-maquete-surface/80 backdrop-blur-sm border border-maquete-border rounded-xl p-6 transition-all duration-300 hover:shadow-xl group"
         style={{ boxShadow: '0 4px 30px rgba(0,0,0,0.3)' }}
       >
@@ -73,7 +72,7 @@ const FerroviaCard = ({ switches, onClick }) => {
 
         <div className="mt-4 h-0.5 rounded-full bg-gradient-to-r from-maquete-accent/0 to-maquete-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:from-maquete-accent group-hover:to-transparent" />
       </div>
-    </Card3D>
+    </div>
   );
 };
 
@@ -107,7 +106,7 @@ const TruckCard = ({ trucks, onClick }) => {
   const active = trucks.filter(t => t.status === 'active');
 
   return (
-    <Card3D glowColor="#FFB800" onClick={onClick} className="cursor-pointer">
+    <div onClick={onClick} className="cursor-pointer">
       <div className="bg-maquete-surface/80 backdrop-blur-sm border border-maquete-border rounded-xl p-6 transition-all duration-300 hover:shadow-xl group"
         style={{ boxShadow: '0 4px 30px rgba(0,0,0,0.3)' }}
       >
@@ -158,12 +157,12 @@ const TruckCard = ({ trucks, onClick }) => {
 
         <div className="mt-4 h-0.5 rounded-full bg-gradient-to-r from-maquete-warning/0 to-maquete-warning/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:from-maquete-warning group-hover:to-transparent" />
       </div>
-    </Card3D>
+    </div>
   );
 };
 
 const SimpleCard = ({ title, icon: Icon, color, colorHex, status, count, alerts, onClick, delay }) => (
-  <Card3D glowColor={colorHex} onClick={onClick} className="cursor-pointer">
+  <div onClick={onClick} className="cursor-pointer">
     <div className="bg-maquete-surface/80 backdrop-blur-sm border border-maquete-border rounded-xl p-6 transition-all duration-300 hover:shadow-xl group"
       style={{
         animationDelay: `${delay}ms`,
@@ -196,7 +195,7 @@ const SimpleCard = ({ title, icon: Icon, color, colorHex, status, count, alerts,
         style={{ background: `linear-gradient(to right, ${colorHex}, transparent)` }}
       />
     </div>
-  </Card3D>
+  </div>
 );
 
 export default function Overview() {

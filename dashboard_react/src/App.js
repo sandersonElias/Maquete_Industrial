@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import axios from 'axios';
@@ -14,7 +14,7 @@ import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
 
-const Background3D = React.lazy(() => import('./components/Background3D'));
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
 axios.interceptors.response.use(
   (res) => res,
@@ -40,11 +40,6 @@ function AppContent() {
   return (
     <SocketProvider>
       <div className="flex h-screen bg-maquete-dark relative">
-        {/* 3D Background */}
-        <Suspense fallback={null}>
-          <Background3D />
-        </Suspense>
-
         {/* Main Layout */}
         <div className="relative z-10 flex w-full h-full">
           <Sidebar isOpen={sidebarOpen} />
