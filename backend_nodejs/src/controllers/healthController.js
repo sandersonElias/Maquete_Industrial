@@ -12,7 +12,7 @@ async function getHealth(req, res) {
     port: Number(PORT),
     services: {
       postgres: { status: "unknown" },
-      redis: { status: redisClient.isOpen ? "connected" : "disconnected" },
+      redis: { status: redisClient && redisClient.isOpen ? "connected" : "not configured" },
     },
     timestamp: new Date().toISOString(),
   };
@@ -26,15 +26,17 @@ async function getHealth(req, res) {
     health.services.postgres.error = e.message;
   }
 
-  try {
-    if (redisClient.isOpen) {
-      await redisClient.ping();
-      health.services.redis.status = "connected";
+  if (redisClient) {
+    try {
+      if (redisClient.isOpen) {
+        await redisClient.ping();
+        health.services.redis.status = "connected";
+      }
+    } catch (e) {
+      health.status = "degraded";
+      health.services.redis.status = "error";
+      health.services.redis.error = e.message;
     }
-  } catch (e) {
-    health.status = "degraded";
-    health.services.redis.status = "error";
-    health.services.redis.error = e.message;
   }
 
   res.status(health.status === "ok" ? 200 : 503).json(health);

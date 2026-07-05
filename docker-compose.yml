@@ -7,6 +7,9 @@ services:
     container_name: maquete-backend
     ports:
       - "4000:4000"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       # PostgreSQL na nuvem (Supabase)
       - DATABASE_URL=${DATABASE_URL}

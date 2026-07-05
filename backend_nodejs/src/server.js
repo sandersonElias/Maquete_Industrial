@@ -13,7 +13,7 @@ setupSockets(io);
 const { markTimedOutCommands } = setupJobs(io);
 const jobsInterval = setInterval(markTimedOutCommands, 5000);
 
-// Teste das Conexões
+// Teste das Conexoes
 async function testConnections() {
   try {
     await pool.query("SELECT NOW()");
@@ -22,11 +22,15 @@ async function testConnections() {
     logger.error(`PostgreSQL ERRO: ${e.message}`);
   }
 
-  try {
-    await redisClient.ping();
-    logger.info("Redis conectado");
-  } catch (e) {
-    logger.error(`Redis ERRO: ${e.message}`);
+  if (redisClient) {
+    try {
+      await redisClient.ping();
+      logger.info("Redis conectado");
+    } catch (e) {
+      logger.error(`Redis ERRO: ${e.message}`);
+    }
+  } else {
+    logger.info("Redis: modo sem cache (nao configurado)");
   }
 }
 
@@ -53,11 +57,13 @@ async function gracefulShutdown(signal) {
     logger.error("Erro ao encerrar PostgreSQL:", e);
   }
 
-  try {
-    await redisClient.quit();
-    logger.info("Redis encerrado");
-  } catch (e) {
-    logger.error("Erro ao encerrar Redis:", e);
+  if (redisClient) {
+    try {
+      await redisClient.quit();
+      logger.info("Redis encerrado");
+    } catch (e) {
+      logger.error("Erro ao encerrar Redis:", e);
+    }
   }
 
   process.exit(0);
@@ -66,7 +72,7 @@ async function gracefulShutdown(signal) {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-// Inicialização do Servidor
+// Inicializacao do Servidor
 server.listen(PORT, () => {
   logger.info("========================================");
   logger.info(`  SERVIDOR MAQUETE INDUSTRIAL`);
