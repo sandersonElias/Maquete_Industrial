@@ -26,8 +26,14 @@ function connectToBackend(deviceManager) {
   return wsClient;
 }
 
-function handleCommand(payload, deviceManager) {
+function handleCommand(rawPayload, deviceManager) {
+  const payload = rawPayload.payload || rawPayload;
   const { target, cmd, switchId, angle, action } = payload;
+
+  if (!target) {
+    logger.error(`Comando sem target: ${JSON.stringify(rawPayload)}`);
+    return;
+  }
 
   const device = deviceManager.resolveTarget(target);
   if (!device) {

@@ -22,6 +22,7 @@ const CONFIG = {
   reconnectInterval: parseInt(process.env.RECONNECT_INTERVAL, 10) || 5000,
   heartbeatInterval: parseInt(process.env.HEARTBEAT_INTERVAL, 10) || 3000,
   serialBaud: parseInt(process.env.SERIAL_BAUD, 10) || 9600,
+  serialPort: process.env.SERIAL_PORT || null,
   simulationMode: process.env.SIMULATION_MODE === "true",
   healthPort: parseInt(process.env.HEALTH_PORT, 10) || 3001,
   devices,

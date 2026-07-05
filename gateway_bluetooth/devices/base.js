@@ -83,11 +83,11 @@ class BluetoothDeviceBase {
 
     const parsed = parseIncomingData(trimmed);
     if (parsed) {
-      this.onDataParsed(parsed);
+      this.onDataParsed(parsed, trimmed);
     }
   }
 
-  onDataParsed(parsed) {
+  onDataParsed(parsed, rawData) {
     // Override in subclass
   }
 
@@ -125,28 +125,139 @@ class BluetoothDeviceBase {
 
   async findSerialPort() {
     try {
-      const ports = await SerialPort.list();
-      const rfcommPorts = ports.filter((p) => p.path.includes("rfcomm"));
-
-      if (rfcommPorts.length === 0) return null;
-      if (rfcommPorts.length === 1) return rfcommPorts[0].path;
-
-      // Try to match by MAC address in pnpId or serialNumber
-      if (this.macAddress) {
-        const macNormalized = this.macAddress.replace(/:/g, "").toLowerCase();
-        const match = rfcommPorts.find((p) => {
-          const pnpId = (p.pnpId || "").toLowerCase().replace(/:/g, "");
-          const serial = (p.serialNumber || "").toLowerCase().replace(/:/g, "");
-          return pnpId.includes(macNormalized) || serial.includes(macNormalized);
-        });
-        if (match) return match.path;
+      // Manual override: skip auto-detection
+      if (CONFIG.serialPort) {
+        logger.info(`Usando porta serial manual: ${CONFIG.serialPort}`);
+        return CONFIG.serialPort;
       }
 
-      // Fallback: return first available
-      return rfcommPorts[0].path;
+      const ports = await SerialPort.list();
+
+      // Linux: rfcomm ports
+      const rfcommPorts = ports.filter((p) => p.path.includes("rfcomm"));
+      if (rfcommPorts.length > 0) {
+        if (rfcommPorts.length === 1) return rfcommPorts[0].path;
+        return this._matchByMac(rfcommPorts) || rfcommPorts[0].path;
+      }
+
+      // Windows: filter Bluetooth COM ports (exclude known USB-Serial adapters)
+      const usbSerialPatterns = ["ch340", "cp210", "ftdi", "usb-serial"];
+      const btPorts = ports.filter((p) => {
+        if (!p.path.startsWith("COM")) return false;
+        const desc = ((p.manufacturer || "") + (p.pnpId || "")).toLowerCase();
+        return !usbSerialPatterns.some((pat) => desc.includes(pat));
+      });
+
+      if (btPorts.length === 0) return null;
+
+      // If only one Bluetooth COM, use it
+      if (btPorts.length === 1) {
+        logger.info(`Porta Bluetooth unica encontrada: ${btPorts[0].path}`);
+        return btPorts[0].path;
+      }
+
+      // Multiple Bluetooth COMs: try MAC match first
+      const macMatch = this._matchByMac(btPorts);
+      if (macMatch) {
+        logger.info(`Porta Bluetooth identificada por MAC: ${macMatch}`);
+        return macMatch;
+      }
+
+      // Try description match
+      const descMatch = this._matchByDescription(btPorts);
+      if (descMatch) {
+        logger.info(`Porta Bluetooth identificada por descricao: ${descMatch}`);
+        return descMatch;
+      }
+
+      // Probe each port to find which responds to Arduino protocol
+      logger.info(`${btPorts.length} portas Bluetooth encontradas, testando...`);
+      const portsInfo = btPorts.map((p) => p.path).join(", ");
+      logger.info(`Portas disponiveis: ${portsInfo}`);
+
+      for (const portInfo of btPorts) {
+        const alive = await this._probePort(portInfo.path);
+        if (alive) {
+          logger.info(`Porta ativa encontrada: ${portInfo.path}`);
+          return portInfo.path;
+        }
+      }
+
+      // Fallback: use first port
+      logger.warn(`Nenhuma porta respondeu ao probe. Usando primeira: ${btPorts[0].path}`);
+      return btPorts[0].path;
     } catch (e) {
+      logger.error(`Erro na deteccao de portas: ${e.message}`);
       return null;
     }
+  }
+
+  _matchByMac(candidates) {
+    if (!this.macAddress) return null;
+    const macNormalized = this.macAddress.replace(/:/g, "").toLowerCase();
+    const match = candidates.find((p) => {
+      const pnpId = (p.pnpId || "").toLowerCase().replace(/:/g, "");
+      const serial = (p.serialNumber || "").toLowerCase().replace(/:/g, "");
+      return pnpId.includes(macNormalized) || serial.includes(macNormalized);
+    });
+    return match ? match.path : null;
+  }
+
+  _matchByDescription(candidates) {
+    const match = candidates.find((p) => {
+      const desc = ((p.manufacturer || "") + (p.pnpId || "")).toLowerCase();
+      return desc.includes("hc-05") || desc.includes("bluetooth");
+    });
+    return match ? match.path : null;
+  }
+
+  _probePort(portPath) {
+    return new Promise((resolve) => {
+      try {
+        const probePort = new SerialPort({
+          path: portPath,
+          baudRate: CONFIG.serialBaud,
+          autoOpen: false,
+        });
+        const timeout = setTimeout(() => {
+          try { probePort.close(); } catch (_) {}
+          resolve(false);
+        }, 2000);
+
+        probePort.open((err) => {
+          if (err) {
+            clearTimeout(timeout);
+            resolve(false);
+            return;
+          }
+          // Send STATUS request for switch 1
+          probePort.write("CMD|SWITCH|1|STATUS\n", (writeErr) => {
+            if (writeErr) {
+              clearTimeout(timeout);
+              try { probePort.close(); } catch (_) {}
+              resolve(false);
+              return;
+            }
+            // Wait for response
+            const onData = (data) => {
+              clearTimeout(timeout);
+              probePort.removeListener("data", onData);
+              try { probePort.close(); } catch (_) {}
+              resolve(data.includes("STATUS|SWITCH") || data.includes("ACK|SWITCH"));
+            };
+            probePort.on("data", onData);
+            // Timeout if no response
+            setTimeout(() => {
+              probePort.removeListener("data", onData);
+              try { probePort.close(); } catch (_) {}
+              resolve(false);
+            }, 1500);
+          });
+        });
+      } catch (e) {
+        resolve(false);
+      }
+    });
   }
 
   scheduleReconnect() {
