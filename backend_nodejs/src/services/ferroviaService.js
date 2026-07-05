@@ -9,6 +9,7 @@ async function getSwitchStatus() {
 
 async function handleSwitchCommand(switchId, action, angle, userId) {
   const client = await pool.connect();
+  let command;
   try {
     await client.query("BEGIN");
 
@@ -18,7 +19,7 @@ async function handleSwitchCommand(switchId, action, angle, userId) {
       [switchId, action ? "SET" : "ANGLE", action, angle, userId],
     );
 
-    const command = cmdResult.rows[0];
+    command = cmdResult.rows[0];
     const targetAngle =
       angle !== undefined
         ? angle
