@@ -8,16 +8,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       await login(username, password);
       toast.success('Bem-vindo!');
     } catch (err) {
-      toast.error('Credenciais inválidas');
+      const msg = err?.response?.data?.error || err?.message || 'Erro ao fazer login';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -34,9 +38,15 @@ export default function Login() {
           <p className="text-gray-500 mt-1">Central de Controle</p>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Usuário</label>
+            <label className="block text-sm text-gray-400 mb-1.5">Usuario</label>
             <input
               type="text"
               value={username}
