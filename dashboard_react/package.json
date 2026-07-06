@@ -5,7 +5,6 @@
   "dependencies": {
     "@react-three/drei": "^9.92.7",
     "@react-three/fiber": "^8.15.12",
-    "@supabase/supabase-js": "^2.110.0",
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.2",
     "date-fns": "^3.0.0",

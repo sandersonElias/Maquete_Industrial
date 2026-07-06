@@ -130,71 +130,144 @@ const RailwayMap = ({ switches }) => {
         </h3>
       </div>
 
-      <div className="relative" style={{ height: '200px' }}>
+      <div className="relative" style={{ height: '280px' }}>
         <div className="relative h-full bg-maquete-dark p-4">
-          <svg viewBox="0 0 800 200" className="w-full h-full">
+          <svg viewBox="0 0 800 300" className="w-full h-full">
             {/* Grid background */}
             <defs>
               <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                 <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1C2333" strokeWidth="0.5"/>
               </pattern>
             </defs>
-            <rect width="800" height="200" fill="url(#grid)" />
+            <rect width="800" height="300" fill="url(#grid)" />
 
-            {/* Trilho principal */}
-            <line x1="30" y1="100" x2="770" y2="100" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" />
-            <line x1="30" y1="100" x2="770" y2="100" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8">
+            {/* === TRILHOS === */}
+
+            {/* Trilho superior: esquerda → SW1 */}
+            <path d="M 40,70 L 130,70" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" fill="none" />
+            <path d="M 40,70 L 130,70" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8" fill="none">
               <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
-            </line>
+            </path>
 
-            {/* Trilhos laterais dos switches */}
-            {[150, 350, 550, 720].map((sx, i) => (
-              <g key={`track-${i}`}>
-                <line x1={sx + 20} y1={100} x2={sx} y2={60} stroke="#2D3748" strokeWidth="4" />
-                <line x1={sx + 20} y1={100} x2={sx} y2={140} stroke="#2D3748" strokeWidth="4" />
-              </g>
-            ))}
+            {/* SW1 → Reversor */}
+            <path d="M 180,70 L 380,70" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" fill="none" />
+            <path d="M 180,70 L 380,70" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8" fill="none">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
+            </path>
 
-            {/* Switches com glow */}
-            {[170, 370, 570, 740].map((cx, i) => {
-              const sw = switches[i];
-              const color = getSwitchColor(sw);
-              return (
-                <g key={i}>
-                  {sw?.is_moving && (
-                    <circle cx={cx} cy={100} r="16" fill={color} opacity="0.2">
-                      <animate attributeName="r" values="12;22;12" dur="1s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.3;0.05;0.3" dur="1s" repeatCount="indefinite" />
-                    </circle>
-                  )}
-                  {/* Outer glow */}
-                  <circle cx={cx} cy={100} r="12" fill={color} opacity="0.1" />
-                  <circle cx={cx} cy={100} r="8" fill={color} stroke="#1C2333" strokeWidth="2" />
-                  {/* Inner highlight */}
-                  <circle cx={cx - 2} cy={98} r="2" fill="white" opacity="0.3" />
-                  <text x={cx} y={78} textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="600">
-                    SW{i + 1}
-                  </text>
-                </g>
-              );
-            })}
+            {/* Reversor → curva direita */}
+            <path d="M 500,70 L 650,70" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" fill="none" />
+            <path d="M 500,70 L 650,70" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8" fill="none">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
+            </path>
 
-            {/* Locomotiva animada */}
+            {/* Curva descendente direita (mais quadrada) */}
+            <path d="M 650,70 L 710,70 L 710,230 L 730,230" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+
+            {/* Trilho inferior: esquerda → SW2 */}
+            <path d="M 40,230 L 200,230" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" fill="none" />
+            <path d="M 40,230 L 200,230" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8" fill="none">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
+            </path>
+
+            {/* SW2 → SW3 (maior distância) */}
+            <path d="M 250,230 L 480,230" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" fill="none" />
+            <path d="M 250,230 L 480,230" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8" fill="none">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
+            </path>
+
+            {/* SW3 → direita (converge no mesmo ponto) */}
+            <path d="M 530,230 L 710,230" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" fill="none" />
+            <path d="M 530,230 L 710,230" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8" fill="none">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
+            </path>
+
+            {/* Lado esquerdo: conexão superior-inferior (mais quadrada) */}
+            <path d="M 40,70 L 40,230" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" fill="none" />
+
+            {/* Derivação diagonal de SW1 (sai logo após o terminal) */}
+            <path d="M 175,70 L 450,170" stroke="#2D3748" strokeWidth="4" strokeLinecap="round" fill="none" />
+
+            {/* Laço externo direito (converge no mesmo ponto) */}
+            <path d="M 450,170 L 710,170" stroke="#2D3748" strokeWidth="4" strokeLinecap="round" fill="none" />
+            <path d="M 710,170 L 710,230" stroke="#2D3748" strokeWidth="4" strokeLinecap="round" fill="none" />
+
+            {/* Derivação de SW2 (sai logo após o terminal) */}
+            <path d="M 245,230 L 500,280" stroke="#2D3748" strokeWidth="4" strokeLinecap="round" fill="none" />
+            <path d="M 500,280 L 710,280 L 710,230" stroke="#2D3748" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+
+            {/* === DESVIOS === */}
+
+            {/* SW1 - Topo-esquerda */}
             <g>
-              <animateTransform attributeName="transform" type="translate" values="0,0;480,0;0,0" dur="8s" repeatCount="indefinite" />
-              <rect x="280" y="86" width="44" height="28" rx="6" fill="#FFB800" opacity="0.95" />
-              <rect x="288" y="90" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
-              <rect x="300" y="90" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
-              <rect x="312" y="88" width="8" height="10" rx="2" fill="#E0A000" opacity="0.8" />
-              {/* Headlight glow */}
-              <circle cx="326" cy="100" r="4" fill="#FFB800" opacity="0.6">
+              {switches[0]?.is_moving && (
+                <circle cx="155" cy="70" r="16" fill={getSwitchColor(switches[0])} opacity="0.2">
+                  <animate attributeName="r" values="12;22;12" dur="1s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.3;0.05;0.3" dur="1s" repeatCount="indefinite" />
+                </circle>
+              )}
+              <circle cx="155" cy="70" r="12" fill={getSwitchColor(switches[0])} opacity="0.1" />
+              <circle cx="155" cy="70" r="8" fill={getSwitchColor(switches[0])} stroke="#1C2333" strokeWidth="2" />
+              <circle cx="153" cy="68" r="2" fill="white" opacity="0.3" />
+              <text x="155" y="50" textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="600">SW1</text>
+            </g>
+
+            {/* SW2 - Baixo-esquerda */}
+            <g>
+              {switches[1]?.is_moving && (
+                <circle cx="225" cy="230" r="16" fill={getSwitchColor(switches[1])} opacity="0.2">
+                  <animate attributeName="r" values="12;22;12" dur="1s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.3;0.05;0.3" dur="1s" repeatCount="indefinite" />
+                </circle>
+              )}
+              <circle cx="225" cy="230" r="12" fill={getSwitchColor(switches[1])} opacity="0.1" />
+              <circle cx="225" cy="230" r="8" fill={getSwitchColor(switches[1])} stroke="#1C2333" strokeWidth="2" />
+              <circle cx="223" cy="228" r="2" fill="white" opacity="0.3" />
+              <text x="225" y="255" textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="600">SW2</text>
+            </g>
+
+            {/* SW3 - Baixo-centro (mais afastado do SW2) */}
+            <g>
+              {switches[2]?.is_moving && (
+                <circle cx="505" cy="230" r="16" fill={getSwitchColor(switches[2])} opacity="0.2">
+                  <animate attributeName="r" values="12;22;12" dur="1s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.3;0.05;0.3" dur="1s" repeatCount="indefinite" />
+                </circle>
+              )}
+              <circle cx="505" cy="230" r="12" fill={getSwitchColor(switches[2])} opacity="0.1" />
+              <circle cx="505" cy="230" r="8" fill={getSwitchColor(switches[2])} stroke="#1C2333" strokeWidth="2" />
+              <circle cx="503" cy="228" r="2" fill="white" opacity="0.3" />
+              <text x="505" y="255" textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="600">SW3</text>
+            </g>
+
+            {/* REVERSOR - Topo-direita (visual retangular) */}
+            <g>
+              {switches[3]?.is_moving && (
+                <rect x="395" y="52" width="90" height="36" rx="6" fill="#FF4560" opacity="0.2">
+                  <animate attributeName="opacity" values="0.3;0.05;0.3" dur="1s" repeatCount="indefinite" />
+                </rect>
+              )}
+              <rect x="400" y="55" width="80" height="30" rx="5" fill="#FF4560" opacity="0.15" />
+              <rect x="405" y="58" width="70" height="24" rx="4" fill="#FF4560" stroke="#1C2333" strokeWidth="2" />
+              <text x="440" y="45" textAnchor="middle" fill="#FF4560" fontSize="10" fontWeight="600">REVERSOR</text>
+              <text x="440" y="75" textAnchor="middle" fill="white" fontSize="9" fontWeight="500">SW4</text>
+            </g>
+
+            {/* === LOCOMOTIVA ANIMADA === */}
+            <g>
+              <animateTransform attributeName="transform" type="translate" values="0,0;600,0;600,160;0,160;0,0" dur="12s" repeatCount="indefinite" />
+              <rect x="80" y="56" width="40" height="28" rx="6" fill="#FFB800" opacity="0.95" />
+              <rect x="88" y="60" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
+              <rect x="100" y="60" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
+              <rect x="112" y="58" width="8" height="10" rx="2" fill="#E0A000" opacity="0.8" />
+              <circle cx="126" cy="70" r="3" fill="#FFB800" opacity="0.6">
                 <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
               </circle>
             </g>
 
             {/* Labels */}
-            <text x="30" y="140" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">INÍCIO</text>
-            <text x="770" y="140" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">FIM</text>
+            <text x="40" y="160" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">ENTRADA</text>
+            <text x="730" y="160" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">SAÍDA</text>
           </svg>
         </div>
       </div>
