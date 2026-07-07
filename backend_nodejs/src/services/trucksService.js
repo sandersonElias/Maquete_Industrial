@@ -68,9 +68,36 @@ async function markTimedOutTruckCommands() {
   );
 }
 
+async function updateTruckCommandStatus(truckId, action) {
+  await pool.query(
+    `UPDATE truck_commands
+     SET status = 'executed',
+         executed_at = NOW()
+     WHERE truck_id = $1
+       AND command = $2
+       AND status = 'pending'
+     ORDER BY issued_at DESC
+     LIMIT 1`,
+    [truckId, action],
+  );
+}
+
+async function updateTruckPosition(truckId, x, y, load, battery) {
+  await pool.query(
+    `UPDATE trucks
+     SET current_x = $1, current_y = $2,
+         current_load = $3, battery_level = $4,
+         last_telemetry_at = NOW()
+     WHERE id = $5`,
+    [x, y, load, battery, truckId],
+  );
+}
+
 module.exports = {
   recordTelemetry,
   getTrucks,
   sendTruckCommand,
   markTimedOutTruckCommands,
+  updateTruckCommandStatus,
+  updateTruckPosition,
 };
