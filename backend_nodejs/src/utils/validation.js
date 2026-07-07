@@ -4,7 +4,7 @@ const TRUCK_COMMANDS = [
   "F", "B", "S", "L", "R", "C", "U", "D", "X",
   "SC",
   "FL", "FR", "BL", "BR",
-  "HH", "TI", "TO", "TX",
+  "HH", "TI", "TO", "TX", "HA",
 ];
 
 const SWITCH_ACTIONS = ["LEFT", "RIGHT", "CENTER"];

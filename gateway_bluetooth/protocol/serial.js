@@ -32,7 +32,7 @@ function encodeTruckCommand(action) {
   }
 
   // Comandos de LED
-  const ledActions = ["HH", "TI", "TO", "TX"];
+  const ledActions = ["HH", "TI", "TO", "TX", "HA"];
   if (ledActions.includes(action)) {
     return action;
   }
