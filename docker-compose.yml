@@ -11,7 +11,7 @@ services:
       - 8.8.8.8
       - 8.8.4.4
     environment:
-      # PostgreSQL na nuvem (Supabase)
+      # PostgreSQL na nuvem (Render)
       - DATABASE_URL=${DATABASE_URL}
       # Redis
       - REDIS_URL=redis://redis:6379
