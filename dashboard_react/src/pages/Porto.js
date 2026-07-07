@@ -28,12 +28,12 @@ export default function Porto() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'docked': return 'bg-green-500/15 text-green-400 border-green-500/20';
-      case 'loading': return 'bg-maquete-warning/15 text-maquete-warning border-maquete-warning/20';
-      case 'unloading': return 'bg-maquete-accent/15 text-maquete-accent border-maquete-accent/20';
-      case 'departed': return 'bg-gray-500/15 text-gray-400 border-gray-500/20';
-      case 'arriving': return 'bg-maquete-purple/15 text-maquete-purple border-maquete-purple/20';
-      default: return 'bg-gray-500/15 text-gray-400 border-gray-500/20';
+      case 'docked': return 'bg-success/10 text-success';
+      case 'loading': return 'bg-warning/10 text-warning';
+      case 'unloading': return 'bg-accent/10 text-accent';
+      case 'departed': return 'bg-muted/10 text-muted';
+      case 'arriving': return 'bg-[#A855F7]/10 text-[#A855F7]';
+      default: return 'bg-muted/10 text-muted';
     }
   };
 
@@ -42,103 +42,88 @@ export default function Porto() {
     departed: 'Partido', arriving: 'Chegando'
   })[status] || status;
 
-  const isAnimated = (status) => ['loading', 'arriving'].includes(status);
-
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-maquete-purple to-purple-300 bg-clip-text text-transparent">
-          Porto Logístico
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">Monitoramento de navios e cargas</p>
+        <h2 className="text-xl font-bold text-text">Porto Logistico</h2>
+        <p className="text-sm text-muted mt-0.5">Monitoramento de navios e cargas</p>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-maquete-surface/60 border border-maquete-border rounded-xl p-6 animate-pulse">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-maquete-card rounded-xl" />
+            <div key={i} className="bg-surface border border-border rounded-lg p-5 animate-pulse">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-card rounded-lg" />
                 <div className="flex-1">
-                  <div className="w-32 h-5 bg-maquete-card rounded mb-1" />
-                  <div className="w-20 h-3 bg-maquete-card rounded" />
+                  <div className="w-28 h-4 bg-card rounded mb-1" />
+                  <div className="w-16 h-2 bg-card rounded" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="h-20 bg-maquete-card rounded-xl" />
-                <div className="h-20 bg-maquete-card rounded-xl" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-16 bg-card rounded-lg" />
+                <div className="h-16 bg-card rounded-lg" />
               </div>
             </div>
           ))}
         </div>
       ) : ships.length === 0 ? (
-        <div className="bg-maquete-card/60 border border-maquete-border rounded-xl p-12 text-center backdrop-blur-sm">
-          <Ship size={48} className="mx-auto mb-4 text-gray-600 opacity-50" />
-          <p className="text-gray-400">Nenhum navio registrado</p>
-          <p className="text-xs text-gray-600 mt-1">Adicione navios pelo backend</p>
+        <div className="bg-surface border border-border rounded-lg p-10 text-center">
+          <Ship size={36} className="mx-auto mb-3 text-muted opacity-40" />
+          <p className="text-muted">Nenhum navio registrado</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {ships.map(ship => (
-            <div key={ship.id} className="bg-maquete-card/80 backdrop-blur-sm border border-maquete-border rounded-xl p-6 transition-all duration-300 hover:border-maquete-purple/30 hover:shadow-lg group"
-              style={{
-                transform: 'perspective(600px) rotateX(1deg)',
-                boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
-              }}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className={`relative p-3 bg-maquete-purple/15 rounded-xl border border-maquete-purple/20 ${isAnimated(ship.status) ? 'animate-pulse' : ''}`}
-                    style={{ boxShadow: '0 0 20px rgba(168,85,247,0.1)' }}
-                  >
-                    <Ship size={24} className="text-maquete-purple" />
+            <div key={ship.id} className="bg-surface border border-border rounded-lg p-5 hover:border-[#A855F7]/20 transition-colors">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#A855F7]/10 flex items-center justify-center">
+                    <Ship size={18} className="text-[#A855F7]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg text-white">{ship.name}</h3>
-                    <p className="text-xs text-gray-500 font-mono">{ship.id}</p>
+                    <h3 className="text-sm font-medium text-text">{ship.name}</h3>
+                    <p className="text-xs text-muted font-mono">{ship.id}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(ship.status)}`}>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${getStatusColor(ship.status)}`}>
                   {getStatusLabel(ship.status)}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-maquete-surface/80 rounded-xl p-3 border border-maquete-border/50">
-                  <div className="flex items-center gap-1.5 text-gray-500 text-[10px] uppercase tracking-wider mb-1.5">
-                    <Package size={12} />
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-card rounded-lg p-2.5 border border-border">
+                  <div className="flex items-center gap-1 text-[10px] text-muted mb-1">
+                    <Package size={10} />
                     <span>Carga</span>
                   </div>
-                  <p className="font-medium text-sm text-white">{ship.cargo_type || 'N/A'}</p>
+                  <p className="text-xs font-medium text-text">{ship.cargo_type || 'N/A'}</p>
                 </div>
-                <div className="bg-maquete-surface/80 rounded-xl p-3 border border-maquete-border/50">
-                  <div className="flex items-center gap-1.5 text-gray-500 text-[10px] uppercase tracking-wider mb-1.5">
-                    <Anchor size={12} />
+                <div className="bg-card rounded-lg p-2.5 border border-border">
+                  <div className="flex items-center gap-1 text-[10px] text-muted mb-1">
+                    <Anchor size={10} />
                     <span>Peso</span>
                   </div>
-                  <p className="font-medium text-sm text-white">{ship.cargo_weight?.toLocaleString() || 'N/A'} kg</p>
+                  <p className="text-xs font-medium text-text">{ship.cargo_weight?.toLocaleString() || 'N/A'} kg</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5 text-gray-400">
-                  <Clock size={12} />
+              <div className="flex items-center gap-3 text-xs text-muted">
+                <div className="flex items-center gap-1">
+                  <Clock size={10} />
                   <span>ETA:</span>
-                  <span className="text-white font-medium">
+                  <span className="text-text">
                     {ship.eta ? formatDistanceToNow(new Date(ship.eta), { locale: ptBR, addSuffix: true }) : 'N/A'}
                   </span>
                 </div>
                 {ship.dock_number && (
-                  <div className="flex items-center gap-1.5 text-gray-400">
-                    <Gauge size={12} />
+                  <div className="flex items-center gap-1">
+                    <Gauge size={10} />
                     <span>Doca:</span>
-                    <span className="text-maquete-accent font-medium">{ship.dock_number}</span>
+                    <span className="text-accent">{ship.dock_number}</span>
                   </div>
                 )}
               </div>
-
-              {/* Bottom accent */}
-              <div className="mt-4 h-0.5 rounded-full bg-gradient-to-r from-maquete-purple/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
           ))}
         </div>

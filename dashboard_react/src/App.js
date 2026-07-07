@@ -39,7 +39,7 @@ function AppContent() {
 
   return (
     <SocketProvider>
-      <div className="flex h-screen bg-maquete-dark relative">
+      <div className="flex h-screen bg-bg">
         {/* Main Layout */}
         <div className="relative z-10 flex w-full h-full">
           <Sidebar isOpen={sidebarOpen} />
@@ -64,11 +64,10 @@ function AppContent() {
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#1C2333',
-            color: '#e8eef8',
-            border: '1px solid #252D40',
-            borderRadius: '12px',
-            backdropFilter: 'blur(10px)',
+            background: '#1A1D27',
+            color: '#E4E7EC',
+            border: '1px solid #2A2D3A',
+            borderRadius: '8px',
           },
         }}
       />
