@@ -56,7 +56,10 @@ maquete_industrial/
 ### 1. Banco de Dados
 
 ```bash
+# PostgreSQL local
 psql -U postgres -f backend_nodejs/schema.sql
+
+# Ou usar PostgreSQL Render (ja configurado no .env)
 ```
 
 ### 2. Back-end
@@ -198,9 +201,10 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | Comando | Ação                  |
 | ------- | --------------------- |
 | `HH`    | Toggle faróis         |
-| `TI`    | Seta esquerda ligar   |
-| `TO`    | Seta direita ligar    |
+| `TI`    | Seta esquerda piscar  |
+| `TO`    | Seta direita piscar   |
 | `TX`    | Desligar setas        |
+| `HA`    | Pisca-alerta (toggle) |
 
 ## Pinagem Arduino
 
@@ -218,13 +222,14 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | VCC Servos            | Fonte 5V externa     |
 | VCC HC-05             | 5V                   |
 
-### Caminhão Basculante (3 Servos + 4 LEDs)
+### Caminhão Basculante (2 Servos + Motor DC L298M + 4 LEDs)
 
 | Componente      | Pino | Função                        |
 | --------------- | ---- | ----------------------------- |
 | Servo Direção   | D5   | Controle de direção (45°-135°) |
 | Servo Caçamba   | D6   | Subir/descer (0°-90°)         |
-| Servo Motor     | D7   | Rotação contínua (0°-180°)    |
+| L298M IN1       | D10  | Motor DC frente               |
+| L298M IN2       | D11  | Motor DC ré                   |
 | Farol Esquerdo  | D2   | LED farol esquerdo            |
 | Farol Direito   | D3   | LED farol direito             |
 | Seta Esquerda   | D8   | LED seta esquerda             |
@@ -243,16 +248,16 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 
 ## Tema Visual
 
-Paleta de cores compartilhada entre Dashboard e App:
+Paleta de cores (minimalista escuro):
 
 | Cor     | Código    | Uso                              |
 | ------- | --------- | -------------------------------- |
-| Glow    | `#00FFB2` | Destaques, indicadores positivos |
-| Dark    | `#0D0F14` | Fundo principal                  |
-| Surface | `#161B26` | Superfícies elevadas             |
-| Card    | `#1C2333` | Cards e painéis                  |
-| Border  | `#252D40` | Bordas                           |
-| Accent  | `#3D9EFF` | Botões, links, switches LEFT     |
-| Warning | `#FFB800` | Alertas, bateria média           |
-| Danger  | `#FF4560` | Erros, bateria baixa, stop       |
-| Purple  | `#A855F7` | Switches RIGHT, caçamba          |
+| Bg      | `#0F1117` | Fundo principal                  |
+| Surface | `#1A1D27` | Cards, sidebar                   |
+| Border  | `#2A2D3A` | Bordas                           |
+| Text    | `#E4E7EC` | Texto principal                  |
+| Muted   | `#8B8FA3` | Texto secundário                 |
+| Accent  | `#3B82F6` | Botões, links, ações primárias   |
+| Success | `#22C55E` | Status ok, switches CENTER       |
+| Warning | `#F59E0B` | Alertas, bateria média           |
+| Danger  | `#EF4444` | Erros, bateria baixa, stop       |
