@@ -3,12 +3,16 @@
  *  CÓDIGO OFICIAL - CARRINHO BASCULANTE RC (BLUETOOTH)
  * ============================================================
  *  Este código recebe comandos via Bluetooth (HC-05) para
- *  controlar o carrinho com 3 servos + 4 LEDs:
+ *  controlar o carrinho com 2 servos + motor DC + 4 LEDs:
  *
  *  SERVOS:
  *    - Servo de Direção (D5)
  *    - Servo de Caçamba (D6)
- *    - Servo de Motor - Rotação Contínua (D7)
+ *
+ *  MOTOR DC (via L298M):
+ *    - IN1 (D10) = direção do motor
+ *    - IN2 (D11) = direção do motor
+ *    - ENA = jumper para 5V (velocidade constante)
  *
  *  LEDs:
  *    - Farol Esquerdo (D2)
@@ -24,9 +28,10 @@
  *
  *  COMANDOS DE LED:
  *    - HH = toggle faróis (ligar/desligar)
- *    - TI = seta esquerda ligar
- *    - TO = seta direita ligar
+ *    - TI = seta esquerda piscar
+ *    - TO = seta direita piscar
  *    - TX = setas desligar
+ *    - HA = pisca-alerta (toggle)
  *
  *  IMPORTANTE: Desconecte os pinos RX/TX do HC-05 ao carregar
  *  este código para o Arduino.
@@ -38,17 +43,18 @@
 // ── Definição dos Pinos ──────────────────────────────────
 const int PIN_SERVO_DIR = 5;
 const int PIN_SERVO_BUCKET = 6;
-const int PIN_SERVO_MOTOR = 7;
 
 const int PIN_FAROL_ESQ = 2;
 const int PIN_FAROL_DIR = 3;
 const int PIN_SETA_ESQ = 8;
 const int PIN_SETA_DIR = 9;
 
+const int PIN_MOTOR_IN1 = 10;
+const int PIN_MOTOR_IN2 = 11;
+
 // ── Objetos Servo ────────────────────────────────────────
 Servo servoDirecao;
 Servo servoCacamba;
-Servo servoMotor;
 
 // ── Variáveis de Estado ──────────────────────────────────
 // Cada subsistema tem seu próprio estado independente
@@ -56,12 +62,17 @@ char estadoMotor = 'S';    // F=frente, B=ré, S=parado
 char estadoDirecao = 'C';  // L=esq, R=dir, C=centro
 char estadoCacamba = 'X';  // U=subindo, D=descendo, X=parado
 bool farolLigado = false;
-char estadoSeta = 'X';     // I=esq, O=dir, X=desligada
+char estadoSeta = 'X';     // I=esq, O=dir, H=hazard, X=desligada
 
 int anguloCacamba = 0;     // Posição atual da caçamba
 int anguloCacambaTarget = 0; // Alvo da caçamba (não-bloqueante)
 unsigned long ultimoMoveCacamba = 0;
 const unsigned long CACAMBA_STEP_DELAY = 15; // ms entre passos
+
+// ── Variáveis de Pisca (Setas e Hazard) ──────────────────
+bool setaEstadoLed = false;       // Estado atual do LED (ON/OFF)
+unsigned long ultimoPisca = 0;
+const unsigned long PISCA_INTERVALO = 500; // 500ms = 0.5s
 
 // ── Buffer para comando composto ─────────────────────────
 String bufferComando = "";
@@ -78,12 +89,16 @@ void setup() {
   // Configura servos
   servoDirecao.attach(PIN_SERVO_DIR);
   servoCacamba.attach(PIN_SERVO_BUCKET);
-  servoMotor.attach(PIN_SERVO_MOTOR);
+
+  // Configura motor DC via L298M
+  pinMode(PIN_MOTOR_IN1, OUTPUT);
+  pinMode(PIN_MOTOR_IN2, OUTPUT);
+  digitalWrite(PIN_MOTOR_IN1, LOW);
+  digitalWrite(PIN_MOTOR_IN2, LOW);
 
   // Posição inicial (centro = 90°)
   servoDirecao.write(90);
   servoCacamba.write(0);
-  servoMotor.write(90); // Motor parado
 
   // LEDs desligados
   atualizarLEDs();
@@ -111,6 +126,9 @@ void loop() {
 
   // 2. Atualizar caçamba (não-bloqueante)
   atualizarCacamba();
+
+  // 3. Atualizar pisca das setas (não-bloqueante)
+  atualizarPisca();
 }
 
 /**
@@ -153,8 +171,16 @@ void executarComando(String cmd) {
   }
   if (cmd == "TX") {
     estadoSeta = 'X';
+    setaEstadoLed = false;
     atualizarLEDs();
     enviarACK("TX");
+    return;
+  }
+  if (cmd == "HA") {
+    estadoSeta = (estadoSeta == 'H') ? 'X' : 'H'; // Toggle hazard
+    setaEstadoLed = false;
+    atualizarLEDs();
+    enviarACK("HA");
     return;
   }
 
@@ -212,11 +238,14 @@ void executarComando(String cmd) {
  */
 void atualizarMotor() {
   if (estadoMotor == 'F') {
-    servoMotor.write(180); // Frente
+    digitalWrite(PIN_MOTOR_IN1, HIGH);
+    digitalWrite(PIN_MOTOR_IN2, LOW);
   } else if (estadoMotor == 'B') {
-    servoMotor.write(0);   // Ré
+    digitalWrite(PIN_MOTOR_IN1, LOW);
+    digitalWrite(PIN_MOTOR_IN2, HIGH);
   } else {
-    servoMotor.write(90);  // Parado
+    digitalWrite(PIN_MOTOR_IN1, LOW);
+    digitalWrite(PIN_MOTOR_IN2, LOW);
   }
 }
 
@@ -235,9 +264,13 @@ void atualizarLEDs() {
   digitalWrite(PIN_FAROL_ESQ, farolLigado ? HIGH : LOW);
   digitalWrite(PIN_FAROL_DIR, farolLigado ? HIGH : LOW);
 
-  // Setas
-  digitalWrite(PIN_SETA_ESQ, estadoSeta == 'I' ? HIGH : LOW);
-  digitalWrite(PIN_SETA_DIR, estadoSeta == 'O' ? HIGH : LOW);
+  // Setas - lógica inicial (o pisca atualiza em tempo real)
+  if (estadoSeta == 'X') {
+    // Desligado
+    digitalWrite(PIN_SETA_ESQ, LOW);
+    digitalWrite(PIN_SETA_DIR, LOW);
+  }
+  // Setas I, O e H são atualizadas por atualizarPisca()
 }
 
 /**
@@ -264,6 +297,43 @@ void atualizarCacamba() {
 
   if (anguloCacamba == anguloCacambaTarget) {
     estadoCacamba = 'X';
+  }
+}
+
+/**
+ * ============================================================
+ *  ATUALIZAR PISCA (Setas e Hazard)
+ * ============================================================
+ *  Pisca os LEDs das setas em intervalo configurável.
+ *  - 'I': Seta esquerda pisca
+ *  - 'O': Seta direita pisca
+ *  - 'H': Ambas piscam juntos (pisca-alerta)
+ * ============================================================
+ */
+void atualizarPisca() {
+  if (estadoSeta != 'I' && estadoSeta != 'O' && estadoSeta != 'H') return;
+
+  unsigned long agora = millis();
+  if (agora - ultimoPisca < PISCA_INTERVALO) return;
+  ultimoPisca = agora;
+
+  // Alterna estado do LED
+  setaEstadoLed = !setaEstadoLed;
+
+  if (estadoSeta == 'I') {
+    // Seta esquerda pisca
+    digitalWrite(PIN_SETA_ESQ, setaEstadoLed ? HIGH : LOW);
+    digitalWrite(PIN_SETA_DIR, LOW);
+  }
+  else if (estadoSeta == 'O') {
+    // Seta direita pisca
+    digitalWrite(PIN_SETA_ESQ, LOW);
+    digitalWrite(PIN_SETA_DIR, setaEstadoLed ? HIGH : LOW);
+  }
+  else if (estadoSeta == 'H') {
+    // Pisca-alerta: ambos piscam juntos
+    digitalWrite(PIN_SETA_ESQ, setaEstadoLed ? HIGH : LOW);
+    digitalWrite(PIN_SETA_DIR, setaEstadoLed ? HIGH : LOW);
   }
 }
 

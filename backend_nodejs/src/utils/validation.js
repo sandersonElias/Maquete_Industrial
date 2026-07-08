@@ -4,7 +4,7 @@ const TRUCK_COMMANDS = [
   "F", "B", "S", "L", "R", "C", "U", "D", "X",
   "SC",
   "FL", "FR", "BL", "BR",
-  "HH", "TI", "TO", "TX",
+  "HH", "TI", "TO", "TX", "HA",
 ];
 
 const SWITCH_ACTIONS = ["LEFT", "RIGHT", "CENTER"];
@@ -88,6 +88,28 @@ const alertQuerySchema = Joi.object({
   offset: Joi.number().integer().min(0).optional().default(0),
 });
 
+const shipSchema = Joi.object({
+  id: Joi.string().max(20).required(),
+  name: Joi.string().max(100).required(),
+  status: Joi.string().valid("docked", "loading", "unloading", "departed", "arriving").optional(),
+  cargo_type: Joi.string().max(50).optional(),
+  cargo_weight: Joi.number().min(0).optional(),
+  eta: Joi.date().iso().optional(),
+  etd: Joi.date().iso().optional(),
+  dock_number: Joi.number().integer().min(1).optional(),
+});
+
+const airplaneSchema = Joi.object({
+  id: Joi.string().max(20).required(),
+  flight_number: Joi.string().max(20).required(),
+  status: Joi.string().valid("landed", "boarding", "departing", "in_air", "arriving").optional(),
+  cargo_type: Joi.string().max(50).optional(),
+  cargo_weight: Joi.number().min(0).optional(),
+  eta: Joi.date().iso().optional(),
+  etd: Joi.date().iso().optional(),
+  gate: Joi.string().max(10).optional(),
+});
+
 module.exports = {
   loginSchema,
   registerSchema,
@@ -98,6 +120,8 @@ module.exports = {
   reportExportSchema,
   alertSchema,
   alertQuerySchema,
+  shipSchema,
+  airplaneSchema,
   TRUCK_COMMANDS,
   SWITCH_ACTIONS,
 };
