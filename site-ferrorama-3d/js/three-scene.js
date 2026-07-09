@@ -277,112 +277,108 @@ class MaquetteScene {
     var sleeperMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.85 });
 
     // === MAIN OVAL CIRCUIT ===
-    // Rounded rectangle: flat top/bottom, curved left/right sides
+    // Rounded rectangle: flat top/bottom, curved left/right
     var ow = 5.0, oh = 3.0, cr = 1.5;
     var ovalPts = [];
 
     // Top straight
-    for (var i = 0; i <= 20; i++) {
-      var t = i / 20;
+    for (var i = 0; i <= 30; i++) {
+      var t = i / 30;
       ovalPts.push(new THREE.Vector3(-ow + cr + t * (2 * ow - 2 * cr), 0.38, -oh));
     }
     // Top-right corner
-    for (var i = 1; i <= 16; i++) {
-      var a = -Math.PI / 2 + (i / 16) * (Math.PI / 2);
+    for (var i = 1; i <= 20; i++) {
+      var a = -Math.PI / 2 + (i / 20) * (Math.PI / 2);
       ovalPts.push(new THREE.Vector3(ow - cr + Math.cos(a) * cr, 0.38, -oh + cr + Math.sin(a) * cr));
     }
     // Right straight
-    for (var i = 1; i <= 12; i++) {
-      var t = i / 12;
+    for (var i = 1; i <= 20; i++) {
+      var t = i / 20;
       ovalPts.push(new THREE.Vector3(ow, 0.38, -oh + cr + t * (2 * oh - 2 * cr)));
     }
     // Bottom-right corner
-    for (var i = 1; i <= 16; i++) {
-      var a = 0 + (i / 16) * (Math.PI / 2);
+    for (var i = 1; i <= 20; i++) {
+      var a = 0 + (i / 20) * (Math.PI / 2);
       ovalPts.push(new THREE.Vector3(ow - cr + Math.cos(a) * cr, 0.38, oh - cr + Math.sin(a) * cr));
     }
     // Bottom straight
-    for (var i = 1; i <= 20; i++) {
-      var t = i / 20;
+    for (var i = 1; i <= 30; i++) {
+      var t = i / 30;
       ovalPts.push(new THREE.Vector3(ow - cr - t * (2 * ow - 2 * cr), 0.38, oh));
     }
     // Bottom-left corner
-    for (var i = 1; i <= 16; i++) {
-      var a = Math.PI / 2 + (i / 16) * (Math.PI / 2);
+    for (var i = 1; i <= 20; i++) {
+      var a = Math.PI / 2 + (i / 20) * (Math.PI / 2);
       ovalPts.push(new THREE.Vector3(-ow + cr + Math.cos(a) * cr, 0.38, oh - cr + Math.sin(a) * cr));
     }
     // Left straight
-    for (var i = 1; i <= 12; i++) {
-      var t = i / 12;
+    for (var i = 1; i <= 20; i++) {
+      var t = i / 20;
       ovalPts.push(new THREE.Vector3(-ow, 0.38, oh - cr - t * (2 * oh - 2 * cr)));
     }
     // Top-left corner
-    for (var i = 1; i <= 16; i++) {
-      var a = Math.PI + (i / 16) * (Math.PI / 2);
+    for (var i = 1; i <= 20; i++) {
+      var a = Math.PI + (i / 20) * (Math.PI / 2);
       ovalPts.push(new THREE.Vector3(-ow + cr + Math.cos(a) * cr, 0.38, -oh + cr + Math.sin(a) * cr));
     }
 
     var ovalCurve = new THREE.CatmullRomCurve3(ovalPts, true);
     this.trackCurves.push({ curve: ovalCurve, name: 'circuito principal' });
-    this._renderRail(ovalCurve, railMat, sleeperMat, 400);
+    this._renderRail(ovalCurve, railMat, sleeperMat, 500);
 
     // === UPPER BRANCH (SW1 + REVERSOR) ===
     var ubY = -oh - 1.2;
     var ubLeft = -ow + 1.5;
     var ubRight = ow + 0.5;
 
-    // Diagonal: oval top-left → upper branch left
-    var connUL = [
+    // Diagonal: oval top-left → upper branch left (STRAIGHT LINE)
+    var connUL = new THREE.LineCurve3(
       new THREE.Vector3(-ow + 0.3, 0.38, -oh),
-      new THREE.Vector3(-ow + 0.8, 0.38, -oh - 0.4),
-      new THREE.Vector3(ubLeft, 0.38, ubY),
-    ];
-    this._renderRail(new THREE.CatmullRomCurve3(connUL, false), railMat, sleeperMat, 30);
+      new THREE.Vector3(ubLeft, 0.38, ubY)
+    );
+    this._renderRail(connUL, railMat, sleeperMat, 20);
 
-    // Upper branch straight
-    var upperPts = [
+    // Upper branch straight (LineCurve3 = perfectly straight)
+    var upperLine = new THREE.LineCurve3(
       new THREE.Vector3(ubLeft, 0.38, ubY),
-      new THREE.Vector3(ubRight, 0.38, ubY),
-    ];
-    var upperCurve = new THREE.CatmullRomCurve3(upperPts, false);
-    this.trackCurves.push({ curve: upperCurve, name: 'ramal superior' });
-    this._renderRail(upperCurve, railMat, sleeperMat, 50);
+      new THREE.Vector3(ubRight, 0.38, ubY)
+    );
+    this.trackCurves.push({ curve: upperLine, name: 'ramal superior' });
+    this._renderRail(upperLine, railMat, sleeperMat, 40);
 
-    // Diagonal: upper branch right → oval top-right
-    var connUR = [
+    // Diagonal: upper branch right → oval top-right (STRAIGHT LINE)
+    var connUR = new THREE.LineCurve3(
       new THREE.Vector3(ubRight, 0.38, ubY),
-      new THREE.Vector3(ow - 0.3, 0.38, -oh),
-    ];
-    this._renderRail(new THREE.CatmullRomCurve3(connUR, false), railMat, sleeperMat, 30);
+      new THREE.Vector3(ow - 0.3, 0.38, -oh)
+    );
+    this._renderRail(connUR, railMat, sleeperMat, 20);
 
     // === LOWER BRANCH (SW2 + SW3) ===
     var lbY = oh + 1.2;
     var lbLeft = -ow + 2.0;
     var lbRight = ow - 0.5;
 
-    // Diagonal: oval bottom-left → lower branch left
-    var connLL = [
+    // Diagonal: oval bottom-left → lower branch left (STRAIGHT LINE)
+    var connLL = new THREE.LineCurve3(
       new THREE.Vector3(-ow + 0.3, 0.38, oh),
-      new THREE.Vector3(-ow + 0.8, 0.38, oh + 0.4),
-      new THREE.Vector3(lbLeft, 0.38, lbY),
-    ];
-    this._renderRail(new THREE.CatmullRomCurve3(connLL, false), railMat, sleeperMat, 30);
+      new THREE.Vector3(lbLeft, 0.38, lbY)
+    );
+    this._renderRail(connLL, railMat, sleeperMat, 20);
 
-    // Lower branch straight
-    var lowerPts = [
+    // Lower branch straight (LineCurve3)
+    var lowerLine = new THREE.LineCurve3(
       new THREE.Vector3(lbLeft, 0.38, lbY),
-      new THREE.Vector3(lbRight, 0.38, lbY),
-    ];
-    var lowerCurve = new THREE.CatmullRomCurve3(lowerPts, false);
-    this.trackCurves.push({ curve: lowerCurve, name: 'ramal inferior' });
-    this._renderRail(lowerCurve, railMat, sleeperMat, 50);
+      new THREE.Vector3(lbRight, 0.38, lbY)
+    );
+    this.trackCurves.push({ curve: lowerLine, name: 'ramal inferior' });
+    this._renderRail(lowerLine, railMat, sleeperMat, 40);
 
-    // Diagonal: lower branch right → oval bottom-right
-    var connLR = [
+    // Diagonal: lower branch right → oval bottom-right (STRAIGHT LINE)
+    var connLR = new THREE.LineCurve3(
       new THREE.Vector3(lbRight, 0.38, lbY),
-      new THREE.Vector3(ow - 0.3, 0.38, oh),
-    ];
-    this._renderRail(new THREE.CatmullRomCurve3(connLR, false), railMat, sleeperMat, 30);
+      new THREE.Vector3(ow - 0.3, 0.38, oh)
+    );
+    this._renderRail(connLR, railMat, sleeperMat, 20);
 
     // === SWITCHES ===
     this._createSwitch(ubLeft + 0.5, 0.38, ubY, 'SW1');
