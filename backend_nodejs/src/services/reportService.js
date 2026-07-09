@@ -241,6 +241,17 @@ async function getReportById(id) {
   return result.rows[0] || null;
 }
 
+async function listReports(limit = 50) {
+  const result = await pool.query(
+    `SELECT id, report_type, format, status, created_at, completed_at
+     FROM reports
+     ORDER BY created_at DESC
+     LIMIT $1`,
+    [limit]
+  );
+  return result.rows;
+}
+
 async function updateReportStatus(reportId, status) {
   await pool.query(
     "UPDATE reports SET status = $1, completed_at = NOW() WHERE id = $2",
@@ -252,5 +263,6 @@ module.exports = {
   createReport,
   generateReportFile,
   getReportById,
+  listReports,
   updateReportStatus,
 };

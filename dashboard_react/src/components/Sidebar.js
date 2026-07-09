@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Train, Truck, Ship, Plane, FileText, LogOut
+  LayoutDashboard, Train, Truck, Ship, Plane, FlaskConical, FileText, LogOut
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,6 +14,7 @@ export default function Sidebar({ isOpen }) {
     { path: '/mina', icon: Truck, label: 'Mina' },
     { path: '/porto', icon: Ship, label: 'Porto' },
     { path: '/aeroporto', icon: Plane, label: 'Aeroporto' },
+    { path: '/quimica', icon: FlaskConical, label: 'Quimica' },
     { path: '/relatorios', icon: FileText, label: 'Relatorios' },
   ];
 

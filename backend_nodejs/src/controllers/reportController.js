@@ -3,6 +3,16 @@ const logger = require("../config/logger");
 const path = require("path");
 
 module.exports = (io) => ({
+  async getListReports(req, res) {
+    try {
+      const reports = await reportService.listReports();
+      res.json(reports);
+    } catch (e) {
+      logger.error(`Erro ao listar relatorios: ${e.message}`);
+      res.status(500).json({ error: e.message });
+    }
+  },
+
   async postReportExport(req, res) {
     try {
       const { reportType, format, filters } = req.body;

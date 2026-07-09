@@ -8,6 +8,7 @@ module.exports = (io) => {
 
   const router = express.Router();
 
+  router.get("/", authenticateToken, reportController.getListReports);
   router.post("/export", authenticateToken, validate(reportExportSchema), reportController.postReportExport);
   router.get("/:id/download", authenticateToken, reportController.getReportDownload);
 

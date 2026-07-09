@@ -31,6 +31,7 @@ const ferroviaRoutes = require("./routes/ferroviaRoutes")(io);
 const trucksRoutes = require("./routes/trucksRoutes")(io);
 const locomotiveRoutes = require("./routes/locomotiveRoutes")(io);
 const portAirportRoutes = require("./routes/portAirportRoutes");
+const chemistryRoutes = require("./routes/chemistryRoutes");
 const reportRoutes = require("./routes/reportRoutes")(io);
 const gatewayRoutes = require("./routes/gatewayRoutes")(io);
 const alertRoutes = require("./routes/alertRoutes")(io);
@@ -63,7 +64,7 @@ app.use(
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: process.env.NODE_ENV === 'production' ? 100 : 1000,
     standardHeaders: true,
     legacyHeaders: false,
   }),
@@ -107,6 +108,8 @@ app.use("/api/locomotive", locomotiveRoutes);
 app.use("/api/port", portAirportRoutes);
 
 app.use("/api/airport", portAirportRoutes);
+
+app.use("/api/chemistry", chemistryRoutes);
 
 app.use("/api/reports", reportRoutes);
 

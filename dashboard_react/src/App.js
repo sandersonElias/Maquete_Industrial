@@ -10,6 +10,7 @@ import Mina from './pages/Mina';
 import Porto from './pages/Porto';
 import Aeroporto from './pages/Aeroporto';
 import Relatorios from './pages/Relatorios';
+import Quimica from './pages/Quimica';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
@@ -52,6 +53,7 @@ function AppContent() {
                 <Route path="/mina" element={<Mina />} />
                 <Route path="/porto" element={<Porto />} />
                 <Route path="/aeroporto" element={<Aeroporto />} />
+                <Route path="/quimica" element={<Quimica />} />
                 <Route path="/relatorios" element={<Relatorios />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
