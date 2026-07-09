@@ -3,21 +3,24 @@
    Dark/Tech Theme with Neon Effects
    ============================================ */
 
-/* CSS Variables */
+/* CSS Variables — Industrial SCADA Theme */
 :root {
-  --primary: #00d4ff;
-  --accent: #ff6b35;
-  --glow: #00ffb2;
-  --dark: #0a0a0f;
-  --dark-lighter: #12121a;
-  --card: #14141f;
-  --card-border: #1e1e2e;
-  --text: #e0e0e0;
-  --text-muted: #888;
-  --gradient: linear-gradient(135deg, #00d4ff, #00ffb2);
+  --primary: #ff8844;
+  --accent: #cc6600;
+  --glow: #ffaa44;
+  --dark: #080810;
+  --dark-lighter: #0e0e18;
+  --card: #111118;
+  --card-border: #1e1a14;
+  --text: #e8e0d8;
+  --text-muted: #8a7e72;
+  --gradient: linear-gradient(135deg, #cc6600, #ff8844);
   --gradient-accent: linear-gradient(135deg, #ff6b35, #ff8f5e);
-  --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.3);
-  --shadow-glow-accent: 0 0 30px rgba(255, 107, 53, 0.3);
+  --shadow-glow: 0 0 20px rgba(204, 102, 0, 0.25);
+  --shadow-glow-accent: 0 0 20px rgba(255, 107, 53, 0.25);
+  --brown: #2a1a08;
+  --brown-light: #3d2810;
+  --orange: #cc6600;
 }
 
 /* Reset & Base */
@@ -131,20 +134,21 @@ body {
 .nav-logo {
   width: 40px;
   height: 40px;
-  background: var(--gradient);
+  background: linear-gradient(135deg, #cc6600, #ff8844);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 1.2rem;
-  color: var(--dark);
+  color: #080810;
+  box-shadow: 0 0 12px rgba(204, 102, 0, 0.3);
 }
 
 .nav-title {
   font-weight: 700;
   font-size: 1.25rem;
-  background: var(--gradient);
+  background: linear-gradient(135deg, #cc6600, #ff8844);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -253,7 +257,7 @@ body {
 .section-number {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.9rem;
-  color: var(--primary);
+  color: var(--accent);
   display: block;
   margin-bottom: 1rem;
 }
@@ -262,7 +266,7 @@ body {
   font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 800;
   margin-bottom: 1rem;
-  background: var(--gradient);
+  background: linear-gradient(135deg, #cc6600, #ff8844);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -343,7 +347,7 @@ body {
 .hero-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
-  color: var(--primary);
+  color: var(--accent);
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-bottom: 1.5rem;
@@ -393,7 +397,7 @@ body {
 .stat-value {
   font-size: 2.5rem;
   font-weight: 800;
-  background: var(--gradient);
+  background: linear-gradient(135deg, #cc6600, #ff8844);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -417,18 +421,18 @@ body {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 2rem;
-  background: var(--gradient);
-  color: var(--dark);
+  background: linear-gradient(135deg, #cc6600, #ff8844);
+  color: #080810;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 50px;
   transition: all 0.3s;
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 0 20px rgba(204, 102, 0, 0.3);
 }
 
 .hero-cta:hover {
   transform: translateY(-3px);
-  box-shadow: 0 0 50px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 40px rgba(255, 136, 68, 0.5);
 }
 
 .hero-3d {
@@ -565,15 +569,15 @@ body {
 }
 
 .control-btn:hover {
-  background: var(--primary);
+  background: var(--accent);
   color: var(--dark);
-  border-color: var(--primary);
+  border-color: var(--accent);
 }
 
 .control-btn.active {
-  background: var(--primary);
+  background: var(--accent);
   color: var(--dark);
-  border-color: var(--primary);
+  border-color: var(--accent);
 }
 
 .maquete-info {
@@ -591,7 +595,7 @@ body {
 .maquete-info h3 {
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
-  color: var(--primary);
+  color: var(--accent);
 }
 
 .maquete-info p {
@@ -719,10 +723,10 @@ body {
 }
 
 .train-type-btn.active {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: rgba(0, 212, 255, 0.1);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(204, 102, 0, 0.1);
+  box-shadow: 0 0 12px rgba(204, 102, 0, 0.15);
 }
 
 .tt-icon {
@@ -739,11 +743,11 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.65rem;
-  background: var(--gradient);
-  color: var(--dark);
+  background: linear-gradient(135deg, #cc6600, #ff8844);
+  color: #080810;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -751,7 +755,7 @@ body {
 
 .btn-add-train:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.4);
+  box-shadow: 0 4px 16px rgba(204, 102, 0, 0.4);
 }
 
 .btn-add-train:active {
@@ -835,23 +839,23 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--accent);
   cursor: pointer;
-  box-shadow: 0 0 6px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 6px rgba(204, 102, 0, 0.5);
 }
 
 .global-speed input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--accent);
   cursor: pointer;
   border: none;
 }
 
 #globalSpeedVal {
   font-size: 0.75rem;
-  color: var(--primary);
+  color: var(--accent);
   font-family: 'JetBrains Mono', monospace;
   min-width: 35px;
   text-align: right;
@@ -891,7 +895,7 @@ body {
 
 .train-card.running {
   border-color: var(--glow);
-  box-shadow: 0 0 12px rgba(0, 255, 178, 0.1);
+  box-shadow: 0 0 12px rgba(255, 170, 68, 0.1);
 }
 
 .train-color-dot {
@@ -987,7 +991,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--accent);
   cursor: pointer;
 }
 
@@ -1005,12 +1009,12 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 212, 255, 0.15);
+  background: rgba(204, 102, 0, 0.15);
   backdrop-filter: blur(8px);
-  border: 1px solid var(--primary);
+  border: 1px solid var(--accent);
   border-radius: 10px;
   padding: 0.75rem 1.25rem;
-  color: var(--primary);
+  color: var(--accent);
   font-size: 0.9rem;
   font-weight: 500;
   display: flex;
@@ -1025,7 +1029,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--accent);
   animation: dotPulse 1s infinite;
 }
 
@@ -1336,13 +1340,13 @@ body {
 .dashboard-icon {
   width: 50px;
   height: 50px;
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(204, 102, 0, 0.1);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1.5rem;
-  color: var(--primary);
+  color: var(--accent);
 }
 
 .dashboard-card h4 {
@@ -1436,7 +1440,7 @@ body {
 .footer-logo {
   font-size: 1.25rem;
   font-weight: 700;
-  background: var(--gradient);
+  background: linear-gradient(135deg, #cc6600, #ff8844);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
