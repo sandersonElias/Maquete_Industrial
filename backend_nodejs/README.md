@@ -29,7 +29,9 @@ src/
 │   ├── trucksRoutes.js       # GET /, POST /:id/telemetry, POST /:id/command
 │   ├── locomotiveRoutes.js   # POST /position
 │   ├── portAirportRoutes.js  # GET /ships, GET /airplanes
-│   ├── reportRoutes.js       # POST /export
+│   ├── chemistryRoutes.js    # GET /equipment
+│   ├── reportRoutes.js       # GET /, POST /export, GET /:id/download
+│   ├── alertRoutes.js        # Rotas de alertas
 │   └── gatewayRoutes.js      # POST /notify
 ├── controllers/
 │   ├── authController.js     # Login e registro
@@ -39,6 +41,7 @@ src/
 │   ├── locomotiveController.js # Posição da locomotiva
 │   ├── portAirportController.js # Navios e aeronaves
 │   ├── reportController.js   # Geração de relatórios
+│   ├── alertController.js    # Alertas do sistema
 │   └── gatewayController.js  # Notificações do gateway
 ├── services/
 │   ├── authService.js        # Login, registro, JWT
@@ -47,16 +50,23 @@ src/
 │   ├── locomotiveService.js  # Posição locomotiva
 │   ├── portAirportService.js # Navios e aeronaves
 │   ├── reportService.js      # Criação de relatórios
+│   ├── alertService.js       # Serviço de alertas
 │   └── redisService.js       # Operações Redis (set/del)
 ├── middlewares/
 │   ├── authenticateToken.js  # Verificação JWT
-│   └── authenticateGateway.js # Verificação API Key
+│   ├── authenticateGateway.js # Verificação API Key
+│   └── validate.js           # Validação Joi
 ├── sockets/
 │   └── index.js              # Eventos Socket.IO (gateway data, switch updates)
 ├── jobs/
 │   └── index.js              # Timeout de comandos (a cada 5s)
-└── utils/
-    └── validation.js         # Validações de switch e truck commands
+├── utils/
+│   └── validation.js         # Validações de switch e truck commands
+└── migrations/
+    └── 002_schema_evolution.sql # Migração adicional (RLS, tabelas extras)
+scripts/
+├── migrate.js                # Executa migrations do banco
+└── seed.js                   # Popula dados iniciais (usuarios, equipamentos)
 ```
 
 ## Comandos
@@ -65,7 +75,8 @@ src/
 npm install          # Instalar dependências
 npm run dev          # Desenvolvimento (nodemon, porta 4000)
 npm start            # Produção (node)
-npm run migrate      # Seed de dados iniciais
+npm run migrate      # Executar migrations do banco
+npm run seed         # Popular dados iniciais (usuarios, equipamentos)
 ```
 
 ## Variáveis de Ambiente
@@ -104,8 +115,10 @@ CORS_ORIGIN=*
 | `airplanes` | Aeronaves do aeroporto |
 | `alerts` | Alertas do sistema |
 | `reports` | Relatórios gerados |
+| `chemistry_equipment` | Equipamentos da área química |
 
 Schema: `schema.sql` na raiz do módulo.
+Migrations: `migrations/002_schema_evolution.sql` (tabelas extras, indexes, views).
 
 ## API Detalhada
 
@@ -201,7 +214,25 @@ Schema: `schema.sql` na raiz do módulo.
 
 Retornam arrays de navios/aeronaves ordenados por ETA.
 
+### Química
+
+**GET `/api/chemistry/equipment`** (sem auth)
+```json
+// Response 200
+[
+  { "id": "CHEM-001", "name": "Tanque Alpha", "status": "online", "temperature": 25.4, "humidity": 45, "level": 78 }
+]
+```
+
 ### Relatórios
+
+**GET `/api/reports`** (JWT obrigatório)
+```json
+// Response 200
+[
+  { "id": "uuid", "report_type": "switches", "format": "csv", "status": "ready", "created_at": "..." }
+]
+```
 
 **POST `/api/reports/export`** (JWT obrigatório)
 ```json
@@ -211,6 +242,10 @@ Retornam arrays de navios/aeronaves ordenados por ETA.
 // Response 200
 { "success": true, "report": { "id": "uuid", "status": "generating", ... } }
 ```
+
+**GET `/api/reports/:id/download`** (JWT obrigatório)
+
+Download do arquivo gerado (CSV, XLSX ou PDF).
 
 ### Health Check
 

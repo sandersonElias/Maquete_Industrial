@@ -1,6 +1,6 @@
 # Maquete Industrial - Sistema Integrado
 
-Sistema completo de monitoramento e controle para maquete industrial com 4 módulos: Ferrovia, Mineradora, Porto Logístico e Aeroporto Logístico.
+Sistema completo de monitoramento e controle para maquete industrial com 5 módulos: Ferrovia, Mineradora, Porto Logístico, Aeroporto Logístico e Química.
 
 ## Arquitetura
 
@@ -23,18 +23,21 @@ Sistema completo de monitoramento e controle para maquete industrial com 4 módu
 ```
 maquete_industrial/
 ├── backend_nodejs/              # API REST + WebSocket (Express + Socket.IO)
-│   └── src/
-│       ├── config/              # Configurações (DB, Redis, Logger)
-│       ├── controllers/         # Handlers das rotas
-│       ├── services/            # Lógica de negócio
-│       ├── routes/              # Definição de rotas Express
-│       ├── middlewares/         # Auth JWT + API Key
-│       ├── sockets/             # Eventos Socket.IO
-│       ├── jobs/                # Tarefas agendadas (timeout)
-│       └── utils/               # Validações
+│   ├── src/
+│   │   ├── config/              # Configurações (DB, Redis, Logger)
+│   │   ├── controllers/         # Handlers das rotas
+│   │   ├── services/            # Lógica de negócio
+│   │   ├── routes/              # Definição de rotas Express
+│   │   ├── middlewares/         # Auth JWT + API Key
+│   │   ├── sockets/             # Eventos Socket.IO
+│   │   ├── jobs/                # Tarefas agendadas (timeout)
+│   │   └── utils/               # Validações
+│   └── scripts/
+│       ├── migrate.js           # Executa migrations do banco
+│       └── seed.js              # Popula dados iniciais
 ├── dashboard_react/             # Dashboard React.js
 │   └── src/
-│       ├── pages/               # 6 páginas (Overview, Ferrovia, Mina, Porto, Aeroporto, Relatórios)
+│       ├── pages/               # 7 páginas (Overview, Ferrovia, Mina, Porto, Aeroporto, Química, Relatórios)
 │       ├── components/          # Sidebar, Header
 │       └── contexts/            # AuthContext, SocketContext
 ├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi)
@@ -68,7 +71,8 @@ psql -U postgres -f backend_nodejs/schema.sql
 cd backend_nodejs
 npm install
 cp .env.exemplo .env   # Configure as variáveis
-npm run migrate         # Dados iniciais (seed)
+npm run migrate         # Executa migrations do banco
+npm run seed            # Popula dados iniciais (usuarios, equipamentos)
 npm run dev             # Porta 4000
 ```
 
@@ -167,7 +171,10 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | POST   | `/api/locomotive/position`  | Registrar posição da locomotiva | JWT     |
 | GET    | `/api/port/ships`           | Listar navios                   | JWT     |
 | GET    | `/api/airport/airplanes`    | Listar aeronaves                | JWT     |
+| GET    | `/api/chemistry/equipment`  | Listar equipamentos químicos    | Não     |
+| GET    | `/api/reports`              | Listar relatórios gerados       | JWT     |
 | POST   | `/api/reports/export`       | Gerar relatório                 | JWT     |
+| GET    | `/api/reports/:id/download` | Download do relatório           | JWT     |
 | POST   | `/api/gateway/notify`       | Notificação do gateway          | API Key |
 
 ## Comandos do Caminhão
@@ -260,4 +267,6 @@ Paleta de cores (minimalista escuro):
 | Accent  | `#3B82F6` | Botões, links, ações primárias   |
 | Success | `#22C55E` | Status ok, switches CENTER       |
 | Warning | `#F59E0B` | Alertas, bateria média           |
+| Danger  | `#EF4444` | Erros, bateria baixa, stop       |
+| Química | `#06B6D4` | Equipamentos químicos            |
 | Danger  | `#EF4444` | Erros, bateria baixa, stop       |
