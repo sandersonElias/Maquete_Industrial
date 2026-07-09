@@ -1,5 +1,9 @@
 /* ============================================
-   THREE.JS SCENE - 3D MAQUETTE INTERATIVA
+   THREE.JS SCENE - MAQUETE INDUSTRIAL 3D
+   Layout fiel ao diagrama:
+   Esquerda: Central de Química + Mina
+   Centro: Ferrorama com trilhos, SW1/SW2/SW3, Reversor
+   Direita: Aeroporto Logístico + Porto Logístico
    ============================================ */
 
 class MaquetteScene {
@@ -12,14 +16,12 @@ class MaquetteScene {
     this.camera = null;
     this.renderer = null;
     this.controls = null;
-    this.maquette = null;
     this.animationId = null;
     this.clock = new THREE.Clock();
 
     this.trains = [];
     this.trainIdCounter = 0;
     this.trackCurves = [];
-    this.trackPoints = [];
 
     this.trainColors = [
       { name: 'Azul', body: 0x1e3a5f, accent: 0x2196f3, strip: 0xffd700 },
@@ -49,14 +51,14 @@ class MaquetteScene {
   init() {
     try {
       this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0x1a1a2e);
-      this.scene.fog = new THREE.Fog(0x1a1a2e, 25, 70);
+      this.scene.background = new THREE.Color(0x0a0a0f);
+      this.scene.fog = new THREE.Fog(0x0a0a0f, 30, 80);
 
       var w = this.container.clientWidth;
       var h = this.container.clientHeight;
 
-      this.camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 1000);
-      this.camera.position.set(0, 18, 18);
+      this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+      this.camera.position.set(0, 22, 20);
 
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       this.renderer.setSize(w, h);
@@ -70,7 +72,7 @@ class MaquetteScene {
       this.controls.dampingFactor = 0.05;
       this.controls.maxPolarAngle = Math.PI / 2.1;
       this.controls.minDistance = 5;
-      this.controls.maxDistance = 40;
+      this.controls.maxDistance = 60;
 
       this.setupLights();
       this.createMaquette();
@@ -86,273 +88,434 @@ class MaquetteScene {
     }
   }
 
+  // ==========================================
+  // LIGHTS
+  // ==========================================
   setupLights() {
-    this.scene.add(new THREE.AmbientLight(0x404060, 0.6));
+    this.scene.add(new THREE.AmbientLight(0x404060, 0.5));
 
-    var dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    var dir = new THREE.DirectionalLight(0xffffff, 1.0);
     dir.position.set(10, 25, 15);
     dir.castShadow = true;
     dir.shadow.mapSize.width = 2048;
     dir.shadow.mapSize.height = 2048;
     dir.shadow.camera.near = 0.5;
     dir.shadow.camera.far = 60;
-    dir.shadow.camera.left = -20;
-    dir.shadow.camera.right = 20;
-    dir.shadow.camera.top = 20;
-    dir.shadow.camera.bottom = -20;
+    dir.shadow.camera.left = -25;
+    dir.shadow.camera.right = 25;
+    dir.shadow.camera.top = 15;
+    dir.shadow.camera.bottom = -15;
     this.scene.add(dir);
 
-    var blue = new THREE.PointLight(0x00d4ff, 1.5, 40);
-    blue.position.set(-10, 8, 5);
-    this.scene.add(blue);
-
-    var green = new THREE.PointLight(0x00ffb2, 1, 35);
-    green.position.set(10, 6, -5);
-    this.scene.add(green);
-
-    var orange = new THREE.PointLight(0xff6b35, 0.8, 25);
-    orange.position.set(0, 5, 10);
-    this.scene.add(orange);
+    var warm = new THREE.PointLight(0xff8844, 0.6, 50);
+    warm.position.set(0, 12, 0);
+    this.scene.add(warm);
   }
 
+  // ==========================================
+  // CREATE FULL MAQUETTE
+  // ==========================================
   createMaquette() {
-    this.maquette = new THREE.Group();
-    this.createBase();
+    this.createBaseTable();
+    this.createLeftBlock();    // Central de Química + Mina
+    this.createCenterBlock();  // Ferrorama com trilhos
+    this.createRightBlock();   // Aeroporto + Porto
     this.createTrackSystem();
-    this.createElevatedSupports();
-    this.createSwitches();
-    this.createElectronics();
-    this.createStructures();
-    this.scene.add(this.maquette);
+    this.createLabels();
   }
 
-  createBase() {
-    var mat = new THREE.MeshStandardMaterial({ color: 0xd4a574, roughness: 0.85, metalness: 0.05 });
-    var table = new THREE.Mesh(new THREE.BoxGeometry(24, 0.5, 10), mat);
-    table.position.y = -0.25;
+  // ==========================================
+  // BASE TABLE
+  // ==========================================
+  createBaseTable() {
+    var mat = new THREE.MeshStandardMaterial({ color: 0x0a0a0f, roughness: 0.9, metalness: 0.1 });
+    var table = new THREE.Mesh(new THREE.BoxGeometry(32, 0.3, 14), mat);
+    table.position.y = -0.15;
     table.receiveShadow = true;
-    table.castShadow = true;
-    this.maquette.add(table);
-
-    var em = new THREE.MeshStandardMaterial({ color: 0xc49464, roughness: 0.9 });
-    [-5, 5].forEach(function(z) {
-      var e = new THREE.Mesh(new THREE.BoxGeometry(24, 0.3, 0.3), em);
-      e.position.set(0, 0.15, z);
-      this.maquette.add(e);
-    }.bind(this));
-    [-12, 12].forEach(function(x) {
-      var e = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 10), em);
-      e.position.set(x, 0.15, 0);
-      this.maquette.add(e);
-    }.bind(this));
+    this.scene.add(table);
   }
 
+  // ==========================================
+  // LEFT BLOCK - Central de Química + Mina
+  // ==========================================
+  createLeftBlock() {
+    var panelMat = new THREE.MeshStandardMaterial({ color: 0x2a1a08, roughness: 0.8, metalness: 0.1 });
+    var borderMat = new THREE.MeshStandardMaterial({ color: 0xcc6600, roughness: 0.6, metalness: 0.2 });
+    var innerMat = new THREE.MeshStandardMaterial({ color: 0x1a1005, roughness: 0.9 });
+
+    // Outer panel
+    var panel = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 12), panelMat);
+    panel.position.set(-11, 0.1, 0);
+    panel.receiveShadow = true;
+    this.scene.add(panel);
+
+    // Orange border
+    this._addBorder(-11, 0.21, 0, 6, 12, borderMat);
+
+    // Central de Química (top)
+    var quimica = new THREE.Mesh(new THREE.BoxGeometry(5, 0.15, 4), innerMat);
+    quimica.position.set(-11, 0.25, -3.5);
+    quimica.receiveShadow = true;
+    this.scene.add(quimica);
+    this._addInnerBorder(-11, 0.32, -3.5, 5, 4, borderMat);
+
+    // Mina (bottom, larger)
+    var mina = new THREE.Mesh(new THREE.BoxGeometry(5, 0.15, 6.5), innerMat);
+    mina.position.set(-11, 0.25, 2.5);
+    mina.receiveShadow = true;
+    this.scene.add(mina);
+    this._addInnerBorder(-11, 0.32, 2.5, 5, 6.5, borderMat);
+  }
+
+  // ==========================================
+  // CENTER BLOCK - Ferrorama
+  // ==========================================
+  createCenterBlock() {
+    var panelMat = new THREE.MeshStandardMaterial({ color: 0x2a1a08, roughness: 0.8, metalness: 0.1 });
+    var borderMat = new THREE.MeshStandardMaterial({ color: 0xcc6600, roughness: 0.6, metalness: 0.2 });
+
+    // Main panel
+    var panel = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 12), panelMat);
+    panel.position.set(0, 0.1, 0);
+    panel.receiveShadow = true;
+    this.scene.add(panel);
+
+    // Orange border
+    this._addBorder(0, 0.21, 0, 14, 12, borderMat);
+  }
+
+  // ==========================================
+  // RIGHT BLOCK - Aeroporto + Porto
+  // ==========================================
+  createRightBlock() {
+    var panelMat = new THREE.MeshStandardMaterial({ color: 0x2a1a08, roughness: 0.8, metalness: 0.1 });
+    var borderMat = new THREE.MeshStandardMaterial({ color: 0xcc6600, roughness: 0.6, metalness: 0.2 });
+    var innerMat = new THREE.MeshStandardMaterial({ color: 0x1a1005, roughness: 0.9 });
+
+    // Outer panel
+    var panel = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 12), panelMat);
+    panel.position.set(11, 0.1, 0);
+    panel.receiveShadow = true;
+    this.scene.add(panel);
+
+    // Orange border
+    this._addBorder(11, 0.21, 0, 6, 12, borderMat);
+
+    // Aeroporto Logístico (top)
+    var aero = new THREE.Mesh(new THREE.BoxGeometry(5, 0.15, 4), innerMat);
+    aero.position.set(11, 0.25, -3.5);
+    aero.receiveShadow = true;
+    this.scene.add(aero);
+    this._addInnerBorder(11, 0.32, -3.5, 5, 4, borderMat);
+
+    // Porto Logístico (bottom)
+    var porto = new THREE.Mesh(new THREE.BoxGeometry(5, 0.15, 5), innerMat);
+    porto.position.set(11, 0.25, 3);
+    porto.receiveShadow = true;
+    this.scene.add(porto);
+    this._addInnerBorder(11, 0.32, 3, 5, 5, borderMat);
+  }
+
+  // ==========================================
+  // BORDER HELPERS
+  // ==========================================
+  _addBorder(cx, cy, cz, w, d, mat) {
+    var t = 0.15; // border thickness
+    var h = 0.25;
+    // Front
+    this.scene.add(this._makeBox(w + t * 2, h, t, mat, cx, cy, cz + d / 2 + t / 2));
+    // Back
+    this.scene.add(this._makeBox(w + t * 2, h, t, mat, cx, cy, cz - d / 2 - t / 2));
+    // Left
+    this.scene.add(this._makeBox(t, h, d + t * 2, mat, cx - w / 2 - t / 2, cy, cz));
+    // Right
+    this.scene.add(this._makeBox(t, h, d + t * 2, mat, cx + w / 2 + t / 2, cy, cz));
+  }
+
+  _addInnerBorder(cx, cy, cz, w, d, mat) {
+    var t = 0.1;
+    var h = 0.2;
+    this.scene.add(this._makeBox(w + t * 2, h, t, mat, cx, cy, cz + d / 2 + t / 2));
+    this.scene.add(this._makeBox(w + t * 2, h, t, mat, cx, cy, cz - d / 2 - t / 2));
+    this.scene.add(this._makeBox(t, h, d + t * 2, mat, cx - w / 2 - t / 2, cy, cz));
+    this.scene.add(this._makeBox(t, h, d + t * 2, mat, cx + w / 2 + t / 2, cy, cz));
+  }
+
+  _makeBox(w, h, d, mat, x, y, z) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    m.castShadow = true;
+    return m;
+  }
+
+  // ==========================================
+  // TRACK SYSTEM — matches the diagram exactly
+  // ==========================================
   createTrackSystem() {
-    var tm = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.3 });
-    var sm = new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.8 });
     this.trackCurves = [];
+    var trackMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.4 });
+    var sleeperMat = new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.8 });
 
-    // Main oval loop
-    var mainPts = [];
-    for (var i = 0; i <= 64; i++) {
-      var a = (i / 64) * Math.PI * 2;
-      mainPts.push(new THREE.Vector3(Math.cos(a) * 9, 0.25, Math.sin(a) * 3.5));
+    // === MAIN OVAL CIRCUIT ===
+    // The main oval is roughly centered in the middle panel
+    var ovalPts = [];
+    for (var i = 0; i <= 80; i++) {
+      var a = (i / 80) * Math.PI * 2;
+      // Slightly squashed oval
+      var x = Math.cos(a) * 5.5;
+      var z = Math.sin(a) * 3.0;
+      ovalPts.push(new THREE.Vector3(x, 0.35, z));
     }
-    this.trackPoints = mainPts;
-    var mainCurve = new THREE.CatmullRomCurve3(mainPts, true);
-    this.trackCurves.push({ curve: mainCurve, name: 'loop principal' });
-    this.renderTrack(mainPts, tm, sm, true);
+    var ovalCurve = new THREE.CatmullRomCurve3(ovalPts, true);
+    this.trackCurves.push({ curve: ovalCurve, name: 'circuito principal' });
+    this._renderRail(ovalCurve, trackMat, 200);
 
-    // Upper branch
-    var upperPts = [];
-    for (var i = 0; i <= 20; i++) {
-      var t = i / 20;
-      upperPts.push(new THREE.Vector3(-4 + t * 3, 0.25 + t * 1.5, -3.5 + Math.sin(t * Math.PI) * -1.5));
-    }
-    this.trackCurves.push({ curve: new THREE.CatmullRomCurve3(upperPts), name: 'ramal elevado' });
-    this.renderTrack(upperPts, tm, sm, false);
+    // === UPPER BRANCH (SW1 + Reversor) ===
+    // Straight branch above the oval, connected at the top-left
+    var upperPts = [
+      new THREE.Vector3(-3.5, 0.35, -3.0),   // Connects to oval top-left
+      new THREE.Vector3(-2.0, 0.35, -3.8),   // Goes up-left
+      new THREE.Vector3(0.0, 0.35, -4.2),    // Straight section (SW1 area)
+      new THREE.Vector3(2.0, 0.35, -4.2),    // Reversor area
+      new THREE.Vector3(4.0, 0.35, -3.8),    // Curves right
+      new THREE.Vector3(5.0, 0.35, -3.0),    // Connects to oval top-right
+    ];
+    var upperCurve = new THREE.CatmullRomCurve3(upperPts, false);
+    this.trackCurves.push({ curve: upperCurve, name: 'ramal superior' });
+    this._renderRail(upperCurve, trackMat, 100);
 
-    // Lower branch
-    var lowerPts = [];
-    for (var i = 0; i <= 15; i++) {
-      var t = i / 15;
-      lowerPts.push(new THREE.Vector3(2 + t * 4, 0.25, 3.5 - t));
-    }
-    this.trackCurves.push({ curve: new THREE.CatmullRomCurve3(lowerPts), name: 'ramal inferior' });
-    this.renderTrack(lowerPts, tm, sm, false);
+    // === LOWER BRANCH (SW2 + SW3) ===
+    // Branch below the oval, connected at bottom
+    var lowerPts = [
+      new THREE.Vector3(-1.0, 0.35, 2.0),    // Connects to oval bottom-left
+      new THREE.Vector3(-0.5, 0.35, 3.0),    // Goes down
+      new THREE.Vector3(0.5, 0.35, 3.5),     // SW2 area
+      new THREE.Vector3(2.0, 0.35, 3.5),     // SW3 area
+      new THREE.Vector3(3.0, 0.35, 2.8),     // Curves back up
+      new THREE.Vector3(3.5, 0.35, 2.0),     // Connects to oval bottom-right
+    ];
+    var lowerCurve = new THREE.CatmullRomCurve3(lowerPts, false);
+    this.trackCurves.push({ curve: lowerCurve, name: 'ramal inferior' });
+    this._renderRail(lowerCurve, trackMat, 100);
 
-    // Diagonal
-    var diagPts = [];
-    for (var i = 0; i <= 20; i++) {
-      var t = i / 20;
-      diagPts.push(new THREE.Vector3(-4 + t * 8, 0.25, -2 + t * 4));
-    }
-    this.trackCurves.push({ curve: new THREE.CatmullRomCurve3(diagPts), name: 'diagonal' });
-    this.renderTrack(diagPts, tm, sm, false);
+    // === DIAGONAL CONNECTION ===
+    var diagPts = [
+      new THREE.Vector3(-2.0, 0.35, -2.5),
+      new THREE.Vector3(-0.5, 0.35, 0.0),
+      new THREE.Vector3(1.5, 0.35, 2.0),
+    ];
+    var diagCurve = new THREE.CatmullRomCurve3(diagPts, false);
+    this.trackCurves.push({ curve: diagCurve, name: 'diagonal' });
+    this._renderRail(diagCurve, trackMat, 60);
+
+    // === SWITCHES (SW1, SW2, SW3) ===
+    this._createSwitch(-2.0, 0.35, -3.8, 'SW1');
+    this._createSwitch(0.5, 0.35, 3.5, 'SW2');
+    this._createSwitch(2.0, 0.35, 3.5, 'SW3');
+
+    // === REVERSOR ===
+    this._createReversor(2.0, 0.35, -4.2);
   }
 
-  renderTrack(points, tm, sm, closed) {
-    if (points.length < 2) return;
-    var c1 = new THREE.CatmullRomCurve3(points, closed);
-    var mesh1 = new THREE.Mesh(new THREE.TubeGeometry(c1, 100, 0.08, 8, false), tm);
-    mesh1.castShadow = true;
-    this.maquette.add(mesh1);
+  _renderRail(curve, mat, segments) {
+    var tube = new THREE.TubeGeometry(curve, segments, 0.06, 8, false);
+    var mesh = new THREE.Mesh(tube, mat);
+    mesh.castShadow = true;
+    this.scene.add(mesh);
 
-    // Second rail
-    var offset = 0.35;
+    // Second rail (offset)
+    var pts = curve.getPoints(segments);
     var pts2 = [];
-    for (var i = 0; i < points.length; i++) {
-      pts2.push(new THREE.Vector3(points[i].x, points[i].y, points[i].z + offset));
+    for (var i = 0; i < pts.length; i++) {
+      pts2.push(new THREE.Vector3(pts[i].x, pts[i].y, pts[i].z + 0.3));
     }
-    var c2 = new THREE.CatmullRomCurve3(pts2, closed);
-    var mesh2 = new THREE.Mesh(new THREE.TubeGeometry(c2, 100, 0.08, 8, false), tm);
+    var curve2 = new THREE.CatmullRomCurve3(pts2, false);
+    var tube2 = new THREE.TubeGeometry(curve2, segments, 0.06, 8, false);
+    var mesh2 = new THREE.Mesh(tube2, mat);
     mesh2.castShadow = true;
-    this.maquette.add(mesh2);
+    this.scene.add(mesh2);
 
     // Sleepers
-    for (var i = 0; i < points.length - 1; i += 2) {
-      var p = points[i];
+    for (var i = 0; i < pts.length; i += 4) {
+      var p = pts[i];
       var q = pts2[i];
       if (!p || !q) continue;
-      var sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.5), sm);
-      sleeper.position.set((p.x + q.x) / 2, (p.y + q.y) / 2 - 0.02, (p.z + q.z) / 2);
-      if (i < points.length - 2) {
-        var next = points[i + 1];
+      var sleeper = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.04, 0.42),
+        new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 })
+      );
+      sleeper.position.set((p.x + q.x) / 2, 0.32, (p.z + q.z) / 2);
+      if (i < pts.length - 1) {
+        var next = pts[i + 1];
         sleeper.rotation.y = -Math.atan2(next.z - p.z, next.x - p.x);
       }
-      this.maquette.add(sleeper);
+      this.scene.add(sleeper);
     }
   }
 
-  createElevatedSupports() {
-    var m = new THREE.MeshStandardMaterial({ color: 0xc49464, roughness: 0.9 });
-    var positions = [
-      { x: -5, z: -4.5, h: 1.5 }, { x: -3, z: -5, h: 1.8 }, { x: -1, z: -4.8, h: 2 },
-      { x: 1, z: -4.5, h: 1.8 }, { x: 3, z: -4, h: 1.5 }
-    ];
-    for (var i = 0; i < positions.length; i++) {
-      var pos = positions[i];
-      var s = new THREE.Shape();
-      s.moveTo(-0.4, 0);
-      s.lineTo(0.4, 0);
-      s.lineTo(0, pos.h);
-      s.lineTo(-0.4, 0);
-      var sup = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.3, bevelEnabled: false }), m);
-      sup.position.set(pos.x, 0, pos.z);
-      sup.castShadow = true;
-      this.maquette.add(sup);
-    }
-    var plat = new THREE.Mesh(new THREE.BoxGeometry(8, 0.15, 1.5), m);
-    plat.position.set(-1, 1.8, -4.5);
-    plat.castShadow = true;
-    this.maquette.add(plat);
+  _createSwitch(x, y, z, label) {
+    var g = new THREE.Group();
+
+    // White block
+    var block = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.15, 0.35),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 })
+    );
+    block.position.y = 0.1;
+    block.castShadow = true;
+    g.add(block);
+
+    // Yellow mechanism
+    var mech = new THREE.Mesh(
+      new THREE.BoxGeometry(0.25, 0.12, 0.2),
+      new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.3, roughness: 0.5 })
+    );
+    mech.position.y = 0.22;
+    g.add(mech);
+
+    // Lever
+    var lever = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0xffd700 })
+    );
+    lever.position.set(0, 0.38, 0);
+    lever.rotation.z = Math.PI / 6;
+    g.add(lever);
+
+    g.position.set(x, y, z);
+    g.userData = { type: 'switch', label: label };
+    this.scene.add(g);
+
+    // Label
+    this._addTextSprite(label, x, y + 0.7, z, 0xffffff);
   }
 
-  createSwitches() {
-    var sw = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.3, roughness: 0.5 });
-    var bm = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.7 });
-    var positions = [
-      { x: -6, z: 0, r: 0 }, { x: 0, z: -3.5, r: Math.PI / 4 },
-      { x: 4, z: 2, r: -Math.PI / 6 }, { x: -2, z: 3, r: Math.PI / 3 }
-    ];
-    for (var i = 0; i < positions.length; i++) {
-      var pos = positions[i];
-      var g = new THREE.Group();
-      var base = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.15, 0.4), bm);
-      base.position.y = 0.1;
-      g.add(base);
-      var mech = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.25), sw);
-      mech.position.y = 0.25;
-      g.add(mech);
-      var lever = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3), sw);
-      lever.position.set(0, 0.45, 0);
-      lever.rotation.z = Math.PI / 6;
-      g.add(lever);
-      g.position.set(pos.x, 0, pos.z);
-      g.rotation.y = pos.r;
-      g.userData = { type: 'switch' };
-      this.maquette.add(g);
-    }
+  _createReversor(x, y, z) {
+    var g = new THREE.Group();
+
+    // White rectangle
+    var block = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, 0.12, 0.3),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 })
+    );
+    block.position.y = 0.08;
+    block.castShadow = true;
+    g.add(block);
+
+    // Green indicator
+    var indicator = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.08, 0.15),
+      new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 0.3 })
+    );
+    indicator.position.set(-0.35, 0.18, 0);
+    g.add(indicator);
+
+    // Red indicator
+    var indicator2 = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.08, 0.15),
+      new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.3 })
+    );
+    indicator2.position.set(0.35, 0.18, 0);
+    g.add(indicator2);
+
+    g.position.set(x, y, z);
+    g.userData = { type: 'reversor' };
+    this.scene.add(g);
+
+    // Label
+    this._addTextSprite('REVERSOR', x, y + 0.6, z, 0xffffff);
   }
 
-  createElectronics() {
-    var eg = new THREE.Group();
-    var bb = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 0.8), new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.8 }));
-    bb.position.set(-8, 0.15, 2);
-    eg.add(bb);
-    var ar = new THREE.Mesh(new THREE.BoxGeometry(1, 0.08, 0.6), new THREE.MeshStandardMaterial({ color: 0x0066cc, roughness: 0.6 }));
-    ar.position.set(-8, 0.15, 3.5);
-    eg.add(ar);
-    var wc = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
-    for (var i = 0; i < 5; i++) {
-      var w = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2), new THREE.MeshStandardMaterial({ color: wc[i] }));
-      w.position.set(-8 + i * 0.2, 0.2, 2.75);
-      w.rotation.x = Math.PI / 2;
-      w.rotation.z = Math.random() * 0.5 - 0.25;
-      eg.add(w);
-    }
-    this.maquette.add(eg);
+  // ==========================================
+  // TEXT LABELS (using canvas textures)
+  // ==========================================
+  createLabels() {
+    // Block titles
+    this._addTextSprite('Central', -11, 1.2, -3.5, 0xffffff, 1.2);
+    this._addTextSprite('de Química', -11, 0.85, -3.5, 0xffffff, 1.0);
+
+    this._addTextSprite('Mina', -11, 0.85, 2.5, 0xffffff, 1.4);
+
+    this._addTextSprite('Ferrorama', 0, 1.5, 0, 0xffffff, 1.6);
+
+    this._addTextSprite('Aeroporto', 11, 1.2, -3.5, 0xffffff, 1.2);
+    this._addTextSprite('Logístico', 11, 0.85, -3.5, 0xffffff, 1.0);
+
+    this._addTextSprite('Porto', 11, 1.2, 3, 0xffffff, 1.2);
+    this._addTextSprite('Logístico', 11, 0.85, 3, 0xffffff, 1.0);
   }
 
-  createStructures() {
-    var cg = new THREE.Group();
-    var crBase = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4), new THREE.MeshStandardMaterial({ color: 0x2a2a2a }));
-    crBase.position.y = 0.15;
-    cg.add(crBase);
-    var crArm = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.5, 0.15), new THREE.MeshStandardMaterial({ color: 0xffd700 }));
-    crArm.position.y = 1;
-    cg.add(crArm);
-    var hk = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 0.1), new THREE.MeshStandardMaterial({ color: 0xffd700 }));
-    hk.position.set(0.4, 1.8, 0);
-    cg.add(hk);
-    cg.position.set(-6, 0, -1);
-    this.maquette.add(cg);
+  _addTextSprite(text, x, y, z, color, scale) {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    var ctx = canvas.getContext('2d');
 
-    var s2 = new THREE.Group();
-    var s2b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.5), new THREE.MeshStandardMaterial({ color: 0xffd700 }));
-    s2b.position.y = 0.2;
-    s2.add(s2b);
-    var s2p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1), new THREE.MeshStandardMaterial({ color: 0xffd700 }));
-    s2p.position.y = 0.9;
-    s2.add(s2p);
-    s2.position.set(2, 0, -2);
-    this.maquette.add(s2);
+    ctx.clearRect(0, 0, 256, 128);
+    ctx.font = 'bold 36px Arial, sans-serif';
+    ctx.fillStyle = '#' + color.toString(16).padStart(6, '0');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-    var boxes = [[-10, 0, 0x8b4513], [-9, -1, 0x654321], [8, -1, 0x2a2a2a], [10, 1, 0x4a4a4a]];
-    for (var i = 0; i < boxes.length; i++) {
-      var b = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5 + Math.random() * 0.5, 0.3 + Math.random() * 0.4, 0.4 + Math.random() * 0.3),
-        new THREE.MeshStandardMaterial({ color: boxes[i][2], roughness: 0.8 })
-      );
-      b.position.set(boxes[i][0], 0.2, boxes[i][1]);
-      b.rotation.y = Math.random() * Math.PI;
-      b.castShadow = true;
-      this.maquette.add(b);
+    // Handle multi-line text
+    var lines = text.split('\n');
+    if (lines.length === 1 && text.length > 10) {
+      // Auto-split long text
+      var mid = Math.ceil(text.length / 2);
+      var spaceIdx = text.indexOf(' ', mid);
+      if (spaceIdx > 0) {
+        lines = [text.substring(0, spaceIdx), text.substring(spaceIdx + 1)];
+      }
     }
+
+    var lineHeight = 40;
+    var startY = 64 - ((lines.length - 1) * lineHeight) / 2;
+    for (var i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], 128, startY + i * lineHeight);
+    }
+
+    var texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    var mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    var sprite = new THREE.Sprite(mat);
+    sprite.position.set(x, y, z);
+    var s = scale || 1.0;
+    sprite.scale.set(s * 3, s * 1.5, 1);
+    this.scene.add(sprite);
   }
 
+  // ==========================================
+  // PARTICLES
+  // ==========================================
   createParticles() {
     var geo = new THREE.BufferGeometry();
-    var pos = new Float32Array(900);
-    for (var i = 0; i < 900; i++) pos[i] = (Math.random() - 0.5) * 40;
+    var pos = new Float32Array(600);
+    for (var i = 0; i < 600; i++) pos[i] = (Math.random() - 0.5) * 50;
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     this.particles = new THREE.Points(geo, new THREE.PointsMaterial({
-      size: 0.05, color: 0x00d4ff, transparent: true, opacity: 0.4
+      size: 0.04, color: 0xcc6600, transparent: true, opacity: 0.3
     }));
     this.scene.add(this.particles);
   }
 
+  // ==========================================
+  // HOVER INDICATOR
+  // ==========================================
   createHoverIndicator() {
     var ring = new THREE.Mesh(
       new THREE.RingGeometry(0.3, 0.45, 32),
       new THREE.MeshBasicMaterial({ color: 0x00ffb2, transparent: true, opacity: 0, side: THREE.DoubleSide })
     );
     ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 0.5;
+    ring.position.y = 0.6;
     this.hoverIndicator = ring;
     this.scene.add(ring);
   }
 
+  // ==========================================
+  // CLICK HANDLER
+  // ==========================================
   setupClickHandler() {
     var self = this;
     var canvas = this.renderer.domElement;
@@ -369,11 +532,11 @@ class MaquetteScene {
       var best = null, bestD = Infinity;
       for (var i = 0; i < pts.length; i++) {
         var pt = pts[i].clone();
-        pt.y = 0.5;
+        pt.y = 0.6;
         var pr = new THREE.Vector3();
         self.raycaster.ray.closestPointToPoint(pt, pr);
         var d = pt.distanceTo(pr);
-        if (d < bestD && d < 2.0) { bestD = d; best = i / pts.length; }
+        if (d < bestD && d < 2.5) { bestD = d; best = i / pts.length; }
       }
       if (best !== null) {
         var ci = self.trainIdCounter % self.trainColors.length;
@@ -394,14 +557,14 @@ class MaquetteScene {
       var best = null, bestD = Infinity;
       for (var i = 0; i < pts.length; i++) {
         var pt = pts[i].clone();
-        pt.y = 0.5;
+        pt.y = 0.6;
         var pr = new THREE.Vector3();
         self.raycaster.ray.closestPointToPoint(pt, pr);
         var d = pt.distanceTo(pr);
-        if (d < bestD && d < 2.0) { bestD = d; best = pts[i]; }
+        if (d < bestD && d < 2.5) { bestD = d; best = pts[i]; }
       }
       if (best) {
-        self.hoverIndicator.position.set(best.x, 0.5, best.z);
+        self.hoverIndicator.position.set(best.x, 0.6, best.z);
         self.hoverIndicator.material.opacity = bestD < 1.5 ? 0.8 : 0.3;
       } else {
         self.hoverIndicator.material.opacity = 0;
@@ -515,27 +678,19 @@ class MaquetteScene {
       parts.push(car);
     }
 
-    this.maquette.add(group);
+    this.scene.add(group);
 
     var train = {
-      id: id,
-      group: group,
-      parts: parts,
-      type: type,
-      color: color,
+      id: id, group: group, parts: parts, type: type, color: color,
       progress: progressOnTrack || 0,
-      targetSpeed: 0.03,
-      currentSpeed: 0,
-      running: false,
-      direction: 1,
+      targetSpeed: 0.03, currentSpeed: 0,
+      running: false, direction: 1,
       name: type.label + ' #' + (id + 1),
-      trackIndex: 0,
-      partGap: 0.03
+      trackIndex: 0, partGap: 0.03
     };
 
     this.trains.push(train);
     this._placeTrainOnTrack(train);
-
     if (typeof this.onTrainAdded === 'function') this.onTrainAdded(train);
     return train;
   }
@@ -547,7 +702,7 @@ class MaquetteScene {
     }
     if (idx === -1) return;
     var train = this.trains[idx];
-    this.maquette.remove(train.group);
+    this.scene.remove(train.group);
     train.group.traverse(function(c) {
       if (c.geometry) c.geometry.dispose();
       if (c.material) {
@@ -623,13 +778,11 @@ class MaquetteScene {
       var tangent = curve.getTangentAt(t);
 
       var part = train.parts[i];
-      part.position.set(point.x, point.y + 0.05, point.z);
+      part.position.set(point.x, point.y + 0.02, point.z);
 
-      // Align to tangent using lookAt
       var ahead = new THREE.Vector3().copy(point).add(tangent);
       part.lookAt(ahead);
 
-      // Simple banking based on tangent change
       var dt = 0.005;
       var t1 = curve.getTangentAt(Math.max(0, t - dt));
       var t2 = curve.getTangentAt(Math.min(1, t + dt));
@@ -646,12 +799,12 @@ class MaquetteScene {
   // ==========================================
   animateToView(view) {
     var views = {
-      overview: { x: 0, y: 18, z: 18, lx: 0, ly: 0, lz: 0 },
-      mina: { x: -12, y: 6, z: 5, lx: -6, ly: 0, lz: -1 },
-      porto: { x: 12, y: 6, z: 5, lx: 8, ly: 0, lz: 0 },
-      trem: { x: 0, y: 5, z: 8, lx: 0, ly: 0, lz: 0 },
-      mine: { x: -12, y: 6, z: 5, lx: -6, ly: 0, lz: -1 },
-      port: { x: 12, y: 6, z: 5, lx: 8, ly: 0, lz: 0 }
+      overview: { x: 0, y: 22, z: 20, lx: 0, ly: 0, lz: 0 },
+      mina: { x: -14, y: 6, z: 4, lx: -11, ly: 0, lz: 2.5 },
+      porto: { x: 14, y: 6, z: 4, lx: 11, ly: 0, lz: 3 },
+      trem: { x: 0, y: 6, z: 10, lx: 0, ly: 0, lz: 0 },
+      mine: { x: -14, y: 6, z: 4, lx: -11, ly: 0, lz: 2.5 },
+      port: { x: 14, y: 6, z: 4, lx: 11, ly: 0, lz: 3 }
     };
     var v = views[view];
     if (!v) return;
@@ -685,7 +838,7 @@ class MaquetteScene {
     var dt = this.clock.getDelta();
     var time = this.clock.getElapsedTime();
 
-    if (this.particles) this.particles.rotation.y = time * 0.03;
+    if (this.particles) this.particles.rotation.y = time * 0.02;
 
     for (var i = 0; i < this.trains.length; i++) {
       var train = this.trains[i];
@@ -696,12 +849,12 @@ class MaquetteScene {
       this._placeTrainOnTrack(train);
     }
 
-    for (var i = 0; i < this.maquette.children.length; i++) {
-      var c = this.maquette.children[i];
+    // Switch animation
+    this.scene.traverse(function(c) {
       if (c.userData && c.userData.type === 'switch') {
         c.scale.setScalar(1 + Math.sin(time * 2 + c.position.x) * 0.05);
       }
-    }
+    });
 
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
