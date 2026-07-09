@@ -1162,6 +1162,7 @@ class MaquetteScene {
 
       var ahead = new THREE.Vector3().copy(point).add(tangent);
       part.lookAt(ahead);
+      part.rotateY(Math.PI / 2); // Trains face +X, lookAt aligns -Z, so rotate 90°
 
       // Banking
       var dt = 0.005;
