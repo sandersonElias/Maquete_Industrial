@@ -354,7 +354,7 @@ class FerroramaApp {
         const speed = parseFloat(globalSpeed.value);
         if (this.maquetteScene) {
           this.maquetteScene.trains.forEach(t => {
-            t.speed = speed;
+            t.targetSpeed = speed;
             // Update individual slider
             const slider = document.querySelector(`.train-card[data-id="${t.id}"] input[type="range"]`);
             if (slider) slider.value = speed;
@@ -387,7 +387,7 @@ class FerroramaApp {
         <div class="train-card-name">${trainData.name}</div>
         <div class="train-card-type">${trainData.color.name} · ${trainData.type.cars} vagões</div>
         <div class="train-card-speed">
-          <input type="range" min="0.005" max="0.1" step="0.005" value="${trainData.speed}">
+          <input type="range" min="0.005" max="0.1" step="0.005" value="${trainData.targetSpeed}">
           <span class="speed-val">30%</span>
         </div>
       </div>

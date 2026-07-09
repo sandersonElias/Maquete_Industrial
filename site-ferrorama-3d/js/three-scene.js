@@ -517,124 +517,129 @@ class MaquetteScene {
   }
 
   // ==========================================
-  // TRAIN CREATION
+  // TRAIN CREATION — each car is a separate 3D group
   // ==========================================
-  addTrain(progressOnTrack, colorIndex, typeIndex) {
-    const colorScheme = this.trainColors[colorIndex % this.trainColors.length];
-    const trainType = this.trainTypes[typeIndex % this.trainTypes.length];
-    const trainGroup = new THREE.Group();
-    const id = this.trainIdCounter++;
+  _buildLocoMesh(colorScheme) {
+    const g = new THREE.Group();
+    const matBody = new THREE.MeshStandardMaterial({ color: colorScheme.body, metalness: 0.4, roughness: 0.5 });
+    const matAccent = new THREE.MeshStandardMaterial({ color: colorScheme.accent, metalness: 0.3 });
+    const matStrip = new THREE.MeshStandardMaterial({ color: colorScheme.strip });
+    const matWheel = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
+    const matHL = new THREE.MeshBasicMaterial({ color: 0xffff99 });
 
-    // Locomotive
-    const locoBody = new THREE.Mesh(
-      new THREE.BoxGeometry(1.8, 0.5, 0.5),
-      new THREE.MeshStandardMaterial({ color: colorScheme.body, metalness: 0.4, roughness: 0.5 })
-    );
-    locoBody.position.y = 0.35;
-    locoBody.castShadow = true;
-    trainGroup.add(locoBody);
+    // Body
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.25, 0.28), matBody);
+    body.position.y = 0.2;
+    body.castShadow = true;
+    g.add(body);
 
-    const cabin = new THREE.Mesh(
-      new THREE.BoxGeometry(0.6, 0.45, 0.45),
-      new THREE.MeshStandardMaterial({ color: colorScheme.accent, metalness: 0.3 })
-    );
-    cabin.position.set(-0.5, 0.7, 0);
-    trainGroup.add(cabin);
+    // Cabin
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.2, 0.26), matAccent);
+    cabin.position.set(-0.18, 0.38, 0);
+    g.add(cabin);
 
-    const strip = new THREE.Mesh(
-      new THREE.BoxGeometry(1.6, 0.08, 0.52),
-      new THREE.MeshStandardMaterial({ color: colorScheme.strip })
-    );
-    strip.position.y = 0.6;
-    trainGroup.add(strip);
+    // Yellow strip
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.03, 0.3), matStrip);
+    strip.position.y = 0.34;
+    g.add(strip);
 
     // Wheels
-    const wheelGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.08);
-    const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
-    for (let x = -0.5; x <= 0.5; x += 0.5) {
-      for (let z of [-0.25, 0.25]) {
-        const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-        wheel.rotation.x = Math.PI / 2;
-        wheel.position.set(x, 0.15, z);
-        trainGroup.add(wheel);
+    const wGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.04);
+    for (const x of [-0.2, 0.2]) {
+      for (const z of [-0.14, 0.14]) {
+        const w = new THREE.Mesh(wGeo, matWheel);
+        w.rotation.x = Math.PI / 2;
+        w.position.set(x, 0.06, z);
+        g.add(w);
       }
     }
 
     // Headlights
-    const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffff99 });
-    for (const z of [-0.15, 0.15]) {
-      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), headlightMat);
-      hl.position.set(0.9, 0.35, z);
-      trainGroup.add(hl);
-    }
-
-    // Cars
-    const carOffset = -1.2;
-    for (let c = 0; c < trainType.cars; c++) {
-      const carGroup = new THREE.Group();
-
-      const carBody = new THREE.Mesh(
-        new THREE.BoxGeometry(1.4, 0.4, 0.45),
-        new THREE.MeshStandardMaterial({ color: colorScheme.body, metalness: 0.3, roughness: 0.5 })
-      );
-      carBody.position.y = 0.3;
-      carBody.castShadow = true;
-      carGroup.add(carBody);
-
-      const carTop = new THREE.Mesh(
-        new THREE.BoxGeometry(1.4, 0.15, 0.48),
-        new THREE.MeshStandardMaterial({ color: colorScheme.accent })
-      );
-      carTop.position.y = 0.55;
-      carGroup.add(carTop);
-
-      // Car wheels
-      for (let x = -0.4; x <= 0.4; x += 0.8) {
-        for (const z of [-0.22, 0.22]) {
-          const w = new THREE.Mesh(wheelGeometry, wheelMaterial);
-          w.rotation.x = Math.PI / 2;
-          w.position.set(x, 0.15, z);
-          carGroup.add(w);
-        }
-      }
-
-      carGroup.position.x = carOffset - c * 1.5;
-      trainGroup.add(carGroup);
+    for (const z of [-0.06, 0.06]) {
+      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 6), matHL);
+      hl.position.set(0.36, 0.18, z);
+      g.add(hl);
     }
 
     // Headlight glow
-    const glowGeometry = new THREE.SphereGeometry(0.2, 8, 8);
-    const glowMaterial = new THREE.MeshBasicMaterial({ color: 0xffff99, transparent: true, opacity: 0.3 });
-    const headGlow = new THREE.Mesh(glowGeometry, glowMaterial);
-    headGlow.position.set(0.95, 0.35, 0);
-    trainGroup.add(headGlow);
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xffff99, transparent: true, opacity: 0.25 })
+    );
+    glow.position.set(0.38, 0.18, 0);
+    g.add(glow);
 
-    // Name label using sprite
+    return g;
+  }
+
+  _buildCarMesh(colorScheme, carIndex) {
+    const g = new THREE.Group();
+    const matBody = new THREE.MeshStandardMaterial({ color: colorScheme.body, metalness: 0.3, roughness: 0.5 });
+    const matAccent = new THREE.MeshStandardMaterial({ color: colorScheme.accent });
+    const matWheel = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.2, 0.26), matBody);
+    body.position.y = 0.17;
+    body.castShadow = true;
+    g.add(body);
+
+    const top = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.28), matAccent);
+    top.position.y = 0.31;
+    g.add(top);
+
+    // Wheels
+    const wGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.03);
+    for (const x of [-0.15, 0.15]) {
+      for (const z of [-0.12, 0.12]) {
+        const w = new THREE.Mesh(wGeo, matWheel);
+        w.rotation.x = Math.PI / 2;
+        w.position.set(x, 0.05, z);
+        g.add(w);
+      }
+    }
+
+    return g;
+  }
+
+  addTrain(progressOnTrack, colorIndex, typeIndex) {
+    const colorScheme = this.trainColors[colorIndex % this.trainColors.length];
+    const trainType = this.trainTypes[typeIndex % this.trainTypes.length];
+    const id = this.trainIdCounter++;
+
+    const loco = this._buildLocoMesh(colorScheme);
+    const cars = [];
+    for (let c = 0; c < trainType.cars; c++) {
+      cars.push(this._buildCarMesh(colorScheme, c));
+    }
+
+    // Add all to scene
+    this.maquette.add(loco);
+    cars.forEach(c => this.maquette.add(c));
+
     const trainData = {
       id: id,
-      group: trainGroup,
+      loco: loco,
+      cars: cars,
       type: trainType,
       color: colorScheme,
       progress: progressOnTrack || 0,
-      speed: 0.03,
+      targetSpeed: 0.03,
+      currentSpeed: 0,
       running: false,
       direction: 1,
       name: `${trainType.label} #${id + 1}`,
       trackIndex: 0,
+      totalParts: 1 + cars.length,
+      // spacing between parts along the curve (in curve-param units)
+      partSpacing: 0.025,
     };
 
-    trainGroup.userData = { type: 'train', trainId: id };
     this.trains.push(trainData);
-    this.maquette.add(trainGroup);
-
-    // Position train on track
     this.updateTrainPosition(trainData);
 
-    // Notify UI
     if (typeof this.onTrainAdded === 'function') {
       this.onTrainAdded(trainData);
     }
-
     return trainData;
   }
 
@@ -642,14 +647,29 @@ class MaquetteScene {
     const idx = this.trains.findIndex(t => t.id === id);
     if (idx === -1) return;
     const train = this.trains[idx];
-    this.maquette.remove(train.group);
-    train.group.traverse(child => {
+
+    // Dispose loco
+    this.maquette.remove(train.loco);
+    train.loco.traverse(child => {
       if (child.geometry) child.geometry.dispose();
       if (child.material) {
         if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
         else child.material.dispose();
       }
     });
+
+    // Dispose cars
+    train.cars.forEach(car => {
+      this.maquette.remove(car);
+      car.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+          else child.material.dispose();
+        }
+      });
+    });
+
     this.trains.splice(idx, 1);
 
     if (typeof this.onTrainRemoved === 'function') {
@@ -662,13 +682,15 @@ class MaquetteScene {
   // ==========================================
   setTrainSpeed(id, speed) {
     const train = this.trains.find(t => t.id === id);
-    if (train) train.speed = speed;
+    if (train) train.targetSpeed = speed;
   }
 
   toggleTrainRunning(id) {
     const train = this.trains.find(t => t.id === id);
     if (train) {
       train.running = !train.running;
+      if (!train.running) train.targetSpeed = 0;
+      else train.targetSpeed = 0.03;
       if (typeof this.onTrainToggled === 'function') {
         this.onTrainToggled(train);
       }
@@ -677,14 +699,14 @@ class MaquetteScene {
   }
 
   startAllTrains() {
-    this.trains.forEach(t => t.running = true);
+    this.trains.forEach(t => { t.running = true; t.targetSpeed = 0.03; });
     if (typeof this.onAllTrainsToggled === 'function') {
       this.onAllTrainsToggled(true);
     }
   }
 
   stopAllTrains() {
-    this.trains.forEach(t => t.running = false);
+    this.trains.forEach(t => { t.running = false; t.targetSpeed = 0; });
     if (typeof this.onAllTrainsToggled === 'function') {
       this.onAllTrainsToggled(false);
     }
@@ -692,9 +714,7 @@ class MaquetteScene {
 
   reverseTrain(id) {
     const train = this.trains.find(t => t.id === id);
-    if (train) {
-      train.direction *= -1;
-    }
+    if (train) train.direction *= -1;
   }
 
   setTrainTrack(id, trackIndex) {
@@ -705,31 +725,91 @@ class MaquetteScene {
     }
   }
 
-  getTrainCount() {
-    return this.trains.length;
-  }
-
-  getRunningCount() {
-    return this.trains.filter(t => t.running).length;
-  }
+  getTrainCount() { return this.trains.length; }
+  getRunningCount() { return this.trains.filter(t => t.running).length; }
 
   // ==========================================
-  // POSITIONING
+  // POSITIONING — each car independently follows curve with banking
   // ==========================================
+  _getCurveFrame(curve, t) {
+    const point = curve.getPointAt(t);
+    const tangent = curve.getTangentAt(t).normalize();
+
+    // Compute approximate normal by sampling nearby point
+    const dt = 0.001;
+    const tNext = Math.min(t + dt, 1);
+    const tPrev = Math.max(t - dt, 0);
+    const nextTangent = curve.getTangentAt(tNext).normalize();
+    const prevTangent = curve.getTangentAt(tPrev).normalize();
+
+    // Curvature via change in tangent
+    const curvature = new THREE.Vector3().subVectors(nextTangent, prevTangent).divideScalar(2 * dt);
+
+    // Normal: perpendicular to tangent in the osculating plane
+    const normal = new THREE.Vector3();
+    if (curvature.lengthSq() > 1e-10) {
+      normal.copy(curvature).normalize();
+    } else {
+      // Fallback: use world up cross tangent
+      normal.crossVectors(new THREE.Vector3(0, 1, 0), tangent).normalize();
+      if (normal.lengthSq() < 1e-10) {
+        normal.set(1, 0, 0);
+      }
+    }
+
+    // Binormal
+    const binormal = new THREE.Vector3().crossVectors(tangent, normal).normalize();
+
+    return { point, tangent, normal, binormal };
+  }
+
+  _positionPart(part, frame, bankingAngle) {
+    // Position at curve point
+    part.position.copy(frame.point);
+    part.position.y += 0.08;
+
+    // Align part's forward axis (X+) with the tangent direction
+    const target = new THREE.Vector3().copy(frame.point).add(frame.tangent);
+    part.lookAt(target);
+
+    // Apply banking (roll around tangent axis)
+    part.rotateX(bankingAngle);
+  }
+
   updateTrainPosition(train) {
     const trackData = this.trackCurves[train.trackIndex];
     if (!trackData) return;
 
-    const point = trackData.curve.getPointAt(Math.abs(train.progress) % 1);
-    const tangent = trackData.curve.getTangentAt(Math.abs(train.progress) % 1);
+    const curve = trackData.curve;
+    const p = ((train.progress % 1) + 1) % 1;
 
-    train.group.position.set(point.x, point.y, point.z);
-    const angle = Math.atan2(tangent.z, tangent.x);
-    train.group.rotation.y = train.direction > 0 ? -angle : Math.PI - angle;
+    // Locomotive position
+    const locoFrame = this._getCurveFrame(curve, p);
 
-    // Slight bobbing
-    const time = this.clock.getElapsedTime();
-    train.group.position.y += Math.sin(time * 8 + train.id) * 0.008;
+    // Compute curvature for banking
+    const dt = 0.002;
+    const f1 = this._getCurveFrame(curve, Math.max(0, p - dt));
+    const f2 = this._getCurveFrame(curve, Math.min(1, p + dt));
+    const curvatureChange = new THREE.Vector3().subVectors(f2.tangent, f1.tangent);
+    let bankAngle = -curvatureChange.z * 3.0;
+    bankAngle = THREE.MathUtils.clamp(bankAngle, -0.3, 0.3);
+
+    this._positionPart(train.loco, locoFrame, bankAngle);
+
+    // Position each car behind the locomotive
+    for (let c = 0; c < train.cars.length; c++) {
+      const carP = ((p - (c + 1) * train.partSpacing) % 1 + 1) % 1;
+      const carFrame = this._getCurveFrame(curve, carP);
+
+      const cdt = 0.002;
+      const cf1 = this._getCurveFrame(curve, Math.max(0, carP - cdt));
+      const cf2 = this._getCurveFrame(curve, Math.min(1, carP + cdt));
+      const cCurvChange = new THREE.Vector3().subVectors(cf2.tangent, cf1.tangent);
+      let cBank = -cCurvChange.z * 3.0;
+      cBank = THREE.MathUtils.clamp(cBank, -0.3, 0.3);
+
+      this._positionPart(train.cars[c], carFrame, cBank);
+    }
   }
 
   // ==========================================
@@ -772,25 +852,29 @@ class MaquetteScene {
     this.animationId = requestAnimationFrame(() => this.animate());
 
     const time = this.clock.getElapsedTime();
+    const dt = this.clock.getDelta();
 
     // Rotate particles
     if (this.particles) {
       this.particles.rotation.y = time * 0.03;
     }
 
-    // Animate all trains
+    // Animate trains with smooth acceleration
     this.trains.forEach(train => {
-      if (train.running) {
-        train.progress += train.speed * train.direction;
-        if (train.progress > 1) train.progress -= 1;
-        if (train.progress < 0) train.progress += 1;
-      }
+      // Smooth speed interpolation
+      const accel = train.running ? 1.5 : 2.0;
+      train.currentSpeed += (train.targetSpeed - train.currentSpeed) * Math.min(accel * dt, 1);
+
+      // Dead zone
+      if (Math.abs(train.currentSpeed) < 0.0001) train.currentSpeed = 0;
+
+      train.progress += train.currentSpeed * train.direction;
       this.updateTrainPosition(train);
     });
 
     // Animate switches
     this.maquette.children.forEach(child => {
-      if (child.userData.type === 'switch') {
+      if (child.userData && child.userData.type === 'switch') {
         const scale = 1 + Math.sin(time * 2 + child.position.x) * 0.05;
         child.scale.setScalar(scale);
       }
