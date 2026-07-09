@@ -158,35 +158,87 @@ class FerroramaApp {
   }
 
   init3DScenes() {
-    setTimeout(() => {
-      const maqueteContainer = document.getElementById('maquete3d');
-      if (maqueteContainer && maqueteContainer.clientWidth > 0) {
-        try {
-          this.maquetteScene = new MaquetteScene('maquete3d');
-          this.maquetteScene.onTrainAdded = (train) => this.addTrainCard(train);
-          this.maquetteScene.onTrainRemoved = (id) => this.removeTrainCard(id);
-          this.maquetteScene.onTrainToggled = (train) => this.updateTrainCardState(train);
-          this.maquetteScene.onTrainPlaced = () => this.onTrainPlaced();
-          this.maquetteScene.onAllTrainsToggled = (running) => this.onAllTrainsToggled(running);
-          console.log('Maquette 3D initialized successfully');
-        } catch (e) {
-          console.error('Error initializing maquette:', e);
-        }
-      }
-
-      const minaContainer = document.getElementById('mina3d');
-      if (minaContainer && minaContainer.clientWidth > 0) {
-        try {
-          this.minaScene = new MaquetteScene('mina3d');
-          if (this.minaScene.camera) {
-            this.minaScene.camera.position.set(-8, 5, 2);
-            this.minaScene.controls.target.set(-5, 1, -2);
+    // Use IntersectionObserver so scene initializes when section is visible
+    const maqueteSection = document.getElementById('maquete');
+    if (maqueteSection) {
+      const maqObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !this.maquetteScene) {
+            this._initMaquetteScene();
+            maqObserver.disconnect();
           }
-        } catch (e) {
-          console.error('Error initializing mina scene:', e);
-        }
+        });
+      }, { rootMargin: '200px' });
+      maqObserver.observe(maqueteSection);
+
+      // Also try immediate init if already visible
+      if (maqueteSection.getBoundingClientRect().top < window.innerHeight + 200) {
+        setTimeout(() => this._initMaquetteScene(), 100);
       }
-    }, 500);
+    }
+
+    const minaSection = document.getElementById('mina');
+    if (minaSection) {
+      const minaObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !this.minaScene) {
+            this._initMinaScene();
+            minaObserver.disconnect();
+          }
+        });
+      }, { rootMargin: '200px' });
+      minaObserver.observe(minaSection);
+    }
+  }
+
+  _initMaquetteScene() {
+    if (this.maquetteScene) return;
+    const container = document.getElementById('maquete3d');
+    if (!container) return;
+
+    // Force layout calculation so container has dimensions
+    container.style.display = 'block';
+    const rect = container.getBoundingClientRect();
+
+    if (rect.width > 0 && rect.height > 0) {
+      try {
+        this.maquetteScene = new MaquetteScene('maquete3d');
+        this.maquetteScene.onTrainAdded = (train) => this.addTrainCard(train);
+        this.maquetteScene.onTrainRemoved = (id) => this.removeTrainCard(id);
+        this.maquetteScene.onTrainToggled = (train) => this.updateTrainCardState(train);
+        this.maquetteScene.onTrainPlaced = () => this.onTrainPlaced();
+        this.maquetteScene.onAllTrainsToggled = (running) => this.onAllTrainsToggled(running);
+        console.log('Maquette 3D initialized successfully');
+      } catch (e) {
+        console.error('Error initializing maquette:', e);
+        // Retry once after a short delay
+        setTimeout(() => this._initMaquetteScene(), 500);
+      }
+    } else {
+      // Container not ready, retry
+      setTimeout(() => this._initMaquetteScene(), 200);
+    }
+  }
+
+  _initMinaScene() {
+    if (this.minaScene) return;
+    const container = document.getElementById('mina3d');
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      try {
+        this.minaScene = new MaquetteScene('mina3d');
+        if (this.minaScene.camera) {
+          this.minaScene.camera.position.set(-8, 5, 2);
+          this.minaScene.controls.target.set(-5, 1, -2);
+        }
+      } catch (e) {
+        console.error('Error initializing mina scene:', e);
+      }
+    } else {
+      setTimeout(() => this._initMinaScene(), 200);
+    }
   }
 
   setupMaqueteControls() {

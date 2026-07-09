@@ -92,6 +92,9 @@ class MaquetteScene {
     this.createHoverIndicator();
     this.setupClickHandler();
 
+    // Mark container as loaded
+    this.container.classList.add('loaded');
+
     window.addEventListener('resize', () => this.onResize());
     this.animate();
   }

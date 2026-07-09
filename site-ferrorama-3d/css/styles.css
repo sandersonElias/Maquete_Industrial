@@ -532,6 +532,10 @@ body {
   pointer-events: none;
 }
 
+.maquete-canvas.loaded::before {
+  display: none;
+}
+
 .maquete-canvas canvas {
   display: block;
 }
