@@ -582,100 +582,302 @@ class MaquetteScene {
   }
 
   // ==========================================
-  // TRAIN CREATION — XP-500S style
+  // TRAIN CREATION — XP-500S detailed models
   // ==========================================
+  _makeWheel(radius, width) {
+    var g = new THREE.Group();
+    var mat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.15 });
+    var matFlange = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.85, roughness: 0.2 });
+
+    var disc = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, width, 16), mat);
+    disc.rotation.x = Math.PI / 2;
+    g.add(disc);
+
+    var flange = new THREE.Mesh(new THREE.CylinderGeometry(radius + 0.008, radius + 0.008, width + 0.006, 16), matFlange);
+    flange.rotation.x = Math.PI / 2;
+    g.add(flange);
+
+    var hub = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.3, radius * 0.3, width + 0.01, 8),
+      new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.9, roughness: 0.2 }));
+    hub.rotation.x = Math.PI / 2;
+    g.add(hub);
+
+    return g;
+  }
+
   _makeLoco(c) {
     var g = new THREE.Group();
 
     // Materials
-    var matBody = new THREE.MeshStandardMaterial({ color: c.body, metalness: 0.5, roughness: 0.35 });
-    var matAccent = new THREE.MeshStandardMaterial({ color: c.accent, metalness: 0.4, roughness: 0.4 });
-    var matStrip = new THREE.MeshStandardMaterial({ color: c.strip, metalness: 0.3, roughness: 0.5 });
-    var matUnder = new THREE.MeshStandardMaterial({ color: c.under, metalness: 0.6, roughness: 0.5 });
-    var matWheel = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.2 });
-    var matHL = new THREE.MeshBasicMaterial({ color: 0xffeeaa });
-    var matGlass = new THREE.MeshStandardMaterial({ color: 0x88ccff, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.6 });
+    var mBody = new THREE.MeshStandardMaterial({ color: c.body, metalness: 0.55, roughness: 0.3 });
+    var mAccent = new THREE.MeshStandardMaterial({ color: c.accent, metalness: 0.4, roughness: 0.35 });
+    var mStrip = new THREE.MeshStandardMaterial({ color: c.strip, metalness: 0.3, roughness: 0.5 });
+    var mUnder = new THREE.MeshStandardMaterial({ color: c.under, metalness: 0.6, roughness: 0.45 });
+    var mChrome = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.95, roughness: 0.1 });
+    var mGlass = new THREE.MeshStandardMaterial({ color: 0x88ccff, metalness: 0.9, roughness: 0.05, transparent: true, opacity: 0.5 });
+    var mHL = new THREE.MeshBasicMaterial({ color: 0xffeeaa });
+    var mRed = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.3, roughness: 0.4 });
+    var mBlack = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.7, roughness: 0.4 });
 
-    // Underframe
-    var under = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.06, 0.28), matUnder);
-    under.position.y = 0.10;
-    under.castShadow = true;
-    g.add(under);
+    // UNDERFRAME
+    var frame = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.04, 0.30), mUnder);
+    frame.position.y = 0.10; frame.castShadow = true;
+    g.add(frame);
 
-    // Main body
-    var body = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.2, 0.28), matBody);
-    body.position.y = 0.23;
-    body.castShadow = true;
-    g.add(body);
+    // Frame side rails
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.14 : 0.14;
+      var rail = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.025, 0.015), mUnder);
+      rail.position.set(0, 0.12, zSide);
+      g.add(rail);
+    }
 
-    // Cab roof
-    var roof = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.26), matAccent);
-    roof.position.set(-0.18, 0.38, 0);
-    g.add(roof);
-
-    // Cab windows
-    var win = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 0.22), matGlass);
-    win.position.set(-0.32, 0.32, 0);
-    g.add(win);
-
-    // Yellow stripe
-    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.025, 0.30), matStrip);
-    stripe.position.y = 0.34;
-    g.add(stripe);
-
-    // Chimney / exhaust
-    var chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.08, 8), matUnder);
-    chimney.position.set(0.2, 0.37, 0);
-    g.add(chimney);
-
-    // Fuel tank (under body center)
-    var tank = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.06, 0.2), matUnder);
-    tank.position.set(0, 0.07, 0);
+    // Fuel tank (cylindrical)
+    var tank = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.22, 12), mBlack);
+    tank.rotation.z = Math.PI / 2;
+    tank.position.set(0.05, 0.08, 0);
     g.add(tank);
 
-    // Wheels — 3 axles per side
-    var wGeo = new THREE.CylinderGeometry(0.055, 0.055, 0.035);
-    var wX = [-0.25, 0.0, 0.25];
-    var wZ = [-0.15, 0.15];
-    for (var i = 0; i < wX.length; i++) {
-      for (var j = 0; j < wZ.length; j++) {
-        var w = new THREE.Mesh(wGeo, matWheel);
-        w.rotation.x = Math.PI / 2;
-        w.position.set(wX[i], 0.055, wZ[j]);
-        g.add(w);
+    var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.015, 8), mChrome);
+    cap.position.set(0.05, 0.13, 0);
+    g.add(cap);
+
+    // Air tanks
+    for (var ai = 0; ai < 2; ai++) {
+      var ax = ai === 0 ? -0.2 : 0.2;
+      var airTank = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.12, 8), mBlack);
+      airTank.rotation.z = Math.PI / 2;
+      airTank.position.set(ax, 0.07, 0);
+      g.add(airTank);
+    }
+
+    // MAIN BODY
+    var lowerBody = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.1, 0.30), mBody);
+    lowerBody.position.y = 0.18; lowerBody.castShadow = true;
+    g.add(lowerBody);
+
+    var upperBody = new THREE.Mesh(new THREE.BoxGeometry(0.70, 0.12, 0.28), mBody);
+    upperBody.position.y = 0.29; upperBody.castShadow = true;
+    g.add(upperBody);
+
+    // Body side panels
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.153 : 0.153;
+      var panel = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.08, 0.005), mAccent);
+      panel.position.set(0.05, 0.24, zSide);
+      g.add(panel);
+    }
+
+    // Radiator grilles
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.153 : 0.153;
+      for (var si = 0; si < 4; si++) {
+        var slat = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.06, 0.008), mBlack);
+        slat.position.set(0.28 + si * 0.015, 0.24, zSide);
+        g.add(slat);
       }
     }
 
-    // Connecting rods (simplified)
-    var rodMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 });
-    for (var j = 0; j < wZ.length; j++) {
-      var rod = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.015, 0.012), rodMat);
-      rod.position.set(0, 0.055, wZ[j] > 0 ? wZ[j] + 0.02 : wZ[j] - 0.02);
-      g.add(rod);
+    // Yellow stripes
+    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.02, 0.31), mStrip);
+    stripe.position.y = 0.345;
+    g.add(stripe);
+    var stripe2 = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.008, 0.31), mStrip);
+    stripe2.position.y = 0.31;
+    g.add(stripe2);
+
+    // CAB
+    var cabBody = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.14, 0.28), mAccent);
+    cabBody.position.set(-0.22, 0.42, 0); cabBody.castShadow = true;
+    g.add(cabBody);
+
+    var cabRoof = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.03, 0.30), mBlack);
+    cabRoof.position.set(-0.22, 0.50, 0);
+    g.add(cabRoof);
+
+    // Cab windows
+    var winFront = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.07, 0.18), mGlass);
+    winFront.position.set(-0.35, 0.43, 0);
+    g.add(winFront);
+
+    var winBack = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.06, 0.14), mGlass);
+    winBack.position.set(-0.09, 0.43, 0);
+    g.add(winBack);
+
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.141 : 0.141;
+      var winSide = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.06, 0.012), mGlass);
+      winSide.position.set(-0.22, 0.44, zSide);
+      g.add(winSide);
     }
+
+    // Window frames
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.142 : 0.142;
+      var fh1 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.004, 0.003), mChrome);
+      fh1.position.set(-0.22, 0.475, zSide);
+      g.add(fh1);
+      var fh2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.004, 0.003), mChrome);
+      fh2.position.set(-0.22, 0.41, zSide);
+      g.add(fh2);
+    }
+
+    // NOSE
+    var nose = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.10, 0.26), mBody);
+    nose.position.set(0.38, 0.24, 0); nose.castShadow = true;
+    g.add(nose);
+
+    var noseTop = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.24), mAccent);
+    noseTop.position.set(0.36, 0.32, 0);
+    g.add(noseTop);
 
     // Headlights
-    for (var j = 0; j < wZ.length; j++) {
-      var hl = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), matHL);
-      hl.position.set(0.38, 0.22, wZ[j]);
-      g.add(hl);
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.10 : 0.10;
+      var hlHouse = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.02, 0.02, 8), mChrome);
+      hlHouse.rotation.z = Math.PI / 2;
+      hlHouse.position.set(0.43, 0.26, zSide);
+      g.add(hlHouse);
+      var hlLens = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), mHL);
+      hlLens.position.set(0.44, 0.26, zSide);
+      g.add(hlLens);
     }
 
-    // Headlight glow
     var glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffeeaa, transparent: true, opacity: 0.15, depthWrite: false })
+      new THREE.SphereGeometry(0.06, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffeeaa, transparent: true, opacity: 0.12, depthWrite: false })
     );
-    glow.position.set(0.42, 0.22, 0);
+    glow.position.set(0.46, 0.26, 0);
     g.add(glow);
 
-    // Number plate (small white rectangle)
+    // Ditch lights
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.12 : 0.12;
+      var ditch = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), mHL);
+      ditch.position.set(0.42, 0.18, zSide);
+      g.add(ditch);
+    }
+
+    // Rear lights
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.10 : 0.10;
+      var rear = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), mRed);
+      rear.position.set(-0.36, 0.22, zSide);
+      g.add(rear);
+    }
+
+    // TOP DETAILS
+    // Exhaust stacks
+    for (var ei = 0; ei < 2; ei++) {
+      var ex = ei === 0 ? 0.15 : 0.22;
+      var exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.018, 0.06, 8), mBlack);
+      exhaust.position.set(ex, 0.38, 0);
+      g.add(exhaust);
+      var exhaustRim = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.015, 0.008, 8), mChrome);
+      exhaustRim.position.set(ex, 0.415, 0);
+      g.add(exhaustRim);
+    }
+
+    // Horn
+    var hornBase = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.03, 6), mChrome);
+    hornBase.position.set(-0.05, 0.40, 0.10);
+    hornBase.rotation.z = 0.3;
+    g.add(hornBase);
+    var hornBell = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.008, 0.025, 8), mChrome);
+    hornBell.position.set(-0.05, 0.42, 0.10);
+    g.add(hornBell);
+
+    // Sand dome
+    var sandDome = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.04, 8), mBody);
+    sandDome.position.set(0.08, 0.38, 0);
+    g.add(sandDome);
+
+    // Bell
+    var bell = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.015, 0.02, 8), mChrome);
+    bell.position.set(-0.10, 0.40, -0.10);
+    g.add(bell);
+
+    // HANDRAILS
+    var handrailMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.15 });
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.155 : 0.155;
+      var hRail = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.004, 0.004), handrailMat);
+      hRail.position.set(0.0, 0.36, zSide);
+      g.add(hRail);
+      for (var sx = -0.28; sx <= 0.35; sx += 0.12) {
+        var stanchion = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.04, 0.004), handrailMat);
+        stanchion.position.set(sx, 0.34, zSide);
+        g.add(stanchion);
+      }
+    }
+
+    // WHEELS
+    var wXArr = [-0.28, -0.02, 0.24];
+    var wZArr = [-0.16, 0.16];
+    for (var wi = 0; wi < wXArr.length; wi++) {
+      for (var wj = 0; wj < wZArr.length; wj++) {
+        var wheel = this._makeWheel(0.052, 0.032);
+        wheel.position.set(wXArr[wi], 0.052, wZArr[wj]);
+        g.add(wheel);
+      }
+    }
+
+    // Connecting rods
+    var rodMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.2 });
+    for (var wj = 0; wj < wZArr.length; wj++) {
+      var rodZ = wZArr[wj] > 0 ? wZArr[wj] + 0.018 : wZArr[wj] - 0.018;
+      var rod = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.012, 0.008), rodMat);
+      rod.position.set(-0.02, 0.052, rodZ);
+      g.add(rod);
+      for (var wi = 0; wi < wXArr.length; wi++) {
+        var pinZ = wZArr[wj] > 0 ? wZArr[wj] + 0.025 : wZArr[wj] - 0.025;
+        var pin = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.015, 6), rodMat);
+        pin.rotation.x = Math.PI / 2;
+        pin.position.set(wXArr[wi], 0.052, pinZ);
+        g.add(pin);
+      }
+    }
+
+    // Brake shoes
+    for (var wi = 0; wi < wXArr.length; wi++) {
+      for (var wj = 0; wj < wZArr.length; wj++) {
+        var brakeZ = wZArr[wj] > 0 ? wZArr[wj] - 0.02 : wZArr[wj] + 0.02;
+        var brake = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.03, 0.005),
+          new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.8 }));
+        brake.position.set(wXArr[wi], 0.04, brakeZ);
+        g.add(brake);
+      }
+    }
+
+    // COUPLERS
+    var couplerX = [0.42, -0.36];
+    for (var ci = 0; ci < 2; ci++) {
+      var cx = couplerX[ci];
+      var coupler = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.06), mBlack);
+      coupler.position.set(cx, 0.10, 0);
+      g.add(coupler);
+      var couplerKnuckle = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.04), mChrome);
+      couplerKnuckle.position.set(cx + (cx > 0 ? 0.025 : -0.025), 0.10, 0);
+      g.add(couplerKnuckle);
+    }
+
+    // Number plates
     var plate = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 0.04, 0.001),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 })
+      new THREE.BoxGeometry(0.06, 0.03, 0.001),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
     );
-    plate.position.set(0.36, 0.18, 0.141);
+    plate.position.set(0.385, 0.20, 0.151);
     g.add(plate);
+
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.152 : 0.152;
+      var sidePlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.025, 0.001),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+      );
+      sidePlate.position.set(-0.15, 0.22, zSide);
+      g.add(sidePlate);
+    }
 
     return g;
   }
@@ -683,52 +885,156 @@ class MaquetteScene {
   _makeCar(c) {
     var g = new THREE.Group();
 
-    var matBody = new THREE.MeshStandardMaterial({ color: c.body, metalness: 0.4, roughness: 0.4 });
-    var matAccent = new THREE.MeshStandardMaterial({ color: c.accent, metalness: 0.3, roughness: 0.45 });
-    var matUnder = new THREE.MeshStandardMaterial({ color: c.under, metalness: 0.6, roughness: 0.5 });
-    var matWheel = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.2 });
+    var mBody = new THREE.MeshStandardMaterial({ color: c.body, metalness: 0.45, roughness: 0.35 });
+    var mAccent = new THREE.MeshStandardMaterial({ color: c.accent, metalness: 0.35, roughness: 0.4 });
+    var mUnder = new THREE.MeshStandardMaterial({ color: c.under, metalness: 0.6, roughness: 0.45 });
+    var mChrome = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.9, roughness: 0.15 });
+    var mBlack = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.7, roughness: 0.4 });
 
-    // Underframe
-    var under = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.26), matUnder);
-    under.position.y = 0.09;
-    under.castShadow = true;
-    g.add(under);
+    // UNDERFRAME
+    var frame = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.03, 0.28), mUnder);
+    frame.position.y = 0.09; frame.castShadow = true;
+    g.add(frame);
 
-    // Body
-    var body = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.18, 0.26), matBody);
-    body.position.y = 0.21;
-    body.castShadow = true;
-    g.add(body);
+    // Cross members
+    for (var xi = -2; xi <= 2; xi++) {
+      var cross = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.02, 0.26), mUnder);
+      cross.position.set(xi * 0.11, 0.10, 0);
+      g.add(cross);
+    }
 
-    // Roof
-    var roof = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.06, 0.28), matAccent);
-    roof.position.y = 0.33;
+    // Brake cylinder
+    var brakeCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.08, 8), mBlack);
+    brakeCyl.rotation.z = Math.PI / 2;
+    brakeCyl.position.set(0, 0.08, 0);
+    g.add(brakeCyl);
+
+    // BODY
+    var lower = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.10, 0.27), mBody);
+    lower.position.y = 0.17; lower.castShadow = true;
+    g.add(lower);
+
+    var upper = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.10, 0.26), mBody);
+    upper.position.y = 0.27; upper.castShadow = true;
+    g.add(upper);
+
+    // Side ribs
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.136 : 0.136;
+      for (var xi = -3; xi <= 3; xi++) {
+        var rib = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.18, 0.004), mAccent);
+        rib.position.set(xi * 0.08, 0.22, zSide);
+        g.add(rib);
+      }
+    }
+
+    // Side stripes
+    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.015, 0.28), mAccent);
+    stripe.position.y = 0.30;
+    g.add(stripe);
+    var stripe2 = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.008, 0.28), mAccent);
+    stripe2.position.y = 0.16;
+    g.add(stripe2);
+
+    // ROOF
+    var roof = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.025, 0.28), mAccent);
+    roof.position.y = 0.34;
     g.add(roof);
 
-    // Side stripe
-    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.02, 0.27), matAccent);
-    stripe.position.y = 0.28;
-    g.add(stripe);
+    // Roof vents
+    for (var vi = -1; vi <= 1; vi++) {
+      var vx = vi * 0.15;
+      var vent = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.012, 0.12), mBlack);
+      vent.position.set(vx, 0.36, 0);
+      g.add(vent);
+      for (var si = 0; si < 3; si++) {
+        var slat = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.003, 0.002), mChrome);
+        slat.position.set(vx, 0.37, -0.03 + si * 0.03);
+        g.add(slat);
+      }
+    }
 
-    // Wheels — 2 axles
-    var wGeo = new THREE.CylinderGeometry(0.048, 0.048, 0.03);
-    var wX = [-0.18, 0.18];
-    var wZ = [-0.13, 0.13];
-    for (var i = 0; i < wX.length; i++) {
-      for (var j = 0; j < wZ.length; j++) {
-        var w = new THREE.Mesh(wGeo, matWheel);
-        w.rotation.x = Math.PI / 2;
-        w.position.set(wX[i], 0.048, wZ[j]);
-        g.add(w);
+    // ENDS
+    var endX = [0.29, -0.29];
+    for (var ei = 0; ei < 2; ei++) {
+      var ex = endX[ei];
+      var end = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.20, 0.26), mBody);
+      end.position.set(ex, 0.22, 0);
+      g.add(end);
+
+      var endWin = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.05, 0.10),
+        new THREE.MeshStandardMaterial({ color: 0x88ccff, metalness: 0.8, roughness: 0.1, transparent: true, opacity: 0.4 }));
+      endWin.position.set(ex > 0 ? ex + 0.005 : ex - 0.005, 0.26, 0);
+      g.add(endWin);
+    }
+
+    // DOORS
+    for (var zz = 0; zz < 2; zz++) {
+      var zSide = zz === 0 ? -0.137 : 0.137;
+      var zSign = zz === 0 ? -1 : 1;
+      var doorX = [-0.18, 0.18];
+      for (var di = 0; di < 2; di++) {
+        var door = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.003), mAccent);
+        door.position.set(doorX[di], 0.22, zSide);
+        g.add(door);
+        var handle = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.004, 0.003), mChrome);
+        handle.position.set(doorX[di] + 0.02, 0.22, zSide + zSign * 0.002);
+        g.add(handle);
+      }
+    }
+
+    // WHEELS
+    var wXArr = [-0.20, 0.20];
+    var wZArr = [-0.14, 0.14];
+    for (var wi = 0; wi < wXArr.length; wi++) {
+      for (var wj = 0; wj < wZArr.length; wj++) {
+        var wheel = this._makeWheel(0.045, 0.028);
+        wheel.position.set(wXArr[wi], 0.045, wZArr[wj]);
+        g.add(wheel);
       }
     }
 
     // Connecting rod
-    var rodMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 });
-    for (var j = 0; j < wZ.length; j++) {
-      var rod = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.012, 0.01), rodMat);
-      rod.position.set(0, 0.048, wZ[j] > 0 ? wZ[j] + 0.015 : wZ[j] - 0.015);
+    var rodMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.2 });
+    for (var wj = 0; wj < wZArr.length; wj++) {
+      var rodZ = wZArr[wj] > 0 ? wZArr[wj] + 0.016 : wZArr[wj] - 0.016;
+      var rod = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.010, 0.006), rodMat);
+      rod.position.set(0, 0.045, rodZ);
       g.add(rod);
+    }
+
+    // Brake shoes
+    for (var wi = 0; wi < wXArr.length; wi++) {
+      for (var wj = 0; wj < wZArr.length; wj++) {
+        var bZ = wZArr[wj] > 0 ? wZArr[wj] - 0.018 : wZArr[wj] + 0.018;
+        var brake = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.025, 0.004),
+          new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.8 }));
+        brake.position.set(wXArr[wi], 0.035, bZ);
+        g.add(brake);
+      }
+    }
+
+    // COUPLERS
+    var couplerX = [0.32, -0.32];
+    for (var ci = 0; ci < 2; ci++) {
+      var cx = couplerX[ci];
+      var coupler = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.025, 0.05), mBlack);
+      coupler.position.set(cx, 0.09, 0);
+      g.add(coupler);
+      var knuckle = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.015, 0.035), mChrome);
+      knuckle.position.set(cx + (cx > 0 ? 0.02 : -0.02), 0.09, 0);
+      g.add(knuckle);
+    }
+
+    // Air hoses
+    for (var hi = 0; hi < 2; hi++) {
+      var hx = hi === 0 ? 0.33 : -0.33;
+      for (var hz = 0; hz < 2; hz++) {
+        var hzz = hz === 0 ? -0.04 : 0.04;
+        var hose = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.03, 4), mBlack);
+        hose.position.set(hx, 0.07, hzz);
+        g.add(hose);
+      }
     }
 
     return g;
