@@ -152,8 +152,8 @@ class MaquetteScene {
   // ==========================================
   createTrackSystem() {
     this.trackCurves = [];
-    var railMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.85, roughness: 0.2 });
-    var sleeperMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
+    var railMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.35 });
+    var sleeperMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85 });
 
     // From the photos, the layout is:
     // - Main oval (elongated, left side is narrower)
@@ -236,36 +236,59 @@ class MaquetteScene {
   _renderRail(curve, railMat, sleeperMat, seg, baseY) {
     if (seg < 10) seg = 10;
 
-    var tube = new THREE.TubeGeometry(curve, seg, 0.04, 8, false);
+    var tube = new THREE.TubeGeometry(curve, seg, 0.035, 8, false);
     var mesh = new THREE.Mesh(tube, railMat);
     mesh.castShadow = true;
     this.scene.add(mesh);
 
-    // Second rail (offset 0.22 — HO gauge)
+    // Second rail — compute proper parallel offset using Frenet normal
     var pts = curve.getPoints(seg);
     var pts2 = [];
+    var gauge = 0.20; // HO gauge distance
+
     for (var i = 0; i < pts.length; i++) {
-      pts2.push(new THREE.Vector3(pts[i].x, pts[i].y, pts[i].z + 0.22));
+      var t = i / Math.max(1, pts.length - 1);
+      var tangent = curve.getTangentAt(Math.min(t, 0.999));
+      tangent.normalize();
+
+      // Normal = cross(tangent, up) for 2D offset in XZ plane
+      var up = new THREE.Vector3(0, 1, 0);
+      var normal = new THREE.Vector3().crossVectors(up, tangent).normalize();
+
+      // If normal is zero (tangent is vertical), use a default
+      if (normal.lengthSq() < 0.001) {
+        normal.set(0, 0, 1);
+      }
+
+      pts2.push(new THREE.Vector3(
+        pts[i].x + normal.x * gauge,
+        pts[i].y,
+        pts[i].z + normal.z * gauge
+      ));
     }
+
     var curve2 = new THREE.CatmullRomCurve3(pts2, false, 'catmullrom', 0.0);
-    var tube2 = new THREE.TubeGeometry(curve2, seg, 0.04, 8, false);
+    var tube2 = new THREE.TubeGeometry(curve2, seg, 0.035, 8, false);
     var mesh2 = new THREE.Mesh(tube2, railMat);
     mesh2.castShadow = true;
     this.scene.add(mesh2);
 
-    // Sleepers
-    var step = Math.max(6, Math.floor(pts.length / 35));
+    // Sleepers — perpendicular to track direction
+    var step = Math.max(6, Math.floor(pts.length / 40));
     for (var i = 0; i < pts.length; i += step) {
       var p = pts[i];
       var q = pts2[i];
       if (!p || !q) continue;
-      var s = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.025, 0.30), sleeperMat);
-      s.position.set((p.x + q.x) / 2, (p.y + q.y) / 2 - 0.01, (p.z + q.z) / 2);
+
+      var sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.32), sleeperMat);
+      sleeper.position.set((p.x + q.x) / 2, (p.y + q.y) / 2 - 0.01, (p.z + q.z) / 2);
+
+      // Rotate sleeper to be perpendicular to track
       if (i < pts.length - 1) {
-        var n = pts[i + 1];
-        s.rotation.y = -Math.atan2(n.z - p.z, n.x - p.x);
+        var n = pts[Math.min(i + 1, pts.length - 1)];
+        sleeper.rotation.y = -Math.atan2(n.z - p.z, n.x - p.x);
       }
-      this.scene.add(s);
+      this.scene.add(sleeper);
     }
   }
 
@@ -274,41 +297,47 @@ class MaquetteScene {
   // ==========================================
   createViaduct() {
     var supportMat = new THREE.MeshStandardMaterial({ color: 0x8B7355, roughness: 0.85, metalness: 0.02 });
+    var platMat = new THREE.MeshStandardMaterial({ color: 0x9B8B6B, roughness: 0.8 });
 
-    // Triangular supports along the viaduct
-    var supportPositions = [
-      { x: 9.5, z: 2.0, h: 0.6 },
-      { x: 10.0, z: 0.5, h: 1.0 },
-      { x: 10.2, z: -1.0, h: 1.4 },
-      { x: 10.0, z: -2.5, h: 1.6 },
-      { x: 9.5, z: -3.5, h: 1.6 },
-      { x: 8.5, z: -4.0, h: 1.4 },
-      { x: 7.5, z: -3.8, h: 1.0 },
-      { x: 7.0, z: -3.2, h: 0.6 },
-    ];
+    // Get viaduct curve points to place supports
+    var viaductCurve = this.trackCurves[1].curve;
+    var vPts = viaductCurve.getPoints(50);
 
-    for (var i = 0; i < supportPositions.length; i++) {
-      var pos = supportPositions[i];
+    // Place triangular supports along the elevated portion
+    for (var i = 5; i < vPts.length - 5; i += 5) {
+      var p = vPts[i];
+      var h = p.y - 0.45; // height above base
+      if (h < 0.2) continue; // skip ground-level points
+
       // Triangular support
       var shape = new THREE.Shape();
-      shape.moveTo(-0.3, 0);
-      shape.lineTo(0.3, 0);
-      shape.lineTo(0, pos.h);
-      shape.lineTo(-0.3, 0);
+      shape.moveTo(-0.25, 0);
+      shape.lineTo(0.25, 0);
+      shape.lineTo(0, h);
+      shape.lineTo(-0.25, 0);
 
-      var geo = new THREE.ExtrudeGeometry(shape, { depth: 0.25, bevelEnabled: false });
+      var geo = new THREE.ExtrudeGeometry(shape, { depth: 0.20, bevelEnabled: false });
       var support = new THREE.Mesh(geo, supportMat);
-      support.position.set(pos.x, 0.25, pos.z);
+      support.position.set(p.x, 0.45, p.z);
       support.castShadow = true;
       this.scene.add(support);
     }
 
-    // Platform on top of supports
-    var platMat = new THREE.MeshStandardMaterial({ color: 0x9B8B6B, roughness: 0.8 });
-    var platform = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, 1.0), platMat);
-    platform.position.set(9.0, 1.65, -1.5);
-    platform.castShadow = true;
-    this.scene.add(platform);
+    // Platform along the elevated section (tube following the curve at height)
+    var platPts = [];
+    for (var i = 3; i < vPts.length - 3; i++) {
+      var p = vPts[i];
+      if (p.y > 0.8) {
+        platPts.push(new THREE.Vector3(p.x, p.y - 0.05, p.z));
+      }
+    }
+    if (platPts.length > 2) {
+      var platCurve = new THREE.CatmullRomCurve3(platPts, false, 'catmullrom', 0.0);
+      var platTube = new THREE.TubeGeometry(platCurve, platPts.length * 2, 0.35, 8, false);
+      var platform = new THREE.Mesh(platTube, platMat);
+      platform.castShadow = true;
+      this.scene.add(platform);
+    }
   }
 
   // ==========================================
