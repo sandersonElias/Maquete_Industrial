@@ -6,14 +6,9 @@
 class MaquetteScene {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
-    if (!this.container) {
-      console.error('Container not found:', containerId);
-      return;
-    }
-
+    if (!this.container) { console.error('Container not found:', containerId); return; }
     if (this.container.clientWidth === 0 || this.container.clientHeight === 0) {
-      console.error('Container has no dimensions:', containerId);
-      return;
+      console.error('Container has no dimensions:', containerId); return;
     }
 
     this.scene = null;
@@ -24,16 +19,11 @@ class MaquetteScene {
     this.animationId = null;
     this.clock = new THREE.Clock();
 
-    // Trains
     this.trains = [];
-    this.selectedTrainIndex = -1;
     this.trainIdCounter = 0;
-
-    // Track data
     this.trackCurves = [];
     this.trackPoints = [];
 
-    // Train colors palette
     this.trainColors = [
       { name: 'Azul', body: 0x1e3a5f, accent: 0x2196f3, strip: 0xffd700 },
       { name: 'Vermelho', body: 0x8b1a1a, accent: 0xcc3333, strip: 0xffffff },
@@ -43,7 +33,6 @@ class MaquetteScene {
       { name: 'Roxo', body: 0x4a1a6b, accent: 0x9933ff, strip: 0xffd700 },
     ];
 
-    // Train types
     this.trainTypes = [
       { name: 'Carga', cars: 4, label: 'Carga', icon: '🚂' },
       { name: 'Passageiro', cars: 5, label: 'Passageiro', icon: '🚆' },
@@ -51,11 +40,11 @@ class MaquetteScene {
       { name: 'Minerador', cars: 3, label: 'Minerador', icon: '⛏️' },
     ];
 
-    // Raycaster for click placement
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
-    this.hoveredTrackPoint = null;
     this.hoverIndicator = null;
+    this.placementMode = false;
+    this.selectedTrainType = 0;
 
     this.init();
   }
@@ -65,14 +54,13 @@ class MaquetteScene {
     this.scene.background = new THREE.Color(0x1a1a2e);
     this.scene.fog = new THREE.Fog(0x1a1a2e, 25, 70);
 
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
-    this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    this.camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 1000);
     this.camera.position.set(0, 18, 18);
-    this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    this.renderer.setSize(width, height);
+    this.renderer.setSize(w, h);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -84,7 +72,6 @@ class MaquetteScene {
     this.controls.maxPolarAngle = Math.PI / 2.1;
     this.controls.minDistance = 5;
     this.controls.maxDistance = 40;
-    this.controls.target.set(0, 0, 0);
 
     this.setupLights();
     this.createMaquette();
@@ -92,41 +79,27 @@ class MaquetteScene {
     this.createHoverIndicator();
     this.setupClickHandler();
 
-    // Mark container as loaded
     this.container.classList.add('loaded');
-
     window.addEventListener('resize', () => this.onResize());
     this.animate();
   }
 
   setupLights() {
-    const ambient = new THREE.AmbientLight(0x404060, 0.6);
-    this.scene.add(ambient);
+    this.scene.add(new THREE.AmbientLight(0x404060, 0.6));
 
-    const directional = new THREE.DirectionalLight(0xffffff, 1.2);
-    directional.position.set(10, 25, 15);
-    directional.castShadow = true;
-    directional.shadow.mapSize.width = 2048;
-    directional.shadow.mapSize.height = 2048;
-    directional.shadow.camera.near = 0.5;
-    directional.shadow.camera.far = 60;
-    directional.shadow.camera.left = -20;
-    directional.shadow.camera.right = 20;
-    directional.shadow.camera.top = 20;
-    directional.shadow.camera.bottom = -20;
-    this.scene.add(directional);
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    dir.position.set(10, 25, 15);
+    dir.castShadow = true;
+    dir.shadow.mapSize.set(2048, 2048);
+    dir.shadow.camera.near = 0.5;
+    dir.shadow.camera.far = 60;
+    dir.shadow.camera.left = dir.shadow.camera.bottom = -20;
+    dir.shadow.camera.right = dir.shadow.camera.top = 20;
+    this.scene.add(dir);
 
-    const blueLight = new THREE.PointLight(0x00d4ff, 1.5, 40);
-    blueLight.position.set(-10, 8, 5);
-    this.scene.add(blueLight);
-
-    const greenLight = new THREE.PointLight(0x00ffb2, 1, 35);
-    greenLight.position.set(10, 6, -5);
-    this.scene.add(greenLight);
-
-    const orangeLight = new THREE.PointLight(0xff6b35, 0.8, 25);
-    orangeLight.position.set(0, 5, 10);
-    this.scene.add(orangeLight);
+    this.scene.add(Object.assign(new THREE.PointLight(0x00d4ff, 1.5, 40), { position: new THREE.Vector3(-10, 8, 5) }));
+    this.scene.add(Object.assign(new THREE.PointLight(0x00ffb2, 1, 35), { position: new THREE.Vector3(10, 6, -5) }));
+    this.scene.add(Object.assign(new THREE.PointLight(0xff6b35, 0.8, 25), { position: new THREE.Vector3(0, 5, 10) }));
   }
 
   createMaquette() {
@@ -141,277 +114,204 @@ class MaquetteScene {
   }
 
   createBase() {
-    const tableGeometry = new THREE.BoxGeometry(24, 0.5, 10);
-    const tableMaterial = new THREE.MeshStandardMaterial({
-      color: 0xd4a574,
-      roughness: 0.85,
-      metalness: 0.05
-    });
-    const table = new THREE.Mesh(tableGeometry, tableMaterial);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xd4a574, roughness: 0.85, metalness: 0.05 });
+    const table = new THREE.Mesh(new THREE.BoxGeometry(24, 0.5, 10), mat);
     table.position.y = -0.25;
     table.receiveShadow = true;
     table.castShadow = true;
-    table.userData = { type: 'base' };
     this.maquette.add(table);
 
-    const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xc49464, roughness: 0.9 });
-
+    const em = new THREE.MeshStandardMaterial({ color: 0xc49464, roughness: 0.9 });
     [-5, 5].forEach(z => {
-      const edge = new THREE.Mesh(new THREE.BoxGeometry(24, 0.3, 0.3), edgeMaterial);
-      edge.position.set(0, 0.15, z);
-      this.maquette.add(edge);
+      const e = new THREE.Mesh(new THREE.BoxGeometry(24, 0.3, 0.3), em);
+      e.position.set(0, 0.15, z);
+      this.maquette.add(e);
     });
-
     [-12, 12].forEach(x => {
-      const edge = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 10), edgeMaterial);
-      edge.position.set(x, 0.15, 0);
-      this.maquette.add(edge);
+      const e = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 10), em);
+      e.position.set(x, 0.15, 0);
+      this.maquette.add(e);
     });
   }
 
   createTrackSystem() {
-    const trackMaterial = new THREE.MeshStandardMaterial({
-      color: 0x2a2a2a, metalness: 0.7, roughness: 0.3
-    });
-    const sleeperMaterial = new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.8 });
-
+    const tm = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.3 });
+    const sm = new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.8 });
     this.trackCurves = [];
 
-    // Main oval loop
-    const createOvalTrack = (cx, cz, rx, ry, segments = 64) => {
-      const points = [];
-      for (let i = 0; i <= segments; i++) {
-        const angle = (i / segments) * Math.PI * 2;
-        points.push(new THREE.Vector3(cx + Math.cos(angle) * rx, 0.25, cz + Math.sin(angle) * ry));
+    const makeOval = (cx, cz, rx, ry, n = 64) => {
+      const pts = [];
+      for (let i = 0; i <= n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        pts.push(new THREE.Vector3(cx + Math.cos(a) * rx, 0.25, cz + Math.sin(a) * ry));
       }
-      return points;
+      return pts;
     };
 
-    const mainLoop = createOvalTrack(0, 0, 9, 3.5);
-    this.trackPoints = mainLoop;
-    const mainCurve = new THREE.CatmullRomCurve3(mainLoop, true);
-    this.trackCurves.push({ curve: mainCurve, points: mainLoop, name: 'loop principal' });
-    this.renderTrackFromPoints(mainLoop, trackMaterial, sleeperMaterial);
+    const main = makeOval(0, 0, 9, 3.5);
+    this.trackPoints = main;
+    const mainCurve = new THREE.CatmullRomCurve3(main, true);
+    this.trackCurves.push({ curve: mainCurve, name: 'loop principal' });
+    this.renderTrack(main, tm, sm);
 
-    // Upper branch (elevated)
-    const branchUpper = [];
+    const upper = [];
     for (let i = 0; i <= 20; i++) {
       const t = i / 20;
-      branchUpper.push(new THREE.Vector3(
-        -4 + t * 3,
-        0.25 + t * 1.5,
-        -3.5 + Math.sin(t * Math.PI) * -1.5
-      ));
+      upper.push(new THREE.Vector3(-4 + t * 3, 0.25 + t * 1.5, -3.5 + Math.sin(t * Math.PI) * -1.5));
     }
-    const upperCurve = new THREE.CatmullRomCurve3(branchUpper);
-    this.trackCurves.push({ curve: upperCurve, points: branchUpper, name: 'ramal elevado' });
-    this.renderTrackFromPoints(branchUpper, trackMaterial, sleeperMaterial, true);
+    this.trackCurves.push({ curve: new THREE.CatmullRomCurve3(upper), name: 'ramal elevado' });
+    this.renderTrack(upper, tm, sm, true);
 
-    // Lower branch
-    const branchLower = [];
+    const lower = [];
     for (let i = 0; i <= 15; i++) {
       const t = i / 15;
-      branchLower.push(new THREE.Vector3(2 + t * 4, 0.25, 3.5 - t * 1));
+      lower.push(new THREE.Vector3(2 + t * 4, 0.25, 3.5 - t));
     }
-    const lowerCurve = new THREE.CatmullRomCurve3(branchLower);
-    this.trackCurves.push({ curve: lowerCurve, points: branchLower, name: 'ramal inferior' });
-    this.renderTrackFromPoints(branchLower, trackMaterial, sleeperMaterial);
+    this.trackCurves.push({ curve: new THREE.CatmullRomCurve3(lower), name: 'ramal inferior' });
+    this.renderTrack(lower, tm, sm);
 
-    // Diagonal connection
-    const diagonal = [];
+    const diag = [];
     for (let i = 0; i <= 20; i++) {
       const t = i / 20;
-      diagonal.push(new THREE.Vector3(-4 + t * 8, 0.25, -2 + t * 4));
+      diag.push(new THREE.Vector3(-4 + t * 8, 0.25, -2 + t * 4));
     }
-    const diagCurve = new THREE.CatmullRomCurve3(diagonal);
-    this.trackCurves.push({ curve: diagCurve, points: diagonal, name: 'diagonal' });
-    this.renderTrackFromPoints(diagonal, trackMaterial, sleeperMaterial);
+    this.trackCurves.push({ curve: new THREE.CatmullRomCurve3(diag), name: 'diagonal' });
+    this.renderTrack(diag, tm, sm);
   }
 
-  renderTrackFromPoints(points, trackMaterial, sleeperMaterial, elevated = false) {
+  renderTrack(points, tm, sm) {
     if (points.length < 2) return;
+    const c1 = new THREE.CatmullRomCurve3(points);
+    this.maquette.add(new THREE.Mesh(new THREE.TubeGeometry(c1, 100, 0.08, 8, false), tm));
 
-    const curve = new THREE.CatmullRomCurve3(points);
-    const tubeGeometry = new THREE.TubeGeometry(curve, 100, 0.08, 8, false);
-    const track = new THREE.Mesh(tubeGeometry, trackMaterial);
-    track.castShadow = true;
-    this.maquette.add(track);
-
-    const offset = 0.35;
-    const points2 = points.map(p => new THREE.Vector3(p.x, p.y, p.z + offset));
-    const curve2 = new THREE.CatmullRomCurve3(points2);
-    const tubeGeometry2 = new THREE.TubeGeometry(curve2, 100, 0.08, 8, false);
-    const track2 = new THREE.Mesh(tubeGeometry2, trackMaterial);
-    track2.castShadow = true;
-    this.maquette.add(track2);
+    const off = 0.35;
+    const p2 = points.map(p => new THREE.Vector3(p.x, p.y, p.z + off));
+    const c2 = new THREE.CatmullRomCurve3(p2);
+    const t2 = new THREE.Mesh(new THREE.TubeGeometry(c2, 100, 0.08, 8, false), tm);
+    t2.castShadow = true;
+    this.maquette.add(t2);
 
     for (let i = 0; i < points.length - 1; i += 2) {
-      const p = points[i];
-      const p2 = points2[i];
-      if (p && p2) {
-        const sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.5), sleeperMaterial);
-        sleeper.position.set((p.x + p2.x) / 2, (p.y + p2.y) / 2 - 0.02, (p.z + p2.z) / 2);
-        if (i < points.length - 2) {
-          const next = points[i + 1];
-          sleeper.rotation.y = -Math.atan2(next.z - p.z, next.x - p.x);
-        }
-        this.maquette.add(sleeper);
+      const p = points[i], q = p2[i];
+      if (!p || !q) continue;
+      const s = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.5), sm);
+      s.position.set((p.x + q.x) / 2, (p.y + q.y) / 2 - 0.02, (p.z + q.z) / 2);
+      if (i < points.length - 2) {
+        const n = points[i + 1];
+        s.rotation.y = -Math.atan2(n.z - p.z, n.x - p.x);
       }
+      this.maquette.add(s);
     }
   }
 
   createElevatedSupports() {
-    const supportMaterial = new THREE.MeshStandardMaterial({ color: 0xc49464, roughness: 0.9 });
-
-    const supportPositions = [
-      { x: -5, z: -4.5, h: 1.5 },
-      { x: -3, z: -5, h: 1.8 },
-      { x: -1, z: -4.8, h: 2 },
-      { x: 1, z: -4.5, h: 1.8 },
-      { x: 3, z: -4, h: 1.5 },
-    ];
-
-    supportPositions.forEach(pos => {
-      const shape = new THREE.Shape();
-      shape.moveTo(-0.4, 0);
-      shape.lineTo(0.4, 0);
-      shape.lineTo(0, pos.h);
-      shape.lineTo(-0.4, 0);
-      const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.3, bevelEnabled: false });
-      const support = new THREE.Mesh(geometry, supportMaterial);
-      support.position.set(pos.x, 0, pos.z);
-      support.castShadow = true;
-      this.maquette.add(support);
+    const m = new THREE.MeshStandardMaterial({ color: 0xc49464, roughness: 0.9 });
+    [
+      { x: -5, z: -4.5, h: 1.5 }, { x: -3, z: -5, h: 1.8 }, { x: -1, z: -4.8, h: 2 },
+      { x: 1, z: -4.5, h: 1.8 }, { x: 3, z: -4, h: 1.5 }
+    ].forEach(p => {
+      const s = new THREE.Shape();
+      s.moveTo(-0.4, 0); s.lineTo(0.4, 0); s.lineTo(0, p.h); s.lineTo(-0.4, 0);
+      const sup = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.3, bevelEnabled: false }), m);
+      sup.position.set(p.x, 0, p.z);
+      sup.castShadow = true;
+      this.maquette.add(sup);
     });
-
-    const platform = new THREE.Mesh(new THREE.BoxGeometry(8, 0.15, 1.5), supportMaterial);
-    platform.position.set(-1, 1.8, -4.5);
-    platform.castShadow = true;
-    this.maquette.add(platform);
+    const plat = new THREE.Mesh(new THREE.BoxGeometry(8, 0.15, 1.5), m);
+    plat.position.set(-1, 1.8, -4.5);
+    plat.castShadow = true;
+    this.maquette.add(plat);
   }
 
   createSwitches() {
-    const switchMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.3, roughness: 0.5 });
-    const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.7 });
-
-    const switchPositions = [
-      { x: -6, z: 0, rotation: 0 },
-      { x: 0, z: -3.5, rotation: Math.PI / 4 },
-      { x: 4, z: 2, rotation: -Math.PI / 6 },
-      { x: -2, z: 3, rotation: Math.PI / 3 },
-    ];
-
-    switchPositions.forEach(pos => {
-      const switchGroup = new THREE.Group();
-      switchGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.15, 0.4), baseMaterial).translateY(0.1));
-      switchGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.25), switchMaterial).translateY(0.25));
-      const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3), switchMaterial);
-      lever.position.set(0, 0.45, 0);
-      lever.rotation.z = Math.PI / 6;
-      switchGroup.add(lever);
-
-      switchGroup.position.set(pos.x, 0, pos.z);
-      switchGroup.rotation.y = pos.rotation;
-      switchGroup.userData = { type: 'switch' };
-      this.maquette.add(switchGroup);
+    const sw = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.3, roughness: 0.5 });
+    const bm = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.7 });
+    [
+      { x: -6, z: 0, r: 0 }, { x: 0, z: -3.5, r: Math.PI / 4 },
+      { x: 4, z: 2, r: -Math.PI / 6 }, { x: -2, z: 3, r: Math.PI / 3 }
+    ].forEach(p => {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.15, 0.4), bm).translateY(0.1));
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.25), sw).translateY(0.25));
+      const l = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3), sw);
+      l.position.set(0, 0.45, 0); l.rotation.z = Math.PI / 6;
+      g.add(l);
+      g.position.set(p.x, 0, p.z); g.rotation.y = p.r;
+      g.userData = { type: 'switch' };
+      this.maquette.add(g);
     });
   }
 
   createElectronics() {
-    const electronicsGroup = new THREE.Group();
-
-    const breadboard = new THREE.Mesh(
-      new THREE.BoxGeometry(1.5, 0.1, 0.8),
-      new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.8 })
-    );
-    breadboard.position.set(-8, 0.15, 2);
-    electronicsGroup.add(breadboard);
-
-    const arduino = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 0.08, 0.6),
-      new THREE.MeshStandardMaterial({ color: 0x0066cc, roughness: 0.6 })
-    );
-    arduino.position.set(-8, 0.15, 3.5);
-    electronicsGroup.add(arduino);
-
-    const wireColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
-    for (let i = 0; i < 5; i++) {
-      const wire = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.02, 0.02, 2),
-        new THREE.MeshStandardMaterial({ color: wireColors[i] })
-      );
-      wire.position.set(-8 + i * 0.2, 0.2, 2.75);
-      wire.rotation.x = Math.PI / 2;
-      wire.rotation.z = Math.random() * 0.5 - 0.25;
-      electronicsGroup.add(wire);
-    }
-
-    this.maquette.add(electronicsGroup);
+    const eg = new THREE.Group();
+    eg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 0.8),
+      new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.8 })), { position: new THREE.Vector3(-8, 0.15, 2) }));
+    eg.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1, 0.08, 0.6),
+      new THREE.MeshStandardMaterial({ color: 0x0066cc, roughness: 0.6 })), { position: new THREE.Vector3(-8, 0.15, 3.5) }));
+    [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff].forEach((c, i) => {
+      const w = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2),
+        new THREE.MeshStandardMaterial({ color: c }));
+      w.position.set(-8 + i * 0.2, 0.2, 2.75);
+      w.rotation.x = Math.PI / 2;
+      w.rotation.z = Math.random() * 0.5 - 0.25;
+      eg.add(w);
+    });
+    this.maquette.add(eg);
   }
 
   createStructures() {
-    // Crane
-    const craneGroup = new THREE.Group();
-    craneGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4), new THREE.MeshStandardMaterial({ color: 0x2a2a2a })).translateY(0.15));
-    craneGroup.add(new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.5, 0.15), new THREE.MeshStandardMaterial({ color: 0xffd700 })).translateY(1));
-    const hook = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 0.1), new THREE.MeshStandardMaterial({ color: 0xffd700 }));
-    hook.position.set(0.4, 1.8, 0);
-    craneGroup.add(hook);
-    craneGroup.position.set(-6, 0, -1);
-    this.maquette.add(craneGroup);
+    const cg = new THREE.Group();
+    cg.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4),
+      new THREE.MeshStandardMaterial({ color: 0x2a2a2a })).translateY(0.15));
+    cg.add(new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.5, 0.15),
+      new THREE.MeshStandardMaterial({ color: 0xffd700 })).translateY(1));
+    const hk = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0xffd700 }));
+    hk.position.set(0.4, 1.8, 0);
+    cg.add(hk);
+    cg.position.set(-6, 0, -1);
+    this.maquette.add(cg);
 
-    // Structure
-    const structure2 = new THREE.Group();
-    structure2.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.5), new THREE.MeshStandardMaterial({ color: 0xffd700 })).translateY(0.2));
-    structure2.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1), new THREE.MeshStandardMaterial({ color: 0xffd700 })).translateY(0.9));
-    structure2.position.set(2, 0, -2);
-    this.maquette.add(structure2);
+    const s2 = new THREE.Group();
+    s2.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.5),
+      new THREE.MeshStandardMaterial({ color: 0xffd700 })).translateY(0.2));
+    s2.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1),
+      new THREE.MeshStandardMaterial({ color: 0xffd700 })).translateY(0.9));
+    s2.position.set(2, 0, -2);
+    this.maquette.add(s2);
 
-    // Boxes
-    const boxPositions = [
-      { x: -10, z: 0, color: 0x8b4513 },
-      { x: -9, z: -1, color: 0x654321 },
-      { x: 8, z: -1, color: 0x2a2a2a },
-      { x: 10, z: 1, color: 0x4a4a4a },
-    ];
-    boxPositions.forEach(pos => {
-      const box = new THREE.Mesh(
+    [[-10, 0, 0x8b4513], [-9, -1, 0x654321], [8, -1, 0x2a2a2a], [10, 1, 0x4a4a4a]].forEach(([x, z, c]) => {
+      const b = new THREE.Mesh(
         new THREE.BoxGeometry(0.5 + Math.random() * 0.5, 0.3 + Math.random() * 0.4, 0.4 + Math.random() * 0.3),
-        new THREE.MeshStandardMaterial({ color: pos.color, roughness: 0.8 })
-      );
-      box.position.set(pos.x, 0.2, pos.z);
-      box.rotation.y = Math.random() * Math.PI;
-      box.castShadow = true;
-      this.maquette.add(box);
+        new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 }));
+      b.position.set(x, 0.2, z); b.rotation.y = Math.random() * Math.PI; b.castShadow = true;
+      this.maquette.add(b);
     });
   }
 
   createParticles() {
-    const geometry = new THREE.BufferGeometry();
-    const count = 300;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 40;
-    }
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    this.particles = new THREE.Points(geometry, new THREE.PointsMaterial({
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(900);
+    for (let i = 0; i < 900; i++) pos[i] = (Math.random() - 0.5) * 40;
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.particles = new THREE.Points(geo, new THREE.PointsMaterial({
       size: 0.05, color: 0x00d4ff, transparent: true, opacity: 0.4
     }));
     this.scene.add(this.particles);
   }
 
   // ==========================================
-  // HOVER INDICATOR for placement
+  // HOVER INDICATOR
   // ==========================================
   createHoverIndicator() {
-    const ringGeometry = new THREE.RingGeometry(0.3, 0.45, 32);
-    const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ffb2, transparent: true, opacity: 0, side: THREE.DoubleSide
-    });
-    this.hoverIndicator = new THREE.Mesh(ringGeometry, ringMaterial);
-    this.hoverIndicator.rotation.x = -Math.PI / 2;
-    this.hoverIndicator.position.y = 0.5;
-    this.scene.add(this.hoverIndicator);
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.3, 0.45, 32),
+      new THREE.MeshBasicMaterial({ color: 0x00ffb2, transparent: true, opacity: 0, side: THREE.DoubleSide })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.5;
+    this.hoverIndicator = ring;
+    this.scene.add(ring);
   }
 
   // ==========================================
@@ -422,88 +322,51 @@ class MaquetteScene {
 
     canvas.addEventListener('click', (e) => {
       if (!this.placementMode) return;
-
       const rect = canvas.getBoundingClientRect();
       this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
       this.raycaster.setFromCamera(this.mouse, this.camera);
 
-      // Check intersection with main track
-      if (this.trackCurves.length > 0) {
-        const mainCurve = this.trackCurves[0];
-        const curvePoints = mainCurve.curve.getPoints(200);
-
-        let closest = null;
-        let closestDist = Infinity;
-
-        for (let i = 0; i < curvePoints.length; i++) {
-          const pt = curvePoints[i];
-          pt.y = 0.5;
-          const ray = this.raycaster.ray;
-          const pointOnRay = new THREE.Vector3();
-          ray.closestPointToPoint(pt, pointOnRay);
-          const dist = pt.distanceTo(pointOnRay);
-
-          if (dist < closestDist && dist < 2.0) {
-            closestDist = dist;
-            closest = i / curvePoints.length;
-          }
-        }
-
-        if (closest !== null) {
-          const colorIdx = this.trainIdCounter % this.trainColors.length;
-          const typeIdx = (this.selectedTrainType !== undefined) ? this.selectedTrainType : 0;
-          this.addTrain(closest, colorIdx, typeIdx);
-
-          // Disable placement mode after placement
-          this.placementMode = false;
-          if (this.hoverIndicator) this.hoverIndicator.material.opacity = 0;
-
-          // Notify UI
-          if (typeof this.onTrainPlaced === 'function') {
-            this.onTrainPlaced();
-          }
-        }
+      if (this.trackCurves.length === 0) return;
+      const pts = this.trackCurves[0].curve.getPoints(200);
+      let best = null, bestD = Infinity;
+      for (let i = 0; i < pts.length; i++) {
+        const pt = pts[i].clone(); pt.y = 0.5;
+        const pr = new THREE.Vector3();
+        this.raycaster.ray.closestPointToPoint(pt, pr);
+        const d = pt.distanceTo(pr);
+        if (d < bestD && d < 2.0) { bestD = d; best = i / pts.length; }
+      }
+      if (best !== null) {
+        const ci = this.trainIdCounter % this.trainColors.length;
+        this.addTrain(best, ci, this.selectedTrainType || 0);
+        this.placementMode = false;
+        this.hoverIndicator.material.opacity = 0;
+        if (typeof this.onTrainPlaced === 'function') this.onTrainPlaced();
       }
     });
 
     canvas.addEventListener('mousemove', (e) => {
-      if (!this.placementMode) {
-        if (this.hoverIndicator) this.hoverIndicator.material.opacity = 0;
-        return;
-      }
-
+      if (!this.placementMode) { this.hoverIndicator.material.opacity = 0; return; }
       const rect = canvas.getBoundingClientRect();
       this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
       this.raycaster.setFromCamera(this.mouse, this.camera);
 
-      if (this.trackCurves.length > 0) {
-        const curvePoints = this.trackCurves[0].curve.getPoints(200);
-        let closest = null;
-        let closestDist = Infinity;
-
-        for (let i = 0; i < curvePoints.length; i++) {
-          const pt = curvePoints[i].clone();
-          pt.y = 0.5;
-          const pointOnRay = new THREE.Vector3();
-          this.raycaster.ray.closestPointToPoint(pt, pointOnRay);
-          const dist = pt.distanceTo(pointOnRay);
-
-          if (dist < closestDist && dist < 2.0) {
-            closestDist = dist;
-            closest = curvePoints[i];
-          }
-        }
-
-        if (closest) {
-          this.hoverIndicator.position.set(closest.x, 0.5, closest.z);
-          this.hoverIndicator.material.opacity = closestDist < 1.5 ? 0.8 : 0.3;
-        } else {
-          this.hoverIndicator.material.opacity = 0;
-        }
+      const pts = this.trackCurves[0].curve.getPoints(200);
+      let best = null, bestD = Infinity;
+      for (let i = 0; i < pts.length; i++) {
+        const pt = pts[i].clone(); pt.y = 0.5;
+        const pr = new THREE.Vector3();
+        this.raycaster.ray.closestPointToPoint(pt, pr);
+        const d = pt.distanceTo(pr);
+        if (d < bestD && d < 2.0) { bestD = d; best = pts[i]; }
+      }
+      if (best) {
+        this.hoverIndicator.position.set(best.x, 0.5, best.z);
+        this.hoverIndicator.material.opacity = bestD < 1.5 ? 0.8 : 0.3;
+      } else {
+        this.hoverIndicator.material.opacity = 0;
       }
     });
   }
@@ -511,89 +374,77 @@ class MaquetteScene {
   setPlacementMode(active, typeIndex) {
     this.placementMode = active;
     this.selectedTrainType = typeIndex || 0;
-    if (!active && this.hoverIndicator) {
-      this.hoverIndicator.material.opacity = 0;
-    }
+    if (!active) this.hoverIndicator.material.opacity = 0;
   }
 
   // ==========================================
-  // TRAIN CREATION — each car is a separate 3D group
+  // TRAIN CREATION — single group, parts positioned along track
   // ==========================================
-  _buildLocoMesh(colorScheme) {
+  _makeLoco(c) {
     const g = new THREE.Group();
-    const matBody = new THREE.MeshStandardMaterial({ color: colorScheme.body, metalness: 0.4, roughness: 0.5 });
-    const matAccent = new THREE.MeshStandardMaterial({ color: colorScheme.accent, metalness: 0.3 });
-    const matStrip = new THREE.MeshStandardMaterial({ color: colorScheme.strip });
-    const matWheel = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
-    const matHL = new THREE.MeshBasicMaterial({ color: 0xffff99 });
+    const mb = new THREE.MeshStandardMaterial({ color: c.body, metalness: 0.4, roughness: 0.5 });
+    const ma = new THREE.MeshStandardMaterial({ color: c.accent, metalness: 0.3 });
+    const ms = new THREE.MeshStandardMaterial({ color: c.strip });
+    const mw = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
+    const mh = new THREE.MeshBasicMaterial({ color: 0xffff99 });
 
-    // Body
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.25, 0.28), matBody);
-    body.position.y = 0.2;
-    body.castShadow = true;
-    g.add(body);
+    // Body — facing +X direction
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.28, 0.3), mb);
+    body.position.y = 0.22; body.castShadow = true; g.add(body);
 
-    // Cabin
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.2, 0.26), matAccent);
-    cabin.position.set(-0.18, 0.38, 0);
-    g.add(cabin);
+    // Cabin at back
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.22, 0.28), ma);
+    cab.position.set(-0.25, 0.42, 0); g.add(cab);
 
-    // Yellow strip
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.03, 0.3), matStrip);
-    strip.position.y = 0.34;
-    g.add(strip);
+    // Yellow stripe
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.035, 0.32), ms);
+    strip.position.y = 0.38; g.add(strip);
 
     // Wheels
-    const wGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.04);
-    for (const x of [-0.2, 0.2]) {
-      for (const z of [-0.14, 0.14]) {
-        const w = new THREE.Mesh(wGeo, matWheel);
+    const wg = new THREE.CylinderGeometry(0.065, 0.065, 0.04);
+    for (const x of [-0.22, 0.22]) {
+      for (const z of [-0.16, 0.16]) {
+        const w = new THREE.Mesh(wg, mw);
         w.rotation.x = Math.PI / 2;
-        w.position.set(x, 0.06, z);
+        w.position.set(x, 0.065, z);
         g.add(w);
       }
     }
 
-    // Headlights
-    for (const z of [-0.06, 0.06]) {
-      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 6), matHL);
-      hl.position.set(0.36, 0.18, z);
-      g.add(hl);
+    // Headlights at front (+X)
+    for (const z of [-0.08, 0.08]) {
+      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), mh);
+      hl.position.set(0.42, 0.2, z); g.add(hl);
     }
 
-    // Headlight glow
+    // Glow
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 6, 6),
-      new THREE.MeshBasicMaterial({ color: 0xffff99, transparent: true, opacity: 0.25 })
+      new THREE.SphereGeometry(0.1, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffff99, transparent: true, opacity: 0.2 })
     );
-    glow.position.set(0.38, 0.18, 0);
-    g.add(glow);
+    glow.position.set(0.45, 0.2, 0); g.add(glow);
 
     return g;
   }
 
-  _buildCarMesh(colorScheme, carIndex) {
+  _makeCar(c) {
     const g = new THREE.Group();
-    const matBody = new THREE.MeshStandardMaterial({ color: colorScheme.body, metalness: 0.3, roughness: 0.5 });
-    const matAccent = new THREE.MeshStandardMaterial({ color: colorScheme.accent });
-    const matWheel = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
+    const mb = new THREE.MeshStandardMaterial({ color: c.body, metalness: 0.3, roughness: 0.5 });
+    const ma = new THREE.MeshStandardMaterial({ color: c.accent });
+    const mw = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.2, 0.26), matBody);
-    body.position.y = 0.17;
-    body.castShadow = true;
-    g.add(body);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.22, 0.28), mb);
+    body.position.y = 0.19; body.castShadow = true; g.add(body);
 
-    const top = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.28), matAccent);
-    top.position.y = 0.31;
-    g.add(top);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 0.3), ma);
+    top.position.y = 0.34; g.add(top);
 
-    // Wheels
-    const wGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.03);
-    for (const x of [-0.15, 0.15]) {
-      for (const z of [-0.12, 0.12]) {
-        const w = new THREE.Mesh(wGeo, matWheel);
+    const wg = new THREE.CylinderGeometry(0.055, 0.055, 0.03);
+    for (const x of [-0.18, 0.18]) {
+      for (const z of [-0.14, 0.14]) {
+        const w = new THREE.Mesh(wg, mw);
         w.rotation.x = Math.PI / 2;
-        w.position.set(x, 0.05, z);
+        w.position.set(x, 0.055, z);
         g.add(w);
       }
     }
@@ -602,213 +453,128 @@ class MaquetteScene {
   }
 
   addTrain(progressOnTrack, colorIndex, typeIndex) {
-    const colorScheme = this.trainColors[colorIndex % this.trainColors.length];
-    const trainType = this.trainTypes[typeIndex % this.trainTypes.length];
+    const color = this.trainColors[colorIndex % this.trainColors.length];
+    const type = this.trainTypes[typeIndex % this.trainTypes.length];
     const id = this.trainIdCounter++;
 
-    const loco = this._buildLocoMesh(colorScheme);
-    const cars = [];
-    for (let c = 0; c < trainType.cars; c++) {
-      cars.push(this._buildCarMesh(colorScheme, c));
+    // Create a single group containing all parts
+    const group = new THREE.Group();
+    const parts = [];
+
+    // Locomotive (index 0)
+    const loco = this._makeLoco(color);
+    group.add(loco);
+    parts.push(loco);
+
+    // Cars
+    for (let i = 0; i < type.cars; i++) {
+      const car = this._makeCar(color);
+      group.add(car);
+      parts.push(car);
     }
 
-    // Add all to scene
-    this.maquette.add(loco);
-    cars.forEach(c => this.maquette.add(c));
+    this.maquette.add(group);
 
-    const trainData = {
-      id: id,
-      loco: loco,
-      cars: cars,
-      type: trainType,
-      color: colorScheme,
+    const train = {
+      id, group, parts, type, color,
       progress: progressOnTrack || 0,
       targetSpeed: 0.03,
       currentSpeed: 0,
       running: false,
       direction: 1,
-      name: `${trainType.label} #${id + 1}`,
+      name: `${type.label} #${id + 1}`,
       trackIndex: 0,
-      totalParts: 1 + cars.length,
-      // spacing between parts along the curve (in curve-param units)
-      partSpacing: 0.025,
+      partGap: 0.03, // curve-param gap between parts
     };
 
-    this.trains.push(trainData);
-    this.updateTrainPosition(trainData);
+    this.trains.push(train);
+    this._placeTrainOnTrack(train);
 
-    if (typeof this.onTrainAdded === 'function') {
-      this.onTrainAdded(trainData);
-    }
-    return trainData;
+    if (typeof this.onTrainAdded === 'function') this.onTrainAdded(train);
+    return train;
   }
 
   removeTrain(id) {
     const idx = this.trains.findIndex(t => t.id === id);
     if (idx === -1) return;
     const train = this.trains[idx];
-
-    // Dispose loco
-    this.maquette.remove(train.loco);
-    train.loco.traverse(child => {
-      if (child.geometry) child.geometry.dispose();
-      if (child.material) {
-        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-        else child.material.dispose();
+    this.maquette.remove(train.group);
+    train.group.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) {
+        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+        else c.material.dispose();
       }
     });
-
-    // Dispose cars
-    train.cars.forEach(car => {
-      this.maquette.remove(car);
-      car.traverse(child => {
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) {
-          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-          else child.material.dispose();
-        }
-      });
-    });
-
     this.trains.splice(idx, 1);
-
-    if (typeof this.onTrainRemoved === 'function') {
-      this.onTrainRemoved(id);
-    }
+    if (typeof this.onTrainRemoved === 'function') this.onTrainRemoved(id);
   }
 
   // ==========================================
   // TRAIN CONTROL
   // ==========================================
   setTrainSpeed(id, speed) {
-    const train = this.trains.find(t => t.id === id);
-    if (train) train.targetSpeed = speed;
+    const t = this.trains.find(t => t.id === id);
+    if (t) t.targetSpeed = speed;
   }
 
   toggleTrainRunning(id) {
-    const train = this.trains.find(t => t.id === id);
-    if (train) {
-      train.running = !train.running;
-      if (!train.running) train.targetSpeed = 0;
-      else train.targetSpeed = 0.03;
-      if (typeof this.onTrainToggled === 'function') {
-        this.onTrainToggled(train);
-      }
+    const t = this.trains.find(t => t.id === id);
+    if (t) {
+      t.running = !t.running;
+      t.targetSpeed = t.running ? 0.03 : 0;
+      if (typeof this.onTrainToggled === 'function') this.onTrainToggled(t);
     }
-    return train ? train.running : false;
+    return t ? t.running : false;
   }
 
   startAllTrains() {
     this.trains.forEach(t => { t.running = true; t.targetSpeed = 0.03; });
-    if (typeof this.onAllTrainsToggled === 'function') {
-      this.onAllTrainsToggled(true);
-    }
+    if (typeof this.onAllTrainsToggled === 'function') this.onAllTrainsToggled(true);
   }
 
   stopAllTrains() {
     this.trains.forEach(t => { t.running = false; t.targetSpeed = 0; });
-    if (typeof this.onAllTrainsToggled === 'function') {
-      this.onAllTrainsToggled(false);
-    }
+    if (typeof this.onAllTrainsToggled === 'function') this.onAllTrainsToggled(false);
   }
 
   reverseTrain(id) {
-    const train = this.trains.find(t => t.id === id);
-    if (train) train.direction *= -1;
-  }
-
-  setTrainTrack(id, trackIndex) {
-    const train = this.trains.find(t => t.id === id);
-    if (train && trackIndex < this.trackCurves.length) {
-      train.trackIndex = trackIndex;
-      train.progress = 0;
-    }
+    const t = this.trains.find(t => t.id === id);
+    if (t) t.direction *= -1;
   }
 
   getTrainCount() { return this.trains.length; }
   getRunningCount() { return this.trains.filter(t => t.running).length; }
 
   // ==========================================
-  // POSITIONING — each car independently follows curve with banking
+  // TRAIN POSITIONING — simple and robust
   // ==========================================
-  _getCurveFrame(curve, t) {
-    const point = curve.getPointAt(t);
-    const tangent = curve.getTangentAt(t).normalize();
-
-    // Compute approximate normal by sampling nearby point
-    const dt = 0.001;
-    const tNext = Math.min(t + dt, 1);
-    const tPrev = Math.max(t - dt, 0);
-    const nextTangent = curve.getTangentAt(tNext).normalize();
-    const prevTangent = curve.getTangentAt(tPrev).normalize();
-
-    // Curvature via change in tangent
-    const curvature = new THREE.Vector3().subVectors(nextTangent, prevTangent).divideScalar(2 * dt);
-
-    // Normal: perpendicular to tangent in the osculating plane
-    const normal = new THREE.Vector3();
-    if (curvature.lengthSq() > 1e-10) {
-      normal.copy(curvature).normalize();
-    } else {
-      // Fallback: use world up cross tangent
-      normal.crossVectors(new THREE.Vector3(0, 1, 0), tangent).normalize();
-      if (normal.lengthSq() < 1e-10) {
-        normal.set(1, 0, 0);
-      }
-    }
-
-    // Binormal
-    const binormal = new THREE.Vector3().crossVectors(tangent, normal).normalize();
-
-    return { point, tangent, normal, binormal };
-  }
-
-  _positionPart(part, frame, bankingAngle) {
-    // Position at curve point
-    part.position.copy(frame.point);
-    part.position.y += 0.08;
-
-    // Align part's forward axis (X+) with the tangent direction
-    const target = new THREE.Vector3().copy(frame.point).add(frame.tangent);
-    part.lookAt(target);
-
-    // Apply banking (roll around tangent axis)
-    part.rotateX(bankingAngle);
-  }
-
-  updateTrainPosition(train) {
-    const trackData = this.trackCurves[train.trackIndex];
-    if (!trackData) return;
-
-    const curve = trackData.curve;
+  _placeTrainOnTrack(train) {
+    const curve = this.trackCurves[train.trackIndex].curve;
     const p = ((train.progress % 1) + 1) % 1;
 
-    // Locomotive position
-    const locoFrame = this._getCurveFrame(curve, p);
+    // Position each part along the curve
+    for (let i = 0; i < train.parts.length; i++) {
+      const t = ((p - i * train.partGap) % 1 + 1) % 1;
+      const point = curve.getPointAt(t);
+      const tangent = curve.getTangentAt(t);
 
-    // Compute curvature for banking
-    const dt = 0.002;
-    const f1 = this._getCurveFrame(curve, Math.max(0, p - dt));
-    const f2 = this._getCurveFrame(curve, Math.min(1, p + dt));
-    const curvatureChange = new THREE.Vector3().subVectors(f2.tangent, f1.tangent);
-    let bankAngle = -curvatureChange.z * 3.0;
-    bankAngle = THREE.MathUtils.clamp(bankAngle, -0.3, 0.3);
+      const part = train.parts[i];
+      part.position.set(point.x, point.y + 0.05, point.z);
 
-    this._positionPart(train.loco, locoFrame, bankAngle);
+      // Rotate to face tangent direction
+      // lookAt makes -Z face the target, so we aim ahead
+      const ahead = point.clone().add(tangent);
+      part.lookAt(ahead.x, ahead.y, ahead.z);
 
-    // Position each car behind the locomotive
-    for (let c = 0; c < train.cars.length; c++) {
-      const carP = ((p - (c + 1) * train.partSpacing) % 1 + 1) % 1;
-      const carFrame = this._getCurveFrame(curve, carP);
-
-      const cdt = 0.002;
-      const cf1 = this._getCurveFrame(curve, Math.max(0, carP - cdt));
-      const cf2 = this._getCurveFrame(curve, Math.min(1, carP + cdt));
-      const cCurvChange = new THREE.Vector3().subVectors(cf2.tangent, cf1.tangent);
-      let cBank = -cCurvChange.z * 3.0;
-      cBank = THREE.MathUtils.clamp(cBank, -0.3, 0.3);
-
-      this._positionPart(train.cars[c], carFrame, cBank);
+      // Slight banking on curves
+      const dt = 0.005;
+      const t1 = curve.getTangentAt(Math.max(0, t - dt));
+      const t2 = curve.getTangentAt(Math.min(1, t + dt));
+      const curv = new THREE.Vector3().subVectors(t2, t1);
+      // Banking = tilt sideways proportional to curvature
+      const bank = THREE.MathUtils.clamp(-curv.x * 4, -0.25, 0.25);
+      part.rotateZ(bank);
     }
   }
 
@@ -817,32 +583,28 @@ class MaquetteScene {
   // ==========================================
   animateToView(view) {
     const views = {
-      overview: { x: 0, y: 18, z: 18, lookAt: { x: 0, y: 0, z: 0 } },
-      mina: { x: -12, y: 6, z: 5, lookAt: { x: -6, y: 0, z: -1 } },
-      porto: { x: 12, y: 6, z: 5, lookAt: { x: 8, y: 0, z: 0 } },
-      trem: { x: 0, y: 5, z: 8, lookAt: { x: 0, y: 0, z: 0 } }
+      overview: { x: 0, y: 18, z: 18, lx: 0, ly: 0, lz: 0 },
+      mina: { x: -12, y: 6, z: 5, lx: -6, ly: 0, lz: -1 },
+      porto: { x: 12, y: 6, z: 5, lx: 8, ly: 0, lz: 0 },
+      trem: { x: 0, y: 5, z: 8, lx: 0, ly: 0, lz: 0 },
     };
+    const v = views[view];
+    if (!v) return;
 
-    const target = views[view];
-    if (!target) return;
+    const start = this.camera.position.clone();
+    const end = new THREE.Vector3(v.x, v.y, v.z);
+    const t0 = Date.now();
+    const dur = 1500;
 
-    const startPos = this.camera.position.clone();
-    const endPos = new THREE.Vector3(target.x, target.y, target.z);
-    const duration = 1500;
-    const startTime = Date.now();
-
-    const animateCamera = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-
-      this.camera.position.lerpVectors(startPos, endPos, eased);
-      this.controls.target.set(target.lookAt.x, target.lookAt.y, target.lookAt.z);
-
-      if (progress < 1) requestAnimationFrame(animateCamera);
+    const tick = () => {
+      const elapsed = Date.now() - t0;
+      const t = Math.min(elapsed / dur, 1);
+      const e = 1 - Math.pow(1 - t, 3); // ease out cubic
+      this.camera.position.lerpVectors(start, end, e);
+      this.controls.target.set(v.lx, v.ly, v.lz);
+      if (t < 1) requestAnimationFrame(tick);
     };
-
-    animateCamera();
+    tick();
   }
 
   // ==========================================
@@ -851,32 +613,26 @@ class MaquetteScene {
   animate() {
     this.animationId = requestAnimationFrame(() => this.animate());
 
-    const time = this.clock.getElapsedTime();
     const dt = this.clock.getDelta();
+    const time = this.clock.getElapsedTime();
 
-    // Rotate particles
-    if (this.particles) {
-      this.particles.rotation.y = time * 0.03;
-    }
+    if (this.particles) this.particles.rotation.y = time * 0.03;
 
-    // Animate trains with smooth acceleration
-    this.trains.forEach(train => {
-      // Smooth speed interpolation
-      const accel = train.running ? 1.5 : 2.0;
-      train.currentSpeed += (train.targetSpeed - train.currentSpeed) * Math.min(accel * dt, 1);
-
-      // Dead zone
+    // Animate trains
+    for (const train of this.trains) {
+      // Smooth acceleration
+      const rate = train.running ? 1.5 : 2.5;
+      train.currentSpeed += (train.targetSpeed - train.currentSpeed) * Math.min(rate * dt, 1);
       if (Math.abs(train.currentSpeed) < 0.0001) train.currentSpeed = 0;
 
       train.progress += train.currentSpeed * train.direction;
-      this.updateTrainPosition(train);
-    });
+      this._placeTrainOnTrack(train);
+    }
 
-    // Animate switches
-    this.maquette.children.forEach(child => {
-      if (child.userData && child.userData.type === 'switch') {
-        const scale = 1 + Math.sin(time * 2 + child.position.x) * 0.05;
-        child.scale.setScalar(scale);
+    // Switch animation
+    this.maquette.children.forEach(c => {
+      if (c.userData && c.userData.type === 'switch') {
+        c.scale.setScalar(1 + Math.sin(time * 2 + c.position.x) * 0.05);
       }
     });
 
@@ -886,11 +642,11 @@ class MaquetteScene {
 
   onResize() {
     if (!this.container) return;
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
-    this.camera.aspect = width / height;
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
+    this.renderer.setSize(w, h);
   }
 
   destroy() {
