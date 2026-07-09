@@ -13,6 +13,8 @@ services:
     environment:
       # PostgreSQL na nuvem (Render)
       - DATABASE_URL=${DATABASE_URL}
+      # Redis
+      - REDIS_URL=redis://redis:6379
       # Configuracoes gerais
       - JWT_SECRET=${JWT_SECRET:-chave_secreta}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
@@ -22,6 +24,8 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - ./backend_nodejs/reports:/app/reports
+    depends_on:
+      - redis
     networks:
       - maquete-network
 
@@ -56,6 +60,15 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=${REACT_APP_API_URL:-http://backend:4000}
+    networks:
+      - maquete-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: maquete-redis
+    ports:
+      - "6379:6379"
     networks:
       - maquete-network
 
