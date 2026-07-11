@@ -297,8 +297,10 @@ class FerroramaApp {
     const btnAddTrain = document.getElementById('btnAddTrain');
     if (btnAddTrain) {
       btnAddTrain.addEventListener('click', () => {
+        if (!this.maquetteScene) return;
         const activeType = document.querySelector('.train-type-btn.active');
         const typeIndex = activeType ? parseInt(activeType.dataset.type) : 0;
+        const hint = document.getElementById('placementHint');
 
         if (this.maquetteScene.placementMode) {
           // Cancel placement mode
@@ -308,7 +310,7 @@ class FerroramaApp {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
             Adicionar ao trilho
           `;
-          document.getElementById('placementHint').style.display = 'none';
+          if (hint) hint.style.display = 'none';
         } else {
           // Enter placement mode
           this.maquetteScene.setPlacementMode(true, typeIndex);
@@ -317,7 +319,7 @@ class FerroramaApp {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
             Cancelar
           `;
-          document.getElementById('placementHint').style.display = 'flex';
+          if (hint) hint.style.display = 'flex';
         }
       });
     }
@@ -465,7 +467,8 @@ class FerroramaApp {
         Adicionar ao trilho
       `;
     }
-    document.getElementById('placementHint').style.display = 'none';
+    const hint = document.getElementById('placementHint');
+    if (hint) hint.style.display = 'none';
     this.updateTrainCountBadge();
   }
 

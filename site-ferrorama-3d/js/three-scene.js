@@ -1316,8 +1316,8 @@ class MaquetteScene {
       var tangent = curve.getTangentAt(t);
 
       var part = train.parts[i];
-      // Place train on top of rail (rail is at y=0.45, train wheels at y=0.048)
-      part.position.set(point.x, 0.45 + 0.048, point.z);
+      // Place train on top of rail at actual track height + wheel offset
+      part.position.set(point.x, point.y + 0.048, point.z);
 
       var ahead = new THREE.Vector3().copy(point).add(tangent);
       part.lookAt(ahead);
@@ -1400,10 +1400,9 @@ class MaquetteScene {
       if (c.userData && c.userData.type === 'reversor') {
         c.children.forEach(function(child) {
           if (child.material && child.material.emissive) {
-            if (child.material.emissive.r > 0.5) {
-              child.material.emissiveIntensity = child.material.emissiveIntensity > 0.5 ? reversorGlow : 0.1;
-            } else {
-              child.material.emissiveIntensity = child.material.emissiveIntensity > 0.5 ? reversorGlow : 0.1;
+            // Pulse only indicators that are "on" (intensity > 0.5)
+            if (child.material.emissiveIntensity > 0.5) {
+              child.material.emissiveIntensity = reversorGlow;
             }
           }
         });
@@ -1440,6 +1439,8 @@ class MaquetteScene {
     ];
     for (var i = 0; i < configs.length; i++) {
       var cfg = configs[i];
+      // Set targetSpeed BEFORE addTrain so the card shows correct value
+      var origAddTrain = this.addTrain;
       var train = this.addTrain(cfg.progress, cfg.colorIndex, cfg.typeIndex);
       train.targetSpeed = cfg.speed;
       train.currentSpeed = cfg.speed;
@@ -1447,6 +1448,11 @@ class MaquetteScene {
       train.running = true;
       this._placeTrainOnTrack(train);
       if (typeof this.onTrainToggled === 'function') this.onTrainToggled(train);
+      // Update the card's speed slider to match actual speed
+      var slider = document.querySelector('.train-card[data-id="' + train.id + '"] input[type="range"]');
+      if (slider) slider.value = cfg.speed;
+      var valSpan = document.querySelector('.train-card[data-id="' + train.id + '"] .speed-val');
+      if (valSpan) valSpan.textContent = Math.round((cfg.speed / 0.1) * 100) + '%';
     }
   }
 }
