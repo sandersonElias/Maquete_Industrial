@@ -158,24 +158,9 @@ class FerroramaApp {
   }
 
   init3DScenes() {
-    // Use IntersectionObserver so scene initializes when section is visible
-    const maqueteSection = document.getElementById('maquete');
-    if (maqueteSection) {
-      const maqObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !this.maquetteScene) {
-            this._initMaquetteScene();
-            maqObserver.disconnect();
-          }
-        });
-      }, { rootMargin: '200px' });
-      maqObserver.observe(maqueteSection);
-
-      // Also try immediate init if already visible
-      if (maqueteSection.getBoundingClientRect().top < window.innerHeight + 200) {
-        setTimeout(() => this._initMaquetteScene(), 100);
-      }
-    }
+    // Initialize immediately — the scene works even if the section is off-screen
+    // because MaquetteScene handles fallback dimensions
+    this._initMaquetteScene();
 
     const minaSection = document.getElementById('mina');
     if (minaSection) {
