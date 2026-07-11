@@ -4,9 +4,6 @@
 # MiMoCode internal
 .mimocode/
 
-# Compose docs
-docs/
-
 # Environment files (sensitive data)
 .env
 .env.local

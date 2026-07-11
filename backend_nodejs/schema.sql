@@ -177,3 +177,50 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO airplanes (id, flight_number, cargo_type, cargo_weight, eta, gate) VALUES
 ('FL-001', 'CARGO-2024', 'Equipamentos', 5000, NOW() + INTERVAL '4 hours', 'G3')
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+--  Tabelas de Química
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS chemistry_equipment (
+    id VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- tanque, reator, misturador, resfriador, forno, bomba
+    status VARCHAR(20) DEFAULT 'online', -- online, warning, offline, maintenance
+    temperature FLOAT DEFAULT 25,
+    humidity FLOAT DEFAULT 50,
+    level FLOAT DEFAULT 50,
+    pressure FLOAT DEFAULT 1.0,
+    ph FLOAT DEFAULT 7.0,
+    min_temperature FLOAT DEFAULT 10,
+    max_temperature FLOAT DEFAULT 50,
+    min_humidity FLOAT DEFAULT 20,
+    max_humidity FLOAT DEFAULT 80,
+    min_level FLOAT DEFAULT 10,
+    max_level FLOAT DEFAULT 95,
+    last_calibration TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS chemistry_readings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    equipment_id VARCHAR(20) REFERENCES chemistry_equipment(id) ON DELETE CASCADE,
+    temperature FLOAT,
+    humidity FLOAT,
+    level FLOAT,
+    pressure FLOAT,
+    ph FLOAT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_chem_readings_equip ON chemistry_readings(equipment_id, timestamp);
+CREATE INDEX IF NOT EXISTS idx_chem_equipment_status ON chemistry_equipment(status);
+
+-- Dados iniciais de química
+INSERT INTO chemistry_equipment (id, name, type, status, temperature, humidity, level, pressure, ph, min_temperature, max_temperature, last_calibration) VALUES
+('CHEM-001', 'Tanque Alpha', 'tanque', 'online', 25.4, 45, 78, 1.0, 7.0, 10, 50, NOW() - INTERVAL '15 days'),
+('CHEM-002', 'Reator Beta', 'reator', 'online', 42.1, 38, 62, 2.5, 6.8, 20, 60, NOW() - INTERVAL '10 days'),
+('CHEM-003', 'Misturador Gamma', 'misturador', 'warning', 31.8, 52, 91, 1.2, 7.2, 15, 45, NOW() - INTERVAL '5 days'),
+('CHEM-004', 'Resfriador Delta', 'resfriador', 'online', 8.2, 85, 45, 1.0, 7.0, 2, 20, NOW() - INTERVAL '20 days')
+ON CONFLICT (id) DO NOTHING;

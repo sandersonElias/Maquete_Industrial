@@ -11,6 +11,9 @@ import Porto from './pages/Porto';
 import Aeroporto from './pages/Aeroporto';
 import Relatorios from './pages/Relatorios';
 import Quimica from './pages/Quimica';
+import Locomotiva from './pages/Locomotiva';
+import Alertas from './pages/Alertas';
+import Admin from './pages/Admin';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
@@ -54,6 +57,9 @@ function AppContent() {
                 <Route path="/porto" element={<Porto />} />
                 <Route path="/aeroporto" element={<Aeroporto />} />
                 <Route path="/quimica" element={<Quimica />} />
+                <Route path="/locomotiva" element={<Locomotiva />} />
+                <Route path="/alertas" element={<Alertas />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="/relatorios" element={<Relatorios />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>

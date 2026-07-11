@@ -10,8 +10,12 @@ const setupJobs = require("./jobs");
 setupSockets(io);
 
 // Inicializa jobs
-const { markTimedOutCommands } = setupJobs(io);
+const { markTimedOutCommands, simulateChemistry, simulatePort, simulateAirport, simulateLocomotive } = setupJobs(io);
 const jobsInterval = setInterval(markTimedOutCommands, 5000);
+const chemistryInterval = setInterval(simulateChemistry, 10000); // A cada 10s
+const portInterval = setInterval(simulatePort, 30000); // A cada 30s
+const airportInterval = setInterval(simulateAirport, 30000); // A cada 30s
+const locomotiveInterval = setInterval(simulateLocomotive, 5000); // A cada 5s
 
 // Teste das Conexoes
 async function testConnections() {
@@ -41,6 +45,10 @@ async function gracefulShutdown(signal) {
   logger.info(`${signal} recebido. Encerrando servidor...`);
 
   clearInterval(jobsInterval);
+  clearInterval(chemistryInterval);
+  clearInterval(portInterval);
+  clearInterval(airportInterval);
+  clearInterval(locomotiveInterval);
 
   server.close(() => {
     logger.info("Servidor HTTP encerrado");

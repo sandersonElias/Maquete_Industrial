@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Train, Truck, Ship, Plane, FlaskConical, FileText, LogOut
+  LayoutDashboard, Train, Truck, Ship, Plane, FlaskConical, FileText, LogOut, MapPin, Bell, Shield
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -12,10 +12,13 @@ export default function Sidebar({ isOpen }) {
     { path: '/', icon: LayoutDashboard, label: 'Visao Geral' },
     { path: '/ferrovia', icon: Train, label: 'Ferrovia' },
     { path: '/mina', icon: Truck, label: 'Mina' },
+    { path: '/locomotiva', icon: MapPin, label: 'Locomotiva' },
     { path: '/porto', icon: Ship, label: 'Porto' },
     { path: '/aeroporto', icon: Plane, label: 'Aeroporto' },
     { path: '/quimica', icon: FlaskConical, label: 'Quimica' },
+    { path: '/alertas', icon: Bell, label: 'Alertas' },
     { path: '/relatorios', icon: FileText, label: 'Relatorios' },
+    ...(user?.role === 'admin' ? [{ path: '/admin', icon: Shield, label: 'Admin' }] : []),
   ];
 
   return (

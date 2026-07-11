@@ -95,69 +95,114 @@ const RailwayMap = ({ switches }) => {
     }
   };
 
+  // Posições dos switches no SVG real (533x177)
+  // Baseado no layout do Ferrorama
+  const switchPositions = [
+    { x: 130, y: 32, label: 'SW1', name: 'Desvio Superior' },
+    { x: 266, y: 14, label: 'SW2', name: 'Desvio Central' },
+    { x: 398, y: 16, label: 'SW3', name: 'Desvio Direito' },
+    { x: 269, y: 165, label: 'SW4', name: 'Reversor' },
+  ];
+
   return (
     <div className="bg-surface border border-border rounded-lg overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <h3 className="text-xs font-medium text-muted uppercase tracking-wider flex items-center gap-2">
           <Box size={12} className="text-accent" />
-          Mapa da Linha
+          Mapa do Ferrorama
         </h3>
+        <div className="flex items-center gap-3 text-[10px]">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#22C55E]"></span> Centro</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#3B82F6]"></span> Esquerda</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#A855F7]"></span> Direita</span>
+        </div>
       </div>
 
       <div className="p-4">
-        <svg viewBox="0 0 800 300" className="w-full" style={{ height: '240px' }}>
-          {/* Grid */}
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2A2D3A" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="800" height="300" fill="url(#grid)" />
-
-          {/* Trilhos */}
-          <path d="M 40,70 L 130,70" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M 180,70 L 380,70" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M 500,70 L 650,70" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M 650,70 L 710,70 L 710,230 L 730,230" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <path d="M 40,230 L 200,230" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M 250,230 L 480,230" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M 530,230 L 710,230" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M 40,70 L 40,230" stroke="#2A2D3A" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M 175,70 L 450,170" stroke="#2A2D3A" strokeWidth="3" strokeLinecap="round" fill="none" />
-          <path d="M 450,170 L 710,170" stroke="#2A2D3A" strokeWidth="3" strokeLinecap="round" fill="none" />
-          <path d="M 710,170 L 710,230" stroke="#2A2D3A" strokeWidth="3" strokeLinecap="round" fill="none" />
-          <path d="M 245,230 L 500,280" stroke="#2A2D3A" strokeWidth="3" strokeLinecap="round" fill="none" />
-          <path d="M 500,280 L 710,280 L 710,230" stroke="#2A2D3A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-
-          {/* SW1 */}
-          <circle cx="155" cy="70" r="7" fill={getSwitchColor(switches[0])} stroke="#0F1117" strokeWidth="2" />
-          <text x="155" y="50" textAnchor="middle" fill="#8B8FA3" fontSize="10" fontWeight="500">SW1</text>
-
-          {/* SW2 */}
-          <circle cx="225" cy="230" r="7" fill={getSwitchColor(switches[1])} stroke="#0F1117" strokeWidth="2" />
-          <text x="225" y="255" textAnchor="middle" fill="#8B8FA3" fontSize="10" fontWeight="500">SW2</text>
-
-          {/* SW3 */}
-          <circle cx="505" cy="230" r="7" fill={getSwitchColor(switches[2])} stroke="#0F1117" strokeWidth="2" />
-          <text x="505" y="255" textAnchor="middle" fill="#8B8FA3" fontSize="10" fontWeight="500">SW3</text>
-
-          {/* Reversor */}
-          <rect x="405" y="55" width="70" height="30" rx="4" fill={getSwitchColor(switches[3])} stroke="#0F1117" strokeWidth="2" />
-          <text x="440" y="45" textAnchor="middle" fill="#8B8FA3" fontSize="9" fontWeight="500">REVERSOR</text>
-          <text x="440" y="75" textAnchor="middle" fill="white" fontSize="9">SW4</text>
-
-          {/* Locomotiva */}
-          <g>
-            <animateTransform attributeName="transform" type="translate" values="0,0;600,0;600,160;0,160;0,0" dur="12s" repeatCount="indefinite" />
-            <rect x="80" y="56" width="40" height="28" rx="4" fill="#F59E0B" opacity="0.9" />
-            <circle cx="126" cy="70" r="3" fill="#F59E0B" opacity="0.6">
-              <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-          </g>
-
-          <text x="40" y="160" fill="#4A5568" fontSize="8" textAnchor="middle">ENTRADA</text>
-          <text x="730" y="160" fill="#4A5568" fontSize="8" textAnchor="middle">SAIDA</text>
-        </svg>
+        <div className="relative bg-card rounded-lg border border-border p-2">
+          {/* SVG do Ferrorama real */}
+          <svg viewBox="0 0 533 177" className="w-full" style={{ height: 'auto' }}>
+            {/* Camada 1: SVG original do Ferrorama */}
+            <image 
+              href="/ferrorama.svg" 
+              x="0" 
+              y="0" 
+              width="533" 
+              height="177"
+              opacity="0.9"
+            />
+            
+            {/* Camada 2: Indicadores dos switches */}
+            {switchPositions.map((pos, index) => {
+              const sw = switches[index];
+              const color = getSwitchColor(sw);
+              const isMoving = sw?.is_moving;
+              
+              return (
+                <g key={`switch-${index}`}>
+                  {/* Efeito de glow */}
+                  <circle 
+                    cx={pos.x} 
+                    cy={pos.y} 
+                    r="12" 
+                    fill={color} 
+                    opacity="0.3"
+                  >
+                    {isMoving && (
+                      <animate 
+                        attributeName="opacity" 
+                        values="0.2;0.5;0.2" 
+                        dur="1s" 
+                        repeatCount="indefinite"
+                      />
+                    )}
+                  </circle>
+                  
+                  {/* Círculo principal do switch */}
+                  <circle 
+                    cx={pos.x} 
+                    cy={pos.y} 
+                    r="8" 
+                    fill={color} 
+                    stroke="#0F1117" 
+                    strokeWidth="2"
+                  />
+                  
+                  {/* Centro escuro */}
+                  <circle 
+                    cx={pos.x} 
+                    cy={pos.y} 
+                    r="3" 
+                    fill="#0F1117"
+                  />
+                  
+                  {/* Label do switch */}
+                  <text 
+                    x={pos.x} 
+                    y={pos.y - 16} 
+                    textAnchor="middle" 
+                    fill="#e0d0c0" 
+                    fontSize="9" 
+                    fontWeight="600"
+                  >
+                    {pos.label}
+                  </text>
+                  
+                  {/* Nome do switch */}
+                  <text 
+                    x={pos.x} 
+                    y={pos.y + 22} 
+                    textAnchor="middle" 
+                    fill="#8a7a6a" 
+                    fontSize="7"
+                  >
+                    {sw?.name || pos.name}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
       </div>
     </div>
   );

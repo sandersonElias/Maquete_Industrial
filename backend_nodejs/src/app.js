@@ -31,10 +31,11 @@ const ferroviaRoutes = require("./routes/ferroviaRoutes")(io);
 const trucksRoutes = require("./routes/trucksRoutes")(io);
 const locomotiveRoutes = require("./routes/locomotiveRoutes")(io);
 const portAirportRoutes = require("./routes/portAirportRoutes");
-const chemistryRoutes = require("./routes/chemistryRoutes");
+const chemistryRoutes = require("./routes/chemistryRoutes")(io);
 const reportRoutes = require("./routes/reportRoutes")(io);
 const gatewayRoutes = require("./routes/gatewayRoutes")(io);
 const alertRoutes = require("./routes/alertRoutes")(io);
+const adminRoutes = require("./routes/adminRoutes");
 
 // =========================
 // Middlewares
@@ -116,6 +117,8 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/gateway", gatewayRoutes);
 
 app.use("/api/alerts", alertRoutes);
+
+app.use("/api/admin", adminRoutes);
 
 // =========================
 // 404
