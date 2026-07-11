@@ -1057,6 +1057,13 @@ class MaquetteScene {
     return g;
   }
 
+  _addMesh(group, geo, mat, px, py, pz) {
+    var m = new THREE.Mesh(geo, mat);
+    m.position.set(px, py, pz);
+    group.add(m);
+    return m;
+  }
+
   _makeLoco(c) {
     var g = new THREE.Group();
     var mB = new THREE.MeshStandardMaterial({ color: c.body, metalness: 0.55, roughness: 0.3 });
@@ -1068,61 +1075,51 @@ class MaquetteScene {
     var mH = new THREE.MeshBasicMaterial({ color: 0xffeeaa });
     var mR = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.3, roughness: 0.4 });
     var mK = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.7, roughness: 0.4 });
+    var hrMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.15 });
+    var rodMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.2 });
+    var a = this._addMesh.bind(this, g);
 
     // Underframe
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.80, 0.04, 0.28), mU), { position: new THREE.Vector3(0, 0.10, 0) }));
+    a(new THREE.BoxGeometry(0.80, 0.04, 0.28), mU, 0, 0.10, 0);
     // Frame rails
-    for (var zz = 0; zz < 2; zz++) {
-      var z = zz === 0 ? -0.13 : 0.13;
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.02, 0.012), mU), { position: new THREE.Vector3(0, 0.12, z) }));
-    }
+    a(new THREE.BoxGeometry(0.76, 0.02, 0.012), mU, 0, 0.12, -0.13);
+    a(new THREE.BoxGeometry(0.76, 0.02, 0.012), mU, 0, 0.12, 0.13);
     // Fuel tank
-    g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.20, 10), mK), { position: new THREE.Vector3(0.05, 0.08, 0), rotation: new THREE.Euler(0, 0, Math.PI / 2) }));
+    var ft = a(new THREE.CylinderGeometry(0.045, 0.045, 0.20, 10), mK, 0.05, 0.08, 0);
+    ft.rotation.z = Math.PI / 2;
     // Body
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.18, 0.28), mB), { position: new THREE.Vector3(0, 0.22, 0), castShadow: true }));
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.10, 0.26), mB), { position: new THREE.Vector3(0, 0.35, 0), castShadow: true }));
+    a(new THREE.BoxGeometry(0.76, 0.18, 0.28), mB, 0, 0.22, 0).castShadow = true;
+    a(new THREE.BoxGeometry(0.68, 0.10, 0.26), mB, 0, 0.35, 0).castShadow = true;
     // Side panels
-    for (var zz = 0; zz < 2; zz++) {
-      var z = zz === 0 ? -0.141 : 0.141;
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.07, 0.004), mA), { position: new THREE.Vector3(0.04, 0.24, z) }));
-    }
+    a(new THREE.BoxGeometry(0.48, 0.07, 0.004), mA, 0.04, 0.24, -0.141);
+    a(new THREE.BoxGeometry(0.48, 0.07, 0.004), mA, 0.04, 0.24, 0.141);
     // Stripes
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.018, 0.29), mS), { position: new THREE.Vector3(0, 0.33, 0) }));
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.006, 0.29), mS), { position: new THREE.Vector3(0, 0.30, 0) }));
+    a(new THREE.BoxGeometry(0.74, 0.018, 0.29), mS, 0, 0.33, 0);
+    a(new THREE.BoxGeometry(0.74, 0.006, 0.29), mS, 0, 0.30, 0);
     // Cab
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.26), mA), { position: new THREE.Vector3(-0.20, 0.44, 0), castShadow: true }));
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.025, 0.28), mK), { position: new THREE.Vector3(-0.20, 0.51, 0) }));
+    a(new THREE.BoxGeometry(0.24, 0.12, 0.26), mA, -0.20, 0.44, 0).castShadow = true;
+    a(new THREE.BoxGeometry(0.26, 0.025, 0.28), mK, -0.20, 0.51, 0);
     // Windows
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.06, 0.16), mG), { position: new THREE.Vector3(-0.32, 0.45, 0) }));
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.05, 0.12), mG), { position: new THREE.Vector3(-0.08, 0.45, 0) }));
-    for (var zz = 0; zz < 2; zz++) {
-      var z = zz === 0 ? -0.131 : 0.131;
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 0.01), mG), { position: new THREE.Vector3(-0.20, 0.46, z) }));
-    }
+    a(new THREE.BoxGeometry(0.012, 0.06, 0.16), mG, -0.32, 0.45, 0);
+    a(new THREE.BoxGeometry(0.012, 0.05, 0.12), mG, -0.08, 0.45, 0);
+    a(new THREE.BoxGeometry(0.14, 0.05, 0.01), mG, -0.20, 0.46, -0.131);
+    a(new THREE.BoxGeometry(0.14, 0.05, 0.01), mG, -0.20, 0.46, 0.131);
     // Nose
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.09, 0.24), mB), { position: new THREE.Vector3(0.37, 0.23, 0), castShadow: true }));
+    a(new THREE.BoxGeometry(0.07, 0.09, 0.24), mB, 0.37, 0.23, 0).castShadow = true;
     // Headlights
-    for (var zz = 0; zz < 2; zz++) {
-      var z = zz === 0 ? -0.09 : 0.09;
-      g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), mH), { position: new THREE.Vector3(0.41, 0.25, z) }));
-    }
+    a(new THREE.SphereGeometry(0.02, 8, 8), mH, 0.41, 0.25, -0.09);
+    a(new THREE.SphereGeometry(0.02, 8, 8), mH, 0.41, 0.25, 0.09);
     // Rear lights
-    for (var zz = 0; zz < 2; zz++) {
-      var z = zz === 0 ? -0.09 : 0.09;
-      g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), mR), { position: new THREE.Vector3(-0.33, 0.22, z) }));
-    }
+    a(new THREE.SphereGeometry(0.015, 6, 6), mR, -0.33, 0.22, -0.09);
+    a(new THREE.SphereGeometry(0.015, 6, 6), mR, -0.33, 0.22, 0.09);
     // Exhaust
-    for (var ei = 0; ei < 2; ei++) {
-      var ex = ei === 0 ? 0.14 : 0.20;
-      g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.05, 8), mK), { position: new THREE.Vector3(ex, 0.40, 0) }));
-      g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, 0.006, 8), mC), { position: new THREE.Vector3(ex, 0.43, 0) }));
-    }
+    a(new THREE.CylinderGeometry(0.012, 0.015, 0.05, 8), mK, 0.14, 0.40, 0);
+    a(new THREE.CylinderGeometry(0.018, 0.012, 0.006, 8), mC, 0.14, 0.43, 0);
+    a(new THREE.CylinderGeometry(0.012, 0.015, 0.05, 8), mK, 0.20, 0.40, 0);
+    a(new THREE.CylinderGeometry(0.018, 0.012, 0.006, 8), mC, 0.20, 0.43, 0);
     // Handrails
-    var hrMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.15 });
-    for (var zz = 0; zz < 2; zz++) {
-      var z = zz === 0 ? -0.145 : 0.145;
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.003, 0.003), hrMat), { position: new THREE.Vector3(0, 0.37, z) }));
-    }
+    a(new THREE.BoxGeometry(0.62, 0.003, 0.003), hrMat, 0, 0.37, -0.145);
+    a(new THREE.BoxGeometry(0.62, 0.003, 0.003), hrMat, 0, 0.37, 0.145);
     // Wheels
     var wX = [-0.26, -0.01, 0.22];
     var wZ = [-0.14, 0.14];
@@ -1134,16 +1131,15 @@ class MaquetteScene {
       }
     }
     // Connecting rods
-    var rodMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.2 });
     for (var wj = 0; wj < wZ.length; wj++) {
       var rz = wZ[wj] > 0 ? wZ[wj] + 0.016 : wZ[wj] - 0.016;
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.010, 0.006), rodMat), { position: new THREE.Vector3(-0.02, 0.048, rz) }));
+      a(new THREE.BoxGeometry(0.50, 0.010, 0.006), rodMat, -0.02, 0.048, rz);
     }
     // Couplers
-    for (var cx of [0.40, -0.34]) {
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.025, 0.05), mK), { position: new THREE.Vector3(cx, 0.10, 0) }));
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.015, 0.035), mC), { position: new THREE.Vector3(cx + (cx > 0 ? 0.02 : -0.02), 0.10, 0) }));
-    }
+    a(new THREE.BoxGeometry(0.035, 0.025, 0.05), mK, 0.40, 0.10, 0);
+    a(new THREE.BoxGeometry(0.015, 0.015, 0.035), mC, 0.42, 0.10, 0);
+    a(new THREE.BoxGeometry(0.035, 0.025, 0.05), mK, -0.34, 0.10, 0);
+    a(new THREE.BoxGeometry(0.015, 0.015, 0.035), mC, -0.36, 0.10, 0);
     return g;
   }
 
@@ -1154,29 +1150,29 @@ class MaquetteScene {
     var mU = new THREE.MeshStandardMaterial({ color: c.under, metalness: 0.6, roughness: 0.45 });
     var mC = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.9, roughness: 0.15 });
     var mK = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.7, roughness: 0.4 });
+    var mW = new THREE.MeshStandardMaterial({ color: 0x88ccff, metalness: 0.8, roughness: 0.1, transparent: true, opacity: 0.4 });
+    var a = this._addMesh.bind(this, g);
 
     // Underframe
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.03, 0.26), mU), { position: new THREE.Vector3(0, 0.09, 0) }));
+    a(new THREE.BoxGeometry(0.58, 0.03, 0.26), mU, 0, 0.09, 0);
     // Body
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.18, 0.25), mB), { position: new THREE.Vector3(0, 0.20, 0), castShadow: true }));
+    a(new THREE.BoxGeometry(0.56, 0.18, 0.25), mB, 0, 0.20, 0).castShadow = true;
     // Roof
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.02, 0.26), mA), { position: new THREE.Vector3(0, 0.31, 0) }));
+    a(new THREE.BoxGeometry(0.54, 0.02, 0.26), mA, 0, 0.31, 0);
     // Stripes
-    g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.012, 0.26), mA), { position: new THREE.Vector3(0, 0.28, 0) }));
+    a(new THREE.BoxGeometry(0.52, 0.012, 0.26), mA, 0, 0.28, 0);
     // Side ribs
     for (var zz = 0; zz < 2; zz++) {
       var z = zz === 0 ? -0.126 : 0.126;
       for (var xi = -2; xi <= 2; xi++) {
-        g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.16, 0.003), mA), { position: new THREE.Vector3(xi * 0.10, 0.20, z) }));
+        a(new THREE.BoxGeometry(0.006, 0.16, 0.003), mA, xi * 0.10, 0.20, z);
       }
     }
     // Windows
     for (var zz = 0; zz < 2; zz++) {
       var z = zz === 0 ? -0.127 : 0.127;
       for (var wi = -2; wi <= 2; wi++) {
-        g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.003),
-          new THREE.MeshStandardMaterial({ color: 0x88ccff, metalness: 0.8, roughness: 0.1, transparent: true, opacity: 0.4 })),
-          { position: new THREE.Vector3(wi * 0.10, 0.24, z) }));
+        a(new THREE.BoxGeometry(0.04, 0.04, 0.003), mW, wi * 0.10, 0.24, z);
       }
     }
     // Wheels
@@ -1190,10 +1186,10 @@ class MaquetteScene {
       }
     }
     // Couplers
-    for (var cx of [0.30, -0.30]) {
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.02, 0.045), mK), { position: new THREE.Vector3(cx, 0.09, 0) }));
-      g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.03), mC), { position: new THREE.Vector3(cx + (cx > 0 ? 0.018 : -0.018), 0.09, 0) }));
-    }
+    a(new THREE.BoxGeometry(0.03, 0.02, 0.045), mK, 0.30, 0.09, 0);
+    a(new THREE.BoxGeometry(0.012, 0.012, 0.03), mC, 0.318, 0.09, 0);
+    a(new THREE.BoxGeometry(0.03, 0.02, 0.045), mK, -0.30, 0.09, 0);
+    a(new THREE.BoxGeometry(0.012, 0.012, 0.03), mC, -0.318, 0.09, 0);
     return g;
   }
 
