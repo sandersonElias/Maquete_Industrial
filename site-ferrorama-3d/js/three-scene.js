@@ -99,7 +99,7 @@ class MaquetteScene {
   }
 
   setupLights() {
-    // Ambient - warm industrial feel
+    // Ambient - warm industrial feel with pink tint
     this.scene.add(new THREE.AmbientLight(0x1a1410, 0.6));
 
     // Key light - main directional
@@ -126,6 +126,11 @@ class MaquetteScene {
     rim.position.set(0, 8, -10);
     this.scene.add(rim);
 
+    // Pink accent light (matching SVG #FFB7B7)
+    var pinkLight = new THREE.PointLight(0xFFB7B7, 0.3, 30);
+    pinkLight.position.set(0, 10, 0);
+    this.scene.add(pinkLight);
+
     // Bottom fill - subtle
     var bottom = new THREE.DirectionalLight(0x332211, 0.15);
     bottom.position.set(0, -5, 0);
@@ -137,6 +142,7 @@ class MaquetteScene {
     this.createGround();
     this.createTrackSystem();
     this.createViaduct();
+    this.createTurntables();
     this.createSwitches();
     this.createReversor();
     this.createElectronics();
@@ -145,73 +151,146 @@ class MaquetteScene {
   }
 
   // ==========================================
-  // BASE — MDF board like in the photos
+  // BASE — MDF board matching SVG proportions (2.33:1)
   // ==========================================
   createBase() {
+    // SVG proportions: 441x189 = 2.33:1 ratio
+    var baseWidth = 23.3;  // 23.3 units wide
+    var baseDepth = 10.0;  // 10 units deep
+    
     var mdfMat = new THREE.MeshStandardMaterial({ color: 0xc49464, roughness: 0.9, metalness: 0.02 });
-    var base = new THREE.Mesh(new THREE.BoxGeometry(20, 0.4, 10), mdfMat);
+    var base = new THREE.Mesh(new THREE.BoxGeometry(baseWidth, 0.4, baseDepth), mdfMat);
     base.position.y = -0.2;
     base.receiveShadow = true;
     base.castShadow = true;
     this.scene.add(base);
 
-    // Edge strips
+    // Edge strips (as shown in SVG with defined segments)
     var edgeMat = new THREE.MeshStandardMaterial({ color: 0xa07848, roughness: 0.85 });
+    
+    // Pink accent edge strips (matching SVG #FFB7B7 color)
+    var pinkEdgeMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.7, 
+      metalness: 0.1,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.1
+    });
+    
+    // Long sides with pink accent
     [[-5, 0.05, 0], [5, 0.05, 0]].forEach(function(p) {
-      var e = new THREE.Mesh(new THREE.BoxGeometry(20, 0.12, 0.15), edgeMat);
+      var e = new THREE.Mesh(new THREE.BoxGeometry(baseWidth, 0.1, 0.12), pinkEdgeMat);
       e.position.set(p[0], p[1], p[2]);
       this.scene.add(e);
     }.bind(this));
-    [[-10, 0.05, 0], [10, 0.05, 0]].forEach(function(p) {
-      var e = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.12, 10), edgeMat);
+    
+    // Short sides with pink accent
+    [[-11.65, 0.05, 0], [11.65, 0.05, 0]].forEach(function(p) {
+      var e = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, baseDepth), pinkEdgeMat);
       e.position.set(p[0], p[1], p[2]);
       this.scene.add(e);
     }.bind(this));
+    
+    // Add decorative pink dots along edges (matching SVG pattern)
+    var dotMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.5, 
+      metalness: 0.2,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.2
+    });
+    
+    for (var i = 0; i < 20; i++) {
+      var x = -11 + i * 1.165;
+      var dot = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 8), dotMat);
+      dot.position.set(x, 0.12, -5.06);
+      this.scene.add(dot);
+      
+      var dot2 = dot.clone();
+      dot2.position.z = 5.06;
+      this.scene.add(dot2);
+    }
   }
 
   // ==========================================
   // GROUND — Grass and terrain around the base
   // ==========================================
   createGround() {
-    // Grass ground plane
+    // Larger grass ground plane for rectangular layout
     var grassMat = new THREE.MeshStandardMaterial({
       color: 0x2d5a1e,
       roughness: 0.95,
       metalness: 0.0
     });
-    var ground = new THREE.Mesh(new THREE.PlaneGeometry(50, 30), grassMat);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 35), grassMat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.25;
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    // Dirt patches near the base
+    // Dirt patches near the base (as shown in SVG)
     var dirtMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.95 });
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 12; i++) {
       var patch = new THREE.Mesh(
-        new THREE.CircleGeometry(0.4 + Math.random() * 0.6, 16),
+        new THREE.CircleGeometry(0.3 + Math.random() * 0.5, 16),
         dirtMat
       );
       patch.rotation.x = -Math.PI / 2;
       patch.position.set(
-        (Math.random() - 0.5) * 15,
+        (Math.random() - 0.5) * 20,
         -0.24,
-        (Math.random() - 0.5) * 8
+        (Math.random() - 0.5) * 11
       );
       this.scene.add(patch);
+    }
+    
+    // Pink accent areas (matching SVG #FFB7B7)
+    var pinkMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.9, 
+      metalness: 0.0,
+      transparent: true,
+      opacity: 0.3
+    });
+    
+    // Add subtle pink ground patches
+    for (var i = 0; i < 6; i++) {
+      var pinkPatch = new THREE.Mesh(
+        new THREE.CircleGeometry(0.4 + Math.random() * 0.3, 16),
+        pinkMat
+      );
+      pinkPatch.rotation.x = -Math.PI / 2;
+      pinkPatch.position.set(
+        (Math.random() - 0.5) * 18,
+        -0.23,
+        (Math.random() - 0.5) * 9
+      );
+      this.scene.add(pinkPatch);
     }
   }
 
   // ==========================================
   // STRUCTURES — buildings and vegetation
+  // Positioned to match SVG rectangular layout
   // ==========================================
   createStructures() {
     var self = this;
 
-    // Buildings around the layout
+    // Buildings positioned according to rectangular layout
     var buildings = [
-      { x: -7, z: -3.5, w: 1.0, h: 0.7, d: 0.7, color: 0x4a4a4a },
-      { x: -7, z: 3.5, w: 0.8, h: 0.5, d: 0.6, color: 0x5a5a5a },
+      // Industrial buildings along the outer loop
+      { x: -9.0, z: -2.0, w: 1.2, h: 0.6, d: 0.7, color: 0x4a4a4a },  // Left industrial
+      { x: -9.0, z: 2.0, w: 0.9, h: 0.5, d: 0.6, color: 0x5a5a5a },   // Left warehouse
+      { x: 9.0, z: -2.0, w: 1.0, h: 0.55, d: 0.65, color: 0x4a4a4a }, // Right industrial
+      { x: 9.0, z: 2.0, w: 0.85, h: 0.45, d: 0.55, color: 0x5a5a5a }, // Right warehouse
+      // Control buildings near center
+      { x: -2.5, z: 0.0, w: 0.6, h: 0.4, d: 0.5, color: 0x3a3a3a },   // Control center
+      { x: 2.5, z: 0.0, w: 0.5, h: 0.35, d: 0.45, color: 0x4a4a4a },  // Signal box
+      // Additional buildings from SVG
+      { x: -6.0, z: -3.5, w: 0.8, h: 0.45, d: 0.5, color: 0x4a4a4a }, // Top-left building
+      { x: 6.0, z: -3.5, w: 0.7, h: 0.4, d: 0.45, color: 0x5a5a5a },  // Top-right building
+      { x: -6.0, z: 3.5, w: 0.75, h: 0.42, d: 0.48, color: 0x4a4a4a }, // Bottom-left building
+      { x: 6.0, z: 3.5, w: 0.8, h: 0.44, d: 0.5, color: 0x5a5a5a },   // Bottom-right building
     ];
 
     buildings.forEach(function(b) {
@@ -224,12 +303,12 @@ class MaquetteScene {
 
       // Roof
       var roofMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7 });
-      var roof = new THREE.Mesh(new THREE.BoxGeometry(b.w + 0.08, 0.06, b.d + 0.08), roofMat);
-      roof.position.set(b.x, 0.45 + b.h + 0.03, b.z);
+      var roof = new THREE.Mesh(new THREE.BoxGeometry(b.w + 0.06, 0.05, b.d + 0.06), roofMat);
+      roof.position.set(b.x, 0.45 + b.h + 0.025, b.z);
       roof.castShadow = true;
       self.scene.add(roof);
 
-      // Windows
+      // Windows (as shown in SVG with regular spacing)
       var windowMat = new THREE.MeshStandardMaterial({
         color: 0x88ccff,
         metalness: 0.8,
@@ -239,39 +318,98 @@ class MaquetteScene {
       });
       for (var zz = 0; zz < 2; zz++) {
         var z = zz === 0 ? -b.d / 2 - 0.01 : b.d / 2 + 0.01;
-        var win = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.1), windowMat);
+        var win = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.08), windowMat);
         win.position.set(b.x, 0.45 + b.h * 0.6, z);
         win.rotation.y = zz === 0 ? 0 : Math.PI;
         self.scene.add(win);
       }
+      
+      // Pink accent on buildings (matching SVG #FFB7B7)
+      var pinkMat = new THREE.MeshStandardMaterial({ 
+        color: 0xFFB7B7, 
+        roughness: 0.6, 
+        metalness: 0.1,
+        emissive: 0xFFB7B7,
+        emissiveIntensity: 0.1
+      });
+      var pinkStrip = new THREE.Mesh(new THREE.BoxGeometry(b.w + 0.02, 0.02, b.d + 0.02), pinkMat);
+      pinkStrip.position.set(b.x, 0.45 + b.h + 0.06, b.z);
+      self.scene.add(pinkStrip);
     });
 
-    // Trees around the layout
+    // Trees positioned around the rectangular layout
     var trunkMat = new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.9 });
     var leavesMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32, roughness: 0.85 });
     var leavesMat2 = new THREE.MeshStandardMaterial({ color: 0x1B5E20, roughness: 0.85 });
 
+    // Trees along the edges and corners
     var treePositions = [
-      { x: -8.5, z: -4.5 },
-      { x: -8.5, z: 4.5 },
-      { x: 8.5, z: -4.5 },
-      { x: -4, z: -4.0 },
-      { x: 4, z: 4.0 },
-      { x: 0, z: -4.5 },
-      { x: -6, z: 0 },
+      // Outer corners
+      { x: -9.5, z: -4.5 },
+      { x: 9.5, z: -4.5 },
+      { x: -9.5, z: 4.5 },
+      { x: 9.5, z: 4.5 },
+      // Along top edge
+      { x: -4.0, z: -4.7 },
+      { x: 0.0, z: -4.7 },
+      { x: 4.0, z: -4.7 },
+      // Along bottom edge
+      { x: -4.0, z: 4.7 },
+      { x: 0.0, z: 4.7 },
+      { x: 4.0, z: 4.7 },
+      // Inner area trees
+      { x: -1.5, z: -1.0 },
+      { x: 1.5, z: 1.0 },
+      // Additional trees from SVG
+      { x: -7.0, z: -3.0 },
+      { x: 7.0, z: -3.0 },
+      { x: -7.0, z: 3.0 },
+      { x: 7.0, z: 3.0 },
     ];
 
     treePositions.forEach(function(pos, idx) {
-      var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.4, 6), trunkMat);
+      var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 0.35, 6), trunkMat);
       trunk.position.set(pos.x, 0.45, pos.z);
       trunk.castShadow = true;
       self.scene.add(trunk);
 
       var leaves = new THREE.Mesh(
-        new THREE.SphereGeometry(0.2, 8, 6),
+        new THREE.SphereGeometry(0.18, 8, 6),
         idx % 2 === 0 ? leavesMat : leavesMat2
       );
-      leaves.position.set(pos.x, 0.75, pos.z);
+      leaves.position.set(pos.x, 0.7, pos.z);
+      leaves.scale.set(1, 0.8, 1);
+      leaves.castShadow = true;
+      self.scene.add(leaves);
+    });
+    
+    // Pink accent trees (matching SVG #FFB7B7)
+    var pinkTreeMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.7, 
+      metalness: 0.1,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.15
+    });
+    
+    var pinkTreePositions = [
+      { x: -5.0, z: -4.5 },
+      { x: 5.0, z: -4.5 },
+      { x: -5.0, z: 4.5 },
+      { x: 5.0, z: 4.5 },
+    ];
+    
+    pinkTreePositions.forEach(function(pos) {
+      var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.3, 6), trunkMat);
+      trunk.position.set(pos.x, 0.45, pos.z);
+      trunk.castShadow = true;
+      self.scene.add(trunk);
+      
+      var leaves = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 8, 6),
+        pinkTreeMat
+      );
+      leaves.position.set(pos.x, 0.65, pos.z);
       leaves.scale.set(1, 0.8, 1);
       leaves.castShadow = true;
       self.scene.add(leaves);
@@ -279,10 +417,10 @@ class MaquetteScene {
   }
 
   // ==========================================
-  // WATER — port area on the right side
+  // WATER — port area (as shown in SVG)
   // ==========================================
   createWater() {
-    // Water (blue area on right side)
+    // Water area positioned according to rectangular layout
     var waterMat = new THREE.MeshStandardMaterial({
       color: 0x1a5276,
       metalness: 0.3,
@@ -290,119 +428,485 @@ class MaquetteScene {
       transparent: true,
       opacity: 0.7
     });
-    var water = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 2.5), waterMat);
+    var water = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 2.5), waterMat);
     water.rotation.x = -Math.PI / 2;
-    water.position.set(8.5, -0.22, -2.5);
+    water.position.set(8.5, -0.22, -2.0);
     this.scene.add(water);
 
-    // Dock/pier
+    // Dock/pier (as shown in SVG with defined segments)
     var dockMat = new THREE.MeshStandardMaterial({ color: 0x6D4C41, roughness: 0.85 });
-    var dock = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 0.35), dockMat);
-    dock.position.set(8.5, 0.45, -1.2);
+    var dock = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.07, 0.3), dockMat);
+    dock.position.set(8.5, 0.45, -0.7);
     dock.castShadow = true;
     this.scene.add(dock);
+    
+    // Additional dock section
+    var dock2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.07, 0.25), dockMat);
+    dock2.position.set(8.5, 0.45, -2.8);
+    dock2.castShadow = true;
+    this.scene.add(dock2);
 
-    // Simple ship
+    // Simple ship (as shown in SVG)
     var shipMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.6, metalness: 0.3 });
     var shipBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.12, 0.4), shipMat);
-    shipBody.position.set(8.5, -0.12, -2.5);
+    shipBody.position.set(8.5, -0.12, -2.0);
     this.scene.add(shipBody);
 
     var cabinMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.7 });
     var cabin = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 0.35), cabinMat);
-    cabin.position.set(8.5, 0.02, -2.5);
+    cabin.position.set(8.5, 0.04, -2.0);
     this.scene.add(cabin);
+    
+    // Pink accent on ship (matching SVG #FFB7B7)
+    var pinkMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.5, 
+      metalness: 0.2,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.15
+    });
+    var pinkStrip = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.015, 0.42), pinkMat);
+    pinkStrip.position.set(8.5, -0.05, -2.0);
+    this.scene.add(pinkStrip);
+    
+    // Water pink accents
+    var waterPinkMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.3, 
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.2
+    });
+    
+    for (var i = 0; i < 5; i++) {
+      var wave = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.05), waterPinkMat);
+      wave.rotation.x = -Math.PI / 2;
+      wave.position.set(8.5 + (Math.random() - 0.5) * 3, -0.21, -2.0 + (Math.random() - 0.5) * 2);
+      this.scene.add(wave);
+    }
   }
 
   // ==========================================
-  // TRACK SYSTEM — faithful to photos
-  // Main oval + viaduct crossing RIGHT → LEFT
+  // TURNTABLES — circular platforms for turning locomotives
+  // Positioned to match SVG rectangular layout
+  // ==========================================
+  createTurntables() {
+    // Turntable positions based on rectangular SVG layout
+    // Positioned at key junction points
+    var turntablePositions = [
+      { x: -6.0, z: -3.5, radius: 0.5, label: 'TG1' },   // Top-left junction
+      { x: -2.0, z: 3.5, radius: 0.45, label: 'TG2' },   // Bottom-left junction
+      { x: 2.0, z: -3.5, radius: 0.45, label: 'TG3' },   // Top-right junction
+      { x: 6.0, z: 3.5, radius: 0.4, label: 'TG4' },     // Bottom-right junction
+      { x: 0.0, z: 0.0, radius: 0.6, label: 'TG5' },     // Center (main turntable)
+    ];
+
+    for (var i = 0; i < turntablePositions.length; i++) {
+      var pos = turntablePositions[i];
+      var g = new THREE.Group();
+
+      // Pit (sunken area)
+      var pitMat = new THREE.MeshStandardMaterial({
+        color: 0x3a3a3a,
+        roughness: 0.9,
+        metalness: 0.1
+      });
+      var pit = new THREE.Mesh(
+        new THREE.CylinderGeometry(pos.radius + 0.08, pos.radius + 0.08, 0.04, 32),
+        pitMat
+      );
+      pit.position.y = 0.43;
+      pit.receiveShadow = true;
+      g.add(pit);
+
+      // Platform (rotating disc)
+      var platformMat = new THREE.MeshStandardMaterial({
+        color: 0x8B7355,
+        roughness: 0.7,
+        metalness: 0.2
+      });
+      var platform = new THREE.Mesh(
+        new THREE.CylinderGeometry(pos.radius, pos.radius, 0.035, 32),
+        platformMat
+      );
+      platform.position.y = 0.47;
+      platform.castShadow = true;
+      platform.receiveShadow = true;
+      g.add(platform);
+
+      // Center pivot
+      var pivotMat = new THREE.MeshStandardMaterial({
+        color: 0x444444,
+        roughness: 0.5,
+        metalness: 0.6
+      });
+      var pivot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.035, 0.05, 12),
+        pivotMat
+      );
+      pivot.position.y = 0.5;
+      g.add(pivot);
+
+      // Track segment on platform
+      var trackMat = new THREE.MeshStandardMaterial({
+        color: 0x222222,
+        roughness: 0.4,
+        metalness: 0.7
+      });
+      var track = new THREE.Mesh(
+        new THREE.BoxGeometry(pos.radius * 2, 0.018, 0.07),
+        trackMat
+      );
+      track.position.y = 0.5;
+      g.add(track);
+
+      // Rails on track
+      var railMat = new THREE.MeshStandardMaterial({
+        color: 0x111111,
+        roughness: 0.3,
+        metalness: 0.8
+      });
+      for (var side = -1; side <= 1; side += 2) {
+        var rail = new THREE.Mesh(
+          new THREE.BoxGeometry(pos.radius * 2, 0.012, 0.012),
+          railMat
+        );
+        rail.position.set(0, 0.51, side * 0.025);
+        g.add(rail);
+      }
+
+      // Edge ring (as shown in SVG)
+      var edgeMat = new THREE.MeshStandardMaterial({
+        color: 0x555555,
+        roughness: 0.6,
+        metalness: 0.4
+      });
+      var edge = new THREE.Mesh(
+        new THREE.TorusGeometry(pos.radius + 0.04, 0.012, 8, 32),
+        edgeMat
+      );
+      edge.rotation.x = Math.PI / 2;
+      edge.position.y = 0.48;
+      g.add(edge);
+      
+      // Pink accent on turntable (matching SVG #FFB7B7)
+      var pinkMat = new THREE.MeshStandardMaterial({ 
+        color: 0xFFB7B7, 
+        roughness: 0.5, 
+        metalness: 0.2,
+        emissive: 0xFFB7B7,
+        emissiveIntensity: 0.15
+      });
+      var pinkRing = new THREE.Mesh(
+        new THREE.TorusGeometry(pos.radius + 0.06, 0.008, 8, 32),
+        pinkMat
+      );
+      pinkRing.rotation.x = Math.PI / 2;
+      pinkRing.position.y = 0.49;
+      g.add(pinkRing);
+
+      g.position.set(pos.x, 0, pos.z);
+      g.userData = { type: 'turntable', label: pos.label };
+      this.scene.add(g);
+    }
+  }
+
+  // ==========================================
+  // TRACK SYSTEM — faithful to SVG reference
+  // Rectangular layout with defined segments
   // ==========================================
   createTrackSystem() {
     this.trackCurves = [];
     var railMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.35 });
     var sleeperMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85 });
 
-    // === MAIN OVAL (ground level) ===
-    var ow = 7.5, oh = 3.2, cr = 1.8;
+    // === MAIN RECTANGULAR CIRCUIT (faithful to SVG) ===
+    // SVG shows rectangular segments with regular spacing
+    // Layout: rectangle with rounded corners, matching SVG proportions
+    var trackWidth = 10.0;   // Half-width of rectangle (increased for 2.33:1 ratio)
+    var trackHeight = 4.3;   // Half-height of rectangle
+    var cornerRadius = 2.0;  // Rounded corners
+    
     var pts = [];
-    var cSegs = 20, sSegs = 28;
+    var segsPerSide = 30;
+    var cornerSegs = 20;
 
-    // Top straight
-    for (var i = 0; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(-ow + cr + t * (2 * ow - 2 * cr), 0.45, -oh));
+    // Top side (left to right)
+    for (var i = 0; i <= segsPerSide; i++) {
+      var t = i / segsPerSide;
+      pts.push(new THREE.Vector3(
+        -trackWidth + cornerRadius + t * (2 * trackWidth - 2 * cornerRadius),
+        0.45,
+        -trackHeight
+      ));
     }
+
     // Top-right corner
-    for (var i = 1; i <= cSegs; i++) {
-      var a = -Math.PI / 2 + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(ow - cr + Math.cos(a) * cr, 0.45, -oh + cr + Math.sin(a) * cr));
+    for (var i = 1; i <= cornerSegs; i++) {
+      var angle = -Math.PI / 2 + (i / cornerSegs) * (Math.PI / 2);
+      pts.push(new THREE.Vector3(
+        trackWidth - cornerRadius + Math.cos(angle) * cornerRadius,
+        0.45,
+        -trackHeight + cornerRadius + Math.sin(angle) * cornerRadius
+      ));
     }
-    // Right straight
-    for (var i = 1; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(ow, 0.45, -oh + cr + t * (2 * oh - 2 * cr)));
+
+    // Right side (top to bottom)
+    for (var i = 1; i <= segsPerSide; i++) {
+      var t = i / segsPerSide;
+      pts.push(new THREE.Vector3(
+        trackWidth,
+        0.45,
+        -trackHeight + cornerRadius + t * (2 * trackHeight - 2 * cornerRadius)
+      ));
     }
+
     // Bottom-right corner
-    for (var i = 1; i <= cSegs; i++) {
-      var a = 0 + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(ow - cr + Math.cos(a) * cr, 0.45, oh - cr + Math.sin(a) * cr));
+    for (var i = 1; i <= cornerSegs; i++) {
+      var angle = 0 + (i / cornerSegs) * (Math.PI / 2);
+      pts.push(new THREE.Vector3(
+        trackWidth - cornerRadius + Math.cos(angle) * cornerRadius,
+        0.45,
+        trackHeight - cornerRadius + Math.sin(angle) * cornerRadius
+      ));
     }
-    // Bottom straight
-    for (var i = 1; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(ow - cr - t * (2 * ow - 2 * cr), 0.45, oh));
+
+    // Bottom side (right to left)
+    for (var i = 1; i <= segsPerSide; i++) {
+      var t = i / segsPerSide;
+      pts.push(new THREE.Vector3(
+        trackWidth - cornerRadius - t * (2 * trackWidth - 2 * cornerRadius),
+        0.45,
+        trackHeight
+      ));
     }
+
     // Bottom-left corner
-    for (var i = 1; i <= cSegs; i++) {
-      var a = Math.PI / 2 + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(-ow + cr + Math.cos(a) * cr, 0.45, oh - cr + Math.sin(a) * cr));
+    for (var i = 1; i <= cornerSegs; i++) {
+      var angle = Math.PI / 2 + (i / cornerSegs) * (Math.PI / 2);
+      pts.push(new THREE.Vector3(
+        -trackWidth + cornerRadius + Math.cos(angle) * cornerRadius,
+        0.45,
+        trackHeight - cornerRadius + Math.sin(angle) * cornerRadius
+      ));
     }
-    // Left straight
-    for (var i = 1; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(-ow, 0.45, oh - cr - t * (2 * oh - 2 * cr)));
+
+    // Left side (bottom to top)
+    for (var i = 1; i <= segsPerSide; i++) {
+      var t = i / segsPerSide;
+      pts.push(new THREE.Vector3(
+        -trackWidth,
+        0.45,
+        trackHeight - cornerRadius - t * (2 * trackHeight - 2 * cornerRadius)
+      ));
     }
+
     // Top-left corner
-    for (var i = 1; i <= cSegs; i++) {
-      var a = Math.PI + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(-ow + cr + Math.cos(a) * cr, 0.45, -oh + cr + Math.sin(a) * cr));
+    for (var i = 1; i <= cornerSegs; i++) {
+      var angle = Math.PI + (i / cornerSegs) * (Math.PI / 2);
+      pts.push(new THREE.Vector3(
+        -trackWidth + cornerRadius + Math.cos(angle) * cornerRadius,
+        0.45,
+        -trackHeight + cornerRadius + Math.sin(angle) * cornerRadius
+      ));
     }
 
-    var ovalCurve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.0);
-    this.trackCurves.push({ curve: ovalCurve, name: 'circuito principal', elevation: 0 });
-    this._renderRail(ovalCurve, railMat, sleeperMat, pts.length * 2, 0.45);
+    var mainCurve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.0);
+    this.trackCurves.push({ curve: mainCurve, name: 'circuito principal', elevation: 0 });
+    this._renderRail(mainCurve, railMat, sleeperMat, pts.length * 2, 0.45);
 
-    // === VIADUCT — smooth curve from RIGHT to LEFT ===
+    // === INNER LOOP (as shown in SVG) ===
+    var innerWidth = 4.5;
+    var innerHeight = 2.0;
+    var innerRadius = 1.0;
+    var innerPts = [];
+
+    // Inner top side
+    for (var i = 0; i <= 15; i++) {
+      var t = i / 15;
+      innerPts.push(new THREE.Vector3(
+        -innerWidth + innerRadius + t * (2 * innerWidth - 2 * innerRadius),
+        0.45,
+        -innerHeight
+      ));
+    }
+
+    // Inner top-right corner
+    for (var i = 1; i <= 10; i++) {
+      var angle = -Math.PI / 2 + (i / 10) * (Math.PI / 2);
+      innerPts.push(new THREE.Vector3(
+        innerWidth - innerRadius + Math.cos(angle) * innerRadius,
+        0.45,
+        -innerHeight + innerRadius + Math.sin(angle) * innerRadius
+      ));
+    }
+
+    // Inner right side
+    for (var i = 1; i <= 15; i++) {
+      var t = i / 15;
+      innerPts.push(new THREE.Vector3(
+        innerWidth,
+        0.45,
+        -innerHeight + innerRadius + t * (2 * innerHeight - 2 * innerRadius)
+      ));
+    }
+
+    // Inner bottom-right corner
+    for (var i = 1; i <= 10; i++) {
+      var angle = 0 + (i / 10) * (Math.PI / 2);
+      innerPts.push(new THREE.Vector3(
+        innerWidth - innerRadius + Math.cos(angle) * innerRadius,
+        0.45,
+        innerHeight - innerRadius + Math.sin(angle) * innerRadius
+      ));
+    }
+
+    // Inner bottom side
+    for (var i = 1; i <= 15; i++) {
+      var t = i / 15;
+      innerPts.push(new THREE.Vector3(
+        innerWidth - innerRadius - t * (2 * innerWidth - 2 * innerRadius),
+        0.45,
+        innerHeight
+      ));
+    }
+
+    // Inner bottom-left corner
+    for (var i = 1; i <= 10; i++) {
+      var angle = Math.PI / 2 + (i / 10) * (Math.PI / 2);
+      innerPts.push(new THREE.Vector3(
+        -innerWidth + innerRadius + Math.cos(angle) * innerRadius,
+        0.45,
+        innerHeight - innerRadius + Math.sin(angle) * innerRadius
+      ));
+    }
+
+    // Inner left side
+    for (var i = 1; i <= 15; i++) {
+      var t = i / 15;
+      innerPts.push(new THREE.Vector3(
+        -innerWidth,
+        0.45,
+        innerHeight - innerRadius - t * (2 * innerHeight - 2 * innerRadius)
+      ));
+    }
+
+    // Inner top-left corner
+    for (var i = 1; i <= 10; i++) {
+      var angle = Math.PI + (i / 10) * (Math.PI / 2);
+      innerPts.push(new THREE.Vector3(
+        -innerWidth + innerRadius + Math.cos(angle) * innerRadius,
+        0.45,
+        -innerHeight + innerRadius + Math.sin(angle) * innerRadius
+      ));
+    }
+
+    var innerCurve = new THREE.CatmullRomCurve3(innerPts, true, 'catmullrom', 0.0);
+    this.trackCurves.push({ curve: innerCurve, name: 'circuito interno', elevation: 0 });
+    this._renderRail(innerCurve, railMat, sleeperMat, innerPts.length * 2, 0.45);
+
+    // === VIADUCT — elevated crossover (as shown in SVG) ===
     var vElev = 1.2;
+
+    // Junction points connecting outer and inner loops
+    var jRightOuter = mainCurve.getPointAt(0.25);
+    var jRightInner = innerCurve.getPointAt(0.25);
+    var jLeftOuter = mainCurve.getPointAt(0.75);
+    var jLeftInner = innerCurve.getPointAt(0.75);
+
     var viaductPts = [
-      // Start at bottom-right of oval (ground level)
-      new THREE.Vector3(ow - 1.5, 0.45, oh - 0.5),
-      // Begin rising
-      new THREE.Vector3(ow - 0.8, 0.45 + vElev * 0.1, oh - 1.2),
-      new THREE.Vector3(ow, 0.45 + vElev * 0.25, oh - 2.0),
-      new THREE.Vector3(ow + 0.3, 0.45 + vElev * 0.4, oh - 2.8),
-      // Climbing toward center
-      new THREE.Vector3(ow - 0.2, 0.45 + vElev * 0.55, -oh + 2.5),
-      new THREE.Vector3(ow - 1.0, 0.45 + vElev * 0.7, -oh + 1.8),
-      // Crossing over main track
-      new THREE.Vector3(ow - 2.5, 0.45 + vElev * 0.85, -oh + 1.0),
-      new THREE.Vector3(ow - 4.0, 0.45 + vElev, -oh + 0.5),
-      // Full height, curving left
-      new THREE.Vector3(ow - 5.5, 0.45 + vElev, -oh + 0.8),
-      new THREE.Vector3(ow - 7.0, 0.45 + vElev * 0.95, -oh + 1.2),
-      // Descending on left side
-      new THREE.Vector3(ow - 8.5, 0.45 + vElev * 0.8, -oh + 1.8),
-      new THREE.Vector3(ow - 10.0, 0.45 + vElev * 0.6, -oh + 2.5),
-      new THREE.Vector3(ow - 11.5, 0.45 + vElev * 0.35, -oh + 3.0),
-      new THREE.Vector3(ow - 13.0, 0.45 + vElev * 0.15, -oh + 2.8),
-      // Back to ground level on left side
-      new THREE.Vector3(-ow + 2.0, 0.45, -oh + 2.0),
+      // Start at outer loop (right side)
+      new THREE.Vector3(jRightOuter.x, jRightOuter.y, jRightOuter.z),
+      // Ramp up
+      new THREE.Vector3(jRightOuter.x - 0.5, 0.45 + vElev * 0.2, jRightOuter.z - 0.5),
+      new THREE.Vector3(jRightOuter.x - 1.2, 0.45 + vElev * 0.4, jRightOuter.z - 1.0),
+      new THREE.Vector3(jRightOuter.x - 2.0, 0.45 + vElev * 0.6, jRightOuter.z - 1.5),
+      // Cross over center
+      new THREE.Vector3(0, 0.45 + vElev, 0),
+      // Descend to inner loop
+      new THREE.Vector3(jLeftInner.x + 2.0, 0.45 + vElev * 0.6, jLeftInner.z + 1.5),
+      new THREE.Vector3(jLeftInner.x + 1.2, 0.45 + vElev * 0.4, jLeftInner.z + 1.0),
+      new THREE.Vector3(jLeftInner.x + 0.5, 0.45 + vElev * 0.2, jLeftInner.z + 0.5),
+      // End at inner loop
+      new THREE.Vector3(jLeftInner.x, jLeftInner.y, jLeftInner.z),
     ];
 
     var viaductCurve = new THREE.CatmullRomCurve3(viaductPts, false, 'catmullrom', 0.0);
     this.trackCurves.push({ curve: viaductCurve, name: 'viaduto', elevation: vElev });
-    this._renderRail(viaductCurve, railMat, sleeperMat, 250, 0.45);
+    this._renderRail(viaductCurve, railMat, sleeperMat, 150, 0.45);
+
+    // === CONNECTING RAILS between loops ===
+    // As shown in SVG, add connecting segments
+    this._createConnectingRail(
+      new THREE.Vector3(trackWidth, 0.45, 0),
+      new THREE.Vector3(innerWidth, 0.45, 0),
+      railMat, sleeperMat
+    );
+    this._createConnectingRail(
+      new THREE.Vector3(-trackWidth, 0.45, 0),
+      new THREE.Vector3(-innerWidth, 0.45, 0),
+      railMat, sleeperMat
+    );
+
+    // === JUNCTION MARKERS ===
+    this._createJunctionMarker(jRightOuter.x, jRightOuter.y, jRightOuter.z);
+    this._createJunctionMarker(jLeftInner.x, jLeftInner.y, jLeftInner.z);
+    this._createJunctionMarker(trackWidth, 0.45, 0);
+    this._createJunctionMarker(-trackWidth, 0.45, 0);
+    
+    // === PINK ACCENT TRACKS (matching SVG #FFB7B7) ===
+    this._createPinkAccentTracks(trackWidth, trackHeight);
+  }
+  
+  // Create pink accent tracks matching SVG color scheme
+  _createPinkAccentTracks(trackWidth, trackHeight) {
+    var pinkMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.5, 
+      metalness: 0.2,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.15
+    });
+    
+    // Add pink accent lines along the outer edges
+    for (var side = -1; side <= 1; side += 2) {
+      var line = new THREE.Mesh(
+        new THREE.BoxGeometry(trackWidth * 2 - 4, 0.008, 0.04),
+        pinkMat
+      );
+      line.position.set(0, 0.46, side * (trackHeight - 0.2));
+      this.scene.add(line);
+    }
+    
+    // Add pink accent lines on sides
+    for (var side = -1; side <= 1; side += 2) {
+      var line = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.008, trackHeight * 2 - 4),
+        pinkMat
+      );
+      line.position.set(side * (trackWidth - 0.2), 0.46, 0);
+      this.scene.add(line);
+    }
+  }
+
+  // Create a short connecting rail between two points
+  _createConnectingRail(start, end, railMat, sleeperMat) {
+    var pts = [start, end];
+    var curve = new THREE.LineCurve3(start, end);
+    this._renderRail(curve, railMat, sleeperMat, 10, 0.45);
+  }
+
+  // Visual marker at track junction (where viaduct meets oval)
+  _createJunctionMarker(x, y, z) {
+    var markerMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700, roughness: 0.4, metalness: 0.3,
+      emissive: 0x664400, emissiveIntensity: 0.3
+    });
+    // Small yellow disc at the junction point
+    var marker = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.02, 16), markerMat);
+    marker.position.set(x, y + 0.01, z);
+    marker.castShadow = true;
+    this.scene.add(marker);
   }
 
   _renderRail(curve, railMat, sleeperMat, seg, baseY) {
@@ -502,11 +1006,11 @@ class MaquetteScene {
 
   // ==========================================
   // VIADUCT — concrete structure with pillars
-  // Faithful to Figma: white pillars, crossbeams, elevated bed
+  // Faithful to SVG: elevated section crossing over
   // ==========================================
   createViaduct() {
-    var viaductCurve = this.trackCurves[1].curve;
-    var vPts = viaductCurve.getPoints(80);
+    var viaductCurve = this.trackCurves[2].curve; // Viaduct is now index 2
+    var vPts = viaductCurve.getPoints(60);
 
     // Materials
     var concreteMat = new THREE.MeshStandardMaterial({
@@ -530,16 +1034,16 @@ class MaquetteScene {
       metalness: 0.02
     });
 
-    // Place pillars along elevated portion
-    var pillarSpacing = 5;
-    for (var i = 4; i < vPts.length - 4; i += pillarSpacing) {
+    // Place pillars along elevated portion (as shown in SVG with regular spacing)
+    var pillarSpacing = 6;
+    for (var i = 3; i < vPts.length - 3; i += pillarSpacing) {
       var p = vPts[i];
       var h = p.y - 0.45;
-      if (h < 0.2) continue;
+      if (h < 0.15) continue;
 
-      // Main vertical pillar (white, like PVC pipe)
+      // Main vertical pillar (white, matching SVG pillars)
       var pillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.05, h, 8),
+        new THREE.CylinderGeometry(0.035, 0.045, h, 8),
         pillarMat
       );
       pillar.position.set(p.x, 0.45 + h / 2, p.z);
@@ -547,76 +1051,56 @@ class MaquetteScene {
       pillar.receiveShadow = true;
       this.scene.add(pillar);
 
-      // Second pillar on other side of track
-      var pillar2 = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.05, h, 8),
-        pillarMat
-      );
-      pillar2.position.set(p.x, 0.45 + h / 2, p.z);
-      pillar2.castShadow = true;
-      this.scene.add(pillar2);
-
-      // Crossbeam at top (horizontal beam connecting pillars)
+      // Crossbeam at top
       var crossbeam = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 0.04, 0.35),
+        new THREE.BoxGeometry(0.035, 0.035, 0.3),
         beamMat
       );
       crossbeam.position.set(p.x, 0.45 + h - 0.02, p.z);
       crossbeam.castShadow = true;
       this.scene.add(crossbeam);
 
-      // Crossbeam at middle
-      if (h > 0.5) {
-        var midBeam = new THREE.Mesh(
-          new THREE.BoxGeometry(0.03, 0.03, 0.3),
-          beamMat
-        );
-        midBeam.position.set(p.x, 0.45 + h * 0.5, p.z);
-        this.scene.add(midBeam);
-      }
-
-      // Base plate (concrete footing)
+      // Base plate
       var basePlate = new THREE.Mesh(
-        new THREE.BoxGeometry(0.2, 0.03, 0.2),
+        new THREE.BoxGeometry(0.18, 0.025, 0.18),
         concreteMat
       );
       basePlate.position.set(p.x, 0.46, p.z);
       basePlate.castShadow = true;
       this.scene.add(basePlate);
 
-      // Triangular support bracket (cardboard)
-      if (h > 0.3) {
+      // Triangular support bracket (as shown in SVG)
+      if (h > 0.25) {
         var bracketShape = new THREE.Shape();
-        bracketShape.moveTo(-0.15, 0);
-        bracketShape.lineTo(0.15, 0);
+        bracketShape.moveTo(-0.12, 0);
+        bracketShape.lineTo(0.12, 0);
         bracketShape.lineTo(0, h * 0.6);
-        bracketShape.lineTo(-0.15, 0);
+        bracketShape.lineTo(-0.12, 0);
 
         var bracketGeo = new THREE.ExtrudeGeometry(bracketShape, {
-          depth: 0.02,
+          depth: 0.015,
           bevelEnabled: false
         });
         var bracket = new THREE.Mesh(bracketGeo, new THREE.MeshStandardMaterial({
           color: 0x8B6914,
           roughness: 0.9
         }));
-        bracket.position.set(p.x, 0.45, p.z - 0.12);
+        bracket.position.set(p.x, 0.45, p.z - 0.1);
         bracket.castShadow = true;
         this.scene.add(bracket);
 
-        // Second bracket on other side
         var bracket2 = bracket.clone();
-        bracket2.position.z = p.z + 0.12;
+        bracket2.position.z = p.z + 0.1;
         bracket2.rotation.y = Math.PI;
         this.scene.add(bracket2);
       }
     }
 
-    // Elevated track bed (flat platform)
+    // Elevated track bed
     var bedPts = [];
     for (var i = 2; i < vPts.length - 2; i++) {
       var p = vPts[i];
-      if (p.y > 0.6) {
+      if (p.y > 0.55) {
         bedPts.push(new THREE.Vector3(p.x, p.y - 0.03, p.z));
       }
     }
@@ -624,8 +1108,8 @@ class MaquetteScene {
     if (bedPts.length > 2) {
       var bedCurve = new THREE.CatmullRomCurve3(bedPts, false, 'catmullrom', 0.0);
 
-      // Main bed (flat platform)
-      var bedTube = new THREE.TubeGeometry(bedCurve, bedPts.length * 3, 0.22, 8, false);
+      // Main bed
+      var bedTube = new THREE.TubeGeometry(bedCurve, bedPts.length * 3, 0.2, 8, false);
       var bed = new THREE.Mesh(bedTube, bedMat);
       bed.castShadow = true;
       bed.receiveShadow = true;
@@ -634,10 +1118,10 @@ class MaquetteScene {
       // Side rails on elevated section
       for (var side = -1; side <= 1; side += 2) {
         var sidePts = bedPts.map(function(p) {
-          return new THREE.Vector3(p.x, p.y + 0.02, p.z + side * 0.18);
+          return new THREE.Vector3(p.x, p.y + 0.02, p.z + side * 0.16);
         });
         var sideCurve = new THREE.CatmullRomCurve3(sidePts, false, 'catmullrom', 0.0);
-        var sideRail = new THREE.TubeGeometry(sideCurve, sidePts.length * 2, 0.015, 6, false);
+        var sideRail = new THREE.TubeGeometry(sideCurve, sidePts.length * 2, 0.012, 6, false);
         var sideMesh = new THREE.Mesh(sideRail, new THREE.MeshStandardMaterial({
           color: 0xaaaaaa,
           metalness: 0.7,
@@ -650,15 +1134,21 @@ class MaquetteScene {
   }
 
   // ==========================================
-  // SWITCHES — yellow mechanisms at track junctions
+  // SWITCHES — mechanisms at track junctions
+  // Positioned to match SVG rectangular layout
   // ==========================================
   createSwitches() {
-    // From photo 3: switches at key junction points
+    // Switch positions at key junction points in rectangular layout
     var positions = [
-      { x: 5.5, z: 2.8, r: 0.3, label: 'SW1' },
-      { x: 2.0, z: -2.8, r: -0.2, label: 'SW2' },
-      { x: -3.5, z: 2.5, r: 0.4, label: 'SW3' },
-      { x: -5.5, z: -1.5, r: 0.1, label: 'SW4' },
+      { x: 8.0, z: 0.0, r: Math.PI / 2, label: 'SW1' },      // Right side junction
+      { x: -8.0, z: 0.0, r: -Math.PI / 2, label: 'SW2' },    // Left side junction
+      { x: 0.0, z: -3.5, r: 0, label: 'SW3' },               // Top center junction
+      { x: 0.0, z: 3.5, r: Math.PI, label: 'SW4' },          // Bottom center junction
+      { x: 3.0, z: -2.0, r: Math.PI / 4, label: 'SW5' },     // Top-right approach
+      { x: -3.0, z: 2.0, r: -Math.PI / 4, label: 'SW6' },    // Bottom-left approach
+      // Additional switches from SVG
+      { x: 5.0, z: -3.0, r: Math.PI / 3, label: 'SW7' },     // Top-right corner
+      { x: -5.0, z: 3.0, r: -Math.PI / 3, label: 'SW8' },    // Bottom-left corner
     ];
 
     for (var i = 0; i < positions.length; i++) {
@@ -667,12 +1157,12 @@ class MaquetteScene {
 
       // Black base
       var baseMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
-      var base = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.35), baseMat);
+      var base = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.07, 0.3), baseMat);
       base.position.y = 0.04;
       base.castShadow = true;
       g.add(base);
 
-      // Yellow mechanism
+      // Yellow mechanism (as shown in SVG)
       var mechMat = new THREE.MeshStandardMaterial({
         color: 0xffd700,
         roughness: 0.4,
@@ -680,15 +1170,27 @@ class MaquetteScene {
         emissive: 0x664400,
         emissiveIntensity: 0.2
       });
-      var mech = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.14, 0.2), mechMat);
-      mech.position.y = 0.15;
+      var mech = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.18), mechMat);
+      mech.position.y = 0.14;
       g.add(mech);
 
       // Lever arm
-      var lever = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.22, 6), mechMat);
-      lever.position.set(0.15, 0.26, 0);
+      var lever = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.2, 6), mechMat);
+      lever.position.set(0.13, 0.24, 0);
       lever.rotation.z = Math.PI / 4;
       g.add(lever);
+      
+      // Pink accent on switch (matching SVG #FFB7B7)
+      var pinkMat = new THREE.MeshStandardMaterial({ 
+        color: 0xFFB7B7, 
+        roughness: 0.5, 
+        metalness: 0.2,
+        emissive: 0xFFB7B7,
+        emissiveIntensity: 0.15
+      });
+      var pinkStrip = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.01, 0.31), pinkMat);
+      pinkStrip.position.y = 0.08;
+      g.add(pinkStrip);
 
       g.position.set(pos.x, 0.45, pos.z);
       g.rotation.y = pos.r;
@@ -696,81 +1198,125 @@ class MaquetteScene {
       this.scene.add(g);
     }
 
-    // White towers/pillars (seen in photos)
+    // White towers/pillars (as shown in SVG with regular spacing)
     var towerMat = new THREE.MeshStandardMaterial({ color: 0xf0f0e8, roughness: 0.7 });
     var towerPositions = [
-      { x: -4.5, z: -3.5 },
-      { x: 4.5, z: -3.5 },
-      { x: -4.5, z: 3.5 },
-      { x: 4.5, z: 3.5 },
-      { x: 0.0, z: -4.0 },
-      { x: 0.0, z: 4.0 },
+      { x: -7.0, z: -4.0 },
+      { x: 7.0, z: -4.0 },
+      { x: -7.0, z: 4.0 },
+      { x: 7.0, z: 4.0 },
+      { x: 0.0, z: -4.5 },
+      { x: 0.0, z: 4.5 },
+      { x: -3.5, z: 0.0 },
+      { x: 3.5, z: 0.0 },
+      // Additional towers from SVG
+      { x: -5.0, z: -4.0 },
+      { x: 5.0, z: -4.0 },
+      { x: -5.0, z: 4.0 },
+      { x: 5.0, z: 4.0 },
     ];
 
     for (var i = 0; i < towerPositions.length; i++) {
       var tp = towerPositions[i];
       var pillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.025, 0.03, 0.8, 6),
+        new THREE.CylinderGeometry(0.02, 0.025, 0.7, 6),
         towerMat
       );
-      pillar.position.set(tp.x, 0.85, tp.z);
+      pillar.position.set(tp.x, 0.8, tp.z);
       pillar.castShadow = true;
       this.scene.add(pillar);
 
       var crossbar = new THREE.Mesh(
-        new THREE.BoxGeometry(0.3, 0.02, 0.02),
+        new THREE.BoxGeometry(0.25, 0.018, 0.018),
         towerMat
       );
-      crossbar.position.set(tp.x, 1.25, tp.z);
+      crossbar.position.set(tp.x, 1.15, tp.z);
       this.scene.add(crossbar);
+      
+      // Pink accent on tower top (matching SVG #FFB7B7)
+      var pinkMat = new THREE.MeshStandardMaterial({ 
+        color: 0xFFB7B7, 
+        roughness: 0.5, 
+        metalness: 0.2,
+        emissive: 0xFFB7B7,
+        emissiveIntensity: 0.15
+      });
+      var pinkTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.02, 0.05, 8), pinkMat);
+      pinkTop.position.set(tp.x, 1.18, tp.z);
+      this.scene.add(pinkTop);
     }
 
-    // Orange crane/tower (seen in photo 1, left side)
+    // Orange crane/tower (as shown in SVG)
     var orangeMat = new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.6, metalness: 0.2 });
-    var craneBase = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.3, 0.15), orangeMat);
-    craneBase.position.set(-8.5, 0.6, -1.5);
+    var craneBase = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.25, 0.12), orangeMat);
+    craneBase.position.set(-9.0, 0.55, -1.5);
     craneBase.castShadow = true;
     this.scene.add(craneBase);
 
-    var craneArm = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.04), orangeMat);
-    craneArm.position.set(-8.5, 0.9, -1.5);
+    var craneArm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.035, 0.035), orangeMat);
+    craneArm.position.set(-9.0, 0.82, -1.5);
     this.scene.add(craneArm);
+    
+    // Pink accent on crane
+    var pinkMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.5, 
+      metalness: 0.2,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.15
+    });
+    var pinkCraneStrip = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.01, 0.04), pinkMat);
+    pinkCraneStrip.position.set(-9.0, 0.84, -1.5);
+    this.scene.add(pinkCraneStrip);
   }
 
   // ==========================================
-  // REVERSOR
+  // REVERSOR — positioned at control point
   // ==========================================
   createReversor() {
     var g = new THREE.Group();
 
     // Black box
     var boxMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
-    var box = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.35), boxMat);
-    box.position.y = 0.06;
+    var box = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.3), boxMat);
+    box.position.y = 0.05;
     box.castShadow = true;
     g.add(box);
 
-    // Yellow top strip
+    // Yellow top strip (as shown in SVG)
     var stripMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.4, metalness: 0.3 });
-    var strip = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.025, 0.3), stripMat);
-    strip.position.y = 0.13;
+    var strip = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.25), stripMat);
+    strip.position.y = 0.11;
     g.add(strip);
 
     // Red indicator (reverse)
     var redMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.15 });
-    var red = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), redMat);
-    red.position.set(-0.2, 0.19, 0);
+    var red = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), redMat);
+    red.position.set(-0.18, 0.17, 0);
     g.add(red);
     this.reversorRed = red;
 
     // Green indicator (forward)
     var greenMat = new THREE.MeshStandardMaterial({ color: 0x00cc00, emissive: 0x00ff00, emissiveIntensity: 0.8 });
-    var green = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), greenMat);
-    green.position.set(0.2, 0.19, 0);
+    var green = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), greenMat);
+    green.position.set(0.18, 0.17, 0);
     g.add(green);
     this.reversorGreen = green;
+    
+    // Pink accent on reversor (matching SVG #FFB7B7)
+    var pinkMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.5, 
+      metalness: 0.2,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.15
+    });
+    var pinkStrip = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.01, 0.32), pinkMat);
+    pinkStrip.position.y = 0.12;
+    g.add(pinkStrip);
 
-    g.position.set(3.5, 0.45, -2.8);
+    // Position at control point (as shown in SVG)
+    g.position.set(4.0, 0.45, -2.5);
     g.userData = { type: 'reversor' };
     this.reversor = g;
     this.scene.add(g);
@@ -778,39 +1324,78 @@ class MaquetteScene {
 
   // ==========================================
   // ELECTRONICS (Arduino, breadboard, wires)
+  // Positioned according to rectangular layout
   // ==========================================
   createElectronics() {
     var eg = new THREE.Group();
 
-    // Breadboard
+    // Breadboard (positioned near control center)
     var bb = new THREE.Mesh(
-      new THREE.BoxGeometry(1.0, 0.05, 0.5),
+      new THREE.BoxGeometry(0.8, 0.04, 0.4),
       new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.8 })
     );
-    bb.position.set(-6, 0.52, 1.5);
+    bb.position.set(-6.5, 0.52, 1.0);
     bb.castShadow = true;
     eg.add(bb);
 
-    // Arduino
+    // Arduino (next to breadboard)
     var ar = new THREE.Mesh(
-      new THREE.BoxGeometry(0.7, 0.04, 0.4),
+      new THREE.BoxGeometry(0.6, 0.035, 0.35),
       new THREE.MeshStandardMaterial({ color: 0x0066cc, roughness: 0.6 })
     );
-    ar.position.set(-6, 0.52, 2.5);
+    ar.position.set(-6.5, 0.52, 1.8);
     ar.castShadow = true;
     eg.add(ar);
+    
+    // Arduino USB port
+    var usb = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.03, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 })
+    );
+    usb.position.set(-6.82, 0.52, 1.8);
+    eg.add(usb);
+    
+    // Arduino pins
+    for (var i = 0; i < 8; i++) {
+      var pin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.003, 0.003, 0.02, 4),
+        new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.1 })
+      );
+      pin.position.set(-6.5 + i * 0.06, 0.54, 1.65);
+      eg.add(pin);
+    }
 
-    // Wires
+    // Wires (as shown in SVG with defined routing)
     var wireColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff6600];
     for (var i = 0; i < 5; i++) {
       var w = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.012, 0.012, 1.2, 4),
+        new THREE.CylinderGeometry(0.01, 0.01, 1.0, 4),
         new THREE.MeshStandardMaterial({ color: wireColors[i] })
       );
-      w.position.set(-6 + i * 0.12, 0.55, 2.0);
+      w.position.set(-6.5 + i * 0.1, 0.55, 1.4);
       w.rotation.x = Math.PI / 2;
-      w.rotation.z = (Math.random() - 0.5) * 0.3;
+      w.rotation.z = (Math.random() - 0.5) * 0.25;
       eg.add(w);
+    }
+    
+    // Pink accent wires (matching SVG #FFB7B7)
+    var pinkWireMat = new THREE.MeshStandardMaterial({ 
+      color: 0xFFB7B7, 
+      roughness: 0.5, 
+      metalness: 0.2,
+      emissive: 0xFFB7B7,
+      emissiveIntensity: 0.1
+    });
+    
+    for (var i = 0; i < 3; i++) {
+      var pw = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.008, 0.008, 0.8, 4),
+        pinkWireMat
+      );
+      pw.position.set(-6.5 + i * 0.08, 0.56, 1.2);
+      pw.rotation.x = Math.PI / 2;
+      pw.rotation.z = (Math.random() - 0.5) * 0.2;
+      eg.add(pw);
     }
 
     this.scene.add(eg);
@@ -1332,16 +1917,16 @@ class MaquetteScene {
   }
 
   // ==========================================
-  // CAMERA VIEWS
+  // CAMERA VIEWS — updated for rectangular layout
   // ==========================================
   animateToView(view) {
     var views = {
-      overview: { x: 0, y: 16, z: 20, lx: 0, ly: 0, lz: 0 },
-      mina: { x: -8, y: 4, z: 3, lx: -5, ly: 0, lz: 1 },
-      porto: { x: 8, y: 4, z: 3, lx: 6, ly: 0, lz: -2 },
-      trem: { x: 0, y: 4, z: 9, lx: 0, ly: 0.5, lz: 0 },
-      mine: { x: -8, y: 4, z: 3, lx: -5, ly: 0, lz: 1 },
-      port: { x: 8, y: 4, z: 3, lx: 6, ly: 0, lz: -2 }
+      overview: { x: 0, y: 18, z: 22, lx: 0, ly: 0, lz: 0 },
+      mina: { x: -8, y: 5, z: 4, lx: -5, ly: 0, lz: 1 },
+      porto: { x: 8, y: 5, z: 4, lx: 6, ly: 0, lz: -2 },
+      trem: { x: 0, y: 5, z: 10, lx: 0, ly: 0.5, lz: 0 },
+      mine: { x: -8, y: 5, z: 4, lx: -5, ly: 0, lz: 1 },
+      port: { x: 8, y: 5, z: 4, lx: 6, ly: 0, lz: -2 }
     };
     var v = views[view];
     if (!v) return;

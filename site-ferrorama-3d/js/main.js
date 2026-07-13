@@ -223,7 +223,7 @@ class FerroramaApp {
     const infoContent = {
       overview: {
         title: 'Visão Geral',
-        text: 'Layout oval com ramais e seções elevadas. Base de MDF com trilhos escala HO e eletrônicos Arduino.'
+        text: 'Layout rectangular com circuitos interno e externo, viaduto elevado e eletrônicos Arduino. Base de MDF com trilhos escala HO.'
       },
       mina: {
         title: 'Área de Eletrônicos',
@@ -231,11 +231,11 @@ class FerroramaApp {
       },
       porto: {
         title: 'Seção Elevada',
-        text: 'Trilhos sobre suportes de cardboard, criando pontes e desníveis no percurso.'
+        text: 'Viaduto com pilares de concreto, cruzando sobre o circuito interno com trilhos elevados.'
       },
       trem: {
         title: 'Trem & Chaveamentos',
-        text: 'Locomotiva azul com amarelo, chaveamentos para troca de trilhos.'
+        text: 'Locomotivas com diferentes cores, chaveamentos amarelos para troca de trilhos nos cruzamentos.'
       }
     };
 
