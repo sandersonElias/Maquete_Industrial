@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Train, MapPin, Gauge, Clock, Navigation, ArrowRight } from 'lucide-react';
 import axios from 'axios';
-import { io } from 'socket.io-client';
+import { useSocket } from '../contexts/SocketContext';
 
 export default function Locomotiva() {
+  const { socket } = useSocket();
   const [position, setPosition] = useState({ x: 0, y: 0, speed: 0, heading: 0, trackSegment: 'Patio Sul' });
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,9 +17,9 @@ export default function Locomotiva() {
 
   // Socket.IO para atualizações em tempo real
   useEffect(() => {
-    const socket = io(window.location.origin, { path: '/socket.io' });
-    
-    socket.on('locomotive:update', (data) => {
+    if (!socket) return;
+
+    const handleLocomotiveUpdate = (data) => {
       setPosition({
         x: data.x,
         y: data.y,
@@ -27,10 +28,11 @@ export default function Locomotiva() {
         trackSegment: data.trackSegment,
       });
       setHistory(prev => [...prev.slice(-19), { ...data, timestamp: new Date(data.timestamp) }]);
-    });
+    };
 
-    return () => socket.disconnect();
-  }, []);
+    socket.on('locomotive:update', handleLocomotiveUpdate);
+    return () => socket.off('locomotive:update', handleLocomotiveUpdate);
+  }, [socket]);
 
   const fetchPosition = async () => {
     try {

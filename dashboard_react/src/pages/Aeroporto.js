@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plane, Clock, Package, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { io } from 'socket.io-client';
+import { useSocket } from '../contexts/SocketContext';
 
 const statusColors = {
   arriving: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'Aproximando' },
@@ -13,6 +13,7 @@ const statusColors = {
 };
 
 export default function Aeroporto() {
+  const { socket } = useSocket();
   const [airplanes, setAirplanes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, landed: 0, inAir: 0 });
@@ -23,17 +24,18 @@ export default function Aeroporto() {
 
   // Socket.IO para atualizações em tempo real
   useEffect(() => {
-    const socket = io(window.location.origin, { path: '/socket.io' });
-    
-    socket.on('airport:airplane_update', (data) => {
-      setAirplanes(prev => prev.map(plane => 
+    if (!socket) return;
+
+    const handleAirplaneUpdate = (data) => {
+      setAirplanes(prev => prev.map(plane =>
         plane.id === data.airplaneId ? { ...plane, status: data.status } : plane
       ));
       toast.info(`Aeronave ${data.airplaneId} mudou para ${statusColors[data.status]?.label || data.status}`);
-    });
+    };
 
-    return () => socket.disconnect();
-  }, []);
+    socket.on('airport:airplane_update', handleAirplaneUpdate);
+    return () => socket.off('airport:airplane_update', handleAirplaneUpdate);
+  }, [socket]);
 
   useEffect(() => {
     const total = airplanes.length;

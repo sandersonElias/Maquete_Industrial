@@ -21,13 +21,15 @@ async function createShip({ id, name, status, cargo_type, cargo_weight, eta, etd
   return result.rows[0];
 }
 
+const SHIP_ALLOWED_FIELDS = ["name", "status", "cargo_type", "cargo_weight", "eta", "etd", "dock_number"];
+
 async function updateShip(id, data) {
   const fields = [];
   const values = [];
   let paramIndex = 1;
 
   for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) {
+    if (value !== undefined && SHIP_ALLOWED_FIELDS.includes(key)) {
       fields.push(`${key} = $${paramIndex++}`);
       values.push(value);
     }
@@ -69,13 +71,15 @@ async function createAirplane({ id, flight_number, status, cargo_type, cargo_wei
   return result.rows[0];
 }
 
+const AIRPLANE_ALLOWED_FIELDS = ["flight_number", "status", "cargo_type", "cargo_weight", "eta", "etd", "gate"];
+
 async function updateAirplane(id, data) {
   const fields = [];
   const values = [];
   let paramIndex = 1;
 
   for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) {
+    if (value !== undefined && AIRPLANE_ALLOWED_FIELDS.includes(key)) {
       fields.push(`${key} = $${paramIndex++}`);
       values.push(value);
     }

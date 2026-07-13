@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  FlaskConical, Thermometer, Droplets, Wind, AlertTriangle, 
-  CheckCircle, Activity, TestTube, Plus, Trash2, Edit2, 
+import {
+  FlaskConical, Thermometer, Droplets, Wind, AlertTriangle,
+  CheckCircle, Activity, TestTube, Plus, Trash2, Edit2,
   TrendingUp, Clock, RefreshCw
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { io } from 'socket.io-client';
+import { useSocket } from '../contexts/SocketContext';
 
 const EquipmentCard = ({ equipment, onEdit, onDelete, onViewHistory }) => {
   const getStatusColor = (status) => {
@@ -254,6 +254,7 @@ const EquipmentModal = ({ equipment, onSave, onClose }) => {
 };
 
 export default function Quimica() {
+  const { socket } = useSocket();
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, online: 0, warnings: 0, offline: 0 });
@@ -265,21 +266,14 @@ export default function Quimica() {
     try {
       const res = await axios.get('/api/chemistry/equipment').catch(() => ({ data: [] }));
       setEquipment(res.data);
-      
+
       const total = res.data.length;
       const online = res.data.filter(e => e.status === 'online').length;
       const warnings = res.data.filter(e => e.status === 'warning').length;
       const offline = res.data.filter(e => e.status === 'offline').length;
       setStats({ total, online, warnings, offline });
     } catch (e) {
-      // Dados estaticos se API nao existir
-      setEquipment([
-        { id: 'CHEM-001', name: 'Tanque Alpha', type: 'tanque', status: 'online', temperature: 25.4, humidity: 45, level: 78, pressure: 1.0 },
-        { id: 'CHEM-002', name: 'Reator Beta', type: 'reator', status: 'online', temperature: 42.1, humidity: 38, level: 62, pressure: 2.5 },
-        { id: 'CHEM-003', name: 'Misturador Gamma', type: 'misturador', status: 'warning', temperature: 31.8, humidity: 52, level: 91, pressure: 1.2 },
-        { id: 'CHEM-004', name: 'Resfriador Delta', type: 'resfriador', status: 'online', temperature: 8.2, humidity: 85, level: 45, pressure: 1.0 },
-      ]);
-      setStats({ total: 4, online: 3, warnings: 1, offline: 0 });
+      setStats({ total: 0, online: 0, warnings: 0, offline: 0 });
     } finally {
       setLoading(false);
     }
@@ -293,9 +287,9 @@ export default function Quimica() {
 
   // Socket.IO para atualizacoes em tempo real
   useEffect(() => {
-    const socket = io(window.location.origin, { path: '/socket.io' });
-    
-    socket.on('chemistry:update', (data) => {
+    if (!socket) return;
+
+    const handleChemistryUpdate = (data) => {
       setEquipment(prev => {
         const updated = [...prev];
         for (const update of data.equipment) {
@@ -306,16 +300,21 @@ export default function Quimica() {
         }
         return updated;
       });
-    });
+    };
 
-    socket.on('alert:new', (alert) => {
+    const handleNewAlert = (alert) => {
       if (alert.module === 'quimica') {
         toast.warning(alert.message);
       }
-    });
+    };
 
-    return () => socket.disconnect();
-  }, []);
+    socket.on('chemistry:update', handleChemistryUpdate);
+    socket.on('alert:new', handleNewAlert);
+    return () => {
+      socket.off('chemistry:update', handleChemistryUpdate);
+      socket.off('alert:new', handleNewAlert);
+    };
+  }, [socket]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Tem certeza que deseja excluir este equipamento?')) return;

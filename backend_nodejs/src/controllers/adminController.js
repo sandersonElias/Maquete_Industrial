@@ -31,9 +31,6 @@ async function getUser(req, res) {
 async function createUser(req, res) {
   try {
     const { username, email, password, role } = req.body;
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: "username, email e password sao obrigatorios" });
-    }
 
     // Verificar se email já existe
     const pool = require("../config/db");
@@ -47,6 +44,9 @@ async function createUser(req, res) {
     res.status(201).json(user);
   } catch (e) {
     logger.error(`Erro criando usuario: ${e.message}`);
+    if (e.code === "23505") {
+      return res.status(409).json({ error: "Usuario ou email ja existe" });
+    }
     res.status(500).json({ error: "Erro ao criar usuario" });
   }
 }

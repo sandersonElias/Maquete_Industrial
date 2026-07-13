@@ -4,18 +4,20 @@ const authenticateToken = require("../middlewares/authenticateToken");
 const validate = require("../middlewares/validate");
 const { shipSchema, airplaneSchema } = require("../utils/validation");
 
-const router = express.Router();
+// ── Router para Porto (Navios) ──
+const portRouter = express.Router();
 
-// ── Navios ──
-router.get("/ships", authenticateToken, portAirportController.getShips);
-router.post("/ships", authenticateToken, validate(shipSchema), portAirportController.createShip);
-router.put("/ships/:id", authenticateToken, portAirportController.updateShip);
-router.delete("/ships/:id", authenticateToken, portAirportController.deleteShip);
+portRouter.get("/ships", authenticateToken, portAirportController.getShips);
+portRouter.post("/ships", authenticateToken, validate(shipSchema), portAirportController.createShip);
+portRouter.put("/ships/:id", authenticateToken, portAirportController.updateShip);
+portRouter.delete("/ships/:id", authenticateToken, portAirportController.deleteShip);
 
-// ── Aviões ──
-router.get("/airplanes", authenticateToken, portAirportController.getAirplanes);
-router.post("/airplanes", authenticateToken, validate(airplaneSchema), portAirportController.createAirplane);
-router.put("/airplanes/:id", authenticateToken, portAirportController.updateAirplane);
-router.delete("/airplanes/:id", authenticateToken, portAirportController.deleteAirplane);
+// ── Router para Aeroporto (Aviões) ──
+const airportRouter = express.Router();
 
-module.exports = router;
+airportRouter.get("/airplanes", authenticateToken, portAirportController.getAirplanes);
+airportRouter.post("/airplanes", authenticateToken, validate(airplaneSchema), portAirportController.createAirplane);
+airportRouter.put("/airplanes/:id", authenticateToken, portAirportController.updateAirplane);
+airportRouter.delete("/airplanes/:id", authenticateToken, portAirportController.deleteAirplane);
+
+module.exports = { portRouter, airportRouter };

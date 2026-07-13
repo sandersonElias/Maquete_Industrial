@@ -59,13 +59,13 @@ export default function Relatorios() {
     }
   };
 
-  const downloadReport = async (reportId) => {
+  const downloadReport = async (report) => {
     try {
-      const res = await axios.get(`/api/reports/${reportId}/download`, { responseType: 'blob' });
+      const res = await axios.get(`/api/reports/${report.id}/download`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `relatorio-${reportId}.${format}`);
+      link.setAttribute('download', `relatorio-${report.report_type || report.type || report.id}.${report.format}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -209,7 +209,7 @@ export default function Relatorios() {
                 </div>
                 {report.status === 'completed' && (
                   <button
-                    onClick={() => downloadReport(report.id)}
+                    onClick={() => downloadReport(report)}
                     className="p-1.5 text-muted hover:text-accent hover:bg-accent/5 rounded-lg transition-colors"
                   >
                     <Download size={14} />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle, Clock, Filter, Bell, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { io } from 'socket.io-client';
+import { useSocket } from '../contexts/SocketContext';
 
 const severityConfig = {
   info: { bg: 'bg-blue-500/10', text: 'text-blue-400', icon: Bell, label: 'Info' },
@@ -20,6 +20,7 @@ const moduleLabels = {
 };
 
 export default function Alertas() {
+  const { socket } = useSocket();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ module: '', severity: '', acknowledged: '' });
@@ -31,28 +32,33 @@ export default function Alertas() {
 
   // Socket.IO para alertas em tempo real
   useEffect(() => {
-    const socket = io(window.location.origin, { path: '/socket.io' });
-    
-    socket.on('alert:new', (alert) => {
+    if (!socket) return;
+
+    const handleNewAlert = (alert) => {
       setAlerts(prev => [alert, ...prev].slice(0, 50));
       setStats(prev => ({ ...prev, pending: prev.pending + 1 }));
-      
+
       if (alert.severity === 'critical') {
         toast.error(`CRITICO: ${alert.message}`);
       } else {
         toast.warning(alert.message);
       }
-    });
+    };
 
-    socket.on('alert:acknowledged', (data) => {
-      setAlerts(prev => prev.map(a => 
+    const handleAlertAcknowledged = (data) => {
+      setAlerts(prev => prev.map(a =>
         a.id === data.id ? { ...a, acknowledged_at: data.acknowledgedAt } : a
       ));
       setStats(prev => ({ ...prev, pending: Math.max(0, prev.pending - 1) }));
-    });
+    };
 
-    return () => socket.disconnect();
-  }, []);
+    socket.on('alert:new', handleNewAlert);
+    socket.on('alert:acknowledged', handleAlertAcknowledged);
+    return () => {
+      socket.off('alert:new', handleNewAlert);
+      socket.off('alert:acknowledged', handleAlertAcknowledged);
+    };
+  }, [socket]);
 
   const fetchAlerts = async () => {
     try {

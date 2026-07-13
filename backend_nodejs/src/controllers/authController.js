@@ -4,7 +4,8 @@ const logger = require("../config/logger");
 async function login(req, res) {
   try {
     const { email, password, username } = req.body;
-    const { token, user } = await authService.login(username || email, password);
+    const identifier = username || email;
+    const { token, user } = await authService.login(identifier, password);
     res.json({ token, user });
   } catch (e) {
     logger.error(`Erro login: ${e.message}`);

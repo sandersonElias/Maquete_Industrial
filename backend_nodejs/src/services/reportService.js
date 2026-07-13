@@ -107,8 +107,31 @@ async function fetchData(reportType, filters = {}) {
       break;
 
     case "all":
-    default:
-      return null;
+      const allQuery = `
+        SELECT 'switch' as module, c.id, c.switch_id as identifier, c.action, c.status, c.issued_at as created_at
+        FROM commands c
+        UNION ALL
+        SELECT 'truck' as module, tt.id, tt.truck_id as identifier, tt.speed::text as action, 'telemetry' as status, tt.timestamp as created_at
+        FROM truck_telemetry tt
+        UNION ALL
+        SELECT 'locomotive' as module, lp.id, lp.track_segment as identifier, lp.speed::text as action, 'position' as status, lp.timestamp as created_at
+        FROM locomotive_position lp
+        UNION ALL
+        SELECT 'alert' as module, a.id, a.module as identifier, a.severity as action, a.message as status, a.created_at
+        FROM alerts a`;
+      const dateConditions = [];
+      if (startDate) {
+        dateConditions.push(`created_at >= $${paramIndex++}`);
+        params.push(startDate);
+      }
+      if (endDate) {
+        dateConditions.push(`created_at <= $${paramIndex++}`);
+        params.push(endDate);
+      }
+      query = dateConditions.length > 0
+        ? `WITH all_data AS (${allQuery}) SELECT * FROM all_data WHERE ${dateConditions.join(" AND ")} ORDER BY created_at DESC`
+        : `WITH all_data AS (${allQuery}) SELECT * FROM all_data ORDER BY created_at DESC`;
+      break;
   }
 
   const result = await pool.query(query, params);
