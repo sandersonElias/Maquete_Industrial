@@ -330,73 +330,118 @@ export default class MaquetteScene {
     }
   }
 
+  // Build a curve from straight LineCurve3 segments (perfectly straight rails)
+  _buildStraightTrack(waypoints) {
+    var segments = [];
+    for (var i = 0; i < waypoints.length - 1; i++) {
+      segments.push(new THREE.LineCurve3(waypoints[i], waypoints[i + 1]));
+    }
+    // Return a custom curve-like object that dispatches to the right segment
+    var totalSegments = segments.length;
+    return {
+      getPointAt: function (t) {
+        t = ((t % 1) + 1) % 1;
+        var idx = Math.min(Math.floor(t * totalSegments), totalSegments - 1);
+        var localT = (t * totalSegments) - idx;
+        return segments[idx].getPointAt(localT);
+      },
+      getTangentAt: function (t) {
+        t = ((t % 1) + 1) % 1;
+        var idx = Math.min(Math.floor(t * totalSegments), totalSegments - 1);
+        return segments[idx].getTangentAt(0);
+      },
+      getPoints: function (count) {
+        var pts = [];
+        for (var i = 0; i <= count; i++) {
+          pts.push(this.getPointAt(i / count));
+        }
+        return pts;
+      }
+    };
+  }
+
   createTrackSystem() {
     this.trackCurves = [];
     var railMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.35 });
     var sleeperMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85 });
 
-    var ow = 6.0, oh = 2.5, cr = 1.4;
-    var pts = [];
-    var cSegs = 20, sSegs = 28;
+    // --- Oval track: 4 straight segments + 4 corner arcs ---
+    var ow = 6.0, oh = 2.5, cr = 1.0;
 
-    for (var i = 0; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(-ow + cr + t * (2 * ow - 2 * cr), 0.45, -oh));
-    }
-    for (var i = 1; i <= cSegs; i++) {
-      var a = -Math.PI / 2 + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(ow - cr + Math.cos(a) * cr, 0.45, -oh + cr + Math.sin(a) * cr));
-    }
-    for (var i = 1; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(ow, 0.45, -oh + cr + t * (2 * oh - 2 * cr)));
-    }
-    for (var i = 1; i <= cSegs; i++) {
-      var a = 0 + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(ow - cr + Math.cos(a) * cr, 0.45, oh - cr + Math.sin(a) * cr));
-    }
-    for (var i = 1; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(ow - cr - t * (2 * ow - 2 * cr), 0.45, oh));
-    }
-    for (var i = 1; i <= cSegs; i++) {
-      var a = Math.PI / 2 + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(-ow + cr + Math.cos(a) * cr, 0.45, oh - cr + Math.sin(a) * cr));
-    }
-    for (var i = 1; i <= sSegs; i++) {
-      var t = i / sSegs;
-      pts.push(new THREE.Vector3(-ow, 0.45, oh - cr - t * (2 * oh - 2 * cr)));
-    }
-    for (var i = 1; i <= cSegs; i++) {
-      var a = Math.PI + (i / cSegs) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(-ow + cr + Math.cos(a) * cr, 0.45, -oh + cr + Math.sin(a) * cr));
-    }
-
-    var ovalCurve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.0);
-    this.trackCurves.push({ curve: ovalCurve, name: 'circuito principal', elevation: 0 });
-    this._renderRail(ovalCurve, railMat, sleeperMat, pts.length * 2, 0.45);
-
-    var vElev = 1.3;
-    var jRight = ovalCurve.getPointAt(0.22);
-    var jLeft = ovalCurve.getPointAt(0.73);
-
-    var viaductPts = [
-      new THREE.Vector3(jRight.x, jRight.y, jRight.z),
-      new THREE.Vector3(jRight.x - 0.3, 0.45 + vElev * 0.12, jRight.z - 0.5),
-      new THREE.Vector3(jRight.x - 0.8, 0.45 + vElev * 0.28, jRight.z - 1.1),
-      new THREE.Vector3(jRight.x - 1.5, 0.45 + vElev * 0.48, jRight.z - 1.7),
-      new THREE.Vector3(jRight.x - 2.5, 0.45 + vElev * 0.68, jRight.z - 2.2),
-      new THREE.Vector3(jRight.x - 3.5, 0.45 + vElev * 0.85, jRight.z - 2.5),
-      new THREE.Vector3(0, 0.45 + vElev, 0),
-      new THREE.Vector3(jLeft.x + 3.5, 0.45 + vElev * 0.85, jLeft.z + 2.5),
-      new THREE.Vector3(jLeft.x + 2.5, 0.45 + vElev * 0.68, jLeft.z + 2.2),
-      new THREE.Vector3(jLeft.x + 1.5, 0.45 + vElev * 0.48, jLeft.z + 1.7),
-      new THREE.Vector3(jLeft.x + 0.8, 0.45 + vElev * 0.28, jLeft.z + 1.1),
-      new THREE.Vector3(jLeft.x + 0.3, 0.45 + vElev * 0.12, jLeft.z + 0.5),
-      new THREE.Vector3(jLeft.x, jLeft.y, jLeft.z),
+    // 4 corner centers
+    var corners = [
+      new THREE.Vector3(ow - cr, 0.45, -oh + cr),   // top-right
+      new THREE.Vector3(ow - cr, 0.45, oh - cr),    // bottom-right
+      new THREE.Vector3(-ow + cr, 0.45, oh - cr),   // bottom-left
+      new THREE.Vector3(-ow + cr, 0.45, -oh + cr),  // top-left
     ];
 
-    var viaductCurve = new THREE.CatmullRomCurve3(viaductPts, false, 'catmullrom', 0.0);
+    var ovalPts = [];
+    var arcSegs = 12;
+
+    // top side: straight from (-ow+cr, -oh) to (ow-cr, -oh)
+    ovalPts.push(new THREE.Vector3(-ow + cr, 0.45, -oh));
+    ovalPts.push(new THREE.Vector3(ow - cr, 0.45, -oh));
+
+    // top-right corner arc
+    for (var i = 1; i <= arcSegs; i++) {
+      var a = -Math.PI / 2 + (i / arcSegs) * (Math.PI / 2);
+      ovalPts.push(new THREE.Vector3(corners[0].x + Math.cos(a) * cr, 0.45, corners[0].z + Math.sin(a) * cr));
+    }
+
+    // right side: straight from (ow, -oh+cr) to (ow, oh-cr)
+    ovalPts.push(new THREE.Vector3(ow, 0.45, -oh + cr));
+    ovalPts.push(new THREE.Vector3(ow, 0.45, oh - cr));
+
+    // bottom-right corner arc
+    for (var i = 1; i <= arcSegs; i++) {
+      var a = 0 + (i / arcSegs) * (Math.PI / 2);
+      ovalPts.push(new THREE.Vector3(corners[1].x + Math.cos(a) * cr, 0.45, corners[1].z + Math.sin(a) * cr));
+    }
+
+    // bottom side: straight from (ow-cr, oh) to (-ow+cr, oh)
+    ovalPts.push(new THREE.Vector3(ow - cr, 0.45, oh));
+    ovalPts.push(new THREE.Vector3(-ow + cr, 0.45, oh));
+
+    // bottom-left corner arc
+    for (var i = 1; i <= arcSegs; i++) {
+      var a = Math.PI / 2 + (i / arcSegs) * (Math.PI / 2);
+      ovalPts.push(new THREE.Vector3(corners[2].x + Math.cos(a) * cr, 0.45, corners[2].z + Math.sin(a) * cr));
+    }
+
+    // left side: straight from (-ow, oh-cr) to (-ow, -oh+cr)
+    ovalPts.push(new THREE.Vector3(-ow, 0.45, oh - cr));
+    ovalPts.push(new THREE.Vector3(-ow, 0.45, -oh + cr));
+
+    // top-left corner arc
+    for (var i = 1; i <= arcSegs; i++) {
+      var a = Math.PI + (i / arcSegs) * (Math.PI / 2);
+      ovalPts.push(new THREE.Vector3(corners[3].x + Math.cos(a) * cr, 0.45, corners[3].z + Math.sin(a) * cr));
+    }
+
+    var ovalCurve = this._buildStraightTrack(ovalPts);
+    this.trackCurves.push({ curve: ovalCurve, name: 'circuito principal', elevation: 0 });
+    this._renderRail(ovalCurve, railMat, sleeperMat, ovalPts.length * 4, 0.45);
+
+    // --- Viaduct (elevated track) ---
+    var vElev = 1.3;
+    // Junction points on the oval (use approximate positions)
+    var jRight = new THREE.Vector3(ow - 1.0, 0.45, -oh + 0.5);
+    var jLeft = new THREE.Vector3(-ow + 1.0, 0.45, oh - 0.5);
+
+    var viaductPts = [
+      jRight.clone(),
+      new THREE.Vector3(jRight.x - 0.5, 0.45 + vElev * 0.15, jRight.z - 0.7),
+      new THREE.Vector3(jRight.x - 1.2, 0.45 + vElev * 0.35, jRight.z - 1.4),
+      new THREE.Vector3(jRight.x - 2.5, 0.45 + vElev * 0.7, jRight.z - 2.0),
+      new THREE.Vector3(0, 0.45 + vElev, 0),
+      new THREE.Vector3(jLeft.x + 2.5, 0.45 + vElev * 0.7, jLeft.z + 2.0),
+      new THREE.Vector3(jLeft.x + 1.2, 0.45 + vElev * 0.35, jLeft.z + 1.4),
+      new THREE.Vector3(jLeft.x + 0.5, 0.45 + vElev * 0.15, jLeft.z + 0.7),
+      jLeft.clone(),
+    ];
+
+    var viaductCurve = this._buildStraightTrack(viaductPts);
     this.trackCurves.push({ curve: viaductCurve, name: 'viaduto', elevation: vElev });
     this._renderRail(viaductCurve, railMat, sleeperMat, 200, 0.45);
 
@@ -417,9 +462,10 @@ export default class MaquetteScene {
   _renderRail(curve, railMat, sleeperMat, seg, baseY) {
     if (seg < 10) seg = 10;
     var pts = curve.getPoints(seg);
-    var pts2 = [];
     var gauge = 0.18;
 
+    // Compute parallel rail (offset by gauge perpendicular to track)
+    var pts2 = [];
     for (var i = 0; i < pts.length; i++) {
       var t = i / Math.max(1, pts.length - 1);
       var tangent = curve.getTangentAt(Math.min(t, 0.999));
@@ -430,31 +476,26 @@ export default class MaquetteScene {
       pts2.push(new THREE.Vector3(pts[i].x + normal.x * gauge, pts[i].y, pts[i].z + normal.z * gauge));
     }
 
-    for (var i = 0; i < pts.length - 1; i++) {
-      var p1 = pts[i]; var p2 = pts[i + 1];
-      var dx = p2.x - p1.x; var dz = p2.z - p1.z;
-      var len = Math.sqrt(dx * dx + dz * dz);
-      if (len < 0.001) continue;
-      var railSeg = new THREE.Mesh(new THREE.BoxGeometry(len, 0.02, 0.025), railMat);
-      railSeg.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
-      railSeg.rotation.y = -Math.atan2(dz, dx);
-      railSeg.castShadow = true;
-      this.scene.add(railSeg);
-    }
+    // Helper: render a series of points as straight rail segments
+    var renderRailSide = function (points) {
+      for (var i = 0; i < points.length - 1; i++) {
+        var p1 = points[i]; var p2 = points[i + 1];
+        var dx = p2.x - p1.x; var dz = p2.z - p1.z;
+        var len = Math.sqrt(dx * dx + dz * dz);
+        if (len < 0.001) continue;
+        var railSeg = new THREE.Mesh(new THREE.BoxGeometry(len + 0.005, 0.02, 0.025), railMat);
+        railSeg.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
+        railSeg.rotation.y = -Math.atan2(dz, dx);
+        railSeg.castShadow = true;
+        this.scene.add(railSeg);
+      }
+    }.bind(this);
 
-    for (var i = 0; i < pts2.length - 1; i++) {
-      var p1 = pts2[i]; var p2 = pts2[i + 1];
-      var dx = p2.x - p1.x; var dz = p2.z - p1.z;
-      var len = Math.sqrt(dx * dx + dz * dz);
-      if (len < 0.001) continue;
-      var railSeg = new THREE.Mesh(new THREE.BoxGeometry(len, 0.02, 0.025), railMat);
-      railSeg.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
-      railSeg.rotation.y = -Math.atan2(dz, dx);
-      railSeg.castShadow = true;
-      this.scene.add(railSeg);
-    }
+    renderRailSide(pts);
+    renderRailSide(pts2);
 
-    var step = Math.max(5, Math.floor(pts.length / 50));
+    // Sleepers (cross-ties) connecting both rails
+    var step = Math.max(3, Math.floor(pts.length / 60));
     for (var i = 0; i < pts.length; i += step) {
       var p = pts[i]; var q = pts2[i];
       if (!p || !q) continue;
