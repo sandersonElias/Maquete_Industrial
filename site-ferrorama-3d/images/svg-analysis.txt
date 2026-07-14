@@ -1,0 +1,68 @@
+Análise do SVG de referência para maquete 3D:
+
+O SVG fornecido (441x189 pixels) mostra um layout técnico de maquete ferroviária com:
+
+1. TRILHOS:
+   - Circuito externo rectangular com cantos arredondados
+   - Circuito interno menor
+   - Conexões entre os circuitos
+   - Estruturas de viaduto elevado
+
+2. ESTRUTURAS:
+   - Prédios rectangulares posicionados ao longo dos trilhos
+   - Torres brancas (pilares) com espaçamento regular
+   - Guindastes laranja
+   - Mesa de girar (turntable) central
+
+3. ELEMENTOS DECORATIVOS:
+   - Árvores posicionadas estrategicamente
+   - Área de água (porto)
+   - Componentes eletrônicos (Arduino, breadboard)
+
+4. PROPORÇÕES:
+   - Largura total: ~441 unidades
+   - Altura total: ~189 unidades
+   - Layout rectangular com proporção aproximada 2.3:1
+
+5. DETALHES TÉCNICOS:
+   - Trilhos com bitola regular
+   - Conexões entre circuitos
+   - Estruturas de suporte para cabos
+   - Sinais e semáforos
+
+MELHORIAS SUGERIDAS PARA A MAQUETE 3D:
+
+1. AJUSTAR PROPORÇÕES:
+   - Modificar base para corresponder às proporções do SVG (2.3:1)
+   - Ajustar positions dos edifícios conforme layout do SVG
+
+2. MELHORAR DETALHES DOS TRILHOS:
+   - Adicionar mais detalhes visuais nos trilhos
+   - Melhorar texturas dos dormentes
+   - Adicionar sinais de trânsito
+
+3. ENRIQUECER ESTRUTURAS:
+   - Adicionar mais prédios conforme SVG
+   - Melhorar detalhes das torres/pilares
+   - Adicionar guindastes e equipamentos industriais
+
+4. MELHORAR ÁREA DO PORTO:
+   - Expandir área de água
+   - Adicionar mais detalhes navais
+   - Melhorar docas e píeres
+
+5. ADICIONAR DETALHES DECORATIVOS:
+   - Mais árvores e vegetação
+   - Sinais de trânsito
+   - Iluminação noturna
+
+6. MELHORAR ELETRÔNICOS:
+   - Adicionar mais detalhes ao Arduino
+   - Melhorar apresentação dos fios
+   - Adicionar sensores visíveis
+
+PRÓXIMOS PASSOS:
+1. Analisar coordenadas exatas do SVG
+2. Mapear posições dos elementos
+3. Modificar código Three.js para corresponder
+4. Testar e ajustar proporções
