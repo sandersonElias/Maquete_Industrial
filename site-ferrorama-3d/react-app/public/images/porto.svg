@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Porto e exporta��o">
+  <rect width="800" height="500" fill="#0a0e14"/>
+  <rect x="0" y="320" width="800" height="180" fill="#004a8f" opacity="0.3"/>
+  <rect x="500" y="200" width="200" height="120" fill="#1a222d" stroke="#64748b"/>
+  <rect x="150" y="250" width="300" height="20" fill="#364152"/>
+  <rect x="180" y="270" width="80" height="50" fill="#e87722" opacity="0.7"/>
+  <rect x="280" y="270" width="80" height="50" fill="#64748b"/>
+  <text x="400" y="440" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="16">Porto  adicione images/porto.jpg</text>
+</svg>
