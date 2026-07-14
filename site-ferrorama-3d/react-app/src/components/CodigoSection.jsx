@@ -30,9 +30,30 @@ export default function CodigoSection() {
     <section id="codigo" className="section" data-bg="dark" ref={ref}>
       <div className="section-container">
         <div className="section-header">
-          <span className="section-number">02</span>
-          <h2 className="section-title">Código & Automação</h2>
-          <p className="section-subtitle">Como os caminhões se movem e como o trem funciona</p>
+          <motion.span
+            className="section-number"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            02
+          </motion.span>
+          <motion.h2
+            className="section-title"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Código & Automação
+          </motion.h2>
+          <motion.p
+            className="section-subtitle"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Como os caminhões se movem e como o trem funciona
+          </motion.p>
         </div>
         <div className="code-showcase">
           <motion.div
@@ -42,9 +63,11 @@ export default function CodigoSection() {
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="code-header">
-              <span className="code-dot red"></span>
-              <span className="code-dot yellow"></span>
-              <span className="code-dot green"></span>
+              <div className="code-dots">
+                <span className="code-dot red"></span>
+                <span className="code-dot yellow"></span>
+                <span className="code-dot green"></span>
+              </div>
               <span className="code-filename">ferrovia_firmware.ino</span>
             </div>
             <pre className="code-content"><code>

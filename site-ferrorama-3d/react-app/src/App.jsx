@@ -7,7 +7,6 @@ import Navigation from './components/Navigation';
 import HeroSection from './components/HeroSection';
 import SectionDivider from './components/SectionDivider';
 import MontagemSection from './components/MontagemSection';
-import MaqueteSection from './components/MaqueteSection';
 import CodigoSection from './components/CodigoSection';
 import PortoSection from './components/PortoSection';
 import MinaSection from './components/MinaSection';
@@ -42,10 +41,8 @@ export default function App() {
       <Particles />
       <Navigation />
       <HeroSection />
-      <SectionDivider number="00" />
-      <MontagemSection />
       <SectionDivider number="01" />
-      <MaqueteSection />
+      <MontagemSection />
       <SectionDivider number="02" />
       <CodigoSection />
       <SectionDivider number="03" />

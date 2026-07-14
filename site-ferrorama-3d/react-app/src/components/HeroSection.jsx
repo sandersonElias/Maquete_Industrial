@@ -9,8 +9,8 @@ const textReveal = {
     y: 0,
     opacity: 1,
     transition: {
-      duration: 1,
-      delay: 0.5 + i * 0.15,
+      duration: 1.2,
+      delay: 0.6 + i * 0.18,
       ease: [0.16, 1, 0.3, 1],
     },
   }),
@@ -23,7 +23,7 @@ const fadeUp = {
     opacity: 1,
     transition: {
       duration: 0.8,
-      delay: 1 + i * 0.1,
+      delay: 1.2 + i * 0.1,
       ease: [0.16, 1, 0.3, 1],
     },
   }),
@@ -34,7 +34,7 @@ const staggerContainer = {
   visible: {
     transition: {
       staggerChildren: 0.12,
-      delayChildren: 1.2,
+      delayChildren: 1.4,
     },
   },
 };
@@ -72,7 +72,7 @@ export default function HeroSection() {
           }
         };
         animate();
-      }, 1500);
+      }, 1800);
       return () => clearTimeout(timeout);
     });
   }, []);
@@ -93,15 +93,16 @@ export default function HeroSection() {
       </div>
 
       <div className="hero-content">
-        <motion.p
-          className="hero-label"
+        <motion.div
+          className="hero-badge"
           custom={0}
           variants={fadeUp}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
+          <span className="badge-dot"></span>
           Projeto Escolar · Escala HO · Arduino
-        </motion.p>
+        </motion.div>
 
         <h1 className="hero-title">
           <span className="title-line">
@@ -128,7 +129,7 @@ export default function HeroSection() {
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
-          Da extração na mina até a exportação pelo porto — experimente em 3D toda a cadeia produtiva do minério de ferro.
+          Da extração na mina até a exportação pelo porto — toda a cadeia produtiva do minério de ferro em uma maquete interativa com automação Arduino.
         </motion.p>
 
         <motion.div
@@ -152,23 +153,34 @@ export default function HeroSection() {
         </motion.div>
 
         <motion.div
+          className="hero-actions"
           custom={5}
           variants={fadeUp}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
           <MagneticButton
-            href="#maquete"
+            href="#montagem"
             className="hero-cta"
             onClick={(e) => {
               e.preventDefault();
-              document.getElementById('maquete')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              document.getElementById('montagem')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
           >
-            <span>Explorar em 3D</span>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <span>Ver Montagem</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M7 17L17 7M17 7H7M17 7V17"/>
             </svg>
+          </MagneticButton>
+          <MagneticButton
+            href="#codigo"
+            className="hero-cta-secondary"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('codigo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          >
+            <span>Ver Automação</span>
           </MagneticButton>
         </motion.div>
       </div>
@@ -177,7 +189,7 @@ export default function HeroSection() {
         className="scroll-indicator"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2, duration: 0.8 }}
+        transition={{ delay: 2.2, duration: 0.8 }}
       >
         <span>Role para baixo</span>
         <div className="scroll-arrow"></div>

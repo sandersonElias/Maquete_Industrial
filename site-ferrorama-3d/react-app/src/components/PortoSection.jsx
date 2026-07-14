@@ -28,9 +28,30 @@ export default function PortoSection() {
     <section id="porto" className="section" data-bg="dark" ref={ref}>
       <div className="section-container">
         <div className="section-header">
-          <span className="section-number">03</span>
-          <h2 className="section-title">Porto & Aeroporto</h2>
-          <p className="section-subtitle">Transporte e exportação dos materiais</p>
+          <motion.span
+            className="section-number"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            03
+          </motion.span>
+          <motion.h2
+            className="section-title"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Porto & Aeroporto
+          </motion.h2>
+          <motion.p
+            className="section-subtitle"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Transporte e exportação dos materiais
+          </motion.p>
         </div>
         <div className="porto-showcase">
           <motion.div
@@ -41,6 +62,9 @@ export default function PortoSection() {
           >
             <img src="images/porto.jpg" alt="Porto da maquete" loading="lazy" />
             <div className="image-overlay"></div>
+            <div className="porto-image-badge">
+              <span>Exportação</span>
+            </div>
           </motion.div>
           <div className="porto-content">
             {items.map((item, i) => (

@@ -4,36 +4,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Início' },
   { id: 'montagem', label: 'Montagem' },
-  { id: 'maquete', label: 'Maquete 3D' },
   { id: 'codigo', label: 'Automação' },
   { id: 'porto', label: 'Porto' },
   { id: 'mina', label: 'Mina' },
   { id: 'controle', label: 'Controle' },
 ];
 
-const navVariants = {
-  hidden: { y: -100, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.2 },
-  },
-};
-
-const linkVariants = {
-  hidden: { opacity: 0, y: -10 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, delay: 0.4 + i * 0.05, ease: [0.16, 1, 0.3, 1] },
-  }),
-};
-
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('inicio');
-  const navRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -73,11 +53,10 @@ export default function Navigation() {
   return (
     <>
       <motion.nav
-        ref={navRef}
         className={`nav ${scrolled ? 'scrolled' : ''}`}
-        variants={navVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
       >
         <div className="nav-brand">
           <motion.span
@@ -95,14 +74,11 @@ export default function Navigation() {
               key={id}
               href={`#${id}`}
               className={`nav-link ${activeSection === id ? 'active' : ''}`}
-              data-section={id}
               onClick={(e) => handleNavClick(e, id)}
-              custom={i}
-              variants={linkVariants}
-              initial="hidden"
-              animate="visible"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.4 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
               whileHover={{ y: -2 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             >
               {label}
             </motion.a>
@@ -131,7 +107,6 @@ export default function Navigation() {
                 key={id}
                 href={`#${id}`}
                 className={`mobile-link ${activeSection === id ? 'active' : ''}`}
-                data-section={id}
                 onClick={(e) => handleNavClick(e, id)}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
