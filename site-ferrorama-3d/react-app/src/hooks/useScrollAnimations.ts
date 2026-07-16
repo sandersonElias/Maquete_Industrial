@@ -6,7 +6,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function useScrollAnimations() {
   useEffect(() => {
-    // Hero animations
+    // Hero entrance animations (play once on load, no scroll trigger)
     gsap.from('.title-line', {
       y: 80, opacity: 0, duration: 1, stagger: 0.2, ease: 'power3.out', delay: 0.5,
     });
@@ -25,61 +25,7 @@ export default function useScrollAnimations() {
       });
     });
 
-    // Section headers
-    gsap.utils.toArray<HTMLElement>('.section-header').forEach((header) => {
-      gsap.from(header, {
-        scrollTrigger: { trigger: header, start: 'top 80%', toggleActions: 'play none none reverse' },
-        y: 50, opacity: 0, duration: 1, ease: 'power3.out',
-      });
-    });
-
-    // Cards
-    gsap.utils.toArray<HTMLElement>('.card').forEach((card, i) => {
-      gsap.from(card, {
-        scrollTrigger: { trigger: card, start: 'top 85%', toggleActions: 'play none none reverse' },
-        y: 80, opacity: 0, duration: 0.8, delay: i * 0.1, ease: 'power3.out',
-      });
-    });
-
-    // Code block
-    gsap.from('.code-block', {
-      scrollTrigger: { trigger: '.code-showcase', start: 'top 70%', toggleActions: 'play none none reverse' },
-      x: -100, opacity: 0, duration: 1, ease: 'power3.out',
-    });
-
-    // Code features
-    gsap.from('.feature-item', {
-      scrollTrigger: { trigger: '.code-features', start: 'top 80%', toggleActions: 'play none none reverse' },
-      y: 50, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out',
-    });
-
-    // Porto
-    gsap.from('.porto-image', {
-      scrollTrigger: { trigger: '.porto-showcase', start: 'top 70%', toggleActions: 'play none none reverse' },
-      x: -80, opacity: 0, duration: 1, ease: 'power3.out',
-    });
-    gsap.from('.porto-item', {
-      scrollTrigger: { trigger: '.porto-content', start: 'top 80%', toggleActions: 'play none none reverse' },
-      x: 80, opacity: 0, duration: 0.8, stagger: 0.2, ease: 'power3.out',
-    });
-
-    // Mina
-    gsap.from('.mina-3d', {
-      scrollTrigger: { trigger: '.mina-showcase', start: 'top 70%', toggleActions: 'play none none reverse' },
-      x: -80, opacity: 0, duration: 1, ease: 'power3.out',
-    });
-    gsap.from('.mina-content > *', {
-      scrollTrigger: { trigger: '.mina-content', start: 'top 80%', toggleActions: 'play none none reverse' },
-      x: 80, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out',
-    });
-
-    // Dashboard cards
-    gsap.from('.dashboard-card', {
-      scrollTrigger: { trigger: '.controle-dashboard', start: 'top 80%', toggleActions: 'play none none reverse' },
-      y: 80, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out',
-    });
-
-    // Parallax
+    // Parallax effects (subtle movement, no opacity changes)
     gsap.to('.orb-1', {
       scrollTrigger: { trigger: '.hero-section', start: 'top top', end: 'bottom top', scrub: 1 },
       y: -100, ease: 'none',

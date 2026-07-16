@@ -60,7 +60,7 @@ export default function PortoSection() {
             animate={isInView ? { x: 0, opacity: 1, scale: 1 } : {}}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <img src="images/porto.jpg" alt="Porto da maquete" loading="lazy" />
+            <img src="/images/porto.jpg" alt="Porto da maquete" loading="lazy" />
             <div className="image-overlay"></div>
             <div className="porto-image-badge">
               <span>Exportação</span>

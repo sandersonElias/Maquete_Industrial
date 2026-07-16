@@ -95,6 +95,14 @@ export default function ControleSection() {
             Central que coordena todo o sistema
           </motion.p>
         </div>
+        <div className="controle-image-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
+          <img
+            src="/images/controle.svg"
+            alt="Sistema de controle central"
+            loading="lazy"
+            style={{ maxWidth: '320px', width: '100%', height: 'auto' }}
+          />
+        </div>
         <div className="controle-dashboard">
           {dashboards.map((d, i) => (
             <motion.div

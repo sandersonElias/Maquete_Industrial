@@ -59,13 +59,13 @@ export default function Navigation() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
       >
         <div className="nav-brand">
-          <motion.span
-            className="nav-logo"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-          >
-            F
-          </motion.span>
+          <img
+            src="/images/trem-circuito.svg"
+            alt="Ferrorama logo"
+            className="nav-logo-image"
+            style={{ height: '36px', width: 'auto', marginRight: '0.5rem' }}
+            loading="eager"
+          />
           <span className="nav-title">Ferrorama</span>
         </div>
         <div className="nav-links">

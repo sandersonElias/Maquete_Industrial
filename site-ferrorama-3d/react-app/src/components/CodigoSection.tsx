@@ -57,6 +57,26 @@ export default function CodigoSection() {
         </div>
         <div className="code-showcase">
           <motion.div
+            className="code-image-container"
+            initial={{ x: -80, opacity: 0 }}
+            animate={isInView ? { x: 0, opacity: 1 } : {}}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+          >
+            <img
+              src="/images/circuit-traces.svg"
+              alt="Circuit traces do Arduino"
+              loading="lazy"
+              style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '12px' }}
+            />
+            <img
+              src="/images/arduino.jpg"
+              alt="Arduino Mega utilizado na automação"
+              loading="lazy"
+              style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px' }}
+            />
+          </motion.div>
+          <motion.div
             className="code-block"
             initial={{ x: -100, opacity: 0 }}
             animate={isInView ? { x: 0, opacity: 1 } : {}}

@@ -21,28 +21,28 @@ export default function MontagemSection() {
 
   const cards = [
     {
-      icon: 'images/trem.svg',
+      icon: '/images/trem.jpg',
       alt: 'Trem',
       title: 'Trem',
       text: 'Locomotiva com 4 servos controlados por Arduino para movimentação nos trilhos.',
       color: '#0d47a1',
     },
     {
-      icon: 'images/caminhoes-3d.svg',
+      icon: '/images/caminhoes-3d.svg',
       alt: 'Caminhões',
       title: 'Caminhões 3D',
       text: '3 caminhões basculantes impressos em PLA com motor DC e controle Bluetooth.',
       color: '#e65100',
     },
     {
-      icon: 'images/arduino.svg',
+      icon: '/images/arduino.svg',
       alt: 'Arduino',
       title: 'Arduino Mega',
       text: 'Central de controle que coordena todos os componentes eletrônicos.',
       color: '#0066cc',
     },
     {
-      icon: 'images/controle.svg',
+      icon: '/images/controle.svg',
       alt: 'Controle',
       title: 'Controle Bluetooth',
       text: 'HC-05 para comunicação sem fio entre app e caminhões.',
@@ -78,6 +78,15 @@ export default function MontagemSection() {
           >
             Componentes e construção da maquete ferroviária
           </motion.p>
+        </div>
+        <div className="montagem-image-container">
+          <img
+            src="/images/montagem-geral.svg"
+            alt="Montagem geral da maquete ferroviária"
+            className="montagem-hero-image"
+            loading="lazy"
+            style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '16px', marginBottom: '3rem' }}
+          />
         </div>
         <div className="cards-grid">
           {cards.map((card, i) => (

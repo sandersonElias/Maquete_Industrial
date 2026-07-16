@@ -80,6 +80,13 @@ export default function HeroSection() {
   return (
     <section id="inicio" className="hero-section" data-bg="dark" ref={sectionRef}>
       <div className="hero-bg">
+        <img
+          src="/images/maquete-montagem-2.png"
+          alt="Maquete ferroviária interativa"
+          className="hero-bg-image"
+          style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.15 }}
+          loading="eager"
+        />
         <div className="gradient-orb orb-1"></div>
         <div className="gradient-orb orb-2"></div>
         <div className="gradient-orb orb-3"></div>

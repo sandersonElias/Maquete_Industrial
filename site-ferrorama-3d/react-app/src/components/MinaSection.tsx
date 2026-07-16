@@ -56,6 +56,14 @@ export default function MinaSection() {
           </motion.p>
         </div>
 
+        <div className="mina-image-container">
+          <img
+            src="/images/mina-real.jpg"
+            alt="Mina de ferro real"
+            loading="lazy"
+            style={{ width: '100%', maxHeight: '280px', objectFit: 'cover', borderRadius: '16px', marginBottom: '2.5rem' }}
+          />
+        </div>
         <div className="mina-layout">
           <motion.div
             className="mina-stats-card"
