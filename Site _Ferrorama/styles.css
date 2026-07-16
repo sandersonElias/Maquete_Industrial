@@ -467,6 +467,25 @@ body {
   transform: translateY(-2px);
 }
 
+.home-card-image {
+  margin: -1.125rem -1.25rem 1rem;
+  overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+.home-card-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.home-card:hover .home-card-image img {
+  transform: scale(1.03);
+}
+
 .home-card-num {
   display: block;
   font-size: 0.6875rem;
