@@ -11,6 +11,7 @@ import CodigoSection from './components/CodigoSection';
 import PortoSection from './components/PortoSection';
 import MinaSection from './components/MinaSection';
 import ControleSection from './components/ControleSection';
+import MaqueteSection from './components/MaqueteSection';
 import Footer from './components/Footer';
 import useScrollAnimations from './hooks/useScrollAnimations';
 
@@ -42,16 +43,19 @@ export default function App() {
       <Navigation />
       <HeroSection />
       <SectionDivider number="01" />
-      <MontagemSection />
+      <MaqueteSection />
       <SectionDivider number="02" />
-      <CodigoSection />
+      <MontagemSection />
       <SectionDivider number="03" />
-      <PortoSection />
+      <CodigoSection />
       <SectionDivider number="04" />
-      <MinaSection />
+      <PortoSection />
       <SectionDivider number="05" />
+      <MinaSection />
+      <SectionDivider number="06" />
       <ControleSection />
       <Footer />
     </>
   );
 }
+
