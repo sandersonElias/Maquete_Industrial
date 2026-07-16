@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 
 const ZONES = [
-  { id: 'mina', label: 'Mina', x: 73, y: 8, radius: 8.5, color: '#e87722', desc: 'Extracao de minério de ferro e carvão' },
-  { id: 'porto', label: 'Porto', x: 261, y: 8.5, radius: 8.5, color: '#0066b3', desc: 'Exportacao maritima de minério' },
-  { id: 'circuito1', label: 'Circuito 1', x: 201.5, y: 9, radius: 6.5, color: '#16a34a', desc: 'Ramal principal de circulacao' },
-  { id: 'circuito2', label: 'Circuito 2', x: 280.5, y: 9, radius: 6.5, color: '#16a34a', desc: 'Ramal secundario' },
-  { id: 'trem1', label: 'Trem', x: 73.5, y: 33.5, radius: 6.5, color: '#8b5cf6', desc: 'Estacionamento de locomotivas' },
-  { id: 'trem2', label: 'Trem', x: 142.5, y: 130, radius: 6.5, color: '#8b5cf6', desc: 'Area de manobra' },
-  { id: 'trem3', label: 'Trem', x: 266.5, y: 130, radius: 6.5, color: '#8b5cf6', desc: 'Estacao de carga' },
-  { id: 'controle', label: 'Controle', x: 179, y: 130.5, radius: 8.5, color: '#dc2626', desc: 'Central de controle Arduino' },
-  { id: 'caminhoes', label: 'Caminhoes', x: 248, y: 161.5, radius: 8, color: '#ca8a04', desc: 'Area de caminhoes basculantes 3D' },
-  { id: 'eletronicos', label: 'Eletronicos', x: 142.5, y: 130, radius: 6.5, color: '#0ea5e9', desc: 'Painel de eletronicos e sensores' },
+  { id: 'mina', label: 'Mina', x: 73, y: 8, radius: 8.5, color: '#e87722', desc: 'Mina de ferro e carvao com dois poços de extracao. O minério e transportado por esteiras ate os caminhoes basculantes, que levam ate o trem para exportacao.' },
+  { id: 'porto', label: 'Porto', x: 261, y: 8.5, radius: 8.5, color: '#0066b3', desc: 'Porto de exportacao com guindaste e cais. Navios recebem o minério transportado pelo trem. LED vermelho indica navio atracado e motor linear move a esteira do cais.' },
+  { id: 'circuito1', label: 'Circuito 1', x: 201.5, y: 9, radius: 6.5, color: '#16a34a', desc: 'Ramal principal do circuito ferroviario. Trilhos em escala HO formam um percurso oval com desvios controlados por servomotores SG90.' },
+  { id: 'circuito2', label: 'Circuito 2', x: 280.5, y: 9, radius: 6.5, color: '#16a34a', desc: 'Ramal secundario para cargas especiais. Conecta o porto ao aeroporto de carga por uma via alternativa.' },
+  { id: 'trem1', label: 'Trem', x: 73.5, y: 33.5, radius: 6.5, color: '#8b5cf6', desc: 'Locomotiva eletrica em escala HO com 3 vagões basculantes. Velocidade regulada por PWM e reed switches nas estacoes de carga e descarga.' },
+  { id: 'trem2', label: 'Trem', x: 142.5, y: 130, radius: 6.5, color: '#8b5cf6', desc: 'Area de manobra e desvio do trem. Dois servomotores definem se o trem segue para o porto ou para o ramal do aeroporto.' },
+  { id: 'trem3', label: 'Trem', x: 266.5, y: 130, radius: 6.5, color: '#8b5cf6', desc: 'Estacao de carga e descarga. Reed switch detecta o trem e dispara parada programada de 3 segundos para operacao de carga.' },
+  { id: 'controle', label: 'Controle', x: 179, y: 130.5, radius: 8.5, color: '#dc2626', desc: 'Central de controle com Arduino Mega. Botoes fisicos e display LCD 16x2 permitem modo manual ou automatico (sequencia completa mina -> porto).' },
+  { id: 'caminhoes', label: 'Caminhoes', x: 248, y: 161.5, radius: 8, color: '#ca8a04', desc: '3 caminhoes basculantes impressos em 3D (PLA). Cada um com motor DC micro controlado por driver L298N e sensores IR nas extremidades.' },
+  { id: 'eletronicos', label: 'Eletronicos', x: 142.5, y: 130, radius: 6.5, color: '#0ea5e9', desc: 'Painel de eletronicos com breadboard, fios de conexao e sensores IR TCRT5000. Alimentacao centralizada com fonte 12V e fusíveis individuais.' },
 ];
 
 interface TrainState {
@@ -24,8 +24,8 @@ interface TrainState {
 export default function MaqueteSvgSection() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [trains, setTrains] = useState<TrainState[]>([
-    { id: 0, progress: 0, speed: 0.0008, color: '#0066b3', active: true },
-    { id: 1, progress: 0.5, speed: 0.0006, color: '#e87722', active: true },
+    { id: 0, progress: 0, speed: 0.0003, color: '#0066b3', active: true },
+    { id: 1, progress: 0.5, speed: 0.00025, color: '#e87722', active: true },
   ]);
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
   const animationRef = useRef<number>();
