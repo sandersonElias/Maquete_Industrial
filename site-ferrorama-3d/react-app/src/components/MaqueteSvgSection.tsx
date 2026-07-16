@@ -31,13 +31,14 @@ const TRAIN_NAMES = ['Trem Azul', 'Trem Laranja', 'Trem Verde', 'Trem Roxo'];
 export default function MaqueteSvgSection() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [trains, setTrains] = useState<TrainData[]>([
-    { id: 0, progress: 0, speed: 0.3, color: '#0066b3', name: 'Trem Azul', active: true, direction: 1 },
-    { id: 1, progress: 0.5, speed: 0.25, color: '#e87722', name: 'Trem Laranja', active: true, direction: 1 },
+    { id: 0, progress: 0.1, speed: 0.3, color: '#0066b3', name: 'Trem Azul', active: true, direction: 1 },
+    { id: 1, progress: 0.4, speed: 0.25, color: '#e87722', name: 'Trem Laranja', active: true, direction: 1 },
+    { id: 2, progress: 0.7, speed: 0.35, color: '#16a34a', name: 'Trem Verde', active: true, direction: 1 },
   ]);
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
   const [globalReversed, setGlobalReversed] = useState(false);
   const [globalSpeed, setGlobalSpeed] = useState(1);
-  const [nextId, setNextId] = useState(2);
+  const [nextId, setNextId] = useState(3);
   const animationRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
@@ -117,14 +118,27 @@ export default function MaqueteSvgSection() {
           <svg viewBox="0 0 441 189" fill="none" xmlns="http://www.w3.org/2000/svg" className="maquete-svg">
             <rect width="441" height="189" fill="#0a0e14" rx="12"/>
             <path d={MAQUETE_PATH} fill="#FFB7B7"/>
-            {trains.map(train => {
+            {trains.map((train, idx) => {
               const x = 56 + (train.progress * 270);
-              const y = 23.5 + Math.sin(train.progress * Math.PI * 4) * 2;
+              const trackY = 23.5 + (idx % 3) * 3;
               return (
-                <g key={train.id}>
-                  <rect x={x - 4} y={y - 2} width="8" height="4" rx="1" fill={train.color} className="train-body"/>
-                  <rect x={x + 4} y={y - 1.5} width="3" height="3" rx="0.5" fill={train.color} opacity="0.7"/>
-                  <circle cx={x + 5} cy={y} r="0.5" fill="#ffd700" opacity="0.8"/>
+                <g key={train.id} opacity={train.active ? 1 : 0.4}>
+                  <rect x={x - 6} y={trackY + 1} width="14" height="4" rx="1.5" fill="rgba(0,0,0,0.3)"/>
+                  <rect x={x - 5} y={trackY - 2.5} width="10" height="5" rx="1.5" fill={train.color} stroke="rgba(255,255,255,0.3)" strokeWidth="0.5"/>
+                  <rect x={x - 3} y={trackY - 4} width="4" height="2" rx="0.5" fill={train.color} opacity="0.9"/>
+                  <rect x={x - 2.5} y={trackY - 3.5} width="1.5" height="1" rx="0.2" fill="#88ccff" opacity="0.8"/>
+                  <rect x={x + 1} y={trackY - 3.5} width="1.5" height="1" rx="0.2" fill="#88ccff" opacity="0.8"/>
+                  <rect x={x + 2} y={trackY - 5.5} width="1.5" height="1.5" rx="0.3" fill="#333"/>
+                  <circle cx={x + 5.5} cy={trackY} r="1" fill="#ffd700" opacity="0.9"/>
+                  <circle cx={x - 3} cy={trackY + 2.5} r="1.2" fill="#222"/>
+                  <circle cx={x + 3} cy={trackY + 2.5} r="1.2" fill="#222"/>
+                  <rect x={x - 12} y={trackY - 1.5} width="6" height="3.5" rx="1" fill={train.color} opacity="0.7"/>
+                  <rect x={x - 19} y={trackY - 1.5} width="6" height="3.5" rx="1" fill={train.color} opacity="0.5"/>
+                  {train.active && (
+                    <circle cx={x} cy={trackY - 6} r="1" fill="#16a34a" opacity="0.8">
+                      <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>
+                  )}
                 </g>
               );
             })}
