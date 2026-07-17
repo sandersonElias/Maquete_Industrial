@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Train {
   id: number;
@@ -40,6 +40,7 @@ export default function MaqueteSvgSection() {
   const [globalSpeed, setGlobalSpeed] = useState(1);
   const [nextId, setNextId] = useState(3);
 
+  const pathRef = useRef<SVGPathElement>(null);
   const globalReversedRef = useRef(false);
   const globalSpeedRef = useRef(1);
   const animFrameRef = useRef<number>(0);
@@ -102,27 +103,27 @@ export default function MaqueteSvgSection() {
         <div className="maquete-svg-wrapper">
           <svg viewBox="0 0 441 189" fill="none" xmlns="http://www.w3.org/2000/svg" className="maquete-svg">
             <rect width="441" height="189" fill="#0a0e14" rx="12" />
-            <path d={MAQUETE_PATH} fill="#FFB7B7" />
+            <path ref={pathRef} d={MAQUETE_PATH} fill="#FFB7B7"/>
 
-            {trains.map(train => {
-              const y = 24;
-              const baseX = 56 + train.progress * 310;
+            {trains.map(tr => {
+              if (!pathRef.current) return null;
+              const totalLen = pathRef.current.getTotalLength();
+              const pt = pathRef.current.getPointAtLength(tr.progress * totalLen);
+              const x = pt.x;
+              const y = pt.y;
               return (
-                <g key={train.id} opacity={train.active ? 1 : 0.35}>
-                  {/* Locomotive body */}
-                  <rect x={baseX - 15} y={y - 4} width="30" height="10" rx="2" fill={train.color} />
-                  {/* Cabin */}
-                  <rect x={baseX - 12} y={y - 9} width="10" height="6" rx="1.5" fill={train.color} opacity="0.9" />
-                  {/* Wheels */}
-                  <circle cx={baseX - 8} cy={y + 7} r="2.5" fill="#1a1a1a" />
-                  <circle cx={baseX + 4} cy={y + 7} r="2.5" fill="#1a1a1a" />
-                  <circle cx={baseX + 12} cy={y + 7} r="2.5" fill="#1a1a1a" />
-                  {/* Active indicator */}
-                  {train.active && (
-                    <circle cx={baseX} cy={y - 14} r="1.5" fill="#22c55e">
-                      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite" />
-                    </circle>
-                  )}
+                <g key={tr.id} opacity={tr.active ? 1 : 0.3}>
+                  <rect x={x - 8} y={y - 4} width="30" height="8" rx="3" fill={tr.color}/>
+                  <rect x={x - 3} y={y - 7} width="8" height="4" rx="1.5" fill={tr.color} opacity="0.9"/>
+                  <rect x={x - 2} y={y - 6} width="2.5" height="2.5" rx="0.5" fill="#b8e0ff"/>
+                  <rect x={x + 1.5} y={y - 6} width="2.5" height="2.5" rx="0.5" fill="#b8e0ff"/>
+                  <circle cx={x + 23} cy={y} r="2.5" fill="#ffd700"/>
+                  <circle cx={x - 4} cy={y + 4} r="2.5" fill="#1a1a1a"/>
+                  <circle cx={x + 8} cy={y + 4} r="2.5" fill="#1a1a1a"/>
+                  <circle cx={x + 16} cy={y + 4} r="2.5" fill="#1a1a1a"/>
+                  <rect x={x - 28} y={y - 2} width="18" height="6" rx="2" fill={tr.color} opacity="0.6"/>
+                  <rect x={x - 44} y={y - 2} width="16" height="6" rx="2" fill={tr.color} opacity="0.45"/>
+                  {tr.active && <circle cx={x} cy={y - 10} r="1.5" fill="#22c55e"><animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/></circle>}
                 </g>
               );
             })}
