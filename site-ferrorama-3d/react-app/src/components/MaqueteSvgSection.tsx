@@ -118,25 +118,45 @@ export default function MaqueteSvgSection() {
           <svg viewBox="0 0 441 189" fill="none" xmlns="http://www.w3.org/2000/svg" className="maquete-svg">
             <rect width="441" height="189" fill="#0a0e14" rx="12"/>
             <path d={MAQUETE_PATH} fill="#FFB7B7"/>
-            {trains.map((train, idx) => {
+            {trains.map((train) => {
               const x = 56 + (train.progress * 270);
-              const trackY = 23.5 + (idx % 3) * 3;
+              const y = 23.5;
+              const dir = globalReversed ? -train.direction : train.direction;
+              const wagonsBehind = dir > 0 ? -1 : 1;
               return (
                 <g key={train.id} opacity={train.active ? 1 : 0.4}>
-                  <rect x={x - 6} y={trackY + 1} width="14" height="4" rx="1.5" fill="rgba(0,0,0,0.3)"/>
-                  <rect x={x - 5} y={trackY - 2.5} width="10" height="5" rx="1.5" fill={train.color} stroke="rgba(255,255,255,0.3)" strokeWidth="0.5"/>
-                  <rect x={x - 3} y={trackY - 4} width="4" height="2" rx="0.5" fill={train.color} opacity="0.9"/>
-                  <rect x={x - 2.5} y={trackY - 3.5} width="1.5" height="1" rx="0.2" fill="#88ccff" opacity="0.8"/>
-                  <rect x={x + 1} y={trackY - 3.5} width="1.5" height="1" rx="0.2" fill="#88ccff" opacity="0.8"/>
-                  <rect x={x + 2} y={trackY - 5.5} width="1.5" height="1.5" rx="0.3" fill="#333"/>
-                  <circle cx={x + 5.5} cy={trackY} r="1" fill="#ffd700" opacity="0.9"/>
-                  <circle cx={x - 3} cy={trackY + 2.5} r="1.2" fill="#222"/>
-                  <circle cx={x + 3} cy={trackY + 2.5} r="1.2" fill="#222"/>
-                  <rect x={x - 12} y={trackY - 1.5} width="6" height="3.5" rx="1" fill={train.color} opacity="0.7"/>
-                  <rect x={x - 19} y={trackY - 1.5} width="6" height="3.5" rx="1" fill={train.color} opacity="0.5"/>
+                  {/* Shadow */}
+                  <ellipse cx={x} cy={y + 4} rx="12" ry="2" fill="rgba(0,0,0,0.25)"/>
+                  {/* Wagon 2 (furthest back) */}
+                  <rect x={x + wagonsBehind * 16} y={y - 2} width="10" height="5" rx="1.5" fill={train.color} opacity="0.5"/>
+                  <rect x={x + wagonsBehind * 16 + 1} y={y - 1} width="8" height="3" rx="0.5" fill={train.color} opacity="0.3"/>
+                  {/* Wagon 1 */}
+                  <rect x={x + wagonsBehind * 8} y={y - 2} width="10" height="5" rx="1.5" fill={train.color} opacity="0.65"/>
+                  <rect x={x + wagonsBehind * 8 + 1} y={y - 1} width="8" height="3" rx="0.5" fill={train.color} opacity="0.4"/>
+                  {/* Locomotive body */}
+                  <rect x={x - 8} y={y - 3} width="16" height="7" rx="2" fill={train.color} stroke="rgba(255,255,255,0.25)" strokeWidth="0.7"/>
+                  {/* Cabin */}
+                  <rect x={x - 5} y={y - 6} width="6" height="3.5" rx="1" fill={train.color} opacity="0.95"/>
+                  {/* Windows */}
+                  <rect x={x - 4} y={y - 5.2} width="2" height="1.5" rx="0.3" fill="#b8e0ff" opacity="0.9"/>
+                  <rect x={x + 0.5} y={y - 5.2} width="2" height="1.5" rx="0.3" fill="#b8e0ff" opacity="0.9"/>
+                  {/* Smokestack */}
+                  <rect x={x + 3} y={y - 7.5} width="2" height="2" rx="0.5" fill="#2a2a2a"/>
+                  {/* Headlight */}
+                  <circle cx={dir > 0 ? x + 8.5 : x - 8.5} cy={y} r="1.5" fill="#ffd700" opacity="0.95"/>
+                  <circle cx={dir > 0 ? x + 8.5 : x - 8.5} cy={y} r="0.7" fill="#fff" opacity="0.6"/>
+                  {/* Wheels */}
+                  <circle cx={x - 5} cy={y + 3.5} r="1.8" fill="#1a1a1a"/>
+                  <circle cx={x + 5} cy={y + 3.5} r="1.8" fill="#1a1a1a"/>
+                  <circle cx={x - 5} cy={y + 3.5} r="0.8" fill="#444"/>
+                  <circle cx={x + 5} cy={y + 3.5} r="0.8" fill="#444"/>
+                  {/* Coupling bars */}
+                  <line x1={x + 8} y1={y} x2={x + wagonsBehind * 8 - (wagonsBehind > 0 ? 10 : 0)} y2={y} stroke="#555" strokeWidth="0.8"/>
+                  <line x1={x + wagonsBehind * 8 + (wagonsBehind > 0 ? 10 : -10) * -1} y1={y} x2={x + wagonsBehind * 16 - (wagonsBehind > 0 ? 10 : 0)} y2={y} stroke="#555" strokeWidth="0.8"/>
+                  {/* Active indicator */}
                   {train.active && (
-                    <circle cx={x} cy={trackY - 6} r="1" fill="#16a34a" opacity="0.8">
-                      <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
+                    <circle cx={x} cy={y - 9} r="1.2" fill="#22c55e">
+                      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite"/>
                     </circle>
                   )}
                 </g>
