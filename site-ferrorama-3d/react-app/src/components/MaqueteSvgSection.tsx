@@ -39,6 +39,8 @@ export default function MaqueteSvgSection() {
   const [globalReversed, setGlobalReversed] = useState(false);
   const [globalSpeed, setGlobalSpeed] = useState(1);
   const [nextId, setNextId] = useState(3);
+  const trainsRef = useRef(trains);
+  trainsRef.current = trains;
   const animationRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
@@ -86,15 +88,17 @@ export default function MaqueteSvgSection() {
     const animate = (time: number) => {
       const delta = lastTimeRef.current ? (time - lastTimeRef.current) / 1000 : 0;
       lastTimeRef.current = time;
-      setTrains(prev => prev.map(train => {
-        if (!train.active) return train;
-        const effectiveDirection = globalReversed ? -train.direction : train.direction;
-        const newProgress = (train.progress + (train.speed * 0.001 * globalSpeed * effectiveDirection * delta)) % 1;
-        return {
-          ...train,
-          progress: newProgress < 0 ? newProgress + 1 : newProgress,
-        };
-      }));
+      if (delta > 0 && delta < 0.1) {
+        setTrains(prev => prev.map(train => {
+          if (!train.active) return train;
+          const effectiveDirection = globalReversed ? -train.direction : train.direction;
+          const newProgress = (train.progress + (train.speed * 0.001 * globalSpeed * effectiveDirection * delta)) % 1;
+          return {
+            ...train,
+            progress: newProgress < 0 ? newProgress + 1 : newProgress,
+          };
+        }));
+      }
       animationRef.current = requestAnimationFrame(animate);
     };
     animationRef.current = requestAnimationFrame(animate);
@@ -121,41 +125,43 @@ export default function MaqueteSvgSection() {
             {trains.map((train) => {
               const x = 56 + (train.progress * 270);
               const y = 23.5;
-              const dir = globalReversed ? -train.direction : train.direction;
-              const wagonsBehind = dir > 0 ? -1 : 1;
               return (
                 <g key={train.id} opacity={train.active ? 1 : 0.4}>
                   {/* Shadow */}
-                  <ellipse cx={x} cy={y + 4} rx="12" ry="2" fill="rgba(0,0,0,0.25)"/>
-                  {/* Wagon 2 (furthest back) */}
-                  <rect x={x + wagonsBehind * 16} y={y - 2} width="10" height="5" rx="1.5" fill={train.color} opacity="0.5"/>
-                  <rect x={x + wagonsBehind * 16 + 1} y={y - 1} width="8" height="3" rx="0.5" fill={train.color} opacity="0.3"/>
+                  <ellipse cx={x} cy={y + 6} rx="18" ry="3" fill="rgba(0,0,0,0.3)"/>
+                  {/* Wagon 2 */}
+                  <rect x={x - 30} y={y - 3} width="14" height="7" rx="2" fill={train.color} opacity="0.5"/>
+                  <rect x={x - 29} y={y - 2} width="12" height="5" rx="1" fill={train.color} opacity="0.3"/>
+                  <circle cx={x - 27} cy={y + 4.5} r="2" fill="#1a1a1a"/>
+                  <circle cx={x - 21} cy={y + 4.5} r="2" fill="#1a1a1a"/>
                   {/* Wagon 1 */}
-                  <rect x={x + wagonsBehind * 8} y={y - 2} width="10" height="5" rx="1.5" fill={train.color} opacity="0.65"/>
-                  <rect x={x + wagonsBehind * 8 + 1} y={y - 1} width="8" height="3" rx="0.5" fill={train.color} opacity="0.4"/>
-                  {/* Locomotive body */}
-                  <rect x={x - 8} y={y - 3} width="16" height="7" rx="2" fill={train.color} stroke="rgba(255,255,255,0.25)" strokeWidth="0.7"/>
+                  <rect x={x - 15} y={y - 3} width="14" height="7" rx="2" fill={train.color} opacity="0.65"/>
+                  <rect x={x - 14} y={y - 2} width="12" height="5" rx="1" fill={train.color} opacity="0.4"/>
+                  <circle cx={x - 12} cy={y + 4.5} r="2" fill="#1a1a1a"/>
+                  <circle cx={x - 6} cy={y + 4.5} r="2" fill="#1a1a1a"/>
+                  {/* Coupling */}
+                  <line x1={x - 16} y1={y} x2={x - 15} y2={y} stroke="#555" strokeWidth="1"/>
+                  <line x1={x - 1} y1={y} x2={x} y2={y} stroke="#555" strokeWidth="1"/>
+                  {/* Locomotive */}
+                  <rect x={x - 10} y={y - 5} width="20" height="10" rx="3" fill={train.color} stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
                   {/* Cabin */}
-                  <rect x={x - 5} y={y - 6} width="6" height="3.5" rx="1" fill={train.color} opacity="0.95"/>
+                  <rect x={x - 7} y={y - 9} width="8" height="5" rx="1.5" fill={train.color} opacity="0.95"/>
                   {/* Windows */}
-                  <rect x={x - 4} y={y - 5.2} width="2" height="1.5" rx="0.3" fill="#b8e0ff" opacity="0.9"/>
-                  <rect x={x + 0.5} y={y - 5.2} width="2" height="1.5" rx="0.3" fill="#b8e0ff" opacity="0.9"/>
+                  <rect x={x - 6} y={y - 8} width="3" height="2.5" rx="0.5" fill="#b8e0ff" opacity="0.9"/>
+                  <rect x={x - 2} y={y - 8} width="3" height="2.5" rx="0.5" fill="#b8e0ff" opacity="0.9"/>
                   {/* Smokestack */}
-                  <rect x={x + 3} y={y - 7.5} width="2" height="2" rx="0.5" fill="#2a2a2a"/>
+                  <rect x={x + 4} y={y - 11} width="3" height="3" rx="0.8" fill="#2a2a2a"/>
                   {/* Headlight */}
-                  <circle cx={dir > 0 ? x + 8.5 : x - 8.5} cy={y} r="1.5" fill="#ffd700" opacity="0.95"/>
-                  <circle cx={dir > 0 ? x + 8.5 : x - 8.5} cy={y} r="0.7" fill="#fff" opacity="0.6"/>
+                  <circle cx={x + 11} cy={y} r="2" fill="#ffd700"/>
+                  <circle cx={x + 11} cy={y} r="1" fill="#fff" opacity="0.7"/>
                   {/* Wheels */}
-                  <circle cx={x - 5} cy={y + 3.5} r="1.8" fill="#1a1a1a"/>
-                  <circle cx={x + 5} cy={y + 3.5} r="1.8" fill="#1a1a1a"/>
-                  <circle cx={x - 5} cy={y + 3.5} r="0.8" fill="#444"/>
-                  <circle cx={x + 5} cy={y + 3.5} r="0.8" fill="#444"/>
-                  {/* Coupling bars */}
-                  <line x1={x + 8} y1={y} x2={x + wagonsBehind * 8 - (wagonsBehind > 0 ? 10 : 0)} y2={y} stroke="#555" strokeWidth="0.8"/>
-                  <line x1={x + wagonsBehind * 8 + (wagonsBehind > 0 ? 10 : -10) * -1} y1={y} x2={x + wagonsBehind * 16 - (wagonsBehind > 0 ? 10 : 0)} y2={y} stroke="#555" strokeWidth="0.8"/>
+                  <circle cx={x - 6} cy={y + 5} r="2.5" fill="#1a1a1a"/>
+                  <circle cx={x + 6} cy={y + 5} r="2.5" fill="#1a1a1a"/>
+                  <circle cx={x - 6} cy={y + 5} r="1" fill="#444"/>
+                  <circle cx={x + 6} cy={y + 5} r="1" fill="#444"/>
                   {/* Active indicator */}
                   {train.active && (
-                    <circle cx={x} cy={y - 9} r="1.2" fill="#22c55e">
+                    <circle cx={x} cy={y - 13} r="1.5" fill="#22c55e">
                       <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite"/>
                     </circle>
                   )}
