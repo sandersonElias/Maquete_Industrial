@@ -5,7 +5,7 @@ const ZONES = [
   { id: 'porto', label: 'Porto', x: 241, y: 8.5, radius: 8.5, color: '#0066b3', desc: 'Porto de exportacao com guindaste e cais. Navios recebem o minério transportado pelo trem. LED vermelho indica navio atracado e motor linear move a esteira do cais.' },
   { id: 'circuito1', label: 'Circuito 1', x: 201.5, y: 9, radius: 6.5, color: '#16a34a', desc: 'Ramal principal do circuito ferroviario. Trilhos em escala HO formam um percurso oval com desvios controlados por servomotores SG90.' },
   { id: 'circuito2', label: 'Circuito 2', x: 280.5, y: 9, radius: 6.5, color: '#16a34a', desc: 'Ramal secundario para cargas especiais. Conecta o porto ao aeroporto de carga por uma via alternativa.' },
-  { id: 'trem1', label: 'Trem', x: 73.5, y: 33.5, radius: 6.5, color: '#8b5cf6', desc: 'Locomotiva eletrica em escala HO com 3 vagões basculantes. Velocidade regulada por PWM e reed switches nas estacoes de carga e descarga.' },
+  { id: 'trem1', label: 'Trem', x: 73.5, y: 33.5, radius: 6.5, color: '#8b5cf6', desc: 'Locomotiva eletrica em escala HO com 3 vagoes basculantes. Velocidade regulada por PWM e reed switches nas estacoes de carga e descarga.' },
   { id: 'trem2', label: 'Trem', x: 142.5, y: 130, radius: 6.5, color: '#8b5cf6', desc: 'Area de manobra e desvio do trem. Dois servomotores definem se o trem segue para o porto ou para o ramal do aeroporto.' },
   { id: 'trem3', label: 'Trem', x: 266.5, y: 130, radius: 6.5, color: '#8b5cf6', desc: 'Estacao de carga e descarga. Reed switch detecta o trem e dispara parada programada de 3 segundos para operacao de carga.' },
   { id: 'controle', label: 'Controle', x: 179, y: 130.5, radius: 8.5, color: '#dc2626', desc: 'Central de controle com Arduino Mega. Botoes fisicos e display LCD 16x2 permitem modo manual ou automatico (sequencia completa mina -> porto).' },
@@ -22,41 +22,140 @@ interface TrainData {
   color: string;
   name: string;
   active: boolean;
-  direction: number; // 1 or -1
+  direction: number;
 }
 
 const TRAIN_COLORS = ['#0066b3', '#e87722', '#16a34a', '#8b5cf6'];
-const TRAIN_NAMES = ['Trem Azul', 'Trem Laranja', 'Trem Verde', 'Trem Roxo'];
+const TRAIN_NAMES = ['Azul', 'Laranja', 'Verde', 'Roxo'];
+
+function Locomotive({ x, y, color }: { x: number; y: number; color: string }) {
+  return (
+    <g>
+      {/* Shadow */}
+      <ellipse cx={x} cy={y + 8} rx="22" ry="4" fill="rgba(0,0,0,0.3)" />
+      {/* Body */}
+      <rect x={x - 20} y={y - 5} width="40" height="12" rx="3" fill={color} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      {/* Cabin */}
+      <rect x={x - 16} y={y - 11} width="12" height="7" rx="2" fill={color} opacity="0.95" />
+      {/* Windows */}
+      <rect x={x - 14} y={y - 9.5} width="4.5" height="4" rx="1" fill="#b8e0ff" opacity="0.9" />
+      <rect x={x - 8} y={y - 9.5} width="4.5" height="4" rx="1" fill="#b8e0ff" opacity="0.9" />
+      {/* Smokestack */}
+      <rect x={x + 8} y={y - 12} width="4" height="4" rx="1" fill="#2a2a2a" />
+      {/* Headlight */}
+      <circle cx={x + 21} cy={y + 1} r="3" fill="#ffd700" />
+      <circle cx={x + 21} cy={y + 1} r="1.5" fill="#fff" opacity="0.7" />
+      {/* Wheels */}
+      <circle cx={x - 12} cy={y + 7} r="3" fill="#1a1a1a" />
+      <circle cx={x + 4} cy={y + 7} r="3" fill="#1a1a1a" />
+      <circle cx={x + 14} cy={y + 7} r="3" fill="#1a1a1a" />
+      <circle cx={x - 12} cy={y + 7} r="1.2" fill="#444" />
+      <circle cx={x + 4} cy={y + 7} r="1.2" fill="#444" />
+      <circle cx={x + 14} cy={y + 7} r="1.2" fill="#444" />
+    </g>
+  );
+}
+
+function Wagon({ x, y, color, opacity }: { x: number; y: number; color: string; opacity: number }) {
+  return (
+    <g opacity={opacity}>
+      {/* Body */}
+      <rect x={x - 12.5} y={y - 3} width="25" height="8" rx="2" fill={color} />
+      <rect x={x - 11} y={y - 1.5} width="22" height="5" rx="1" fill={color} opacity="0.4" />
+      {/* Wheels */}
+      <circle cx={x - 8} cy={y + 5.5} r="2.5" fill="#1a1a1a" />
+      <circle cx={x + 8} cy={y + 5.5} r="2.5" fill="#1a1a1a" />
+      <circle cx={x - 8} cy={y + 5.5} r="1" fill="#444" />
+      <circle cx={x + 8} cy={y + 5.5} r="1" fill="#444" />
+    </g>
+  );
+}
+
+function TrainSvg({ train }: { train: TrainData }) {
+  const y = 24;
+  const baseX = 56 + train.progress * 310;
+  const locoX = baseX;
+  const wagon1X = baseX - 42;
+  const wagon2X = baseX - 70;
+  const wagon3X = baseX - 98;
+
+  return (
+    <g opacity={train.active ? 1 : 0.35}>
+      {/* Couplings */}
+      <line x1={wagon3X + 12.5} y1={y} x2={wagon1X - 12.5} y2={y} stroke="#555" strokeWidth="1" />
+      <line x1={wagon2X + 12.5} y1={y} x2={wagon1X - 12.5} y2={y} stroke="#555" strokeWidth="1" />
+      <line x1={wagon1X + 12.5} y1={y} x2={locoX - 20} y2={y} stroke="#555" strokeWidth="1" />
+      <Wagon x={wagon3X} y={y} color={train.color} opacity={0.5} />
+      <Wagon x={wagon2X} y={y} color={train.color} opacity={0.6} />
+      <Wagon x={wagon1X} y={y} color={train.color} opacity={0.75} />
+      <Locomotive x={locoX} y={y} color={train.color} />
+      {/* Active indicator */}
+      {train.active && (
+        <circle cx={locoX} cy={y - 16} r="2" fill="#22c55e">
+          <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite" />
+        </circle>
+      )}
+    </g>
+  );
+}
 
 export default function MaqueteSvgSection() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const [trains, setTrains] = useState<TrainData[]>([
-    { id: 0, progress: 0.1, speed: 0.3, color: '#0066b3', name: 'Trem Azul', active: true, direction: 1 },
-    { id: 1, progress: 0.4, speed: 0.25, color: '#e87722', name: 'Trem Laranja', active: true, direction: 1 },
-    { id: 2, progress: 0.7, speed: 0.35, color: '#16a34a', name: 'Trem Verde', active: true, direction: 1 },
-  ]);
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
+  const [trains, setTrains] = useState<TrainData[]>([
+    { id: 0, progress: 0.1, speed: 0.08, color: '#0066b3', name: 'Azul', active: true, direction: 1 },
+    { id: 1, progress: 0.4, speed: 0.06, color: '#e87722', name: 'Laranja', active: true, direction: 1 },
+    { id: 2, progress: 0.7, speed: 0.07, color: '#16a34a', name: 'Verde', active: true, direction: 1 },
+  ]);
   const [globalReversed, setGlobalReversed] = useState(false);
   const [globalSpeed, setGlobalSpeed] = useState(1);
   const [nextId, setNextId] = useState(3);
-  const trainsRef = useRef(trains);
-  trainsRef.current = trains;
-  const animationRef = useRef<number>();
-  const lastTimeRef = useRef<number>(0);
+
+  const globalReversedRef = useRef(false);
+  const globalSpeedRef = useRef(1);
+  const trainsRef = useRef<TrainData[]>(trains);
+  const animFrameRef = useRef<number>();
+  const lastTimeRef = useRef(0);
+
+  // Keep refs in sync
+  useEffect(() => { globalReversedRef.current = globalReversed; }, [globalReversed]);
+  useEffect(() => { globalSpeedRef.current = globalSpeed; }, [globalSpeed]);
+  useEffect(() => { trainsRef.current = trains; }, [trains]);
+
+  // Single animation loop - runs forever, reads from refs
+  useEffect(() => {
+    const animate = (time: number) => {
+      const delta = lastTimeRef.current ? Math.min((time - lastTimeRef.current) / 1000, 0.05) : 0;
+      lastTimeRef.current = time;
+
+      if (delta > 0) {
+        setTrains(prev => prev.map(t => {
+          if (!t.active) return t;
+          const dir = globalReversedRef.current ? -t.direction : t.direction;
+          let p = t.progress + t.speed * globalSpeedRef.current * dir * delta;
+          if (p > 1) p -= 1;
+          if (p < 0) p += 1;
+          return { ...t, progress: p };
+        }));
+      }
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+    animFrameRef.current = requestAnimationFrame(animate);
+    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
+  }, []);
 
   const addTrain = () => {
     const colorIndex = nextId % TRAIN_COLORS.length;
     const nameIndex = nextId % TRAIN_NAMES.length;
-    const newTrain: TrainData = {
+    setTrains(prev => [...prev, {
       id: nextId,
       progress: Math.random(),
-      speed: 0.3,
+      speed: 0.07,
       color: TRAIN_COLORS[colorIndex],
-      name: `${TRAIN_NAMES[nameIndex]} ${nextId + 1}`,
+      name: `${TRAIN_NAMES[nameIndex]}`,
       active: true,
       direction: 1,
-    };
-    setTrains(prev => [...prev, newTrain]);
+    }]);
     setNextId(prev => prev + 1);
   };
 
@@ -84,29 +183,6 @@ export default function MaqueteSvgSection() {
     setTrains(prev => prev.map(t => ({ ...t, active: false })));
   };
 
-  useEffect(() => {
-    const animate = (time: number) => {
-      const delta = lastTimeRef.current ? (time - lastTimeRef.current) / 1000 : 0;
-      lastTimeRef.current = time;
-      if (delta > 0 && delta < 0.1) {
-        setTrains(prev => prev.map(train => {
-          if (!train.active) return train;
-          const effectiveDirection = globalReversed ? -train.direction : train.direction;
-          const newProgress = (train.progress + (train.speed * 0.001 * globalSpeed * effectiveDirection * delta)) % 1;
-          return {
-            ...train,
-            progress: newProgress < 0 ? newProgress + 1 : newProgress,
-          };
-        }));
-      }
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-  }, [globalReversed, globalSpeed]);
-
   const selectedZoneData = ZONES.find(z => z.id === selectedZone);
 
   return (
@@ -122,52 +198,9 @@ export default function MaqueteSvgSection() {
           <svg viewBox="0 0 441 189" fill="none" xmlns="http://www.w3.org/2000/svg" className="maquete-svg">
             <rect width="441" height="189" fill="#0a0e14" rx="12"/>
             <path d={MAQUETE_PATH} fill="#FFB7B7"/>
-            {trains.map((train) => {
-              const x = 56 + (train.progress * 270);
-              const y = 23.5;
-              return (
-                <g key={train.id} opacity={train.active ? 1 : 0.4}>
-                  {/* Shadow */}
-                  <ellipse cx={x} cy={y + 6} rx="18" ry="3" fill="rgba(0,0,0,0.3)"/>
-                  {/* Wagon 2 */}
-                  <rect x={x - 30} y={y - 3} width="14" height="7" rx="2" fill={train.color} opacity="0.5"/>
-                  <rect x={x - 29} y={y - 2} width="12" height="5" rx="1" fill={train.color} opacity="0.3"/>
-                  <circle cx={x - 27} cy={y + 4.5} r="2" fill="#1a1a1a"/>
-                  <circle cx={x - 21} cy={y + 4.5} r="2" fill="#1a1a1a"/>
-                  {/* Wagon 1 */}
-                  <rect x={x - 15} y={y - 3} width="14" height="7" rx="2" fill={train.color} opacity="0.65"/>
-                  <rect x={x - 14} y={y - 2} width="12" height="5" rx="1" fill={train.color} opacity="0.4"/>
-                  <circle cx={x - 12} cy={y + 4.5} r="2" fill="#1a1a1a"/>
-                  <circle cx={x - 6} cy={y + 4.5} r="2" fill="#1a1a1a"/>
-                  {/* Coupling */}
-                  <line x1={x - 16} y1={y} x2={x - 15} y2={y} stroke="#555" strokeWidth="1"/>
-                  <line x1={x - 1} y1={y} x2={x} y2={y} stroke="#555" strokeWidth="1"/>
-                  {/* Locomotive */}
-                  <rect x={x - 10} y={y - 5} width="20" height="10" rx="3" fill={train.color} stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
-                  {/* Cabin */}
-                  <rect x={x - 7} y={y - 9} width="8" height="5" rx="1.5" fill={train.color} opacity="0.95"/>
-                  {/* Windows */}
-                  <rect x={x - 6} y={y - 8} width="3" height="2.5" rx="0.5" fill="#b8e0ff" opacity="0.9"/>
-                  <rect x={x - 2} y={y - 8} width="3" height="2.5" rx="0.5" fill="#b8e0ff" opacity="0.9"/>
-                  {/* Smokestack */}
-                  <rect x={x + 4} y={y - 11} width="3" height="3" rx="0.8" fill="#2a2a2a"/>
-                  {/* Headlight */}
-                  <circle cx={x + 11} cy={y} r="2" fill="#ffd700"/>
-                  <circle cx={x + 11} cy={y} r="1" fill="#fff" opacity="0.7"/>
-                  {/* Wheels */}
-                  <circle cx={x - 6} cy={y + 5} r="2.5" fill="#1a1a1a"/>
-                  <circle cx={x + 6} cy={y + 5} r="2.5" fill="#1a1a1a"/>
-                  <circle cx={x - 6} cy={y + 5} r="1" fill="#444"/>
-                  <circle cx={x + 6} cy={y + 5} r="1" fill="#444"/>
-                  {/* Active indicator */}
-                  {train.active && (
-                    <circle cx={x} cy={y - 13} r="1.5" fill="#22c55e">
-                      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite"/>
-                    </circle>
-                  )}
-                </g>
-              );
-            })}
+            {trains.map((train) => (
+              <TrainSvg key={train.id} train={train} />
+            ))}
             {ZONES.map(zone => (
               <g key={zone.id} className="maquete-zone" onClick={() => setSelectedZone(selectedZone === zone.id ? null : zone.id)} onMouseEnter={() => setHoveredZone(zone.id)} onMouseLeave={() => setHoveredZone(null)} style={{ cursor: 'pointer' }}>
                 <circle cx={zone.x} cy={zone.y} r={zone.radius + 2} fill={zone.color} opacity={hoveredZone === zone.id || selectedZone === zone.id ? 0.15 : 0.05} className="zone-glow"/>
@@ -219,7 +252,7 @@ export default function MaqueteSvgSection() {
             </span>
             <button
               className="ctrl-btn"
-              onClick={() => setGlobalReversed(!globalReversed)}
+              onClick={() => setGlobalReversed(prev => !prev)}
               style={{ marginLeft: 'auto' }}
             >
               {globalReversed ? 'Reverter' : 'Normal'}
@@ -255,9 +288,9 @@ export default function MaqueteSvgSection() {
                   </div>
                   <input
                     type="range"
-                    min="0.05"
-                    max="1"
-                    step="0.05"
+                    min="0.01"
+                    max="0.3"
+                    step="0.01"
                     value={train.speed}
                     onChange={(e) => setTrainSpeed(train.id, parseFloat(e.target.value))}
                     style={{ width: '100%', marginTop: '4px', accentColor: train.color }}
@@ -265,7 +298,7 @@ export default function MaqueteSvgSection() {
                 </div>
                 <div className="train-actions">
                   <button
-                    className={`train-btn ${train.active ? 'active' : ''}`}
+                    className={	rain-btn }
                     onClick={() => toggleTrain(train.id)}
                     title={train.active ? 'Pausar' : 'Iniciar'}
                   >
