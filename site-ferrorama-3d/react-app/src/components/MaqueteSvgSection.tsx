@@ -118,33 +118,91 @@ export default function MaqueteSvgSection() {
             {trains.map(tr => {
               if (!trackPathRef.current) return null;
               const totalLen = trackPathRef.current.getTotalLength();
-              const pt = trackPathRef.current.getPointAtLength(tr.progress * totalLen);
-              const x = pt.x;
-              const y = pt.y;
 
-              // Get next point for rotation
-              const nextP = Math.min(tr.progress + 0.01, 1);
-              const nextPt = trackPathRef.current.getPointAtLength(nextP * totalLen);
-              const angle = Math.atan2(nextPt.y - pt.y, nextPt.x - pt.x) * (180 / Math.PI);
+              // Wagon config: [offsetBehindLoco (as fraction of total), width, height]
+              const WAGONS = [
+                { offset: 0, w: 14, h: 7, label: 'loco' },       // locomotive
+                { offset: 0.025, w: 10, h: 5, label: 'vagao1' },  // wagon 1
+                { offset: 0.045, w: 10, h: 5, label: 'vagao2' },  // wagon 2
+              ];
 
               return (
-                <g key={tr.id} opacity={tr.active ? 1 : 0.3} transform={`rotate(${angle}, ${x}, ${y})`}>
-                  {/* Locomotive */}
-                  <rect x={x - 6} y={y - 3} width="12" height="6" rx="2" fill={tr.color}/>
-                  <rect x={x - 5} y={y - 2} width="3" height="2" rx="0.5" fill="#b8e0ff" opacity="0.8"/>
-                  {/* Headlight */}
-                  <circle cx={x + 7} cy={y} r="1.5" fill="#ffd700"/>
-                  {/* Wheels */}
-                  <circle cx={x - 3} cy={y + 3} r="1.5" fill="#1a1a1a"/>
-                  <circle cx={x + 3} cy={y + 3} r="1.5" fill="#1a1a1a"/>
-                  {/* Wagons */}
-                  <rect x={x - 16} y={y - 2} width="8" height="4" rx="1" fill={tr.color} opacity="0.6"/>
-                  <rect x={x - 26} y={y - 2} width="8" height="4" rx="1" fill={tr.color} opacity="0.45"/>
-                  {/* Status light */}
+                <g key={tr.id} opacity={tr.active ? 1 : 0.3}>
+                  {WAGONS.map((wagon, wi) => {
+                    // Calculate wagon progress along path
+                    let wp = tr.progress - wagon.offset;
+                    if (wp < 0) wp += 1;
+
+                    const pt = trackPathRef.current!.getPointAtLength(wp * totalLen);
+
+                    // Get rotation from next point on path
+                    const lookAhead = 0.005;
+                    let wpNext = wp + lookAhead;
+                    if (wpNext > 1) wpNext -= 1;
+                    const ptNext = trackPathRef.current!.getPointAtLength(wpNext * totalLen);
+                    const angle = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x) * (180 / Math.PI);
+
+                    const isLoco = wi === 0;
+
+                    return (
+                      <g key={wi} transform={`rotate(${angle}, ${pt.x}, ${pt.y})`}>
+                        {/* Body */}
+                        <rect
+                          x={pt.x - wagon.w / 2}
+                          y={pt.y - wagon.h / 2}
+                          width={wagon.w}
+                          height={wagon.h}
+                          rx={isLoco ? 2.5 : 1.5}
+                          fill={tr.color}
+                          opacity={isLoco ? 1 : 0.55}
+                        />
+                        {isLoco && (
+                          <>
+                            {/* Locomotive cabin */}
+                            <rect
+                              x={pt.x - wagon.w / 2 + 2}
+                              y={pt.y - wagon.h / 2 - 2}
+                              width={4}
+                              height={2}
+                              rx={0.8}
+                              fill={tr.color}
+                              opacity={0.9}
+                            />
+                            {/* Windows */}
+                            <rect x={pt.x - 3} y={pt.y - 2} width={2} height={1.5} rx={0.3} fill="#b8e0ff" opacity="0.8"/>
+                            <rect x={pt.x} y={pt.y - 2} width={2} height={1.5} rx={0.3} fill="#b8e0ff" opacity="0.8"/>
+                            {/* Headlight */}
+                            <circle cx={pt.x + wagon.w / 2} cy={pt.y} r={1.2} fill="#ffd700"/>
+                          </>
+                        )}
+                        {/* Wheels */}
+                        <circle cx={pt.x - wagon.w / 4} cy={pt.y + wagon.h / 2} r={1.2} fill="#1a1a1a"/>
+                        <circle cx={pt.x + wagon.w / 4} cy={pt.y + wagon.h / 2} r={1.2} fill="#1a1a1a"/>
+                        {/* Coupling (connecting rod between wagons) */}
+                        {!isLoco && (
+                          <line
+                            x1={pt.x + wagon.w / 2}
+                            y1={pt.y}
+                            x2={pt.x + wagon.w / 2 + 3}
+                            y2={pt.y}
+                            stroke={tr.color}
+                            strokeWidth={0.8}
+                            opacity={0.4}
+                          />
+                        )}
+                      </g>
+                    );
+                  })}
+                  {/* Active indicator */}
                   {tr.active && (
-                    <circle cx={x} cy={y - 6} r="1.2" fill="#22c55e">
-                      <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/>
-                    </circle>
+                    (() => {
+                      const locoPt = trackPathRef.current!.getPointAtLength(tr.progress * totalLen);
+                      return (
+                        <circle cx={locoPt.x} cy={locoPt.y - 8} r={1.2} fill="#22c55e">
+                          <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                      );
+                    })()
                   )}
                 </g>
               );
