@@ -52,6 +52,19 @@ const statItem = {
   },
 };
 
+const imageReveal = {
+  hidden: { opacity: 0, scale: 1.1 },
+  visible: (i: number) => ({
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 1.2,
+      delay: 0.3 + i * 0.15,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+};
+
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true });
@@ -91,6 +104,40 @@ export default function HeroSection() {
         <div className="gradient-orb orb-2"></div>
         <div className="gradient-orb orb-3"></div>
         <div className="hero-grid-lines"></div>
+
+        {/* Floating images around hero */}
+        <div className="hero-floating-images">
+          <motion.div
+            className="hero-float-img hero-float-1"
+            custom={0}
+            variants={imageReveal}
+            initial="hidden"
+            animate={isInView ? 'visible' : 'hidden'}
+          >
+            <img src="/images/trem.jpg" alt="Trem ferroviário" />
+            <span className="float-label">Locomotiva</span>
+          </motion.div>
+          <motion.div
+            className="hero-float-img hero-float-2"
+            custom={1}
+            variants={imageReveal}
+            initial="hidden"
+            animate={isInView ? 'visible' : 'hidden'}
+          >
+            <img src="/images/porto.jpg" alt="Porto de exportação" />
+            <span className="float-label">Porto</span>
+          </motion.div>
+          <motion.div
+            className="hero-float-img hero-float-3"
+            custom={2}
+            variants={imageReveal}
+            initial="hidden"
+            animate={isInView ? 'visible' : 'hidden'}
+          >
+            <img src="/images/mina-real.jpg" alt="Mina de ferro" />
+            <span className="float-label">Mina</span>
+          </motion.div>
+        </div>
       </div>
 
       <div className="hero-3d" id="hero3d">
@@ -174,10 +221,10 @@ export default function HeroSection() {
               document.getElementById('montagem')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
           >
-            <span>Ver Montagem</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M7 17L17 7M17 7H7M17 7V17"/>
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
             </svg>
+            <span>Ver Montagem</span>
           </MagneticButton>
           <MagneticButton
             href="#codigo"
@@ -187,7 +234,23 @@ export default function HeroSection() {
               document.getElementById('codigo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
           >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
             <span>Ver Automação</span>
+          </MagneticButton>
+          <MagneticButton
+            href="#porto"
+            className="hero-cta-ghost"
+            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.preventDefault();
+              document.getElementById('porto')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          >
+            <span>Explorar Porto</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M7 17L17 7M17 7H7M17 7V17"/>
+            </svg>
           </MagneticButton>
         </motion.div>
       </div>

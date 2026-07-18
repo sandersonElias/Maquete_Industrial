@@ -15,15 +15,29 @@ const stepVariants = {
   }),
 };
 
+const imageReveal = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      delay: i * 0.15,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+};
+
 export default function MinaSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   const steps = [
-    { num: '01', text: 'Extração', desc: 'Escavação a céu aberto' },
-    { num: '02', text: 'Britagem', desc: 'Fragmentação do minério' },
-    { num: '03', text: 'Transporte', desc: 'Ferrovia até o porto' },
-    { num: '04', text: 'Exportação', desc: 'Embarque internacional' },
+    { num: '01', text: 'Extração', desc: 'Perfuração, detonação e escavação', icon: '⛏️' },
+    { num: '02', text: 'Britagem', desc: 'Fragmentação da rocha', icon: '🪨' },
+    { num: '03', text: 'Beneficiamento', desc: 'Separação magnética', icon: '🧲' },
+    { num: '04', text: 'Transporte', desc: 'Ferrovia até o porto', icon: '🚂' },
+    { num: '05', text: 'Alto-forno', desc: 'Minério + carvão → aço', icon: '🏭' },
   ];
 
   return (
@@ -56,14 +70,34 @@ export default function MinaSection() {
           </motion.p>
         </div>
 
-        <div className="mina-image-container">
-          <img
-            src="/images/mina-real.jpg"
-            alt="Mina de ferro real"
-            loading="lazy"
-            style={{ width: '100%', maxHeight: '280px', objectFit: 'cover', borderRadius: '16px', marginBottom: '2.5rem' }}
-          />
+        {/* Image gallery row */}
+        <div className="mina-gallery">
+          <motion.div
+            className="mina-gallery-item mina-gallery-main"
+            custom={0}
+            variants={imageReveal}
+            initial="hidden"
+            animate={isInView ? 'visible' : 'hidden'}
+          >
+            <img src="/images/mina-real.jpg" alt="Mina de ferro real" loading="lazy" />
+            <div className="mina-gallery-overlay">
+              <span className="mina-gallery-label">Mina Real</span>
+            </div>
+          </motion.div>
+          <motion.div
+            className="mina-gallery-item"
+            custom={1}
+            variants={imageReveal}
+            initial="hidden"
+            animate={isInView ? 'visible' : 'hidden'}
+          >
+            <img src="/images/mina-maquete.jpg" alt="Mina na maquete" loading="lazy" />
+            <div className="mina-gallery-overlay">
+              <span className="mina-gallery-label">Na Maquete</span>
+            </div>
+          </motion.div>
         </div>
+
         <div className="mina-layout">
           <motion.div
             className="mina-stats-card"
@@ -97,21 +131,65 @@ export default function MinaSection() {
             {steps.map((step, i) => (
               <motion.div
                 key={i}
-                className="process-step"
+                className="process-step-enhanced"
                 custom={i}
                 variants={stepVariants}
                 initial="hidden"
                 animate={isInView ? 'visible' : 'hidden'}
                 whileHover={{ scale: 1.05, borderColor: 'rgba(204, 102, 0, 0.4)' }}
               >
-                <span className="step-num">{step.num}</span>
+                <span className="step-icon">{step.icon}</span>
                 <div className="step-content">
+                  <span className="step-num">{step.num}</span>
                   <span className="step-text">{step.text}</span>
                   <span className="step-desc">{step.desc}</span>
                 </div>
               </motion.div>
             ))}
           </div>
+
+          {/* Ferro vs Carvão table */}
+          <motion.div
+            className="mina-comparison"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.7 }}
+          >
+            <h3 className="mina-section-subtitle">Ferro vs. Carvão na maquete</h3>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Aspecto</th>
+                    <th>Minério de Ferro</th>
+                    <th>Carvão Mineral</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Cor na maquete</td>
+                    <td>Tom avermelhado / ferrugem</td>
+                    <td>Preto / cinza escuro</td>
+                  </tr>
+                  <tr>
+                    <td>Função</td>
+                    <td>Matéria-prima do aço</td>
+                    <td>Combustível do alto-forno</td>
+                  </tr>
+                  <tr>
+                    <td>Poço na mina</td>
+                    <td>Poço principal (maior)</td>
+                    <td>Poço secundário</td>
+                  </tr>
+                  <tr>
+                    <td>Transporte</td>
+                    <td>Vagão basculante 1 e 2</td>
+                    <td>Vagão basculante 3</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>

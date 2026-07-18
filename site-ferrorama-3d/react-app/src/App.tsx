@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import Lenis from 'lenis';
 import Loader from './components/Loader';
 import Particles from './components/Particles';
@@ -59,6 +59,8 @@ export default function App() {
     </>
   );
 }
+
+
 
 
 

@@ -15,38 +15,51 @@ const cardVariants = {
   }),
 };
 
+const imageReveal = {
+  hidden: { opacity: 0, scale: 1.1 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
 export default function MontagemSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   const cards = [
     {
-      icon: '/images/trem.jpg',
-      alt: 'Trem',
-      title: 'Trem',
-      text: 'Locomotiva com 4 servos controlados por Arduino para movimentação nos trilhos.',
+      image: '/images/trem.jpg',
+      alt: 'Trem ferroviário em escala HO',
+      title: 'Locomotiva',
+      text: 'Locomotiva com 4 servos controlados por Arduino para movimentação nos trilhos. Velocidade regulada por PWM.',
       color: '#0d47a1',
+      tag: 'Trilhos',
     },
     {
-      icon: '/images/caminhoes-3d.svg',
-      alt: 'Caminhões',
+      image: '/images/maquete-montagem-1.png',
+      alt: 'Caminhões basculantes 3D',
       title: 'Caminhões 3D',
-      text: '3 caminhões basculantes impressos em PLA com motor DC e controle Bluetooth.',
+      text: '3 caminhões basculantes impressos em PLA com motor DC e controle Bluetooth para transporte de minério.',
       color: '#e65100',
+      tag: 'PLA',
     },
     {
-      icon: '/images/arduino.svg',
-      alt: 'Arduino',
+      image: '/images/arduino.jpg',
+      alt: 'Arduino Mega 2560',
       title: 'Arduino Mega',
-      text: 'Central de controle que coordena todos os componentes eletrônicos.',
+      text: 'Central de controle que coordena todos os componentes eletrônicos. Comunicação via Serial e Bluetooth.',
       color: '#0066cc',
+      tag: 'Eletrônica',
     },
     {
-      icon: '/images/controle.svg',
-      alt: 'Controle',
-      title: 'Controle Bluetooth',
-      text: 'HC-05 para comunicação sem fio entre app e caminhões.',
+      image: '/images/controle.svg',
+      alt: 'Módulo Bluetooth HC-05',
+      title: 'Bluetooth HC-05',
+      text: 'Comunicação sem fio entre app mobile e caminhões. Protocolo serial de baixa energia para controle remoto.',
       color: '#1b5e20',
+      tag: 'Wireless',
     },
   ];
 
@@ -79,20 +92,43 @@ export default function MontagemSection() {
             Componentes e construção da maquete ferroviária
           </motion.p>
         </div>
-        <div className="montagem-image-container">
-          <img
-            src="/images/montagem-geral.svg"
-            alt="Montagem geral da maquete ferroviária"
-            className="montagem-hero-image"
-            loading="lazy"
-            style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '16px', marginBottom: '3rem' }}
-          />
-        </div>
+
+        {/* Hero image with parallax effect */}
+        <motion.div
+          className="montagem-hero-wrapper"
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="montagem-hero-card">
+            <img
+              src="/images/montagem-geral.svg"
+              alt="Montagem geral da maquete ferroviária"
+              className="montagem-hero-image"
+              loading="lazy"
+            />
+            <div className="montagem-hero-overlay">
+              <div className="montagem-hero-stat">
+                <span className="hero-stat-number">5</span>
+                <span className="hero-stat-desc">Áreas<br/>Interligadas</span>
+              </div>
+              <div className="montagem-hero-stat">
+                <span className="hero-stat-number">120cm</span>
+                <span className="hero-stat-desc">Base<br/>Total</span>
+              </div>
+              <div className="montagem-hero-stat">
+                <span className="hero-stat-number">HO</span>
+                <span className="hero-stat-desc">Escala<br/>Padrão</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         <div className="cards-grid">
           {cards.map((card, i) => (
             <motion.div
               key={i}
-              className="card card-3d"
+              className="card card-3d card-image"
               custom={i}
               variants={cardVariants}
               initial="hidden"
@@ -101,11 +137,15 @@ export default function MontagemSection() {
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               style={{ perspective: 1000 }}
             >
-              <div className="card-icon" style={{ background: `${card.color}15` }}>
-                <img src={card.icon} alt={card.alt} loading="lazy" />
+              <div className="card-image-wrapper">
+                <img src={card.image} alt={card.alt} loading="lazy" />
+                <div className="card-image-overlay"></div>
+                <span className="card-tag" style={{ background: card.color }}>{card.tag}</span>
               </div>
-              <h3 className="card-title">{card.title}</h3>
-              <p className="card-text">{card.text}</p>
+              <div className="card-body">
+                <h3 className="card-title">{card.title}</h3>
+                <p className="card-text">{card.text}</p>
+              </div>
               <div className="card-glow"></div>
             </motion.div>
           ))}

@@ -27,7 +27,7 @@ class Particle {
     this.speedX = (Math.random() - 0.5) * 0.5;
     this.speedY = (Math.random() - 0.5) * 0.5;
     this.opacity = Math.random() * 0.5 + 0.1;
-    this.color = Math.random() > 0.5 ? '#00d4ff' : '#00ffb2';
+    this.color = Math.random() > 0.5 ? '#ff8844' : '#cc6600';
   }
 
   update() {
@@ -79,7 +79,7 @@ export default function Particles() {
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 150) {
             ctx.beginPath();
-            ctx.strokeStyle = '#00d4ff';
+            ctx.strokeStyle = '#ff8844';
             ctx.globalAlpha = 0.1 * (1 - dist / 150);
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);

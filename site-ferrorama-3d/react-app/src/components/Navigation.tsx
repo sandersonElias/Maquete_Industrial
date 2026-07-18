@@ -2,18 +2,19 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_ITEMS = [
-  { id: 'inicio', label: 'Início' },
-  { id: 'montagem', label: 'Montagem' },
-  { id: 'codigo', label: 'Automação' },
-  { id: 'porto', label: 'Porto' },
-  { id: 'mina', label: 'Mina' },
-  { id: 'controle', label: 'Controle' },
+  { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-2.png' },
+  { id: 'montagem', label: 'Montagem', thumb: '/images/trem.jpg' },
+  { id: 'codigo', label: 'Automação', thumb: '/images/arduino.jpg' },
+  { id: 'porto', label: 'Porto', thumb: '/images/porto.jpg' },
+  { id: 'mina', label: 'Mina', thumb: '/images/mina-real.jpg' },
+  { id: 'controle', label: 'Controle', thumb: '/images/controle.svg' },
 ];
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('inicio');
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -50,6 +51,8 @@ export default function Navigation() {
     }
   };
 
+  const hoveredItem = NAV_ITEMS.find(n => n.id === hoveredLink);
+
   return (
     <>
       <motion.nav
@@ -69,12 +72,14 @@ export default function Navigation() {
           <span className="nav-title">Ferrorama</span>
         </div>
         <div className="nav-links">
-          {NAV_ITEMS.map(({ id, label }, i) => (
+          {NAV_ITEMS.map(({ id, label, thumb }, i) => (
             <motion.a
               key={id}
               href={`#${id}`}
               className={`nav-link ${activeSection === id ? 'active' : ''}`}
               onClick={(e) => handleNavClick(e, id)}
+              onMouseEnter={() => setHoveredLink(id)}
+              onMouseLeave={() => setHoveredLink(null)}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.4 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
@@ -84,6 +89,21 @@ export default function Navigation() {
             </motion.a>
           ))}
         </div>
+
+        <AnimatePresence>
+          {hoveredItem && (
+            <motion.div
+              className="nav-thumbnail"
+              initial={{ opacity: 0, y: -10, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+            >
+              <img src={hoveredItem.thumb} alt={hoveredItem.label} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.button
           className={`nav-menu-btn ${mobileOpen ? 'active' : ''}`}
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -102,7 +122,7 @@ export default function Navigation() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
-            {NAV_ITEMS.map(({ id, label }, i) => (
+            {NAV_ITEMS.map(({ id, label, thumb }, i) => (
               <motion.a
                 key={id}
                 href={`#${id}`}
@@ -112,7 +132,8 @@ export default function Navigation() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                {label}
+                <img src={thumb} alt="" className="mobile-link-thumb" />
+                <span>{label}</span>
               </motion.a>
             ))}
           </motion.div>
