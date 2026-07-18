@@ -119,46 +119,36 @@ export default function MaqueteSvgSection() {
               if (!trackPathRef.current) return null;
               const totalLen = trackPathRef.current.getTotalLength();
 
-              // Wagon config: [offsetBehindLoco (as fraction of total), width, height]
+              // Wagon config: offset behind loco, size
               const WAGONS = [
-                { offset: 0, w: 14, h: 7, label: 'loco' },       // locomotive
-                { offset: 0.025, w: 10, h: 5, label: 'vagao1' },  // wagon 1
-                { offset: 0.045, w: 10, h: 5, label: 'vagao2' },  // wagon 2
+                { offset: 0, w: 14, h: 7, isLoco: true },
+                { offset: 0.025, w: 10, h: 5, isLoco: false },
+                { offset: 0.045, w: 10, h: 5, isLoco: false },
               ];
 
               return (
                 <g key={tr.id} opacity={tr.active ? 1 : 0.3}>
                   {WAGONS.map((wagon, wi) => {
-                    // Calculate wagon progress along path
                     let wp = tr.progress - wagon.offset;
                     if (wp < 0) wp += 1;
 
                     const pt = trackPathRef.current!.getPointAtLength(wp * totalLen);
 
-                    // Get rotation from next point on path
-                    const lookAhead = 0.005;
-                    let wpNext = wp + lookAhead;
-                    if (wpNext > 1) wpNext -= 1;
-                    const ptNext = trackPathRef.current!.getPointAtLength(wpNext * totalLen);
-                    const angle = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x) * (180 / Math.PI);
-
-                    const isLoco = wi === 0;
-
                     return (
-                      <g key={wi} transform={`rotate(${angle}, ${pt.x}, ${pt.y})`}>
-                        {/* Body */}
+                      <g key={wi}>
+                        {/* Body - always horizontal, no rotation */}
                         <rect
                           x={pt.x - wagon.w / 2}
                           y={pt.y - wagon.h / 2}
                           width={wagon.w}
                           height={wagon.h}
-                          rx={isLoco ? 2.5 : 1.5}
+                          rx={wagon.isLoco ? 2.5 : 1.5}
                           fill={tr.color}
-                          opacity={isLoco ? 1 : 0.55}
+                          opacity={wagon.isLoco ? 1 : 0.55}
                         />
-                        {isLoco && (
+                        {wagon.isLoco && (
                           <>
-                            {/* Locomotive cabin */}
+                            {/* Cabin */}
                             <rect
                               x={pt.x - wagon.w / 2 + 2}
                               y={pt.y - wagon.h / 2 - 2}
@@ -178,18 +168,6 @@ export default function MaqueteSvgSection() {
                         {/* Wheels */}
                         <circle cx={pt.x - wagon.w / 4} cy={pt.y + wagon.h / 2} r={1.2} fill="#1a1a1a"/>
                         <circle cx={pt.x + wagon.w / 4} cy={pt.y + wagon.h / 2} r={1.2} fill="#1a1a1a"/>
-                        {/* Coupling (connecting rod between wagons) */}
-                        {!isLoco && (
-                          <line
-                            x1={pt.x + wagon.w / 2}
-                            y1={pt.y}
-                            x2={pt.x + wagon.w / 2 + 3}
-                            y2={pt.y}
-                            stroke={tr.color}
-                            strokeWidth={0.8}
-                            opacity={0.4}
-                          />
-                        )}
                       </g>
                     );
                   })}
