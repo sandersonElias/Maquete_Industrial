@@ -1,82 +1,103 @@
-import { useEffect, useRef } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { useEffect, useRef, useCallback } from 'react';
 
 export default function CustomCursor() {
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
-  const dotX = useMotionValue(-100);
-  const dotY = useMotionValue(-100);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const mousePos = useRef({ x: -100, y: -100 });
+  const ringPos = useRef({ x: -100, y: -100 });
   const isHovering = useRef(false);
+  const rafId = useRef<number>(0);
 
-  const springConfig = { damping: 25, stiffness: 200 };
-  const cursorXSpring = useSpring(cursorX, springConfig);
-  const cursorYSpring = useSpring(cursorY, springConfig);
+  const animate = useCallback(() => {
+    // Smooth ring follow (lerp)
+    ringPos.current.x += (mousePos.current.x - ringPos.current.x) * 0.15;
+    ringPos.current.y += (mousePos.current.y - ringPos.current.y) * 0.15;
 
-  const dotSpringConfig = { damping: 8, stiffness: 300 };
-  const dotXSpring = useSpring(dotX, dotSpringConfig);
-  const dotYSpring = useSpring(dotY, dotSpringConfig);
+    if (ringRef.current) {
+      ringRef.current.style.transform = `translate(${ringPos.current.x - 20}px, ${ringPos.current.y - 20}px)`;
+    }
+    if (dotRef.current) {
+      dotRef.current.style.transform = `translate(${mousePos.current.x - 4}px, ${mousePos.current.y - 4}px)`;
+    }
+
+    rafId.current = requestAnimationFrame(animate);
+  }, []);
 
   useEffect(() => {
+    // Detect touch device
+    if ('ontouchstart' in window) return;
+
     const moveCursor = (e: MouseEvent) => {
-      cursorX.set(e.clientX - 20);
-      cursorY.set(e.clientY - 20);
-      dotX.set(e.clientX - 4);
-      dotY.set(e.clientY - 4);
+      mousePos.current = { x: e.clientX, y: e.clientY };
     };
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (
+      const isInteractive =
         target.tagName === 'A' ||
         target.tagName === 'BUTTON' ||
         target.closest('a') ||
         target.closest('button') ||
-        target.classList.contains('nav-link') ||
-        target.classList.contains('hero-cta') ||
-        target.classList.contains('card') ||
-        target.classList.contains('control-btn')
-      ) {
+        target.closest('.nav-link') ||
+        target.closest('.hero-cta') ||
+        target.closest('.hero-cta-secondary') ||
+        target.closest('.hero-cta-ghost') ||
+        target.closest('.card') ||
+        target.closest('.control-btn') ||
+        target.closest('.porto-item-enhanced') ||
+        target.closest('.feature-card-enhanced') ||
+        target.closest('.dashboard-card-enhanced') ||
+        target.closest('.maquete-accordion-item') ||
+        target.closest('.maquete-zone') ||
+        target.closest('.maquete-svg') ||
+        target.tagName === 'SUMMARY' ||
+        target.closest('summary');
+
+      if (isInteractive) {
         isHovering.current = true;
-        document.querySelector('.custom-cursor-ring')?.classList.add('hovering');
-        document.querySelector('.custom-cursor-dot')?.classList.add('hovering');
+        ringRef.current?.classList.add('hovering');
+        dotRef.current?.classList.add('hovering');
       }
     };
 
     const handleMouseOut = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'A' ||
-        target.tagName === 'BUTTON' ||
-        target.closest('a') ||
-        target.closest('button')
-      ) {
+      const related = e.relatedTarget as HTMLElement | null;
+      if (!related || related === document.documentElement) {
         isHovering.current = false;
-        document.querySelector('.custom-cursor-ring')?.classList.remove('hovering');
-        document.querySelector('.custom-cursor-dot')?.classList.remove('hovering');
+        ringRef.current?.classList.remove('hovering');
+        dotRef.current?.classList.remove('hovering');
       }
     };
 
-    window.addEventListener('mousemove', moveCursor);
-    window.addEventListener('mouseover', handleMouseOver);
-    window.addEventListener('mouseout', handleMouseOut);
+    const handleMouseLeave = () => {
+      isHovering.current = false;
+      ringRef.current?.classList.remove('hovering');
+      dotRef.current?.classList.remove('hovering');
+    };
+
+    window.addEventListener('mousemove', moveCursor, { passive: true });
+    document.addEventListener('mouseover', handleMouseOver, { passive: true });
+    document.addEventListener('mouseout', handleMouseOut, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    rafId.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('mousemove', moveCursor);
-      window.removeEventListener('mouseover', handleMouseOver);
-      window.removeEventListener('mouseout', handleMouseOut);
+      document.removeEventListener('mouseover', handleMouseOver);
+      document.removeEventListener('mouseout', handleMouseOut);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      cancelAnimationFrame(rafId.current);
     };
-  }, [cursorX, cursorY, dotX, dotY]);
+  }, [animate]);
+
+  // Don't render on touch devices
+  if (typeof window !== 'undefined' && 'ontouchstart' in window) return null;
 
   return (
     <>
-      <motion.div
-        className="custom-cursor-ring"
-        style={{ x: cursorXSpring, y: cursorYSpring }}
-      />
-      <motion.div
-        className="custom-cursor-dot"
-        style={{ x: dotXSpring, y: dotYSpring }}
-      />
+      <div ref={ringRef} className="custom-cursor-ring" />
+      <div ref={dotRef} className="custom-cursor-dot" />
     </>
   );
 }

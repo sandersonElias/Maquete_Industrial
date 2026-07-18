@@ -6,7 +6,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function useScrollAnimations() {
   useEffect(() => {
-    // Hero entrance animations (play once on load, no scroll trigger)
+    // Hero entrance animations
     gsap.from('.title-line', {
       y: 80, opacity: 0, duration: 1, stagger: 0.2, ease: 'power3.out', delay: 0.5,
     });
@@ -25,7 +25,7 @@ export default function useScrollAnimations() {
       });
     });
 
-    // Parallax effects (subtle movement, no opacity changes)
+    // Parallax effects
     gsap.to('.orb-1', {
       scrollTrigger: { trigger: '.hero-section', start: 'top top', end: 'bottom top', scrub: 1 },
       y: -100, ease: 'none',
@@ -64,6 +64,118 @@ export default function useScrollAnimations() {
       };
       card.addEventListener('mousemove', handleMove);
       card.addEventListener('mouseleave', handleLeave);
+    });
+
+    // === SCROLL REVEAL ANIMATIONS ===
+
+    // Montagem hero card
+    gsap.from('.montagem-hero-card', {
+      scrollTrigger: { trigger: '.montagem-hero-card', start: 'top 85%', once: true },
+      y: 60, opacity: 0, duration: 0.9, ease: 'power3.out',
+    });
+
+    // Cards with images
+    gsap.from('.card-image', {
+      scrollTrigger: { trigger: '.cards-grid', start: 'top 85%', once: true },
+      y: 50, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out',
+    });
+
+    // Porto section
+    gsap.from('.porto-image-card', {
+      scrollTrigger: { trigger: '.porto-showcase', start: 'top 85%', once: true },
+      x: -60, opacity: 0, duration: 0.9, ease: 'power3.out',
+    });
+    gsap.from('.porto-item-enhanced', {
+      scrollTrigger: { trigger: '.porto-content', start: 'top 85%', once: true },
+      x: 60, opacity: 0, duration: 0.7, stagger: 0.15, ease: 'power3.out',
+    });
+
+    // Porto comparison & export
+    gsap.from('.porto-comparison', {
+      scrollTrigger: { trigger: '.porto-comparison', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+    gsap.from('.porto-export-info', {
+      scrollTrigger: { trigger: '.porto-export-info', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+
+    // Mina gallery
+    gsap.from('.mina-gallery-item', {
+      scrollTrigger: { trigger: '.mina-gallery', start: 'top 85%', once: true },
+      y: 50, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out',
+    });
+
+    // Mina stats card
+    gsap.from('.mina-stats-card', {
+      scrollTrigger: { trigger: '.mina-stats-card', start: 'top 85%', once: true },
+      x: -50, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+
+    // Mina comparison
+    gsap.from('.mina-comparison', {
+      scrollTrigger: { trigger: '.mina-comparison', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+
+    // Controle architecture
+    gsap.from('.controle-architecture', {
+      scrollTrigger: { trigger: '.controle-architecture', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+
+    // Controle glossary & modes
+    gsap.from('.controle-glossary', {
+      scrollTrigger: { trigger: '.controle-glossary', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+    gsap.from('.controle-modes', {
+      scrollTrigger: { trigger: '.controle-modes', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+
+    // Maquete sections (About, Map, FAQ)
+    gsap.from('.maquete-about-section', {
+      scrollTrigger: { trigger: '.maquete-about-section', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+    gsap.from('.maquete-map-section', {
+      scrollTrigger: { trigger: '.maquete-map-section', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+    gsap.from('.maquete-faq-section', {
+      scrollTrigger: { trigger: '.maquete-faq-section', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    });
+
+    // Section headers (stagger)
+    gsap.from('.section-header', {
+      scrollTrigger: { trigger: '.section-header', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.8, stagger: 0.2, ease: 'power3.out',
+    });
+
+    // Code blocks
+    gsap.from('.code-block', {
+      scrollTrigger: { trigger: '.code-showcase', start: 'top 85%', once: true },
+      x: 60, opacity: 0, duration: 0.9, ease: 'power3.out',
+    });
+
+    // Feature cards
+    gsap.from('.feature-card-enhanced', {
+      scrollTrigger: { trigger: '.code-features-enhanced', start: 'top 85%', once: true },
+      y: 40, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out',
+    });
+
+    // Dashboard cards
+    gsap.from('.dashboard-card-enhanced', {
+      scrollTrigger: { trigger: '.controle-dashboard', start: 'top 85%', once: true },
+      y: 50, opacity: 0, duration: 0.7, stagger: 0.12, ease: 'power3.out',
+    });
+
+    // Footer
+    gsap.from('.footer-content > *', {
+      scrollTrigger: { trigger: '.footer', start: 'top 90%', once: true },
+      y: 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power3.out',
     });
 
     return () => {

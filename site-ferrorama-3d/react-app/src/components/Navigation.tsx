@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-2.png' },
+  { id: 'maquete', label: 'Maquete', thumb: '/images/maquete-montagem-1.png' },
   { id: 'montagem', label: 'Montagem', thumb: '/images/trem.jpg' },
   { id: 'codigo', label: 'Automação', thumb: '/images/arduino.jpg' },
   { id: 'porto', label: 'Porto', thumb: '/images/porto.jpg' },

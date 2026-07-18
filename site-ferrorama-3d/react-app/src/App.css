@@ -104,47 +104,55 @@ body {
   left: 0;
   width: 40px;
   height: 40px;
-  border: 1.5px solid rgba(255, 136, 68, 0.4);
+  border: 1.5px solid rgba(255, 136, 68, 0.35);
   border-radius: 50%;
   pointer-events: none;
   z-index: 99999;
-  mix-blend-mode: difference;
-  transition: width 0.3s var(--ease-out-expo),
-              height 0.3s var(--ease-out-expo),
-              border-color 0.3s,
-              background 0.3s;
+  will-change: transform;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease,
+              background 0.3s ease,
+              opacity 0.3s ease;
 }
 
 .custom-cursor-ring.hovering {
-  width: 60px;
-  height: 60px;
-  border-color: rgba(255, 136, 68, 0.8);
-  background: rgba(255, 136, 68, 0.06);
+  width: 56px;
+  height: 56px;
+  border-color: rgba(255, 136, 68, 0.7);
+  background: rgba(255, 136, 68, 0.05);
+  border-width: 1px;
 }
 
 .custom-cursor-dot {
   position: fixed;
   top: 0;
   left: 0;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: var(--primary);
   border-radius: 50%;
   pointer-events: none;
   z-index: 100000;
-  mix-blend-mode: difference;
-  transition: transform 0.2s var(--ease-out-expo),
-              background 0.3s;
+  will-change: transform;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.25s ease,
+              opacity 0.3s ease;
 }
 
 .custom-cursor-dot.hovering {
-  transform: scale(0.5);
-  background: #fff;
+  width: 4px;
+  height: 4px;
+  background: white;
+  opacity: 0.9;
 }
 
 @media (max-width: 768px) {
   .custom-cursor-ring,
   .custom-cursor-dot { display: none !important; }
+  html { cursor: auto !important; }
+  *, *::before, *::after { cursor: auto !important; }
 }
 
 /* ============================================
