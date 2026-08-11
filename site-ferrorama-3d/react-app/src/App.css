@@ -4771,61 +4771,91 @@ body::after {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 48px;
-  opacity: 0.72;
+  width: 52px;
+  opacity: 0.9;
+  overflow: hidden;
 }
 
 .page-rail--left {
   left: 0;
-  background: linear-gradient(90deg, rgba(6, 6, 10, 0.55), transparent);
+  background: linear-gradient(90deg, rgba(6, 6, 10, 0.65), transparent);
 }
 
 .page-rail--right {
   right: 0;
-  background: linear-gradient(270deg, rgba(6, 6, 10, 0.55), transparent);
+  background: linear-gradient(270deg, rgba(6, 6, 10, 0.65), transparent);
+}
+
+.page-rail__track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200vh;
+  min-height: 200%;
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
 }
 
 .page-rail__svg {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
-  height: 200%;
-  animation: railScroll 42s linear infinite;
+  height: 50%;
+  flex: 0 0 50%;
 }
 
 .page-rail__svg--mirror {
-  animation: railScrollMirror 42s linear infinite;
+  transform: scaleX(-1);
 }
 
-@keyframes railScroll {
+/* brilho que marca o “movimento” na coluna do trilho */
+.page-rail__scrub {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: -20%;
+  height: 28%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 136, 68, 0.22),
+    transparent
+  );
+  animation: railScrub 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.page-rail__scrub--alt {
+  animation-delay: -1.6s;
+  animation-direction: reverse;
+}
+
+@keyframes railScrub {
   from { transform: translateY(0); }
-  to { transform: translateY(-50%); }
+  to { transform: translateY(380%); }
 }
 
-@keyframes railScrollMirror {
-  from { transform: scaleX(-1) translateY(0); }
-  to { transform: scaleX(-1) translateY(-50%); }
-}
-
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
   .page-rails {
     display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-rail__svg {
+  .page-rail__scrub,
+  .page-rail__scrub.is-static {
     animation: none;
-  }
-
-  .page-rail__svg--mirror {
-    animation: none;
-    transform: scaleX(-1);
+    display: none;
   }
 }
 
-/* Empurra o conteúdo pra não colidir com os trilhos em telas largas */
-@media (min-width: 1101px) {
+.page-rail__scrub.is-static {
+  animation: none;
+  display: none;
+}
+
+@media (min-width: 901px) {
   .section-container,
   .hero-section--cinematic .hero-content,
   .site-footer__inner {
@@ -4834,8 +4864,8 @@ body::after {
   }
 
   .nav {
-    padding-left: 3.25rem !important;
-    padding-right: 3.25rem !important;
+    padding-left: 3.5rem !important;
+    padding-right: 3.5rem !important;
   }
 }
 
@@ -5086,6 +5116,13 @@ html.has-transport-cursor summary {
 }
 
 /* Loader marca */
+.loader-brand-stage {
+  position: relative;
+  display: inline-block;
+  padding: 0.85rem 0 0.35rem;
+  overflow: visible;
+}
+
 .loader-brand {
   margin: 0;
   font-family: var(--font-display-expanded), var(--font-display), sans-serif;
@@ -5095,6 +5132,102 @@ html.has-transport-cursor summary {
   text-transform: uppercase;
   color: #fff;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.02em;
+  position: relative;
+  z-index: 1;
+}
+
+.loader-brand__text {
+  display: inline-block;
+}
+
+.loader-brand__gear-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.92em;
+  height: 0.92em;
+  margin: 0 0.02em;
+  position: relative;
+  top: -0.02em;
+}
+
+.loader-gear {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  /* PNG escuro → cobre Ferrorama */
+  filter:
+    brightness(0) saturate(100%)
+    invert(62%) sepia(68%) saturate(1800%) hue-rotate(340deg) brightness(1.08);
+  animation: loaderGearSpin 1.05s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+.loader-gear.is-static {
+  animation: none;
+}
+
+@keyframes loaderGearSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Avião (mesmo ícone do cursor) cruzando por cima do brand */
+.loader-flyby {
+  position: absolute;
+  top: -0.2em;
+  left: -12%;
+  z-index: 2;
+  width: 2.4rem;
+  height: 2.4rem;
+  pointer-events: none;
+  animation: loaderPlaneFlyby 2s cubic-bezier(0.4, 0.05, 0.2, 1) forwards;
+  filter:
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 10px rgba(255, 136, 68, 0.35));
+}
+
+.loader-flyby__icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: rotate(90deg);
+}
+
+@keyframes loaderPlaneFlyby {
+  0% {
+    opacity: 0;
+    left: -14%;
+    top: 0.05em;
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    top: -0.35em;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    left: 108%;
+    top: -0.15em;
+  }
+}
+
+.loader-caption {
+  margin: 1rem 0 0;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(240, 235, 228, 0.45);
 }
 
 .loader-rail {
@@ -5109,6 +5242,16 @@ html.has-transport-cursor summary {
 
 .loader-text {
   animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-gear {
+    animation: none;
+  }
+
+  .loader-flyby {
+    display: none;
+  }
 }
 
 /* Divider: só trilha */

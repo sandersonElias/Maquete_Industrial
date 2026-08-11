@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useHasFinePointer } from '../lib/motion';
+import AirplaneModeIcon from './AirplaneModeIcon';
 
 /**
  * Ponteiro = ícone clássico de “modo avião” (OS).
@@ -67,50 +68,12 @@ export default function TransportCursor() {
       aria-hidden="true"
     >
       <div className="transport-cursor__plane">
-        <AirplaneModeIcon />
+        <AirplaneModeIcon size={32} className="transport-cursor__svg" />
       </div>
       <div className="transport-cursor__boat">
         <BoatModeIcon />
       </div>
     </div>
-  );
-}
-
-/**
- * Silhueta padrão de “modo avião” (Material / iOS-like).
- * Nariz na ponta superior-esquerda do viewBox = hot-spot do mouse.
- * Path clássico rotacionado ~-45° para a ponta funcionar como seta.
- */
-function AirplaneModeIcon() {
-  return (
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      className="transport-cursor__svg"
-    >
-      {/* sombra de leitura */}
-      <path
-        d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-        fill="#06060a"
-        opacity="0.55"
-        transform="translate(0.6 0.8)"
-      />
-      {/* ícone modo avião — cobre Ferrorama */}
-      <path
-        d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-        fill="#ff8844"
-      />
-      <path
-        d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-        fill="none"
-        stroke="#f0ebe4"
-        strokeWidth="0.7"
-        strokeLinejoin="round"
-        opacity="0.35"
-      />
-    </svg>
   );
 }
 
