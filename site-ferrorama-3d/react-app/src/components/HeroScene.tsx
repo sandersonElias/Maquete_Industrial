@@ -1,10 +1,11 @@
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { usePrefersReducedMotion } from '../lib/motion';
 
 function FloatingParticles() {
   const meshRef = useRef<THREE.Points>(null);
-  const count = 400;
+  const count = 250;
 
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -43,18 +44,8 @@ function FloatingParticles() {
   return (
     <points ref={meshRef}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={count}
-          array={colors}
-          itemSize={3}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <pointsMaterial
         size={0.04}
@@ -141,13 +132,17 @@ function GlowOrb() {
 }
 
 export default function HeroScene() {
+  const reduced = usePrefersReducedMotion();
+
   return (
-    <div className="hero-3d-scene">
+    <div className="hero-3d-scene" aria-hidden="true">
       <Canvas
         camera={{ position: [0, 0, 6], fov: 60 }}
         style={{ background: 'transparent' }}
         dpr={[1, 1.5]}
         gl={{ alpha: true, antialias: true }}
+        /* Sem movimento reduzido: renderiza um quadro e congela, poupando GPU */
+        frameloop={reduced ? 'demand' : 'always'}
       >
         <ambientLight intensity={0.3} />
         <pointLight position={[5, 5, 5]} intensity={0.5} color="#ff8844" />

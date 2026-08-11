@@ -2,6 +2,7 @@ import { useRef, useEffect, Suspense } from 'react';
 import { motion, useInView } from 'framer-motion';
 import HeroScene from './HeroScene';
 import MagneticButton from './MagneticButton';
+import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
 
 const textReveal = {
   hidden: { y: '110%', opacity: 0 },
@@ -9,9 +10,9 @@ const textReveal = {
     y: 0,
     opacity: 1,
     transition: {
-      duration: 1.2,
-      delay: 0.6 + i * 0.18,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 0.9,
+      delay: 0.3 + i * 0.12,
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -22,9 +23,9 @@ const fadeUp = {
     y: 0,
     opacity: 1,
     transition: {
-      duration: 0.8,
-      delay: 1.2 + i * 0.1,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 0.7,
+      delay: 0.8 + i * 0.08,
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -33,8 +34,8 @@ const staggerContainer = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.12,
-      delayChildren: 1.4,
+      staggerChildren: 0.1,
+      delayChildren: 1,
     },
   },
 };
@@ -47,7 +48,7 @@ const statItem = {
     scale: 1,
     transition: {
       duration: 0.6,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   },
 };
@@ -60,7 +61,7 @@ const imageReveal = {
     transition: {
       duration: 1.2,
       delay: 0.3 + i * 0.15,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -68,34 +69,59 @@ const imageReveal = {
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true });
+  const reduced = usePrefersReducedMotion();
 
+  // Contagem progressiva das estatísticas do hero.
+  // O `return` dentro do forEach anterior era descartado — timers e frames
+  // continuavam rodando após a desmontagem. Aqui tudo é coletado e cancelado.
   useEffect(() => {
-    document.querySelectorAll<HTMLElement>('.hero-stat-value').forEach((stat) => {
-      const target = parseInt(stat.dataset.count || '0');
+    const stats = Array.from(document.querySelectorAll<HTMLElement>('.hero-stat-value'));
+
+    // Movimento reduzido: mostra o número final direto, sem animar
+    if (reduced) {
+      stats.forEach((stat) => {
+        stat.textContent = stat.dataset.count || '0';
+      });
+      return;
+    }
+
+    const timeouts: number[] = [];
+    const frames: number[] = [];
+
+    stats.forEach((stat) => {
+      const target = parseInt(stat.dataset.count || '0', 10);
       if (!target) return;
-      const obj = { value: 0 };
-      const timeout = setTimeout(() => {
-        const animate = () => {
-          obj.value += (target - obj.value) * 0.05;
-          stat.textContent = String(Math.floor(obj.value));
-          if (Math.abs(target - obj.value) > 0.5) {
-            requestAnimationFrame(animate);
-          } else {
-            stat.textContent = String(target);
-          }
-        };
-        animate();
-      }, 1800);
-      return () => clearTimeout(timeout);
+      let value = 0;
+
+      timeouts.push(
+        window.setTimeout(() => {
+          const step = () => {
+            value += (target - value) * 0.05;
+            if (Math.abs(target - value) > 0.5) {
+              stat.textContent = String(Math.floor(value));
+              frames.push(requestAnimationFrame(step));
+            } else {
+              stat.textContent = String(target);
+            }
+          };
+          step();
+        }, 1100)
+      );
     });
-  }, []);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      frames.forEach(cancelAnimationFrame);
+    };
+  }, [reduced]);
 
   return (
     <section id="inicio" className="hero-section" data-bg="dark" ref={sectionRef}>
       <div className="hero-bg">
         <img
           src="/images/maquete-montagem-2.png"
-          alt="Maquete ferroviária interativa"
+          alt=""
+          aria-hidden="true"
           className="hero-bg-image"
           style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.15 }}
           loading="eager"
@@ -259,7 +285,7 @@ export default function HeroSection() {
         className="scroll-indicator"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.2, duration: 0.8 }}
+        transition={{ delay: 1.6, duration: 0.6 }}
       >
         <span>Role para baixo</span>
         <div className="scroll-arrow"></div>

@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, ReactNode } from 'react';
+import { EASE_OUT_EXPO } from '../lib/motion';
 
 const cardVariants = {
   hidden: { y: 60, opacity: 0, scale: 0.95 },
@@ -10,7 +11,7 @@ const cardVariants = {
     transition: {
       duration: 0.7,
       delay: i * 0.12,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -80,7 +81,7 @@ export default function ControleSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            05
+            06
           </motion.span>
           <motion.h2
             className="section-title"
@@ -105,7 +106,7 @@ export default function ControleSection() {
           className="controle-architecture"
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, ease: EASE_OUT_EXPO }}
         >
           <div className="architecture-flow">
             <div className="arch-node">

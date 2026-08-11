@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { EASE_OUT_EXPO } from '../lib/motion';
 
 const featureVariants = {
   hidden: { y: 40, opacity: 0, scale: 0.95 },
@@ -10,7 +11,7 @@ const featureVariants = {
     transition: {
       duration: 0.6,
       delay: 0.4 + i * 0.1,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -74,7 +75,7 @@ export default function CodigoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            02
+            03
           </motion.span>
           <motion.h2
             className="section-title"
@@ -100,7 +101,7 @@ export default function CodigoSection() {
             className="code-image-stack"
             initial={{ x: -80, opacity: 0 }}
             animate={isInView ? { x: 0, opacity: 1 } : {}}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1, ease: EASE_OUT_EXPO }}
           >
             <div className="code-image-card code-image-main">
               <img
@@ -131,7 +132,7 @@ export default function CodigoSection() {
             className="code-block"
             initial={{ x: 100, opacity: 0 }}
             animate={isInView ? { x: 0, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1, delay: 0.2, ease: EASE_OUT_EXPO }}
           >
             <div className="code-header">
               <div className="code-dots">

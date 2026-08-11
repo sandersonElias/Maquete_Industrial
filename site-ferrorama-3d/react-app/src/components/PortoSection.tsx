@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { EASE_OUT_EXPO } from '../lib/motion';
 
 const itemVariants = {
   hidden: { x: 60, opacity: 0 },
@@ -9,7 +10,7 @@ const itemVariants = {
     transition: {
       duration: 0.7,
       delay: 0.3 + i * 0.15,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -63,7 +64,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            03
+            04
           </motion.span>
           <motion.h2
             className="section-title"
@@ -89,7 +90,7 @@ export default function PortoSection() {
             className="porto-image-main"
             initial={{ x: -80, opacity: 0, scale: 0.95 }}
             animate={isInView ? { x: 0, opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1, ease: EASE_OUT_EXPO }}
           >
             <div className="porto-image-card">
               <img src="/images/porto.jpg" alt="Porto da maquete" loading="lazy" />

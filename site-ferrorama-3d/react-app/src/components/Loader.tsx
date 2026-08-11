@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { EASE_OUT_EXPO } from '../lib/motion';
 
 export default function Loader() {
   const [hidden, setHidden] = useState(false);
@@ -12,14 +13,14 @@ export default function Loader() {
           clearInterval(interval);
           return 100;
         }
-        return prev + Math.random() * 15 + 5;
+        return prev + Math.random() * 18 + 8;
       });
-    }, 100);
+    }, 80);
 
     const timer = setTimeout(() => {
       setProgress(100);
-      setTimeout(() => setHidden(true), 400);
-    }, 1800);
+      setTimeout(() => setHidden(true), 300);
+    }, 1000);
 
     return () => {
       clearInterval(interval);
@@ -27,17 +28,31 @@ export default function Loader() {
     };
   }, []);
 
+  // Impede que a página role por trás da tela de carregamento
+  useEffect(() => {
+    if (hidden) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [hidden]);
+
   return (
     <AnimatePresence>
       {!hidden && (
         <motion.div
           className="loader"
+          role="status"
+          aria-live="polite"
+          aria-label="Carregando o site"
           exit={{ opacity: 0, scale: 1.05 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
         >
           <div className="loader-content">
             <motion.div
               className="loader-icon"
+              aria-hidden="true"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5 }}

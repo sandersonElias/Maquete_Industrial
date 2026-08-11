@@ -19,3 +19,6 @@ app_react_native/.env
 # Docker volumes
 postgres_data/
 redis_data/
+
+# Ferramentas locais do Claude Code
+.claude/

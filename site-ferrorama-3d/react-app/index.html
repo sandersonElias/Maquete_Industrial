@@ -41,10 +41,22 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- "Archivo Expanded" não é uma família do Google Fonts, e sim o eixo de
+         largura (wdth) da Archivo variável — pedi-lo separado só desperdiçava
+         uma requisição que voltava vazia. -->
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Imagem de fundo do hero: começa a baixar junto com o HTML -->
+    <link rel="preload" as="image" href="/images/maquete-montagem-2.png" fetchpriority="high">
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <noscript>
+      <p style="padding:2rem;font-family:sans-serif;color:#f0ebe4;background:#08080d">
+        Este site precisa de JavaScript para exibir a maquete interativa.
+        Ative o JavaScript no navegador para ver o conteúdo.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

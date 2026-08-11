@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { EASE_OUT_EXPO } from '../lib/motion';
 
 const stepVariants = {
   hidden: { y: 20, opacity: 0, scale: 0.9 },
@@ -10,7 +11,7 @@ const stepVariants = {
     transition: {
       duration: 0.5,
       delay: 0.6 + i * 0.1,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -23,7 +24,7 @@ const imageReveal = {
     transition: {
       duration: 0.8,
       delay: i * 0.15,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   }),
 };
@@ -50,7 +51,7 @@ export default function MinaSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            04
+            05
           </motion.span>
           <motion.h2
             className="section-title"
@@ -103,7 +104,7 @@ export default function MinaSection() {
             className="mina-stats-card"
             initial={{ x: -60, opacity: 0 }}
             animate={isInView ? { x: 0, opacity: 1 } : {}}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, delay: 0.2, ease: EASE_OUT_EXPO }}
           >
             <div className="mina-stat">
               <span className="mina-stat-value">+</span>
@@ -122,7 +123,7 @@ export default function MinaSection() {
             className="mina-description"
             initial={{ y: 30, opacity: 0 }}
             animate={isInView ? { y: 0, opacity: 1 } : {}}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, delay: 0.3, ease: EASE_OUT_EXPO }}
           >
             O Brasil é um dos maiores exportadores mundiais de minério de ferro. Na maquete, simulamos todo o processo de extração, desde a mina até o transporte ferroviário.
           </motion.p>

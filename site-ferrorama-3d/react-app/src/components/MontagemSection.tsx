@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { EASE_OUT_EXPO } from '../lib/motion';
 
 const cardVariants = {
   hidden: { y: 80, opacity: 0, rotateX: 15 },
@@ -10,18 +11,9 @@ const cardVariants = {
     transition: {
       duration: 0.8,
       delay: i * 0.12,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE_OUT_EXPO,
     },
   }),
-};
-
-const imageReveal = {
-  hidden: { opacity: 0, scale: 1.1 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
-  },
 };
 
 export default function MontagemSection() {
@@ -73,7 +65,7 @@ export default function MontagemSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            01
+            02
           </motion.span>
           <motion.h2
             className="section-title"
@@ -98,7 +90,7 @@ export default function MontagemSection() {
           className="montagem-hero-wrapper"
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, ease: EASE_OUT_EXPO }}
         >
           <div className="montagem-hero-card">
             <img

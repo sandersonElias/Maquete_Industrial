@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { EASE_OUT_EXPO } from '../lib/motion';
 
 export default function Footer() {
   const ref = useRef<HTMLElement>(null);
@@ -12,7 +13,7 @@ export default function Footer() {
           className="footer-brand"
           initial={{ y: 20, opacity: 0 }}
           animate={isInView ? { y: 0, opacity: 1 } : {}}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
         >
           <div className="footer-brand-row">
             <img src="/images/trem-circuito.svg" alt="Ferrorama" style={{ width: '32px', height: '32px' }} />
@@ -25,7 +26,7 @@ export default function Footer() {
           className="footer-nav"
           initial={{ y: 20, opacity: 0 }}
           animate={isInView ? { y: 0, opacity: 1 } : {}}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, delay: 0.1, ease: EASE_OUT_EXPO }}
         >
           <div className="footer-links">
             <a href="#inicio" onClick={(e: React.MouseEvent<HTMLAnchorElement>) => { e.preventDefault(); document.getElementById('inicio')?.scrollIntoView({ behavior: 'smooth' }); }}>
@@ -51,7 +52,7 @@ export default function Footer() {
           className="footer-tech"
           initial={{ y: 20, opacity: 0 }}
           animate={isInView ? { y: 0, opacity: 1 } : {}}
-          transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, delay: 0.2, ease: EASE_OUT_EXPO }}
         >
           <div className="footer-tech-label">Tecnologias</div>
           <div className="footer-tech-stack">

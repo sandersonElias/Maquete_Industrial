@@ -1,84 +1,64 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useHasFinePointer, usePrefersReducedMotion } from '../lib/motion';
 
 export default function CustomCursor() {
   const ringRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: -100, y: -100 });
   const ringPos = useRef({ x: -100, y: -100 });
-  const isHovering = useRef(false);
   const rafId = useRef<number>(0);
+  const hasFinePointer = useHasFinePointer();
+  const reduced = usePrefersReducedMotion();
 
   const animate = useCallback(() => {
-    // Smooth ring follow (lerp)
-    ringPos.current.x += (mousePos.current.x - ringPos.current.x) * 0.15;
-    ringPos.current.y += (mousePos.current.y - ringPos.current.y) * 0.15;
+    // Ring segue suavemente (lerp)
+    ringPos.current.x += (mousePos.current.x - ringPos.current.x) * 0.18;
+    ringPos.current.y += (mousePos.current.y - ringPos.current.y) * 0.18;
 
     if (ringRef.current) {
       ringRef.current.style.transform = `translate(${ringPos.current.x - 20}px, ${ringPos.current.y - 20}px)`;
     }
     if (dotRef.current) {
-      dotRef.current.style.transform = `translate(${mousePos.current.x - 4}px, ${mousePos.current.y - 4}px)`;
+      dotRef.current.style.transform = `translate(${mousePos.current.x - 3}px, ${mousePos.current.y - 3}px)`;
     }
 
     rafId.current = requestAnimationFrame(animate);
   }, []);
 
   useEffect(() => {
-    // Detect touch device
-    if ('ontouchstart' in window) return;
+    // Só faz sentido com mouse/trackpad e sem preferência por movimento reduzido.
+    // `(hover: hover) and (pointer: fine)` é mais confiável que `ontouchstart`,
+    // que dá falso positivo em notebooks com tela sensível ao toque.
+    if (!hasFinePointer || reduced) return;
 
     const moveCursor = (e: MouseEvent) => {
       mousePos.current = { x: e.clientX, y: e.clientY };
     };
 
+    // Detecta interativo com delegação de eventos (uma única vez, sem closest em mousemove)
+    const interactiveSelector = 'a, button, [role="button"], summary, .nav-link, .hero-cta, .hero-cta-secondary, .hero-cta-ghost, .card, .control-btn, .porto-item-enhanced, .feature-card-enhanced, .dashboard-card-enhanced, .maquete-accordion-item, .maquete-zone, .maquete-svg';
+
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const isInteractive =
-        target.tagName === 'A' ||
-        target.tagName === 'BUTTON' ||
-        target.closest('a') ||
-        target.closest('button') ||
-        target.closest('.nav-link') ||
-        target.closest('.hero-cta') ||
-        target.closest('.hero-cta-secondary') ||
-        target.closest('.hero-cta-ghost') ||
-        target.closest('.card') ||
-        target.closest('.control-btn') ||
-        target.closest('.porto-item-enhanced') ||
-        target.closest('.feature-card-enhanced') ||
-        target.closest('.dashboard-card-enhanced') ||
-        target.closest('.maquete-accordion-item') ||
-        target.closest('.maquete-zone') ||
-        target.closest('.maquete-svg') ||
-        target.tagName === 'SUMMARY' ||
-        target.closest('summary');
-
-      if (isInteractive) {
-        isHovering.current = true;
+      if (target.closest(interactiveSelector)) {
         ringRef.current?.classList.add('hovering');
         dotRef.current?.classList.add('hovering');
       }
     };
 
     const handleMouseOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
       const related = e.relatedTarget as HTMLElement | null;
-      if (!related || related === document.documentElement) {
-        isHovering.current = false;
+      // Só remove se saiu de um interativo E não entrou em outro interativo
+      if (target.closest(interactiveSelector) && (!related || !related.closest?.(interactiveSelector))) {
         ringRef.current?.classList.remove('hovering');
         dotRef.current?.classList.remove('hovering');
       }
     };
 
-    const handleMouseLeave = () => {
-      isHovering.current = false;
-      ringRef.current?.classList.remove('hovering');
-      dotRef.current?.classList.remove('hovering');
-    };
-
     window.addEventListener('mousemove', moveCursor, { passive: true });
     document.addEventListener('mouseover', handleMouseOver, { passive: true });
     document.addEventListener('mouseout', handleMouseOut, { passive: true });
-    document.addEventListener('mouseleave', handleMouseLeave);
 
     rafId.current = requestAnimationFrame(animate);
 
@@ -86,18 +66,16 @@ export default function CustomCursor() {
       window.removeEventListener('mousemove', moveCursor);
       document.removeEventListener('mouseover', handleMouseOver);
       document.removeEventListener('mouseout', handleMouseOut);
-      document.removeEventListener('mouseleave', handleMouseLeave);
       cancelAnimationFrame(rafId.current);
     };
-  }, [animate]);
+  }, [animate, hasFinePointer, reduced]);
 
-  // Don't render on touch devices
-  if (typeof window !== 'undefined' && 'ontouchstart' in window) return null;
+  if (!hasFinePointer || reduced) return null;
 
   return (
     <>
-      <div ref={ringRef} className="custom-cursor-ring" />
-      <div ref={dotRef} className="custom-cursor-dot" />
+      <div ref={ringRef} className="custom-cursor-ring" aria-hidden="true" />
+      <div ref={dotRef} className="custom-cursor-dot" aria-hidden="true" />
     </>
   );
 }
