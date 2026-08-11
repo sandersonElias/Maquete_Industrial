@@ -1,7 +1,6 @@
-import { useRef, useEffect, Suspense } from 'react';
+import { useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
-import HeroScene from './HeroScene';
-import MagneticButton from './MagneticButton';
+import CtaLink from './CtaLink';
 import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
 
 const textReveal = {
@@ -166,12 +165,6 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="hero-3d" id="hero3d">
-        <Suspense fallback={null}>
-          <HeroScene />
-        </Suspense>
-      </div>
-
       <div className="hero-content">
         <motion.div
           className="hero-badge"
@@ -239,7 +232,7 @@ export default function HeroSection() {
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
-          <MagneticButton
+          <CtaLink
             href="#montagem"
             className="hero-cta"
             onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -251,8 +244,8 @@ export default function HeroSection() {
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
             </svg>
             <span>Ver Montagem</span>
-          </MagneticButton>
-          <MagneticButton
+          </CtaLink>
+          <CtaLink
             href="#codigo"
             className="hero-cta-secondary"
             onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -264,8 +257,8 @@ export default function HeroSection() {
               <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
             </svg>
             <span>Ver Automação</span>
-          </MagneticButton>
-          <MagneticButton
+          </CtaLink>
+          <CtaLink
             href="#porto"
             className="hero-cta-ghost"
             onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -277,7 +270,7 @@ export default function HeroSection() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M7 17L17 7M17 7H7M17 7V17"/>
             </svg>
-          </MagneticButton>
+          </CtaLink>
         </motion.div>
       </div>
 

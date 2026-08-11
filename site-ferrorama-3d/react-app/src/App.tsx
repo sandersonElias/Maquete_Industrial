@@ -1,17 +1,14 @@
 import Loader from './components/Loader';
-import Particles from './components/Particles';
-import CustomCursor from './components/CustomCursor';
 import Navigation from './components/Navigation';
 import HeroSection from './components/HeroSection';
 import SectionDivider from './components/SectionDivider';
+import MaqueteSection from './components/MaqueteSection';
 import MontagemSection from './components/MontagemSection';
 import CodigoSection from './components/CodigoSection';
 import PortoSection from './components/PortoSection';
 import MinaSection from './components/MinaSection';
 import ControleSection from './components/ControleSection';
-import MaqueteSvgSection from './components/MaqueteSvgSection';
 import BackToTop from './components/BackToTop';
-
 import Footer from './components/Footer';
 import useScrollAnimations from './hooks/useScrollAnimations';
 
@@ -24,8 +21,6 @@ export default function App() {
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
 
       <Loader />
-      <CustomCursor />
-      <Particles />
       <Navigation />
 
       <main id="conteudo">
@@ -34,8 +29,8 @@ export default function App() {
 
         <SectionDivider number="01" />
 
-        {/* Section 01: Maquete Interativa */}
-        <MaqueteSvgSection />
+        {/* Section 01: Maquete 3D interativa */}
+        <MaqueteSection />
 
         <SectionDivider number="02" />
 
