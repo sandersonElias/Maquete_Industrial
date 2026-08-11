@@ -7,7 +7,7 @@ export default function Loader() {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setHidden(true), 520);
+    const timer = window.setTimeout(() => setHidden(true), 560);
     return () => clearTimeout(timer);
   }, []);
 
@@ -33,13 +33,20 @@ export default function Loader() {
         >
           <div className="loader-content">
             <motion.p
-              className="loader-text"
-              initial={{ opacity: 0, y: 8 }}
+              className="loader-brand"
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
+              transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
             >
               Ferrorama
             </motion.p>
+            <motion.span
+              className="loader-rail"
+              aria-hidden="true"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.5, delay: 0.12, ease: EASE_OUT_EXPO }}
+            />
           </div>
         </motion.div>
       )}

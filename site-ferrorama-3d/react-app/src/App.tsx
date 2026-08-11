@@ -10,6 +10,8 @@ import MinaSection from './components/MinaSection';
 import ControleSection from './components/ControleSection';
 import BackToTop from './components/BackToTop';
 import Footer from './components/Footer';
+import PageRails from './components/PageRails';
+import TransportCursor from './components/TransportCursor';
 import useScrollAnimations from './hooks/useScrollAnimations';
 
 export default function App() {
@@ -21,38 +23,40 @@ export default function App() {
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
 
       <Loader />
+      <PageRails />
+      <TransportCursor />
       <Navigation />
 
       <main id="conteudo">
         {/* Section 00: Hero / Início */}
         <HeroSection />
 
-        <SectionDivider number="01" />
+        <SectionDivider />
 
         {/* Section 01: Maquete 3D interativa */}
         <MaqueteSection />
 
-        <SectionDivider number="02" />
+        <SectionDivider />
 
         {/* Section 02: Montagem */}
         <MontagemSection />
 
-        <SectionDivider number="03" />
+        <SectionDivider />
 
         {/* Section 03: Código & Automação */}
         <CodigoSection />
 
-        <SectionDivider number="04" />
+        <SectionDivider />
 
         {/* Section 04: Porto & Aeroporto */}
         <PortoSection />
 
-        <SectionDivider number="05" />
+        <SectionDivider />
 
         {/* Section 05: Mina de Ferro */}
         <MinaSection />
 
-        <SectionDivider number="06" />
+        <SectionDivider />
 
         {/* Section 06: Central de Controle */}
         <ControleSection />

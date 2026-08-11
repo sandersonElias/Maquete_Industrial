@@ -56,6 +56,29 @@ function Placeholder() {
   );
 }
 
+const objectives = [
+  {
+    label: 'Objetivo',
+    text: 'Demonstrar como materiais brutos percorrem diferentes modos de transporte até o mercado internacional.',
+  },
+  {
+    label: 'Aprendizado',
+    text: 'Combinar física (motores, sensores), modelismo e lógica de programação num único projeto.',
+  },
+  {
+    label: 'Contexto',
+    text: 'Relacionar a maquete com a economia brasileira — o minério de ferro como exportação-chave.',
+  },
+];
+
+const pipeline = [
+  'Arduino',
+  'Gateway',
+  'Backend',
+  'Dashboard',
+  'App mobile',
+];
+
 export default function MaqueteSection() {
   const { ref, proximo } = useProximoDaTela<HTMLDivElement>();
 
@@ -80,68 +103,40 @@ export default function MaqueteSection() {
           )}
         </div>
 
-        {/* Sobre o Projeto */}
-        <div className="maquete-about-section">
-          <h3 className="maquete-section-title">Sobre o Projeto</h3>
-          <p className="maquete-section-desc">
-            O Ferrorama simula toda a cadeia produtiva do minério de ferro e carvão — da extração na
-            mina até a exportação pelo porto ou aeroporto — integrando modelismo ferroviário,
-            impressão 3D e programação em Arduino.
+        <div className="shell-block">
+          <h3 className="shell-block__title">Sobre o projeto</h3>
+          <p className="shell-block__lead">
+            O Ferrorama simula a cadeia do minério de ferro e carvão — da mina ao porto ou
+            aeroporto — com modelismo ferroviário, impressão 3D e Arduino.
           </p>
-          <div className="maquete-objectives-grid">
-            <div className="maquete-objective-item">
-              <strong>Objetivo principal</strong>
-              <p>
-                Demonstrar como materiais brutos percorrem diferentes modos de transporte até chegar
-                ao mercado internacional.
-              </p>
-            </div>
-            <div className="maquete-objective-item">
-              <strong>Aprendizado técnico</strong>
-              <p>
-                Combinar física (motores, sensores), modelismo e lógica de programação em um único
-                projeto integrado.
-              </p>
-            </div>
-            <div className="maquete-objective-item">
-              <strong>Contexto real</strong>
-              <p>
-                Relacionar a maquete com a economia brasileira, onde o minério de ferro é um dos
-                principais produtos de exportação.
-              </p>
-            </div>
-          </div>
+          <ul className="shell-facts">
+            {objectives.map((item) => (
+              <li key={item.label} className="shell-fact">
+                <span className="shell-fact__label">{item.label}</span>
+                <p className="shell-fact__text">{item.text}</p>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Arquitetura do sistema */}
-        <div className="maquete-map-section">
-          <h3 className="maquete-section-title">Como os módulos conversam</h3>
-          <p className="maquete-section-desc">
-            Do Arduino ao dashboard, cada comando percorre o mesmo caminho.
+        <div className="shell-block">
+          <h3 className="shell-block__title">Como os módulos conversam</h3>
+          <p className="shell-block__lead">
+            Do Arduino ao painel: o mesmo caminho para cada comando.
           </p>
-          <div className="maquete-map">
-            <div className="map-zone map-mina">Arduino</div>
-            <div className="map-arrow" aria-hidden="true"></div>
-            <div className="map-zone map-caminhoes">Gateway</div>
-            <div className="map-arrow" aria-hidden="true"></div>
-            <div className="map-zone map-trem">Backend</div>
-            <div className="map-split">
-              <div className="map-branch">
-                <div className="map-arrow map-arrow-down" aria-hidden="true"></div>
-                <div className="map-zone map-porto">Dashboard</div>
-              </div>
-              <div className="map-branch">
-                <div className="map-arrow map-arrow-down" aria-hidden="true"></div>
-                <div className="map-zone map-aeroporto">App mobile</div>
-              </div>
-            </div>
-            <div className="map-control">PostgreSQL + Redis</div>
-          </div>
+          <ol className="shell-pipeline" aria-label="Fluxo do sistema">
+            {pipeline.map((step, i) => (
+              <li key={step} className="shell-pipeline__step">
+                {i > 0 && <span className="shell-pipeline__rail" aria-hidden="true" />}
+                <span className="shell-pipeline__node">{step}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="shell-pipeline__note">Persistência: PostgreSQL + Redis</p>
         </div>
 
-        {/* FAQ */}
-        <div className="maquete-faq-section">
-          <h3 className="maquete-section-title">Perguntas Frequentes</h3>
+        <div className="shell-block shell-block--faq">
+          <h3 className="shell-block__title">Perguntas frequentes</h3>
           <div className="maquete-accordion">
             <details className="maquete-accordion-item">
               <summary>Qual escala foi usada na maquete?</summary>

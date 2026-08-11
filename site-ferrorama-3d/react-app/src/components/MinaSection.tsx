@@ -3,14 +3,13 @@ import { useRef } from 'react';
 import { EASE_OUT_EXPO } from '../lib/motion';
 
 const stepVariants = {
-  hidden: { y: 20, opacity: 0, scale: 0.9 },
+  hidden: { y: 20, opacity: 0 },
   visible: (i: number) => ({
     y: 0,
     opacity: 1,
-    scale: 1,
     transition: {
       duration: 0.5,
-      delay: 0.6 + i * 0.1,
+      delay: 0.55 + i * 0.08,
       ease: EASE_OUT_EXPO,
     },
   }),
@@ -29,17 +28,17 @@ const imageReveal = {
   }),
 };
 
+const steps = [
+  { num: '01', text: 'Extração', desc: 'Perfuração, detonação e escavação' },
+  { num: '02', text: 'Britagem', desc: 'Fragmentação da rocha' },
+  { num: '03', text: 'Beneficiamento', desc: 'Separação magnética' },
+  { num: '04', text: 'Transporte', desc: 'Ferrovia até o porto' },
+  { num: '05', text: 'Alto-forno', desc: 'Minério + carvão → aço' },
+];
+
 export default function MinaSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
-
-  const steps = [
-    { num: '01', text: 'Extração', desc: 'Perfuração, detonação e escavação', icon: '⛏️' },
-    { num: '02', text: 'Britagem', desc: 'Fragmentação da rocha', icon: '🪨' },
-    { num: '03', text: 'Beneficiamento', desc: 'Separação magnética', icon: '🧲' },
-    { num: '04', text: 'Transporte', desc: 'Ferrovia até o porto', icon: '🚂' },
-    { num: '05', text: 'Alto-forno', desc: 'Minério + carvão → aço', icon: '🏭' },
-  ];
 
   return (
     <section id="mina" className="section" data-bg="gradient" ref={ref}>
@@ -71,7 +70,6 @@ export default function MinaSection() {
           </motion.p>
         </div>
 
-        {/* Image gallery row */}
         <div className="mina-gallery">
           <motion.div
             className="mina-gallery-item mina-gallery-main"
@@ -131,15 +129,13 @@ export default function MinaSection() {
           <div className="mina-process">
             {steps.map((step, i) => (
               <motion.div
-                key={i}
+                key={step.num}
                 className="process-step-enhanced"
                 custom={i}
                 variants={stepVariants}
                 initial="hidden"
                 animate={isInView ? 'visible' : 'hidden'}
-                whileHover={{ scale: 1.05, borderColor: 'rgba(204, 102, 0, 0.4)' }}
               >
-                <span className="step-icon">{step.icon}</span>
                 <div className="step-content">
                   <span className="step-num">{step.num}</span>
                   <span className="step-text">{step.text}</span>
@@ -149,7 +145,6 @@ export default function MinaSection() {
             ))}
           </div>
 
-          {/* Ferro vs Carvão table */}
           <motion.div
             className="mina-comparison"
             initial={{ opacity: 0, y: 30 }}
