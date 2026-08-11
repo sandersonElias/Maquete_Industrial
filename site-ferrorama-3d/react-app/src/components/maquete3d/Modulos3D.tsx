@@ -1,62 +1,65 @@
-import { useRef, useMemo, useLayoutEffect, ReactNode } from 'react';
+import { useRef, ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
-import { criarTracado, curvaParalela, matrizesDormentes, posicionarNaCurva } from './geometria';
 
 /* ============================================================
-   Wrapper interativo: destaca o módulo no hover e na seleção
+   Wrapper interativo: destaca a zona no hover e na seleção
    ============================================================ */
 
-interface GrupoInterativoProps {
+interface ZonaProps {
   id: string;
   cor: string;
   selecionado: boolean;
   destacado: boolean;
   onSelecionar: (id: string) => void;
   onDestacar: (id: string | null) => void;
-  position?: [number, number, number];
+  position: [number, number, number];
+  /** Tamanho da plataforma da zona [largura, profundidade] */
+  tamanho: [number, number];
   children: ReactNode;
 }
 
-export function GrupoInterativo({
+export function Zona({
   id,
   cor,
   selecionado,
   destacado,
   onSelecionar,
   onDestacar,
-  position = [0, 0, 0],
+  position,
+  tamanho,
   children,
-}: GrupoInterativoProps) {
+}: ZonaProps) {
   const grupo = useRef<THREE.Group>(null);
-  const anel = useRef<THREE.Mesh>(null);
+  const borda = useRef<THREE.Mesh>(null);
   const ativo = selecionado || destacado;
+  const [larg, prof] = tamanho;
 
   useFrame((_, delta) => {
-    if (!grupo.current) return;
-    // Módulo ativo sobe um pouco — leitura imediata de "isto está selecionado"
-    const alvoY = ativo ? 0.35 : 0;
-    grupo.current.position.y += (alvoY - grupo.current.position.y) * Math.min(delta * 8, 1);
-
-    if (anel.current) {
-      const mat = anel.current.material as THREE.MeshBasicMaterial;
-      const alvoOp = selecionado ? 0.85 : destacado ? 0.4 : 0;
-      mat.opacity += (alvoOp - mat.opacity) * Math.min(delta * 8, 1);
-      anel.current.rotation.z += delta * 0.6;
+    const k = Math.min(delta * 8, 1);
+    if (grupo.current) {
+      const alvoY = ativo ? 0.4 : 0;
+      grupo.current.position.y += (alvoY - grupo.current.position.y) * k;
+    }
+    if (borda.current) {
+      const mat = borda.current.material as THREE.MeshBasicMaterial;
+      const alvo = selecionado ? 0.9 : destacado ? 0.45 : 0.16;
+      mat.opacity += (alvo - mat.opacity) * k;
     }
   });
 
   return (
     <group position={position}>
-      {/* Anel de destaque no chão */}
-      <mesh ref={anel} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <ringGeometry args={[2.1, 2.45, 48]} />
-        <meshBasicMaterial color={cor} transparent opacity={0} side={THREE.DoubleSide} />
-      </mesh>
+      {/* Contorno da zona — as caixas laranjas da planta */}
+      <lineSegments ref={borda as never} position={[0, 0.06, 0]}>
+        <edgesGeometry args={[new THREE.BoxGeometry(larg, 0.001, prof)]} />
+        <lineBasicMaterial color={cor} transparent opacity={0.16} />
+      </lineSegments>
 
-      <group
-        ref={grupo}
+      <mesh
+        position={[0, 0.03, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
         onClick={(e) => {
           e.stopPropagation();
           onSelecionar(id);
@@ -71,178 +74,145 @@ export function GrupoInterativo({
           document.body.style.cursor = '';
         }}
       >
-        {children}
-      </group>
+        <planeGeometry args={[larg, prof]} />
+        <meshStandardMaterial
+          color={PALETA.surface}
+          roughness={0.95}
+          transparent
+          opacity={ativo ? 0.75 : 0.5}
+        />
+      </mesh>
+
+      <group ref={grupo}>{children}</group>
     </group>
   );
 }
 
 /* ============================================================
-   Base — a placa de MDF da maquete
+   Base — a placa de MDF
    ============================================================ */
 
 export function Base() {
   return (
     <group>
-      <mesh receiveShadow position={[0, -0.15, 0]}>
-        <boxGeometry args={[30, 0.3, 22]} />
-        <meshStandardMaterial color="#2a2118" roughness={0.9} metalness={0} />
+      <mesh receiveShadow position={[0, -0.16, 0]}>
+        <boxGeometry args={[38, 0.32, 24]} />
+        <meshStandardMaterial color="#2a2118" roughness={0.9} />
       </mesh>
-      {/* Superfície: verde de paisagismo bem dessaturado */}
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
-        <planeGeometry args={[29.4, 21.4]} />
-        <meshStandardMaterial color="#1d2a20" roughness={1} />
+        <planeGeometry args={[37.4, 23.4]} />
+        <meshStandardMaterial color="#161a17" roughness={1} />
       </mesh>
-      {/* Borda da placa */}
-      <lineSegments position={[0, 0.01, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(29.4, 0.02, 21.4)]} />
-        <lineBasicMaterial color={PALETA.border} />
-      </lineSegments>
     </group>
   );
 }
 
 /* ============================================================
-   Ferrovia — trilhos, dormentes, trem e desvios
+   Central de Química — tanques, reatores e painel de processo
    ============================================================ */
 
-interface FerroviaProps {
-  rodando: boolean;
-  velocidade: number;
-  desvios: number[];
-}
-
-export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
-  const trem = useRef<THREE.Group>(null);
-  const vagoes = useRef<(THREE.Group | null)[]>([]);
-  const progresso = useRef(0);
-  const dormentesRef = useRef<THREE.InstancedMesh>(null);
-
-  const curva = useMemo(() => criarTracado(), []);
-  const trilhoEsq = useMemo(() => curvaParalela(curva, 0.42), [curva]);
-  const trilhoDir = useMemo(() => curvaParalela(curva, -0.42), [curva]);
-  const matrizes = useMemo(() => matrizesDormentes(curva, 96), [curva]);
-
-  useLayoutEffect(() => {
-    if (!dormentesRef.current) return;
-    matrizes.forEach((m, i) => dormentesRef.current!.setMatrixAt(i, m));
-    dormentesRef.current.instanceMatrix.needsUpdate = true;
-  }, [matrizes]);
-
-  // Posicionamento inicial antes do primeiro quadro
-  useLayoutEffect(() => {
-    if (trem.current) posicionarNaCurva(trem.current, curva, 0, 0.16);
-  }, [curva]);
+export function CentralQuimica({ rodando }: { rodando: boolean }) {
+  const liquidos = useRef<THREE.Group>(null);
+  const tempo = useRef(0);
 
   useFrame((_, delta) => {
-    if (rodando) progresso.current += delta * 0.035 * velocidade;
-
-    if (trem.current) posicionarNaCurva(trem.current, curva, progresso.current, 0.16);
-    // Cada vagão fica um pouco atrás na MESMA curva, por isso acompanha as voltas
-    vagoes.current.forEach((v, i) => {
-      if (v) posicionarNaCurva(v, curva, progresso.current - 0.016 * (i + 1), 0.15);
+    if (!rodando || !liquidos.current) return;
+    tempo.current += delta;
+    // Nível dos tanques oscila, como um processo em andamento
+    liquidos.current.children.forEach((filho, i) => {
+      const m = filho as THREE.Mesh;
+      const nivel = 0.55 + Math.sin(tempo.current * 0.7 + i * 1.3) * 0.22;
+      m.scale.y = nivel;
+      m.position.y = 0.42 * nivel;
     });
   });
 
+  const tanques: Array<[number, number]> = [
+    [-1.5, -1.1],
+    [0, -1.1],
+    [1.5, -1.1],
+  ];
+
   return (
     <group>
-      {/* Leito de brita */}
-      <mesh position={[0, 0.01, 0]}>
-        <tubeGeometry args={[curva, 160, 0.75, 4, true]} />
-        <meshStandardMaterial color="#3a3630" roughness={1} />
-      </mesh>
-
-      {/* Dormentes instanciados — 96 peças, uma chamada de desenho */}
-      <instancedMesh ref={dormentesRef} args={[undefined, undefined, matrizes.length]} castShadow>
-        <boxGeometry args={[1.1, 0.06, 0.16]} />
-        <meshStandardMaterial color="#4a3b2a" roughness={0.95} />
-      </instancedMesh>
-
-      {/* Os dois trilhos */}
-      {[trilhoEsq, trilhoDir].map((trilho, i) => (
-        <mesh key={i} position={[0, 0.06, 0]}>
-          <tubeGeometry args={[trilho, 200, 0.045, 6, true]} />
-          <meshStandardMaterial color="#9aa5b1" roughness={0.35} metalness={0.85} />
-        </mesh>
+      {/* Tanques de tratamento */}
+      {tanques.map(([x, z], i) => (
+        <group key={i} position={[x, 0, z]}>
+          <mesh castShadow position={[0, 0.42, 0]}>
+            <cylinderGeometry args={[0.5, 0.5, 0.84, 16, 1, true]} />
+            <meshStandardMaterial
+              color="#8f9aa8"
+              roughness={0.35}
+              metalness={0.7}
+              side={THREE.DoubleSide}
+              transparent
+              opacity={0.55}
+            />
+          </mesh>
+          <mesh position={[0, 0.86, 0]}>
+            <cylinderGeometry args={[0.54, 0.54, 0.08, 16]} />
+            <meshStandardMaterial color={PALETA.surface} roughness={0.5} metalness={0.5} />
+          </mesh>
+        </group>
       ))}
 
-      {/* 4 desvios (servos SG90) — a cor indica o estado atual */}
-      {desvios.map((estado, i) => {
-        const t = 0.08 + i * 0.25;
-        const p = curva.getPointAt(t);
-        const cor = estado === 0 ? PALETA.accent : estado === 1 ? PALETA.purple : PALETA.warning;
-        return (
-          <group key={i} position={[p.x, 0.1, p.z]}>
-            <mesh castShadow>
-              <boxGeometry args={[0.34, 0.2, 0.34]} />
-              <meshStandardMaterial color={PALETA.surface} roughness={0.6} />
-            </mesh>
-            <mesh position={[0, 0.22, 0]}>
-              <sphereGeometry args={[0.11, 12, 12]} />
-              <meshStandardMaterial color={cor} emissive={cor} emissiveIntensity={2.2} toneMapped={false} />
-            </mesh>
-          </group>
-        );
-      })}
-
-      {/* Locomotiva */}
-      <group ref={trem}>
-        <mesh castShadow position={[0, 0.16, 0]}>
-          <boxGeometry args={[0.5, 0.32, 1.05]} />
-          <meshStandardMaterial color={PALETA.accent} roughness={0.4} metalness={0.3} />
-        </mesh>
-        {/* Cabine */}
-        <mesh castShadow position={[0, 0.42, -0.18]}>
-          <boxGeometry args={[0.44, 0.26, 0.42]} />
-          <meshStandardMaterial color="#2b6fb8" roughness={0.4} />
-        </mesh>
-        {/* Farol dianteiro */}
-        <mesh position={[0, 0.2, 0.55]}>
-          <sphereGeometry args={[0.07, 10, 10]} />
-          <meshStandardMaterial color="#fff3c4" emissive="#ffd700" emissiveIntensity={3} toneMapped={false} />
-        </mesh>
-        {/* Rodas */}
-        {[-0.3, 0.3].map((z) =>
-          [-0.26, 0.26].map((x) => (
-            <mesh key={`${x}-${z}`} position={[x, 0.06, z]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.09, 0.09, 0.05, 10]} />
-              <meshStandardMaterial color="#15181d" roughness={0.7} />
-            </mesh>
-          ))
-        )}
+      {/* Líquido dentro dos tanques */}
+      <group ref={liquidos}>
+        {tanques.map(([x, z], i) => (
+          <mesh key={i} position={[x, 0.23, z]}>
+            <cylinderGeometry args={[0.44, 0.44, 0.84, 16]} />
+            <meshStandardMaterial
+              color={[PALETA.glow, PALETA.accent, PALETA.warning][i]}
+              emissive={[PALETA.glow, PALETA.accent, PALETA.warning][i]}
+              emissiveIntensity={0.5}
+              roughness={0.2}
+              transparent
+              opacity={0.85}
+            />
+          </mesh>
+        ))}
       </group>
 
-      {/* Vagões basculantes carregados de minério */}
-      {[0, 1, 2].map((i) => (
-        <group key={i} ref={(el) => { vagoes.current[i] = el; }}>
-          <mesh castShadow position={[0, 0.15, 0]}>
-            <boxGeometry args={[0.46, 0.26, 0.8]} />
-            <meshStandardMaterial color="#7a4a2a" roughness={0.7} />
-          </mesh>
-          {/* Carga de minério */}
-          <mesh position={[0, 0.3, 0]}>
-            <boxGeometry args={[0.36, 0.1, 0.62]} />
-            <meshStandardMaterial color="#4a2f22" roughness={1} />
-          </mesh>
-          {[-0.22, 0.22].map((z) =>
-            [-0.24, 0.24].map((x) => (
-              <mesh key={`${x}-${z}`} position={[x, 0.06, z]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.08, 0.08, 0.04, 8]} />
-                <meshStandardMaterial color="#15181d" roughness={0.7} />
-              </mesh>
-            ))
-          )}
-        </group>
+      {/* Tubulação ligando os tanques */}
+      <mesh position={[0, 0.94, -1.1]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.06, 0.06, 3.1, 8]} />
+        <meshStandardMaterial color="#6c757d" metalness={0.7} roughness={0.35} />
+      </mesh>
+
+      {/* Painel de controle do processo */}
+      <mesh castShadow position={[0, 0.35, 1.3]}>
+        <boxGeometry args={[2.6, 0.7, 0.5]} />
+        <meshStandardMaterial color={PALETA.card} roughness={0.75} />
+      </mesh>
+      <mesh position={[0, 0.55, 1.56]} rotation={[-0.25, 0, 0]}>
+        <boxGeometry args={[1.1, 0.42, 0.04]} />
+        <meshStandardMaterial
+          color="#0a3d2e"
+          emissive={PALETA.glow}
+          emissiveIntensity={0.6}
+          roughness={0.3}
+        />
+      </mesh>
+      {[-0.9, 0.9].map((x) => (
+        <mesh key={x} position={[x, 0.62, 1.4]}>
+          <sphereGeometry args={[0.07, 8, 8]} />
+          <meshStandardMaterial
+            color={PALETA.glow}
+            emissive={PALETA.glow}
+            emissiveIntensity={2.2}
+            toneMapped={false}
+          />
+        </mesh>
       ))}
     </group>
   );
 }
 
 /* ============================================================
-   Mineradora — poços, esteira e caminhão basculante
+   Mina — poços, esteira e caminhão basculante
    ============================================================ */
 
-export function Mineradora({ rodando }: { rodando: boolean }) {
+export function Mina({ rodando }: { rodando: boolean }) {
   const cacamba = useRef<THREE.Group>(null);
   const caminhao = useRef<THREE.Group>(null);
   const tempo = useRef(0);
@@ -251,70 +221,70 @@ export function Mineradora({ rodando }: { rodando: boolean }) {
     if (!rodando) return;
     tempo.current += delta;
 
-    // Caminhão faz o vaivém entre a mina e o ponto de carga do trem
     if (caminhao.current) {
       const ciclo = (Math.sin(tempo.current * 0.4) + 1) / 2;
-      caminhao.current.position.x = -1.6 + ciclo * 3.2;
+      caminhao.current.position.x = -1.8 + ciclo * 3.4;
       caminhao.current.rotation.y = Math.cos(tempo.current * 0.4) > 0 ? Math.PI / 2 : -Math.PI / 2;
     }
-    // A caçamba bascula ao chegar no fim do trajeto
     if (cacamba.current) {
-      const despejo = Math.max(0, Math.sin(tempo.current * 0.4));
-      cacamba.current.rotation.x = -despejo * 0.7;
+      cacamba.current.rotation.x = -Math.max(0, Math.sin(tempo.current * 0.4)) * 0.7;
     }
   });
 
   return (
     <group>
-      {/* Montanha em degraus, como uma mina a céu aberto */}
+      {/* Montanha em degraus — mina a céu aberto */}
       {[
-        { r: 2.6, h: 0.5, y: 0.25 },
-        { r: 1.9, h: 0.5, y: 0.75 },
-        { r: 1.2, h: 0.5, y: 1.25 },
+        { r: 2.3, h: 0.45, y: 0.22 },
+        { r: 1.7, h: 0.45, y: 0.67 },
+        { r: 1.1, h: 0.45, y: 1.12 },
       ].map((n, i) => (
-        <mesh key={i} castShadow receiveShadow position={[0, n.y, 0]}>
-          <cylinderGeometry args={[n.r - 0.35, n.r, n.h, 10]} />
+        <mesh key={i} castShadow receiveShadow position={[0, n.y, -0.7]}>
+          <cylinderGeometry args={[n.r - 0.3, n.r, n.h, 10]} />
           <meshStandardMaterial color={i === 2 ? '#5a4632' : '#4a3a2a'} roughness={1} flatShading />
         </mesh>
       ))}
 
-      {/* Dois poços de extração */}
-      {[[-0.5, 1.52, 0.3], [0.55, 1.52, -0.35]].map((p, i) => (
+      {[[-0.45, 1.36, -0.4], [0.5, 1.36, -1.05]].map((p, i) => (
         <mesh key={i} position={p as [number, number, number]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.3, 16]} />
+          <circleGeometry args={[0.27, 16]} />
           <meshStandardMaterial color="#15100a" roughness={1} />
         </mesh>
       ))}
 
-      {/* Esteira transportadora descendo da mina */}
-      <mesh castShadow position={[1.7, 0.85, 0]} rotation={[0, 0, -0.5]}>
-        <boxGeometry args={[3, 0.09, 0.5]} />
+      {/* Esteira transportadora */}
+      <mesh castShadow position={[1.6, 0.75, -0.7]} rotation={[0, 0, -0.5]}>
+        <boxGeometry args={[2.6, 0.09, 0.45]} />
         <meshStandardMaterial color={PALETA.surface} roughness={0.6} metalness={0.3} />
       </mesh>
 
-      {/* Caminhão basculante — 3 servos: direção, caçamba e motor */}
-      <group ref={caminhao} position={[0, 0, 2.4]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh castShadow position={[0, 0.22, 0.28]}>
-          <boxGeometry args={[0.44, 0.3, 0.42]} />
+      {/* Caminhão basculante */}
+      <group ref={caminhao} position={[0, 0, 1.6]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh castShadow position={[0, 0.22, 0.26]}>
+          <boxGeometry args={[0.42, 0.28, 0.4]} />
           <meshStandardMaterial color={PALETA.warning} roughness={0.5} metalness={0.2} />
         </mesh>
-        <group ref={cacamba} position={[0, 0.24, -0.18]}>
-          <mesh castShadow position={[0, 0.06, -0.16]}>
-            <boxGeometry args={[0.48, 0.24, 0.6]} />
+        <group ref={cacamba} position={[0, 0.24, -0.17]}>
+          <mesh castShadow position={[0, 0.06, -0.15]}>
+            <boxGeometry args={[0.46, 0.22, 0.56]} />
             <meshStandardMaterial color="#c98a1a" roughness={0.6} />
           </mesh>
         </group>
-        {/* Faróis em LED (pinos D2 e D3) */}
-        {[-0.14, 0.14].map((x) => (
-          <mesh key={x} position={[x, 0.22, 0.5]}>
+        {[-0.13, 0.13].map((x) => (
+          <mesh key={x} position={[x, 0.22, 0.47]}>
             <sphereGeometry args={[0.05, 8, 8]} />
-            <meshStandardMaterial color="#fff8dc" emissive="#ffe9a0" emissiveIntensity={2.5} toneMapped={false} />
+            <meshStandardMaterial
+              color="#fff8dc"
+              emissive="#ffe9a0"
+              emissiveIntensity={2.5}
+              toneMapped={false}
+            />
           </mesh>
         ))}
-        {[-0.26, 0.26].map((x) =>
-          [-0.28, 0.26].map((z) => (
+        {[-0.24, 0.24].map((x) =>
+          [-0.26, 0.24].map((z) => (
             <mesh key={`${x}-${z}`} position={[x, 0.1, z]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.1, 0.1, 0.07, 10]} />
+              <cylinderGeometry args={[0.095, 0.095, 0.07, 10]} />
               <meshStandardMaterial color="#15181d" roughness={0.8} />
             </mesh>
           ))
@@ -325,93 +295,85 @@ export function Mineradora({ rodando }: { rodando: boolean }) {
 }
 
 /* ============================================================
-   Porto — água, cais, guindaste e navio
+   Porto Logístico
    ============================================================ */
 
 export function Porto({ rodando }: { rodando: boolean }) {
   const lanca = useRef<THREE.Group>(null);
   const navio = useRef<THREE.Group>(null);
-  const agua = useRef<THREE.Mesh>(null);
   const tempo = useRef(0);
 
   useFrame((_, delta) => {
     if (!rodando) return;
     tempo.current += delta;
     if (lanca.current) lanca.current.rotation.y = Math.sin(tempo.current * 0.5) * 0.55;
-    // Navio balança de leve, como atracado na água
     if (navio.current) {
       navio.current.position.y = Math.sin(tempo.current * 1.1) * 0.04;
       navio.current.rotation.z = Math.sin(tempo.current * 0.9) * 0.02;
-    }
-    if (agua.current) {
-      const mat = agua.current.material as THREE.MeshStandardMaterial;
-      mat.opacity = 0.75 + Math.sin(tempo.current * 0.8) * 0.05;
     }
   });
 
   return (
     <group>
-      {/* Lâmina d'água */}
-      <mesh ref={agua} rotation={[-Math.PI / 2, 0, 0]} position={[1.6, 0.03, 0]}>
-        <planeGeometry args={[6.5, 7]} />
-        <meshStandardMaterial color="#0d3b4a" roughness={0.15} metalness={0.6} transparent opacity={0.8} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[1.2, 0.04, 0]}>
+        <planeGeometry args={[4.4, 6.4]} />
+        <meshStandardMaterial
+          color="#0d3b4a"
+          roughness={0.15}
+          metalness={0.6}
+          transparent
+          opacity={0.85}
+        />
       </mesh>
 
-      {/* Cais de concreto */}
-      <mesh castShadow receiveShadow position={[-1.9, 0.18, 0]}>
-        <boxGeometry args={[2.4, 0.36, 6.4]} />
+      <mesh castShadow receiveShadow position={[-1.7, 0.16, 0]}>
+        <boxGeometry args={[1.9, 0.32, 5.8]} />
         <meshStandardMaterial color="#4b5058" roughness={0.9} />
       </mesh>
 
       {/* Guindaste */}
-      <group position={[-1.6, 0.36, 1.2]}>
+      <group position={[-1.5, 0.32, 1.1]}>
         <mesh castShadow>
-          <boxGeometry args={[0.7, 0.18, 0.7]} />
+          <boxGeometry args={[0.6, 0.16, 0.6]} />
           <meshStandardMaterial color={PALETA.surface} roughness={0.6} />
         </mesh>
-        <mesh castShadow position={[0, 1.1, 0]}>
-          <cylinderGeometry args={[0.11, 0.13, 2.1, 8]} />
-          <meshStandardMaterial color={PALETA.glow} roughness={0.45} metalness={0.5} />
+        <mesh castShadow position={[0, 0.95, 0]}>
+          <cylinderGeometry args={[0.1, 0.12, 1.8, 8]} />
+          <meshStandardMaterial color={PALETA.danger} roughness={0.45} metalness={0.5} />
         </mesh>
-        <group ref={lanca} position={[0, 2.1, 0]}>
-          <mesh castShadow position={[1.1, 0, 0]}>
-            <boxGeometry args={[2.4, 0.12, 0.16]} />
-            <meshStandardMaterial color={PALETA.glow} roughness={0.45} metalness={0.5} />
+        <group ref={lanca} position={[0, 1.8, 0]}>
+          <mesh castShadow position={[0.95, 0, 0]}>
+            <boxGeometry args={[2, 0.11, 0.14]} />
+            <meshStandardMaterial color={PALETA.danger} roughness={0.45} metalness={0.5} />
           </mesh>
-          {/* Cabo e gancho */}
-          <mesh position={[2, -0.42, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.8, 4]} />
+          <mesh position={[1.7, -0.38, 0]}>
+            <cylinderGeometry args={[0.014, 0.014, 0.72, 4]} />
             <meshStandardMaterial color="#8a8f98" />
           </mesh>
-          <mesh castShadow position={[2, -0.9, 0]}>
-            <boxGeometry args={[0.26, 0.2, 0.26]} />
+          <mesh castShadow position={[1.7, -0.8, 0]}>
+            <boxGeometry args={[0.24, 0.18, 0.24]} />
             <meshStandardMaterial color={PALETA.warning} roughness={0.5} />
           </mesh>
         </group>
       </group>
 
-      {/* Navio atracado */}
-      <group ref={navio} position={[1.8, 0.22, -0.4]}>
+      {/* Navio */}
+      <group ref={navio} position={[1.5, 0.22, -0.3]}>
         <mesh castShadow>
-          <boxGeometry args={[1.5, 0.42, 4.2]} />
+          <boxGeometry args={[1.3, 0.4, 3.8]} />
           <meshStandardMaterial color="#8c2f3a" roughness={0.6} />
         </mesh>
-        <mesh castShadow position={[0, 0.34, -1.2]}>
-          <boxGeometry args={[1.1, 0.5, 1]} />
+        <mesh castShadow position={[0, 0.32, -1.1]}>
+          <boxGeometry args={[0.95, 0.46, 0.9]} />
           <meshStandardMaterial color="#e8e4dd" roughness={0.7} />
         </mesh>
-        {/* Contêineres */}
-        {[0.6, 0.05, -0.5].map((z, i) => (
-          <mesh key={z} castShadow position={[0, 0.34, z]}>
-            <boxGeometry args={[1.1, 0.28, 0.5]} />
-            <meshStandardMaterial
-              color={[PALETA.accent, PALETA.warning, PALETA.glow][i]}
-              roughness={0.7}
-            />
+        {[0.55, 0.05, -0.45].map((z, i) => (
+          <mesh key={z} castShadow position={[0, 0.32, z]}>
+            <boxGeometry args={[0.95, 0.26, 0.45]} />
+            <meshStandardMaterial color={[PALETA.accent, PALETA.warning, PALETA.glow][i]} roughness={0.7} />
           </mesh>
         ))}
-        {/* LED vermelho: navio atracado */}
-        <mesh position={[0, 0.68, -1.2]}>
+        <mesh position={[0, 0.62, -1.1]}>
           <sphereGeometry args={[0.07, 8, 8]} />
           <meshStandardMaterial
             color={PALETA.danger}
@@ -426,7 +388,7 @@ export function Porto({ rodando }: { rodando: boolean }) {
 }
 
 /* ============================================================
-   Aeroporto — pista, balizamento e aeronave
+   Aeroporto Logístico
    ============================================================ */
 
 export function Aeroporto({ rodando }: { rodando: boolean }) {
@@ -436,34 +398,30 @@ export function Aeroporto({ rodando }: { rodando: boolean }) {
   useFrame((_, delta) => {
     if (!rodando || !aviao.current) return;
     tempo.current += delta;
-    // Ciclo de taxiamento e decolagem na pista
     const ciclo = (tempo.current * 0.16) % 1;
-    aviao.current.position.z = -3 + ciclo * 6;
-    aviao.current.position.y = ciclo > 0.72 ? (ciclo - 0.72) * 5 : 0.18;
+    aviao.current.position.z = -2.6 + ciclo * 5.2;
+    aviao.current.position.y = ciclo > 0.72 ? 0.18 + (ciclo - 0.72) * 5 : 0.18;
     aviao.current.rotation.x = ciclo > 0.72 ? -0.22 : 0;
   });
 
   return (
     <group>
-      {/* Pista */}
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <planeGeometry args={[2.2, 8]} />
+      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+        <planeGeometry args={[1.9, 6.6]} />
         <meshStandardMaterial color="#22262c" roughness={0.95} />
       </mesh>
 
-      {/* Faixa central tracejada */}
-      {Array.from({ length: 9 }, (_, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, -3.6 + i * 0.9]}>
-          <planeGeometry args={[0.12, 0.5]} />
+      {Array.from({ length: 8 }, (_, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, -2.9 + i * 0.82]}>
+          <planeGeometry args={[0.1, 0.45]} />
           <meshStandardMaterial color="#c8ccd2" roughness={0.8} />
         </mesh>
       ))}
 
-      {/* Balizamento em LED nas bordas */}
-      {Array.from({ length: 8 }, (_, i) =>
-        [-1.25, 1.25].map((x) => (
-          <mesh key={`${i}-${x}`} position={[x, 0.08, -3.4 + i * 1]}>
-            <sphereGeometry args={[0.055, 6, 6]} />
+      {Array.from({ length: 7 }, (_, i) =>
+        [-1.05, 1.05].map((x) => (
+          <mesh key={`${i}-${x}`} position={[x, 0.08, -2.7 + i * 0.9]}>
+            <sphereGeometry args={[0.05, 6, 6]} />
             <meshStandardMaterial
               color={PALETA.purple}
               emissive={PALETA.purple}
@@ -475,113 +433,25 @@ export function Aeroporto({ rodando }: { rodando: boolean }) {
       )}
 
       {/* Terminal de carga */}
-      <mesh castShadow position={[2.1, 0.4, 1.4]}>
-        <boxGeometry args={[1.7, 0.8, 2.4]} />
+      <mesh castShadow position={[1.9, 0.36, 1.2]}>
+        <boxGeometry args={[1.5, 0.72, 2]} />
         <meshStandardMaterial color={PALETA.card} roughness={0.75} />
       </mesh>
-      <mesh castShadow position={[2.1, 0.95, 1.4]}>
-        <boxGeometry args={[1.8, 0.3, 2.5]} />
-        <meshStandardMaterial color={PALETA.surface} roughness={0.6} />
-      </mesh>
 
-      {/* Aeronave de carga */}
-      <group ref={aviao} position={[0, 0.18, -3]}>
+      <group ref={aviao} position={[0, 0.18, -2.6]}>
         <mesh castShadow>
-          <capsuleGeometry args={[0.16, 1.2, 4, 10]} />
+          <capsuleGeometry args={[0.15, 1.1, 4, 10]} />
           <meshStandardMaterial color="#e6e9ee" roughness={0.45} metalness={0.3} />
         </mesh>
-        {/* Asas */}
-        <mesh castShadow position={[0, -0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <boxGeometry args={[0.07, 2.1, 0.42]} />
+        <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
+          <boxGeometry args={[0.07, 1.9, 0.38]} />
           <meshStandardMaterial color="#d4d8de" roughness={0.5} metalness={0.3} />
         </mesh>
-        {/* Cauda */}
-        <mesh castShadow position={[0, 0.24, -0.66]}>
-          <boxGeometry args={[0.06, 0.44, 0.3]} />
+        <mesh castShadow position={[0, 0.22, -0.6]}>
+          <boxGeometry args={[0.06, 0.4, 0.28]} />
           <meshStandardMaterial color={PALETA.purple} roughness={0.5} />
         </mesh>
       </group>
-    </group>
-  );
-}
-
-/* ============================================================
-   Central de Controle — Arduino, gateway e telas
-   ============================================================ */
-
-export function Controle({ rodando }: { rodando: boolean }) {
-  const leds = useRef<THREE.Group>(null);
-  const tempo = useRef(0);
-
-  useFrame((_, delta) => {
-    if (!rodando || !leds.current) return;
-    tempo.current += delta;
-    // LEDs piscam em sequência, como o tráfego serial real
-    leds.current.children.forEach((led, i) => {
-      const mesh = led as THREE.Mesh;
-      const mat = mesh.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 0.6 + Math.max(0, Math.sin(tempo.current * 3 - i * 0.9)) * 3;
-    });
-  });
-
-  return (
-    <group>
-      {/* Bancada */}
-      <mesh castShadow receiveShadow position={[0, 0.3, 0]}>
-        <boxGeometry args={[4.4, 0.6, 2.4]} />
-        <meshStandardMaterial color={PALETA.card} roughness={0.8} />
-      </mesh>
-
-      {/* Placa Arduino Mega */}
-      <mesh castShadow position={[-1.2, 0.64, 0.2]}>
-        <boxGeometry args={[1.1, 0.08, 0.75]} />
-        <meshStandardMaterial color="#0f6b5c" roughness={0.6} />
-      </mesh>
-
-      {/* LEDs de status do gateway */}
-      <group ref={leds} position={[-1.2, 0.72, 0.2]}>
-        {[-0.32, -0.1, 0.12, 0.34].map((x, i) => (
-          <mesh key={x} position={[x, 0, 0.2]}>
-            <sphereGeometry args={[0.055, 8, 8]} />
-            <meshStandardMaterial
-              color={[PALETA.glow, PALETA.accent, PALETA.warning, PALETA.danger][i]}
-              emissive={[PALETA.glow, PALETA.accent, PALETA.warning, PALETA.danger][i]}
-              emissiveIntensity={1}
-              toneMapped={false}
-            />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Display LCD 16x2 */}
-      <mesh castShadow position={[0.3, 0.75, 0]} rotation={[-0.35, 0, 0]}>
-        <boxGeometry args={[1, 0.5, 0.06]} />
-        <meshStandardMaterial
-          color="#0a3d2e"
-          emissive={PALETA.glow}
-          emissiveIntensity={0.55}
-          roughness={0.4}
-        />
-      </mesh>
-
-      {/* Monitor do dashboard */}
-      <mesh castShadow position={[1.6, 0.95, -0.3]} rotation={[-0.18, -0.4, 0]}>
-        <boxGeometry args={[1.3, 0.85, 0.06]} />
-        <meshStandardMaterial
-          color={PALETA.dark}
-          emissive={PALETA.accent}
-          emissiveIntensity={0.4}
-          roughness={0.3}
-        />
-      </mesh>
-
-      {/* Botões físicos do painel */}
-      {[-0.5, -0.2, 0.1].map((x, i) => (
-        <mesh key={x} castShadow position={[x, 0.63, -0.75]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.08, 12]} />
-          <meshStandardMaterial color={[PALETA.glow, PALETA.warning, PALETA.danger][i]} roughness={0.5} />
-        </mesh>
-      ))}
     </group>
   );
 }

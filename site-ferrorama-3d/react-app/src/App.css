@@ -3886,3 +3886,161 @@ table {
     animation-duration: 2s;
   }
 }
+
+/* ============================================
+   CONTROLES DE OPERAÇÃO — REVERSOR E DESVIOS
+   ============================================ */
+
+/* Reversor: o controle mais chamativo, para uso na apresentação */
+.maquete3d-reversor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.maquete3d-btn-reversor {
+  gap: 0.6rem;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.9rem;
+  border-width: 2px;
+  border-color: #00FFB2;
+  color: #00FFB2;
+  background: rgba(0, 255, 178, 0.08);
+}
+
+.maquete3d-btn-reversor:hover {
+  background: rgba(0, 255, 178, 0.16);
+}
+
+.maquete3d-btn-reversor.invertido {
+  border-color: #FF4560;
+  color: #FF4560;
+  background: rgba(255, 69, 96, 0.1);
+}
+
+.maquete3d-btn-reversor.invertido:hover {
+  background: rgba(255, 69, 96, 0.18);
+}
+
+.maquete3d-seta {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.maquete3d-status {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* Chaves de desvio */
+.maquete3d-desvios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 0.6rem;
+}
+
+.maquete3d-chave {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  background: var(--dark-lighter);
+  border: 1px solid var(--card-border);
+  border-left: 3px solid #00FFB2;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.maquete3d-chave:hover {
+  background: var(--card-hover);
+}
+
+.maquete3d-chave.desviado {
+  border-left-color: #FFB800;
+}
+
+.maquete3d-chave-id {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.maquete3d-chave-estado {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #00FFB2;
+}
+
+.maquete3d-chave.desviado .maquete3d-chave-estado {
+  color: #FFB800;
+}
+
+.maquete3d-chave-desc {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Rota resultante */
+.maquete3d-rota {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: rota;
+}
+
+.maquete3d-rota li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--dark-2);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+}
+
+.maquete3d-rota li::before {
+  counter-increment: rota;
+  content: counter(rota);
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--dark);
+  background: #3D9EFF;
+  border-radius: 50%;
+}
+
+/* Seta entre os trechos da rota */
+.maquete3d-rota li:not(:last-child)::after {
+  content: '→';
+  margin-left: 0.2rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 720px) {
+  .maquete3d-desvios {
+    grid-template-columns: 1fr;
+  }
+
+  .maquete3d-rota li {
+    font-size: 0.68rem;
+  }
+}
