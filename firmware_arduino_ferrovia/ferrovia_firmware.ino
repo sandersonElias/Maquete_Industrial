@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  FIRMWARE FERROVIA - 4 SERVOS SG90 + HC-05 (BLUETOOTH)
+ *  FIRMWARE FERROVIA - 4 SERVOS + 8 LEDS + HC-05 (BLUETOOTH)
  * ============================================================
  *  Recebe comandos via Bluetooth (HC-05) no formato:
  *    CMD|SWITCH|<id>|<acao>|<valor>\n
@@ -9,11 +9,19 @@
  *  Envia heartbeat periodico:
  *    STATUS|SWITCH|<id>|<angulo>|<estado>|<ts>\n
  *  
- *  Pinos:
- *    - Servo 1 (SwitchId 1): D3
- *    - Servo 2 (SwitchId 2): D5
- *    - Servo 3 (SwitchId 3): D6
- *    - Servo 4 (SwitchId 4): D9
+ *  Pinos Servos:
+ *    - Servo 1 (SwitchId 1): D2
+ *    - Servo 2 (SwitchId 2): D3
+ *    - Servo 3 (SwitchId 3): D4
+ *    - Servo 4 (SwitchId 4): D5
+ *  
+ *  Pinos LEDs (Indicador de Direcao):
+ *    - Divisao 1: Esquerda=D6, Direita=D7
+ *    - Divisao 2: Esquerda=D8, Direita=D9
+ *    - Divisao 3: Esquerda=D10, Direita=D11
+ *    - Divisao 4: Esquerda=D12, Direita=D13
+ *  
+ *  Bluetooth:
  *    - HC-05 TX -> Arduino RX (D0 Serial)
  *    - HC-05 RX <- Arduino TX (D1 Serial)
  *  
@@ -25,7 +33,14 @@
 
 // === CONFIGURACAO ===
 const int NUM_SWITCHES = 4;
-const int SERVO_PINS[NUM_SWITCHES] = {3, 5, 6, 9};
+const int SERVO_PINS[NUM_SWITCHES] = {2, 3, 4, 5};
+
+// === PINOS DOS LEDS (INDICADOR DE DIRECAO) ===
+// LED Esquerda aceso = Locomotiva vai para linha esquerda
+// LED Direita aceso = Locomotiva vai para linha direita
+const int LED_LEFT[NUM_SWITCHES] = {6, 8, 10, 12};
+const int LED_RIGHT[NUM_SWITCHES] = {7, 9, 11, 13};
+
 const int BAUD_BT = 9600;
 const unsigned long HEARTBEAT_INTERVAL = 5000; // ms
 const int ANGLE_LEFT = 0;
@@ -49,11 +64,43 @@ unsigned long lastHeartbeat = 0;
 String inputBuffer = "";
 const int MAX_BUFFER = 64;
 
+// === CONFIGURACAO DOS LEDS ===
+void setupLEDs() {
+  for (int i = 0; i < NUM_SWITCHES; i++) {
+    pinMode(LED_LEFT[i], OUTPUT);
+    pinMode(LED_RIGHT[i], OUTPUT);
+    digitalWrite(LED_LEFT[i], LOW);
+    digitalWrite(LED_RIGHT[i], LOW);
+  }
+  Serial.println(F("LEDs inicializados."));
+}
+
+// === ATUALIZACAO DOS LEDS ===
+void updateLEDs() {
+  for (int i = 0; i < NUM_SWITCHES; i++) {
+    int angle = switchStates[i].currentAngle;
+    
+    if (angle <= 10) {
+      // LEFT - Locomotiva vai para linha esquerda
+      digitalWrite(LED_LEFT[i], HIGH);
+      digitalWrite(LED_RIGHT[i], LOW);
+    } else if (angle >= 170) {
+      // RIGHT - Locomotiva vai para linha direita
+      digitalWrite(LED_LEFT[i], LOW);
+      digitalWrite(LED_RIGHT[i], HIGH);
+    } else {
+      // CENTER - Ambos apagados (neutro)
+      digitalWrite(LED_LEFT[i], LOW);
+      digitalWrite(LED_RIGHT[i], LOW);
+    }
+  }
+}
+
 // === SETUP ===
 void setup() {
   Serial.begin(BAUD_BT);
 
-  Serial.println(F("=== FERROVIA FIRMWARE v2.2 ==="));
+  Serial.println(F("=== FERROVIA FIRMWARE v3.2 ==="));
   Serial.println(F("Inicializando servos..."));
 
   inputBuffer.reserve(MAX_BUFFER);
@@ -68,7 +115,10 @@ void setup() {
     delay(200);
   }
 
-  Serial.println(F("Servos prontos. Aguardando comandos BT..."));
+  // Inicializar LEDs
+  setupLEDs();
+
+  Serial.println(F("Sistema pronto. Aguardando comandos BT..."));
   sendStatusAll();
 }
 
@@ -80,7 +130,10 @@ void loop() {
   // 2. Atualizar servos (movimento suave)
   updateServos();
 
-  // 3. Heartbeat periodico
+  // 3. Atualizar LEDs indicador de direcao
+  updateLEDs();
+
+  // 4. Heartbeat periodico
   unsigned long now = millis();
   if (now - lastHeartbeat >= HEARTBEAT_INTERVAL) {
     sendStatusAll();

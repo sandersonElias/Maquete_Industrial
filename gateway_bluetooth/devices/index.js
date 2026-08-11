@@ -23,11 +23,12 @@ class DeviceManager {
       const key = def.name.toLowerCase().replace(/_/g, "");
       this.devices.set(key, device);
 
-      device.onDataParsed = (parsed) => {
+      device.onDataParsed = (parsed, rawData) => {
         this.onDataCallback("device:parsed", {
           deviceName: def.name,
           deviceType: def.type,
           parsed,
+          rawData,
         });
       };
 
@@ -59,6 +60,7 @@ class DeviceManager {
   }
 
   resolveTarget(target) {
+    if (!target) return null;
     if (target === "ferrovia" || target === "FERROVIA_SW") {
       return this.getByType("ferrovia")[0] || null;
     }

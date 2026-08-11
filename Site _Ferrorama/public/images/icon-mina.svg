@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" fill="none">
+  <rect width="120" height="80" rx="6" fill="#141b24"/>
+  <rect x="1" y="1" width="118" height="78" rx="5" stroke="#2a3444" stroke-width="1"/>
+  <!-- Mountain -->
+  <path d="M15 55 L45 15 L55 28 L65 10 L95 55 Z" fill="#1e2736"/>
+  <path d="M15 55 L45 18 L55 30 L65 13 L95 55 Z" fill="#2a3444" opacity="0.7"/>
+  <!-- Mining pit -->
+  <path d="M35 55 L45 35 L55 45 L65 28 L75 42 L85 55 Z" fill="#0d1118" stroke="#3d4a5c" stroke-width="0.8"/>
+  <!-- Ore layers -->
+  <path d="M40 50 L50 38 L55 42" fill="none" stroke="#e87722" stroke-width="1.5" opacity="0.6"/>
+  <path d="M60 45 L70 35 L75 40" fill="none" stroke="#e87722" stroke-width="1.5" opacity="0.4"/>
+  <!-- Pickaxe icon -->
+  <g transform="translate(70, 10) scale(0.7)">
+    <line x1="0" y1="16" x2="16" y2="0" stroke="#8b9cb3" stroke-width="2" stroke-linecap="round"/>
+    <path d="M12 0 L20 4 L16 8 L8 4 Z" fill="#ff9830"/>
+  </g>
+  <!-- Ground -->
+  <rect x="10" y="55" width="100" height="4" rx="1" fill="#3d4a5c" opacity="0.5"/>
+  <!-- Label -->
+  <text x="60" y="70" text-anchor="middle" font-family="Inter, system-ui" font-size="8" fill="#94a3b8" font-weight="600" letter-spacing="0.05em">MINA</text>
+</svg>

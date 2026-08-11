@@ -1,16 +1,23 @@
 const redis = require("redis");
 const logger = require("./logger");
 
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || "redis://localhost:6379",
-});
+let redisClient = null;
 
-redisClient.on("error", (err) => {
-  logger.error("Erro na conexão Redis:", err);
-});
+// Redis e opcional - so conectar se REDIS_URL estiver configurado
+if (process.env.REDIS_URL) {
+  redisClient = redis.createClient({
+    url: process.env.REDIS_URL,
+  });
 
-redisClient.connect().catch((err) => {
-  logger.warn("Não foi possível conectar ao Redis:", err.message);
-});
+  redisClient.on("error", (err) => {
+    logger.error("Erro na conexao Redis:", err);
+  });
+
+  redisClient.connect().catch((err) => {
+    logger.warn("Nao foi possivel conectar ao Redis:", err.message);
+  });
+} else {
+  logger.info("Redis nao configurado (REDIS_URL nao definido). Modo sem cache.");
+}
 
 module.exports = redisClient;

@@ -1,9 +1,8 @@
-import React, { useState, useEffect, Suspense } from 'react';
-import { Train, ArrowLeft, ArrowRight, RotateCcw, AlertOctagon, Loader, Box, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Train, ArrowLeft, ArrowRight, RotateCcw, AlertOctagon, Loader, Box } from 'lucide-react';
 import axios from 'axios';
 import { useSocket } from '../contexts/SocketContext';
 import toast from 'react-hot-toast';
-import RailwayScene3D from '../components/RailwayScene3D';
 
 const SwitchControl = ({ switchData, onCommand, loading }) => {
   const getStateColor = (state) => {
@@ -108,7 +107,7 @@ const SwitchControl = ({ switchData, onCommand, loading }) => {
   );
 };
 
-const RailwayMap = ({ switches, viewMode, onViewToggle }) => {
+const RailwayMap = ({ switches }) => {
   const getSwitchColor = (sw) => {
     if (!sw) return '#4A5568';
     if (sw.is_moving) return '#FFB800';
@@ -129,101 +128,75 @@ const RailwayMap = ({ switches, viewMode, onViewToggle }) => {
           <Box size={14} className="text-maquete-glow" />
           Mapa da Linha
         </h3>
-        <button
-          onClick={onViewToggle}
-          className="flex items-center gap-2 px-3 py-1.5 bg-maquete-surface hover:bg-maquete-accent/15 border border-maquete-border hover:border-maquete-accent/30 rounded-lg text-xs font-medium transition-all"
-        >
-          {viewMode === '3d' ? <Eye size={14} /> : <Box size={14} />}
-          {viewMode === '3d' ? '2D' : '3D'}
-        </button>
       </div>
 
-      <div className="relative" style={{ height: viewMode === '3d' ? '420px' : '200px' }}>
-        {viewMode === '3d' ? (
-          <Suspense fallback={
-            <div className="w-full h-full flex items-center justify-center bg-maquete-dark">
-              <div className="text-center">
-                <Loader size={32} className="mx-auto mb-3 text-maquete-glow animate-spin" />
-                <p className="text-sm text-gray-400">Carregando cena 3D...</p>
-              </div>
-            </div>
-          }>
-            <RailwayScene3D
-              switches={switches}
-              onSwitchClick={(id) => {
-                const sw = switches[id - 1];
-                if (sw) toast(`Switch ${id}: ${sw.current_state || 'N/A'}`, { icon: '🚂' });
-              }}
-            />
-          </Suspense>
-        ) : (
-          <div className="relative h-full bg-maquete-dark p-4">
-            <svg viewBox="0 0 800 200" className="w-full h-full">
-              {/* Grid background */}
-              <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1C2333" strokeWidth="0.5"/>
-                </pattern>
-              </defs>
-              <rect width="800" height="200" fill="url(#grid)" />
+      <div className="relative" style={{ height: '200px' }}>
+        <div className="relative h-full bg-maquete-dark p-4">
+          <svg viewBox="0 0 800 200" className="w-full h-full">
+            {/* Grid background */}
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1C2333" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="800" height="200" fill="url(#grid)" />
 
-              {/* Trilho principal */}
-              <line x1="30" y1="100" x2="770" y2="100" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" />
-              <line x1="30" y1="100" x2="770" y2="100" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8">
-                <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
-              </line>
+            {/* Trilho principal */}
+            <line x1="30" y1="100" x2="770" y2="100" stroke="#2D3748" strokeWidth="8" strokeLinecap="round" />
+            <line x1="30" y1="100" x2="770" y2="100" stroke="#4A5568" strokeWidth="2" strokeDasharray="12 8">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite" />
+            </line>
 
-              {/* Trilhos laterais dos switches */}
-              {[150, 350, 550, 720].map((sx, i) => (
-                <g key={`track-${i}`}>
-                  <line x1={sx + 20} y1={100} x2={sx} y2={60} stroke="#2D3748" strokeWidth="4" />
-                  <line x1={sx + 20} y1={100} x2={sx} y2={140} stroke="#2D3748" strokeWidth="4" />
-                </g>
-              ))}
-
-              {/* Switches com glow */}
-              {[170, 370, 570, 740].map((cx, i) => {
-                const sw = switches[i];
-                const color = getSwitchColor(sw);
-                return (
-                  <g key={i}>
-                    {sw?.is_moving && (
-                      <circle cx={cx} cy={100} r="16" fill={color} opacity="0.2">
-                        <animate attributeName="r" values="12;22;12" dur="1s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.3;0.05;0.3" dur="1s" repeatCount="indefinite" />
-                      </circle>
-                    )}
-                    {/* Outer glow */}
-                    <circle cx={cx} cy={100} r="12" fill={color} opacity="0.1" />
-                    <circle cx={cx} cy={100} r="8" fill={color} stroke="#1C2333" strokeWidth="2" />
-                    {/* Inner highlight */}
-                    <circle cx={cx - 2} cy={98} r="2" fill="white" opacity="0.3" />
-                    <text x={cx} y={78} textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="600">
-                      SW{i + 1}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* Locomotiva animada */}
-              <g>
-                <animateTransform attributeName="transform" type="translate" values="0,0;480,0;0,0" dur="8s" repeatCount="indefinite" />
-                <rect x="280" y="86" width="44" height="28" rx="6" fill="#FFB800" opacity="0.95" />
-                <rect x="288" y="90" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
-                <rect x="300" y="90" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
-                <rect x="312" y="88" width="8" height="10" rx="2" fill="#E0A000" opacity="0.8" />
-                {/* Headlight glow */}
-                <circle cx="326" cy="100" r="4" fill="#FFB800" opacity="0.6">
-                  <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
-                </circle>
+            {/* Trilhos laterais dos switches */}
+            {[150, 350, 550, 720].map((sx, i) => (
+              <g key={`track-${i}`}>
+                <line x1={sx + 20} y1={100} x2={sx} y2={60} stroke="#2D3748" strokeWidth="4" />
+                <line x1={sx + 20} y1={100} x2={sx} y2={140} stroke="#2D3748" strokeWidth="4" />
               </g>
+            ))}
 
-              {/* Labels */}
-              <text x="30" y="140" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">INÍCIO</text>
-              <text x="770" y="140" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">FIM</text>
-            </svg>
-          </div>
-        )}
+            {/* Switches com glow */}
+            {[170, 370, 570, 740].map((cx, i) => {
+              const sw = switches[i];
+              const color = getSwitchColor(sw);
+              return (
+                <g key={i}>
+                  {sw?.is_moving && (
+                    <circle cx={cx} cy={100} r="16" fill={color} opacity="0.2">
+                      <animate attributeName="r" values="12;22;12" dur="1s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.3;0.05;0.3" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                  )}
+                  {/* Outer glow */}
+                  <circle cx={cx} cy={100} r="12" fill={color} opacity="0.1" />
+                  <circle cx={cx} cy={100} r="8" fill={color} stroke="#1C2333" strokeWidth="2" />
+                  {/* Inner highlight */}
+                  <circle cx={cx - 2} cy={98} r="2" fill="white" opacity="0.3" />
+                  <text x={cx} y={78} textAnchor="middle" fill="#9CA3AF" fontSize="11" fontWeight="600">
+                    SW{i + 1}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Locomotiva animada */}
+            <g>
+              <animateTransform attributeName="transform" type="translate" values="0,0;480,0;0,0" dur="8s" repeatCount="indefinite" />
+              <rect x="280" y="86" width="44" height="28" rx="6" fill="#FFB800" opacity="0.95" />
+              <rect x="288" y="90" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
+              <rect x="300" y="90" width="8" height="6" rx="1" fill="#1C2333" opacity="0.5" />
+              <rect x="312" y="88" width="8" height="10" rx="2" fill="#E0A000" opacity="0.8" />
+              {/* Headlight glow */}
+              <circle cx="326" cy="100" r="4" fill="#FFB800" opacity="0.6">
+                <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+            </g>
+
+            {/* Labels */}
+            <text x="30" y="140" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">INÍCIO</text>
+            <text x="770" y="140" fill="#4A5568" fontSize="9" textAnchor="middle" fontWeight="500">FIM</text>
+          </svg>
+        </div>
       </div>
     </div>
   );
@@ -233,7 +206,6 @@ export default function Ferrovia() {
   const [switches, setSwitches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cmdLoading, setCmdLoading] = useState(false);
-  const [viewMode, setViewMode] = useState('3d');
   const { socket } = useSocket();
 
   useEffect(() => {
@@ -320,7 +292,7 @@ export default function Ferrovia() {
         </button>
       </div>
 
-      <RailwayMap switches={switches} viewMode={viewMode} onViewToggle={() => setViewMode(v => v === '3d' ? '2d' : '3d')} />
+      <RailwayMap switches={switches} />
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

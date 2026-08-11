@@ -19,7 +19,7 @@ const onDataEvent = (event, data) => {
     wsClient.emit("device:data", {
       gatewayId: CONFIG.gatewayId,
       deviceName: data.deviceName,
-      data: data.parsed,
+      data: data.rawData,
       timestamp: Date.now(),
     });
   }

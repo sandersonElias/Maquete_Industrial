@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ferrorama — Maquete Ferroviária com Automação</title>
+    <meta name="description" content="Documentação do Ferrorama: maquete ferroviária em escala HO com mina, trem, caminhões 3D, porto e central Arduino. Projeto escolar de mineração e logística." />
+    <meta name="author" content="Projeto Ferrorama" />
+    <meta name="theme-color" content="#ff8844" />
+    <link rel="canonical" href="index.html" />
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Ferrorama — Maquete Ferroviária com Automação" />
+    <meta property="og:description" content="Da mina ao porto: documentação completa da maquete ferroviária com Arduino, impressão 3D e automação industrial." />
+    <meta property="og:image" content="images/og-cover.svg" />
+    <meta property="og:url" content="index.html" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ferrorama — Maquete Ferroviária" />
+    <meta name="twitter:description" content="Documentação do projeto escolar: mina, trem, caminhões 3D e central de controle." />
+    <meta name="twitter:image" content="images/og-cover.svg" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "headline": "Ferrorama — Maquete Ferroviária com Automação",
+      "description": "Documentação técnica de maquete em escala HO simulando extração de minério, transporte ferroviário e exportação portuária com Arduino.",
+      "inLanguage": "pt-BR",
+      "author": { "@type": "Organization", "name": "Projeto Ferrorama" },
+      "about": ["Modelismo ferroviário", "Mineração", "Arduino", "Impressão 3D"],
+      "image": "images/og-cover.svg"
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- "Archivo Expanded" não é uma família do Google Fonts, e sim o eixo de
+         largura (wdth) da Archivo variável — pedi-lo separado só desperdiçava
+         uma requisição que voltava vazia. -->
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Imagem de fundo do hero: começa a baixar junto com o HTML -->
+    <link rel="preload" as="image" href="/images/maquete-montagem-2.png" fetchpriority="high">
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p style="padding:2rem;font-family:sans-serif;color:#f0ebe4;background:#08080d">
+        Este site precisa de JavaScript para exibir a maquete interativa.
+        Ative o JavaScript no navegador para ver o conteúdo.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
