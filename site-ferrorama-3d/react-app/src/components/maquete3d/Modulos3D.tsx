@@ -1,7 +1,7 @@
 import { useRef, ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { PALETA } from './modulos';
+import { PALETA, VITRINE } from './modulos';
 
 /* ============================================================
    Wrapper interativo: destaca a zona no hover e na seleção
@@ -51,15 +51,10 @@ export function Zona({
 
   return (
     <group position={position}>
-      {/* Contorno da zona — as caixas laranjas da planta */}
-      <lineSegments ref={borda as never} position={[0, 0.06, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(larg, 0.001, prof)]} />
-        <lineBasicMaterial color={cor} transparent opacity={0.16} />
-      </lineSegments>
-
+      {/* Piso de concreto do lote, elevado sobre a grama */}
       <mesh
-        position={[0, 0.03, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.06, 0]}
+        receiveShadow
         onClick={(e) => {
           e.stopPropagation();
           onSelecionar(id);
@@ -74,14 +69,21 @@ export function Zona({
           document.body.style.cursor = '';
         }}
       >
-        <planeGeometry args={[larg, prof]} />
-        <meshStandardMaterial
-          color={PALETA.surface}
-          roughness={0.95}
-          transparent
-          opacity={ativo ? 0.75 : 0.5}
-        />
+        <boxGeometry args={[larg, 0.12, prof]} />
+        <meshStandardMaterial color="#575d66" roughness={0.92} metalness={0.05} />
       </mesh>
+
+      {/* Fita de LED contornando o lote — acende ao passar o mouse ou selecionar */}
+      <mesh ref={borda} position={[0, 0.13, 0]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+        <ringGeometry args={[Math.min(larg, prof) / 2 - 0.18, Math.min(larg, prof) / 2 - 0.02, 4, 1]} />
+        <meshBasicMaterial color={cor} transparent opacity={0.16} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Moldura luminosa nas bordas do lote */}
+      <lineSegments position={[0, 0.13, 0]} raycast={() => null}>
+        <edgesGeometry args={[new THREE.BoxGeometry(larg, 0.001, prof)]} />
+        <lineBasicMaterial color={cor} transparent opacity={0.55} />
+      </lineSegments>
 
       <group ref={grupo}>{children}</group>
     </group>
@@ -89,19 +91,140 @@ export function Zona({
 }
 
 /* ============================================================
-   Base — a placa de MDF
+   Prédios — blocos brancos com grade de janelas acesas
    ============================================================ */
 
-export function Base() {
+export function Predio({
+  position,
+  tamanho,
+  cor = '#E8EAED',
+  andares = 4,
+}: {
+  position: [number, number, number];
+  tamanho: [number, number, number];
+  cor?: string;
+  andares?: number;
+}) {
+  const [l, a, p] = tamanho;
+
   return (
-    <group>
-      <mesh receiveShadow position={[0, -0.16, 0]}>
-        <boxGeometry args={[38, 0.32, 24]} />
-        <meshStandardMaterial color="#2a2118" roughness={0.9} />
+    <group position={position}>
+      <mesh castShadow receiveShadow position={[0, a / 2, 0]}>
+        <boxGeometry args={[l, a, p]} />
+        <meshStandardMaterial color={cor} roughness={0.62} metalness={0.08} />
       </mesh>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
-        <planeGeometry args={[37.4, 23.4]} />
-        <meshStandardMaterial color="#161a17" roughness={1} />
+
+      {/* Faixas de janelas nas quatro fachadas */}
+      {Array.from({ length: andares }, (_, i) => {
+        const y = (a / (andares + 1)) * (i + 1);
+        return (
+          <group key={i}>
+            {([[0, p / 2 + 0.011, 0], [0, -p / 2 - 0.011, Math.PI]] as const).map(
+              ([, z, rot], k) => (
+                <mesh key={k} position={[0, y, z as number]} rotation={[0, rot as number, 0]}>
+                  <planeGeometry args={[l * 0.82, a / (andares + 1) * 0.34]} />
+                  <meshStandardMaterial
+                    color="#9fd8f5"
+                    emissive="#7cc4e8"
+                    emissiveIntensity={0.85}
+                    roughness={0.25}
+                  />
+                </mesh>
+              )
+            )}
+            {([[l / 2 + 0.011, Math.PI / 2], [-l / 2 - 0.011, -Math.PI / 2]] as const).map(
+              ([x, rot], k) => (
+                <mesh key={`s${k}`} position={[x, y, 0]} rotation={[0, rot, 0]}>
+                  <planeGeometry args={[p * 0.82, a / (andares + 1) * 0.34]} />
+                  <meshStandardMaterial
+                    color="#9fd8f5"
+                    emissive="#7cc4e8"
+                    emissiveIntensity={0.85}
+                    roughness={0.25}
+                  />
+                </mesh>
+              )
+            )}
+          </group>
+        );
+      })}
+
+      {/* Laje com casa de máquinas */}
+      <mesh castShadow position={[0, a + 0.09, 0]}>
+        <boxGeometry args={[l * 0.42, 0.18, p * 0.42]} />
+        <meshStandardMaterial color="#98a0aa" roughness={0.7} />
+      </mesh>
+    </group>
+  );
+}
+
+/* ============================================================
+   Planta industrial — chaminés e torres de destilação
+   ============================================================ */
+
+export function PlantaIndustrial({ position }: { position: [number, number, number] }) {
+  const fumaca = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (!fumaca.current) return;
+    // Sopro leve saindo das chaminés
+    fumaca.current.children.forEach((n, i) => {
+      const m = n as THREE.Mesh;
+      const t = (state.clock.elapsedTime * 0.35 + i * 0.4) % 1;
+      m.position.y = 2.4 + t * 1.5;
+      m.scale.setScalar(0.3 + t * 0.9);
+      (m.material as THREE.MeshBasicMaterial).opacity = 0.22 * (1 - t);
+    });
+  });
+
+  return (
+    <group position={position}>
+      {/* Chaminés listradas */}
+      {[-0.55, 0.2, 0.95].map((x, i) => (
+        <group key={x} position={[x, 0, 0]}>
+          <mesh castShadow position={[0, 1.2 + i * 0.16, 0]}>
+            <cylinderGeometry args={[0.12, 0.16, 2.4 + i * 0.32, 10]} />
+            <meshStandardMaterial color="#e4e7eb" roughness={0.6} />
+          </mesh>
+          {/* Luz de obstáculo no topo */}
+          <mesh position={[0, 2.42 + i * 0.32, 0]}>
+            <sphereGeometry args={[0.06, 8, 8]} />
+            <meshStandardMaterial
+              color={VITRINE.vermelho}
+              emissive={VITRINE.vermelho}
+              emissiveIntensity={2.6}
+              toneMapped={false}
+            />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Vapor */}
+      <group ref={fumaca} position={[0.2, 0, 0]}>
+        {[0, 1, 2].map((i) => (
+          <mesh key={i} position={[0, 2.4, 0]} raycast={() => null}>
+            <sphereGeometry args={[0.3, 8, 8]} />
+            <meshBasicMaterial color="#cfe0ee" transparent opacity={0.2} depthWrite={false} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Torres de destilação */}
+      {[[-1.5, 0.6], [1.9, -0.5]].map(([x, z], i) => (
+        <mesh key={i} castShadow position={[x, 0.9, z]}>
+          <cylinderGeometry args={[0.26, 0.3, 1.8, 12]} />
+          <meshStandardMaterial color="#c4cad2" roughness={0.45} metalness={0.55} />
+        </mesh>
+      ))}
+
+      {/* Pipe rack ligando as torres */}
+      <mesh position={[0.2, 0.75, 0.05]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.05, 0.05, 3.4, 6]} />
+        <meshStandardMaterial color="#8d959e" metalness={0.7} roughness={0.35} />
+      </mesh>
+      <mesh position={[0.2, 0.52, 0.05]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.04, 0.04, 3.4, 6]} />
+        <meshStandardMaterial color="#7d858f" metalness={0.7} roughness={0.35} />
       </mesh>
     </group>
   );

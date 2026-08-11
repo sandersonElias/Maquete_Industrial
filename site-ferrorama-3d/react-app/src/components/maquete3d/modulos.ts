@@ -17,6 +17,26 @@ export interface Modulo {
   detalhes: string[];
 }
 
+/**
+ * Paleta de dentro da vitrine.
+ *
+ * O site é laranja/ferrugem, mas o diorama segue o visual de estande de feira
+ * da referência: azul, ciano e verde. Os dois convivem porque o laranja fica
+ * no cromo HTML em volta (botões, títulos) e o azul fica dentro do vidro —
+ * como uma peça de exposição iluminada sobre um móvel escuro.
+ */
+export const VITRINE = {
+  ciano: '#4DD8FF',
+  azul: '#2B5CFF',
+  violeta: '#7B4DFF',
+  verde: '#39FF6A',
+  ambar: '#FFB800',
+  vermelho: '#FF4560',
+  predio: '#E8EAED',
+  predioEscuro: '#B9BEC6',
+  fundo: '#05070B',
+} as const;
+
 /** Paleta compartilhada com o dashboard e o app (ver README). */
 export const PALETA = {
   glow: '#00FFB2',

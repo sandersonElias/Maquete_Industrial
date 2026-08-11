@@ -2,8 +2,29 @@ import { useRef, useState, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
-import { MODULOS, PALETA, POSICOES } from './modulos';
-import { Base, Zona, CentralQuimica, Mina, Porto, Aeroporto } from './Modulos3D';
+import { MODULOS, PALETA, POSICOES, VITRINE } from './modulos';
+import {
+  Zona,
+  CentralQuimica,
+  Mina,
+  Porto,
+  Aeroporto,
+  Predio,
+  PlantaIndustrial,
+} from './Modulos3D';
+import {
+  Pedestal,
+  Vitrine,
+  Terreno,
+  Arvores,
+  Veiculos,
+  TurbinasEolicas,
+  PainelSolar,
+  EsferasArmazenamento,
+  FeixeLuz,
+  TubulacaoNeon,
+} from './Cenario';
+import Hologramas from './Hologramas';
 import Ferrovia from './Ferrovia';
 import {
   TRECHOS,
@@ -15,7 +36,7 @@ import {
 } from './tracado';
 import { usePrefersReducedMotion } from '../../lib/motion';
 
-const CAMERA_INICIAL = new THREE.Vector3(17, 15, 21);
+const CAMERA_INICIAL = new THREE.Vector3(21, 17, 26);
 
 /** Tamanho da plataforma de cada zona, seguindo a planta. */
 const TAMANHOS: Record<string, [number, number]> = {
@@ -24,6 +45,15 @@ const TAMANHOS: Record<string, [number, number]> = {
   ferrorama: [15.5, 12.5],
   aeroporto: [7, 6.6],
   porto: [7, 8.4],
+};
+
+const NOMES_TRECHO: Record<string, string> = {
+  topo: 'Reta principal (reversor)',
+  fundo: 'Reta de baixo',
+  esq: 'Curva da esquerda',
+  diagA: 'Diagonal SW1-SW2',
+  diagB: 'Diagonal SW3-SW1',
+  manobra: 'Desvio de manobra',
 };
 
 /**
@@ -152,27 +182,83 @@ function Cena(props: CenaProps) {
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
 
   const conteudo: Record<string, React.ReactNode> = {
-    quimica: <CentralQuimica rodando={rodando} />,
-    mina: <Mina rodando={rodando} />,
-    ferrorama: (
-      <Ferrovia
-        rodando={rodando}
-        velocidade={velocidade}
-        desvios={desvios}
-        sentido={sentido}
-        rotaAtiva={rotaAtiva}
-      />
+    quimica: (
+      <group>
+        <CentralQuimica rodando={rodando} />
+        <PlantaIndustrial position={[-1.9, 0, 1.4]} />
+        <EsferasArmazenamento position={[1.6, 0, 1.6]} />
+        <Predio position={[2.4, 0, -2.2]} tamanho={[1.5, 1.7, 1.2]} andares={4} />
+      </group>
     ),
-    aeroporto: <Aeroporto rodando={rodando} />,
-    porto: <Porto rodando={rodando} />,
+    mina: (
+      <group>
+        <Mina rodando={rodando} />
+        <Predio position={[-2.3, 0, 3]} tamanho={[1.3, 1.1, 1.1]} cor="#B9BEC6" andares={2} />
+      </group>
+    ),
+    ferrorama: (
+      <group>
+        <Ferrovia
+          rodando={rodando}
+          velocidade={velocidade}
+          desvios={desvios}
+          sentido={sentido}
+          rotaAtiva={rotaAtiva}
+        />
+        {/* Torre de controle luminosa no miolo do circuito — ocupa o lugar do
+            reator da referência e é a âncora visual da cena */}
+        <group position={[3.4, 0, 0]}>
+          <mesh castShadow position={[0, 0.9, 0]}>
+            <cylinderGeometry args={[0.42, 0.55, 1.8, 14]} />
+            <meshStandardMaterial
+              color="#1a3a6e"
+              emissive={VITRINE.azul}
+              emissiveIntensity={1.1}
+              roughness={0.25}
+              metalness={0.5}
+            />
+          </mesh>
+          <mesh castShadow position={[0, 2, 0]}>
+            <cylinderGeometry args={[0.72, 0.5, 0.5, 14]} />
+            <meshStandardMaterial color="#dfe5ec" roughness={0.3} metalness={0.4} />
+          </mesh>
+          <mesh position={[0, 2.05, 0]}>
+            <cylinderGeometry args={[0.74, 0.52, 0.24, 14]} />
+            <meshStandardMaterial
+              color={VITRINE.ciano}
+              emissive={VITRINE.ciano}
+              emissiveIntensity={1.6}
+              toneMapped={false}
+            />
+          </mesh>
+          <pointLight position={[0, 1.6, 0]} color={VITRINE.azul} intensity={4} distance={7} />
+        </group>
+        <FeixeLuz position={[3.4, 2.2, 0]} altura={4.4} raio={0.5} />
+      </group>
+    ),
+    aeroporto: (
+      <group>
+        <Aeroporto rodando={rodando} />
+        <Predio position={[-2, 0, -2.2]} tamanho={[1.2, 1.4, 1]} andares={3} />
+      </group>
+    ),
+    porto: (
+      <group>
+        <Porto rodando={rodando} />
+        <Predio position={[-2.5, 0, -2.4]} tamanho={[1.1, 1.2, 1]} cor="#B9BEC6" andares={3} />
+      </group>
+    ),
   };
 
   return (
     <>
-      <ambientLight intensity={0.6} color="#b8c4d4" />
+      {/* Luz de vitrine: spot branco de cima (como as luminárias do estande)
+          e preenchimento azul frio vindo de baixo, que é o que dá o clima de
+          peça iluminada dentro do vidro. */}
+      <ambientLight intensity={0.5} color="#9fb3c8" />
       <directionalLight
-        position={[14, 20, 12]}
-        intensity={1.7}
+        position={[14, 24, 12]}
+        intensity={2}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-24}
@@ -180,10 +266,20 @@ function Cena(props: CenaProps) {
         shadow-camera-top={24}
         shadow-camera-bottom={-24}
       />
-      <directionalLight position={[-12, 9, -10]} intensity={0.5} color={PALETA.accent} />
-      <hemisphereLight args={['#5a6b7d', '#1a1410', 0.6]} />
+      <directionalLight position={[-14, 10, -12]} intensity={0.55} color={VITRINE.azul} />
+      <hemisphereLight args={['#7d93ad', '#0c1017', 0.7]} />
 
-      <Base />
+      <Pedestal />
+      <Terreno />
+      <Arvores />
+      <Veiculos rodando={rodando} />
+      <TurbinasEolicas rodando={rodando} />
+      <PainelSolar position={[-8.35, 0.02, -3.2]} />
+
+      {/* Tubulação neon ligando os módulos, como na referência */}
+      <TubulacaoNeon pontos={[[-9, -5.2], [-7, -3.6], [-7.6, 0], [-9, 4.4]]} />
+      <TubulacaoNeon pontos={[[9, -5.2], [7.4, -3.4], [7.8, 0.4], [9, 4.4]]} />
+      <TubulacaoNeon pontos={[[-8.6, 0], [-4, 0.3], [4, 0.3], [8.4, 0]]} />
 
       {MODULOS.map((mod) => (
         <group key={mod.id}>
@@ -229,7 +325,21 @@ function Cena(props: CenaProps) {
           />
         ))}
 
-      <ContactShadows position={[0, 0.02, 0]} opacity={0.4} scale={40} blur={2.6} far={7} />
+      {/* Painéis de telemetria flutuando sobre a maquete */}
+      <Hologramas
+        dados={{
+          velocidade,
+          sentido,
+          rodando,
+          desvios,
+          rota: rotaAtiva.map((id) => NOMES_TRECHO[id] ?? id),
+        }}
+      />
+
+      <ContactShadows position={[0, 0.14, 0]} opacity={0.42} scale={42} blur={2.6} far={7} />
+
+      {/* A vitrine entra por último: é transparente e não pode receber cliques */}
+      <Vitrine />
 
       <OrbitControls
         ref={controlsRef}
@@ -251,14 +361,6 @@ function Cena(props: CenaProps) {
    Componente exportado
    ============================================================ */
 
-const NOMES_TRECHO: Record<string, string> = {
-  topo: 'Reta principal (reversor)',
-  fundo: 'Reta de baixo',
-  esq: 'Curva da esquerda',
-  diagA: 'Diagonal SW1-SW2',
-  diagB: 'Diagonal SW3-SW1',
-  manobra: 'Desvio de manobra',
-};
 
 export default function Maquete3D() {
   const [selecionado, setSelecionado] = useState<string | null>(null);
@@ -305,8 +407,8 @@ export default function Maquete3D() {
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           onPointerMissed={() => setSelecionado(null)}
         >
-          <color attach="background" args={[PALETA.dark]} />
-          <fog attach="fog" args={[PALETA.dark, 40, 78]} />
+          <color attach="background" args={[VITRINE.fundo]} />
+          <fog attach="fog" args={[VITRINE.fundo, 46, 92]} />
           <PausarForaDaTela ativo={visivel} />
           <Cena
             selecionado={selecionado}
