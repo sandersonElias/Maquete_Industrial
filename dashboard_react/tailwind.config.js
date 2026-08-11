@@ -4,15 +4,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'maquete-dark': '#0D0F14',
-        'maquete-surface': '#161B26',
-        'maquete-card': '#1C2333',
-        'maquete-border': '#252D40',
-        'maquete-glow': '#00FFB2',
-        'maquete-accent': '#3D9EFF',
-        'maquete-warning': '#FFB800',
-        'maquete-danger': '#FF4560',
-        'maquete-purple': '#A855F7',
+        'bg': '#0F1117',
+        'surface': '#1A1D27',
+        'card': '#1A1D27',
+        'border': '#2A2D3A',
+        'text': '#E4E7EC',
+        'muted': '#8B8FA3',
+        'accent': '#3B82F6',
+        'success': '#22C55E',
+        'warning': '#F59E0B',
+        'danger': '#EF4444',
       }
     },
   },

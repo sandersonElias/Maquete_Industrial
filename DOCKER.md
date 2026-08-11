@@ -90,14 +90,6 @@ docker-compose up -d
 
 ## Desenvolvimento
 
-### Modo com auto-reload
-
-Para desenvolvimento com hot-reload, use os volumes mapeados:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-```
-
 ### Rodar sem Docker
 
 Se preferir rodar localmente:

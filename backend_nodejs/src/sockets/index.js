@@ -95,7 +95,7 @@ async function handleGatewayData(data, io, socket) {
       const switchId = parseInt(parts[2]);
       const state = parts[3];
 
-      if (isNaN(switchId) || switchId < 1 || switchId > 4) {
+      if (isNaN(switchId) || switchId < 1 || switchId > 3) {
         logger.warn(`switchId invalido no ACK: ${parts[2]}`);
         return;
       }
@@ -114,7 +114,7 @@ async function handleGatewayData(data, io, socket) {
       const angle = parseInt(parts[3]);
       const state = parts[4];
 
-      if (isNaN(switchId) || switchId < 1 || switchId > 4) {
+      if (isNaN(switchId) || switchId < 1 || switchId > 3) {
         logger.warn(`switchId invalido no STATUS: ${parts[2]}`);
         return;
       }
@@ -127,6 +127,45 @@ async function handleGatewayData(data, io, socket) {
         state,
         timestamp: Date.now(),
       });
+    }
+
+    // ── Dados do Caminhão ──
+    if (rawData.startsWith("ACK|TRUCK")) {
+      const action = parts[2];
+      const truckId = deviceName;
+
+      if (truckId && action) {
+        await trucksService.updateTruckCommandStatus(truckId, action);
+
+        io.to("dashboard").emit("truck:ack", {
+          truckId,
+          action,
+          timestamp: Date.now(),
+        });
+
+        logger.info(`ACK truck: ${truckId} - ${action}`);
+      }
+    }
+
+    if (rawData.startsWith("STATUS|TRUCK") && parts[2] === "POS") {
+      const truckId = deviceName;
+      const x = parseInt(parts[3]);
+      const y = parseInt(parts[4]);
+      const load = parseInt(parts[6]);
+      const battery = parseInt(parts[8]);
+
+      if (truckId && !isNaN(x) && !isNaN(y)) {
+        await trucksService.updateTruckPosition(truckId, x, y, load || 0, battery || 0);
+
+        io.to("dashboard").emit("truck:telemetry", {
+          truckId,
+          x,
+          y,
+          load: load || 0,
+          battery: battery || 0,
+          timestamp: Date.now(),
+        });
+      }
     }
   } catch (e) {
     logger.error(`Erro processando dados gateway: ${e.message}`);

@@ -23,14 +23,15 @@ src/
 ├── App.js                    # Rotas + AuthProvider + SocketProvider
 ├── pages/
 │   ├── Login.js              # Tela de login
-│   ├── Overview.js           # Visão geral (4 módulos)
+│   ├── Overview.js           # Visão geral (5 módulos)
 │   ├── Ferrovia.js           # Controle de switches (mapa SVG + botões)
 │   ├── Mina.js               # Mapa de caminhões + telemetria
 │   ├── Porto.js              # Cards de navios
 │   ├── Aeroporto.js          # Cards de aeronaves
+│   ├── Quimica.js            # Monitoramento de equipamentos químicos
 │   └── Relatorios.js         # Formulário de exportação
 ├── components/
-│   ├── Sidebar.js            # Menu lateral com navegação
+│   ├── Sidebar.js            # Menu lateral com navegação (7 itens)
 │   └── Header.js             # Barra superior (status conexão + alertas)
 └── contexts/
     ├── AuthContext.js         # Login/logout, JWT no localStorage
@@ -58,11 +59,12 @@ REACT_APP_API_URL=http://localhost:4000
 
 | Path | Componente | Descrição |
 |------|------------|-----------|
-| `/` | Overview | Status geral dos 4 módulos |
-| `/ferrovia` | Ferrovia | Controle dos 4 switches |
+| `/` | Overview | Status geral dos 5 módulos |
+| `/ferrovia` | Ferrovia | Controle dos 3 switches |
 | `/mina` | Mina | Mapa + telemetria dos caminhões |
 | `/porto` | Porto | Lista de navios |
 | `/aeroporto` | Aeroporto | Lista de aeronaves |
+| `/quimica` | Quimica | Monitoramento de equipamentos químicos |
 | `/relatorios` | Relatorios | Geração de relatórios |
 | `*` | Redirect → `/` | Catch-all |
 
@@ -75,13 +77,15 @@ REACT_APP_API_URL=http://localhost:4000
 - Redireciona para Overview ao autenticar
 
 ### Overview (`/`)
-- 4 StatusCards: Ferrovia, Mina, Porto, Aeroporto
-- Polling a cada 5s em 4 endpoints simultâneos
-- Painel de "Alertas Recentes" (hardcoded por enquanto)
+- 5 StatusCards: Ferrovia, Mina, Porto, Aeroporto, Química
+- Polling a cada 5s em 5 endpoints simultâneos
+- Relógio em tempo real
+- Quick Stats com contadores
+- Painel de Alertas e Atividade Recente
 
 ### Ferrovia (`/ferrovia`)
-- Mapa SVG esquemático da ferrovia com 4 switches coloridos por estado
-- 4 cards de controle (SwitchControl) com:
+- Mapa SVG esquemático da ferrovia com 3 switches coloridos por estado
+- 3 cards de controle (SwitchControl) com:
   - Badge de estado (LEFT/RIGHT/CENTER/TRANSITION)
   - Barra de progresso do ângulo (0-180°)
   - 3 botões: Esquerda, Centro, Direita
@@ -105,6 +109,13 @@ REACT_APP_API_URL=http://localhost:4000
 - Cada card: número do voo, status, tipo de carga, peso, ETA relativo, portão
 - Polling a cada 30s
 
+### Química (`/quimica`)
+- Grid de cards de equipamentos químicos
+- Cada card: nome, status (online/warning/offline), temperatura, umidade, nível
+- Status bar com contagem de alertas
+- Polling a cada 30s
+- Dados de exemplo quando API não existe
+
 ### Relatórios (`/relatorios`)
 - Seleção de tipo: Ferrovia, Mina, Porto, Aeroporto, Completo
 - Seleção de formato: CSV, Excel (XLSX), PDF
@@ -116,7 +127,7 @@ REACT_APP_API_URL=http://localhost:4000
 ### Sidebar
 - Largura animada (w-64 aberto, w-0 fechado)
 - Logo "MAQUETEIND"
-- 6 links de navegação com `NavLink` (ativo em azul)
+- 7 links de navegação com `NavLink` (ativo em azul)
 - Nome do usuário + role
 - Botão de logout
 

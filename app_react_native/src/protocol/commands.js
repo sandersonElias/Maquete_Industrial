@@ -13,6 +13,7 @@ export const CMD = {
   TURN_LEFT: "TI",
   TURN_RIGHT: "TO",
   TURN_OFF: "TX",
+  HAZARD: "HA",
 };
 
 export function encodeGestureToCommand(dx, dy, threshold) {

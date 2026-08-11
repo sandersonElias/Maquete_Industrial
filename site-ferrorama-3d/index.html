@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ferrorama 3D — Maquete Ferroviária Interativa</title>
+  <meta name="description" content="Experiência interativa 3D do Ferrorama: maquete ferroviária com automação, mineração e logística.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="loader-content">
+      <div class="loader-icon">
+        <svg viewBox="0 0 100 100" class="loader-svg">
+          <circle cx="50" cy="50" r="45" class="loader-circle"/>
+        </svg>
+      </div>
+      <p class="loader-text">Carregando experiência 3D...</p>
+    </div>
+  </div>
+
+  <!-- Scroll Progress -->
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <!-- Particles Background -->
+  <canvas id="particles"></canvas>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-brand">
+      <span class="nav-logo">F</span>
+      <span class="nav-title">Ferrorama</span>
+    </div>
+    <div class="nav-links">
+      <a href="#inicio" class="nav-link active" data-section="inicio">Início</a>
+      <a href="#montagem" class="nav-link" data-section="montagem">Montagem</a>
+      <a href="#maquete" class="nav-link" data-section="maquete">Maquete 3D</a>
+      <a href="#codigo" class="nav-link" data-section="codigo">Automação</a>
+      <a href="#porto" class="nav-link" data-section="porto">Porto</a>
+      <a href="#mina" class="nav-link" data-section="mina">Mina</a>
+      <a href="#controle" class="nav-link" data-section="controle">Controle</a>
+    </div>
+    <button class="nav-menu-btn" id="menuBtn">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#inicio" class="mobile-link" data-section="inicio">Início</a>
+    <a href="#montagem" class="mobile-link" data-section="montagem">Montagem</a>
+    <a href="#maquete" class="mobile-link" data-section="maquete">Maquete 3D</a>
+    <a href="#codigo" class="mobile-link" data-section="codigo">Automação</a>
+    <a href="#porto" class="mobile-link" data-section="porto">Porto</a>
+    <a href="#mina" class="mobile-link" data-section="mina">Mina</a>
+    <a href="#controle" class="mobile-link" data-section="controle">Controle</a>
+  </div>
+
+  <!-- Hero Section -->
+  <section id="inicio" class="section hero-section" data-bg="dark">
+    <div class="hero-bg">
+      <div class="gradient-orb orb-1"></div>
+      <div class="gradient-orb orb-2"></div>
+      <div class="gradient-orb orb-3"></div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-label scroll-reveal">Projeto Escolar · Escala HO · Arduino</p>
+      <h1 class="hero-title">
+        <span class="title-line scroll-reveal">Maquete</span>
+        <span class="title-line title-accent scroll-reveal">Ferroviária</span>
+        <span class="title-line scroll-reveal">Interativa</span>
+      </h1>
+      <p class="hero-description scroll-reveal">
+        Da extração na mina até a exportação pelo porto — experimente em 3D toda a cadeia produtiva do minério de ferro.
+      </p>
+      <div class="hero-stats scroll-reveal">
+        <div class="stat-item">
+          <span class="stat-value" data-count="120">0</span>
+          <span class="stat-unit">cm</span>
+          <span class="stat-label">Base</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" data-count="5">0</span>
+          <span class="stat-unit">áreas</span>
+          <span class="stat-label">Módulos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" data-count="3">0</span>
+          <span class="stat-unit">un.</span>
+          <span class="stat-label">Caminhões</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" data-count="1">0</span>
+          <span class="stat-unit">Mega</span>
+          <span class="stat-label">Arduino</span>
+        </div>
+      </div>
+      <a href="#maquete" class="hero-cta scroll-reveal">
+        <span>Explorar em 3D</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7 17L17 7M17 7H7M17 7V17"/>
+        </svg>
+      </a>
+    </div>
+    <div class="hero-3d" id="hero3d"></div>
+    
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator">
+      <span>Role para baixo</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-number">00</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Montagem Section -->
+  <section id="montagem" class="section" data-bg="dark">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-number scroll-reveal">00</span>
+        <h2 class="section-title scroll-reveal">Montagem</h2>
+        <p class="section-subtitle scroll-reveal">Componentes e construção da maquete ferroviária</p>
+      </div>
+      
+      <div class="cards-grid">
+        <div class="card card-3d scroll-reveal" data-delay="0">
+          <div class="card-icon">
+            <img src="images/trem.svg" alt="Trem" loading="lazy">
+          </div>
+          <h3 class="card-title">Trem</h3>
+          <p class="card-text">Locomotiva com 4 servos controlados por Arduino para movimentação nos trilhos.</p>
+          <div class="card-glow"></div>
+        </div>
+        
+        <div class="card card-3d scroll-reveal" data-delay="1">
+          <div class="card-icon">
+            <img src="images/caminhoes-3d.svg" alt="Caminhões" loading="lazy">
+          </div>
+          <h3 class="card-title">Caminhões 3D</h3>
+          <p class="card-text">3 caminhões basculantes impressos em PLA com motor DC e controle Bluetooth.</p>
+          <div class="card-glow"></div>
+        </div>
+        
+        <div class="card card-3d scroll-reveal" data-delay="2">
+          <div class="card-icon">
+            <img src="images/arduino.svg" alt="Arduino" loading="lazy">
+          </div>
+          <h3 class="card-title">Arduino Mega</h3>
+          <p class="card-text">Central de controle que coordena todos os componentes eletrônicos.</p>
+          <div class="card-glow"></div>
+        </div>
+        
+        <div class="card card-3d scroll-reveal" data-delay="3">
+          <div class="card-icon">
+            <img src="images/controle.svg" alt="Controle" loading="lazy">
+          </div>
+          <h3 class="card-title">Controle Bluetooth</h3>
+          <p class="card-text">HC-05 para comunicação sem fio entre app e caminhões.</p>
+          <div class="card-glow"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-number">01</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Maquete 3D Section -->
+  <section id="maquete" class="section maquete-section" data-bg="gradient">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-number scroll-reveal">01</span>
+        <h2 class="section-title scroll-reveal">Maquete 3D</h2>
+        <p class="section-subtitle scroll-reveal">Explore a maquete interativamente em três dimensões</p>
+      </div>
+      
+      <div class="maquete-viewer scroll-reveal">
+        <div class="maquete-canvas" id="maquete3d"></div>
+
+        <!-- Camera controls (left side) -->
+        <div class="maquete-controls">
+          <button class="control-btn active" data-view="overview" title="Visão geral">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+            </svg>
+          </button>
+          <button class="control-btn" data-view="mina" title="Eletrônicos">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/>
+            </svg>
+          </button>
+          <button class="control-btn" data-view="porto" title="Seção Elevada">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/>
+            </svg>
+          </button>
+          <button class="control-btn" data-view="trem" title="Trem">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="3" width="16" height="14" rx="2"/><path d="M4 11h16M8 21l2-4M16 21l-2-4"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Train control panel (right side) -->
+        <div class="train-panel" id="trainPanel">
+          <div class="train-panel-header">
+            <h3><span class="train-panel-icon">🚂</span> Controle de Trens</h3>
+            <button class="train-panel-toggle" id="panelToggle" title="Minimizar">—</button>
+          </div>
+          <div class="train-panel-body" id="trainPanelBody">
+            <!-- Add train section -->
+            <div class="train-add-section">
+              <p class="train-add-label">Tipo de trem:</p>
+              <div class="train-type-grid" id="trainTypeGrid">
+                <button class="train-type-btn active" data-type="0" title="Carga">
+                  <span class="tt-icon">🚂</span>
+                  <span class="tt-name">Carga</span>
+                </button>
+                <button class="train-type-btn" data-type="1" title="Passageiro">
+                  <span class="tt-icon">🚆</span>
+                  <span class="tt-name">Passageiro</span>
+                </button>
+                <button class="train-type-btn" data-type="2" title="Expresso">
+                  <span class="tt-icon">🚄</span>
+                  <span class="tt-name">Expresso</span>
+                </button>
+                <button class="train-type-btn" data-type="3" title="Minerador">
+                  <span class="tt-icon">⛏️</span>
+                  <span class="tt-name">Minerador</span>
+                </button>
+              </div>
+              <button class="btn-add-train" id="btnAddTrain">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Adicionar ao trilho
+              </button>
+            </div>
+
+            <!-- Global controls -->
+            <div class="train-global-controls">
+              <button class="btn-global btn-start-all" id="btnStartAll" title="Iniciar todos">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                Todos
+              </button>
+              <button class="btn-global btn-stop-all" id="btnStopAll" title="Parar todos">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                Todos
+              </button>
+              <div class="global-speed">
+                <label>Velocidade global:</label>
+                <input type="range" id="globalSpeed" min="0.005" max="0.1" step="0.005" value="0.03">
+                <span id="globalSpeedVal">100%</span>
+              </div>
+            </div>
+
+            <!-- Train list -->
+            <div class="train-list" id="trainList">
+              <div class="train-list-empty" id="trainListEmpty">
+                Nenhum trem adicionado.<br>Clique em "Adicionar ao trilho" e depois clique no trilho.
+              </div>
+            </div>
+
+            <!-- Placement mode indicator -->
+            <div class="placement-hint" id="placementHint" style="display:none;">
+              <span class="placement-dot"></span>
+              Clique no trilho para posicionar o trem
+            </div>
+          </div>
+        </div>
+
+        <!-- Info bar -->
+        <div class="maquete-info" id="maqueteInfo">
+          <h3>Visão Geral</h3>
+          <p>Layout oval com ramais, seções elevadas e eletrônicos Arduino. Arraste para girar, scroll para zoom.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-number">02</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Código e Automação Section -->
+  <section id="codigo" class="section" data-bg="dark">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-number scroll-reveal">02</span>
+        <h2 class="section-title scroll-reveal">Código & Automação</h2>
+        <p class="section-subtitle scroll-reveal">Como os caminhões se movem e como o trem funciona</p>
+      </div>
+      
+      <div class="code-showcase">
+        <div class="code-block scroll-reveal">
+          <div class="code-header">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+            <span class="code-filename">ferrovia_firmware.ino</span>
+          </div>
+          <pre class="code-content"><code><span class="code-comment">// Controle do trem via Bluetooth</span>
+<span class="code-keyword">void</span> <span class="code-function">executarComando</span>(String cmd) {
+  <span class="code-keyword">if</span> (cmd == <span class="code-string">"F"</span>) {
+    servoMotor.<span class="code-function">write</span>(<span class="code-number">180</span>); <span class="code-comment">// Frente</span>
+  }
+  <span class="code-keyword">if</span> (cmd == <span class="code-string">"B"</span>) {
+    servoMotor.<span class="code-function">write</span>(<span class="code-number">0</span>);   <span class="code-comment">// Ré</span>
+  }
+  <span class="code-keyword">if</span> (cmd == <span class="code-string">"S"</span>) {
+    servoMotor.<span class="code-function">write</span>(<span class="code-number">90</span>);  <span class="code-comment">// Parado</span>
+  }
+}</code></pre>
+        </div>
+        
+        <div class="code-features">
+          <div class="feature-item scroll-reveal" data-delay="0">
+            <div class="feature-icon">📡</div>
+            <h4>Bluetooth HC-05</h4>
+            <p>Comunicação sem fio entre o app e os dispositivos</p>
+          </div>
+          <div class="feature-item scroll-reveal" data-delay="1">
+            <div class="feature-icon">⚙️</div>
+            <h4>4 Servos</h4>
+            <p>Direção, caçamba, motor e guincho</p>
+          </div>
+          <div class="feature-item scroll-reveal" data-delay="2">
+            <div class="feature-icon">🔌</div>
+            <h4>Sensores</h4>
+            <p>Sensores de proximidade e fim de curso</p>
+          </div>
+          <div class="feature-item scroll-reveal" data-delay="3">
+            <div class="feature-icon">💡</div>
+            <h4>LEDs</h4>
+            <p>Faróis, setas e pisca-alerta</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-number">03</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Porto Section -->
+  <section id="porto" class="section" data-bg="dark">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-number scroll-reveal">03</span>
+        <h2 class="section-title scroll-reveal">Porto & Aeroporto</h2>
+        <p class="section-subtitle scroll-reveal">Transporte e exportação dos materiais</p>
+      </div>
+      
+      <div class="porto-showcase">
+        <div class="porto-image scroll-reveal">
+          <img src="images/porto.jpg" alt="Porto da maquete" loading="lazy">
+          <div class="image-overlay"></div>
+        </div>
+        <div class="porto-content">
+          <div class="porto-item scroll-reveal" data-delay="0">
+            <div class="porto-icon">🚢</div>
+            <div>
+              <h4>Terminal Portuário</h4>
+              <p>Exportação de minério de ferro e carvão para mercados internacionais.</p>
+            </div>
+          </div>
+          <div class="porto-item scroll-reveal" data-delay="1">
+            <div class="porto-icon">✈️</div>
+            <div>
+              <h4>Aeroporto</h4>
+              <p>Transporte aéreo de carga de alta prioridade.</p>
+            </div>
+          </div>
+          <div class="porto-item scroll-reveal" data-delay="2">
+            <div class="porto-icon">🚂</div>
+            <div>
+              <h4>Ferrovia</h4>
+              <p>Conexão entre a mina e o porto com trens de carga.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-number">04</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Mina Section -->
+  <section id="mina" class="section" data-bg="gradient">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-number scroll-reveal">04</span>
+        <h2 class="section-title scroll-reveal">Mina de Ferro</h2>
+        <p class="section-subtitle scroll-reveal">O que é uma mina e como reproduzimos na maquete</p>
+      </div>
+      
+      <div class="mina-showcase">
+        <div class="mina-3d scroll-reveal" id="mina3d"></div>
+        <div class="mina-content">
+          <div class="mina-stat scroll-reveal">
+            <span class="mina-stat-value">+</span>
+            <span class="mina-stat-text">400 milhões</span>
+            <span class="mina-stat-label">de toneladas exportadas/ano</span>
+          </div>
+          <p class="mina-description scroll-reveal">
+            O Brasil é um dos maiores exportadores mundiais de minério de ferro. Na maquete, simulamos todo o processo de extração, desde a mina até o transporte ferroviário.
+          </p>
+          <div class="mina-process">
+            <div class="process-step scroll-reveal" data-delay="0">
+              <span class="step-num">01</span>
+              <span class="step-text">Extração</span>
+            </div>
+            <div class="process-step scroll-reveal" data-delay="1">
+              <span class="step-num">02</span>
+              <span class="step-text">Britagem</span>
+            </div>
+            <div class="process-step scroll-reveal" data-delay="2">
+              <span class="step-num">03</span>
+              <span class="step-text">Transporte</span>
+            </div>
+            <div class="process-step scroll-reveal" data-delay="3">
+              <span class="step-num">04</span>
+              <span class="step-text">Exportação</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-number">05</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Controle Section -->
+  <section id="controle" class="section" data-bg="dark">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-number scroll-reveal">05</span>
+        <h2 class="section-title scroll-reveal">Central de Controle</h2>
+        <p class="section-subtitle scroll-reveal">Central que coordena todo o sistema</p>
+      </div>
+      
+      <div class="controle-dashboard">
+        <div class="dashboard-card scroll-reveal" data-delay="0">
+          <div class="dashboard-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <h4>Dashboard Web</h4>
+          <p>Interface React com monitoramento em tempo real via Socket.IO</p>
+          <div class="dashboard-status online">Online</div>
+        </div>
+        
+        <div class="dashboard-card scroll-reveal" data-delay="1">
+          <div class="dashboard-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>
+            </svg>
+          </div>
+          <h4>App Mobile</h4>
+          <p>React Native com controle Bluetooth dos caminhões</p>
+          <div class="dashboard-status active">Ativo</div>
+        </div>
+        
+        <div class="dashboard-card scroll-reveal" data-delay="2">
+          <div class="dashboard-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h4>Backend</h4>
+          <p>Node.js com Express, PostgreSQL e Redis</p>
+          <div class="dashboard-status running">Rodando</div>
+        </div>
+        
+        <div class="dashboard-card scroll-reveal" data-delay="3">
+          <div class="dashboard-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <h4>Gateway</h4>
+          <p>Ponte entre Arduino e servidor via Bluetooth/Serial</p>
+          <div class="dashboard-status connected">Conectado</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="footer-logo">Ferrorama</span>
+        <p>Projeto escolar · Feira de ciências</p>
+      </div>
+      <div class="footer-tech">
+        <p>Feito com Three.js, GSAP e muito café</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="js/three-scene.js"></script>
+  <script src="js/scroll-anim.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
