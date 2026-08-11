@@ -1,0 +1,21 @@
+---
+description: Não alterar a maquete 3D interativa do Caio; resto do site pode mudar
+alwaysApply: true
+---
+
+# Maquete do Caio — NÃO ALTERAR
+
+**Regra fixa:** a maquete 3D interativa é do Caio. Zero edição sem autorização explícita.
+
+Hands-off absoluto:
+
+- `site-ferrorama-3d/react-app/src/components/maquete3d/**`
+- Não “melhorar”, refatorar, otimizar, renomear nem reformular a cena 3D nesses arquivos
+
+Pode sapecar a rodo:
+
+- Todo o resto de `site-ferrorama-3d/react-app/` (Hero, seções, nav, CSS, motion, textos, layout…)
+- `Site _Ferrorama/`
+- Backend, dashboard, gateway, firmwares
+
+Se precisar tocar na maquete interativa: **parar e perguntar** antes.

@@ -1,0 +1,17 @@
+---
+description: Lembrar e executar o fluxo Git (pull → add → commit → push) na feat/dev-Marco
+alwaysApply: true
+---
+
+# Fluxo Git — Marco
+
+Quando o usuário pedir commit / “manda pro git” / push:
+
+1. `git pull` (na branch atual)
+2. `git add` dos arquivos relevantes (nunca secrets `.env`, nem `node_modules` / `.vite` / `dist`)
+3. `git commit` com mensagem clara
+4. `git push`
+
+Branch padrão: `feat/dev-Marco`. Só mexer em `master` se ele pedir explicitamente.
+
+**Lembrete:** ao terminar uma mudança relevante no código, perguntar se quer mandar pro Git (pull + add + commit + push), caso ele não tenha pedido ainda.

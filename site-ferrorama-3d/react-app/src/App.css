@@ -1347,8 +1347,9 @@ to { opacity: 1; transform: translateY(0); }
 .code-showcase {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
+  gap: clamp(2rem, 4vw, 3.5rem);
   align-items: start;
+  margin-bottom: clamp(0.5rem, 2vw, 1rem);
 }
 /* Itens de grid têm min-width: auto por padrão, então o <pre> do código
    esticava a coluna e empurrava a página inteira (~68px de rolagem
@@ -1387,10 +1388,10 @@ to { opacity: 1; transform: translateY(0); }
   color: var(--text-dim);
 }
 .code-content {
-  padding: 1.25rem;
+  padding: 1.5rem 1.5rem 1.75rem;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
-  line-height: 1.8;
+  line-height: 1.9;
   overflow-x: auto;
 }
 .code-keyword { color: #c678dd; }
@@ -2591,7 +2592,7 @@ to { opacity: 1; transform: translateY(0); }
 .code-image-stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 .code-image-card {
   position: relative;
@@ -2643,12 +2644,13 @@ to { opacity: 1; transform: translateY(0); }
 .code-features-enhanced {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-  margin-top: 2.5rem;
+  gap: 1.75rem;
+  margin-top: clamp(3rem, 5vw, 4.5rem);
 }
 @media (max-width: 768px) {
   .code-features-enhanced {
     grid-template-columns: 1fr;
+    gap: 1.35rem;
   }
 }
 .feature-card-enhanced {
@@ -2665,7 +2667,7 @@ to { opacity: 1; transform: translateY(0); }
 }
 .feature-card-image {
   position: relative;
-  height: 100px;
+  height: 140px;
   overflow: hidden;
 }
 .feature-card-image img {
@@ -2683,22 +2685,40 @@ to { opacity: 1; transform: translateY(0); }
   background: linear-gradient(to bottom, transparent 40%, var(--card) 100%);
 }
 .feature-card-content {
-  padding: 1.25rem;
+  padding: 1.5rem 1.5rem 1.75rem;
 }
 .feature-card-icon {
   color: var(--accent);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 .feature-card-content h4 {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.55rem;
 }
 .feature-card-content p {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.7;
+}
+
+/* Código & Automação — respiração entre título, showcase e cards */
+#codigo .section-container {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.75rem, 5vw, 4.5rem);
+}
+#codigo .section-header {
+  margin-bottom: 0;
+}
+#codigo .code-features-enhanced {
+  margin-top: 0;
+}
+@media (max-width: 1024px) {
+  #codigo .code-showcase {
+    gap: 2rem;
+  }
 }
 /* ============================================
    PORTO ENHANCED

@@ -130,31 +130,11 @@ export default function HeroSection() {
         <div className="gradient-orb orb-3"></div>
         <div className="hero-grid-lines"></div>
 
-        {/* Floating images around hero */}
+        {/* Floating image — mina only (locomotiva/porto removidos do painel inicial) */}
         <div className="hero-floating-images">
           <motion.div
-            className="hero-float-img hero-float-1"
-            custom={0}
-            variants={imageReveal}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-          >
-            <img src="/images/trem.jpg" alt="Trem ferroviário" />
-            <span className="float-label">Locomotiva</span>
-          </motion.div>
-          <motion.div
-            className="hero-float-img hero-float-2"
-            custom={1}
-            variants={imageReveal}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-          >
-            <img src="/images/porto.jpg" alt="Porto de exportação" />
-            <span className="float-label">Porto</span>
-          </motion.div>
-          <motion.div
             className="hero-float-img hero-float-3"
-            custom={2}
+            custom={0}
             variants={imageReveal}
             initial="hidden"
             animate={isInView ? 'visible' : 'hidden'}
