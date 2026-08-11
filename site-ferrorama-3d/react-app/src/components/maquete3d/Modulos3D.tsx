@@ -50,25 +50,28 @@ export function Zona({
   });
 
   return (
-    <group position={position}>
+    /* Os handlers ficam no grupo que envolve TUDO — piso e conteúdo.
+       Antes estavam só no mesh do piso, então clicar num prédio, na montanha,
+       no navio ou no guindaste não selecionava nada: só funcionava se o clique
+       acertasse o chão vazio do lote, e a maquete parecia não responder. */
+    <group
+      position={position}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelecionar(id);
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        onDestacar(id);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => {
+        onDestacar(null);
+        document.body.style.cursor = '';
+      }}
+    >
       {/* Piso de concreto do lote, elevado sobre a grama */}
-      <mesh
-        position={[0, 0.06, 0]}
-        receiveShadow
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelecionar(id);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          onDestacar(id);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          onDestacar(null);
-          document.body.style.cursor = '';
-        }}
-      >
+      <mesh position={[0, 0.06, 0]} receiveShadow>
         <boxGeometry args={[larg, 0.12, prof]} />
         <meshStandardMaterial color="#575d66" roughness={0.92} metalness={0.05} />
       </mesh>

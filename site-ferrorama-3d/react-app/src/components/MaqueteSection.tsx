@@ -70,7 +70,11 @@ export default function MaqueteSection() {
           </p>
         </div>
 
-        <div ref={ref}>
+        {/* `maquete3d-palco-wrap` fura o container de 1240px — a maquete é o
+            destaque do site. Fica no wrapper, e não no componente, para que o
+            placeholder de carregamento já ocupe a mesma largura e a página não
+            salte quando a cena 3D entra. */}
+        <div className="maquete3d-palco-wrap" ref={ref}>
           {proximo ? (
             <Suspense fallback={<Placeholder />}>
               <Maquete3D />

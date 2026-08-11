@@ -13,7 +13,11 @@ export interface Modulo {
   id: string;
   nome: string;
   cor: string;
+  /** Etiqueta curta da função na cadeia produtiva (ex.: "Extração"). */
+  papel: string;
+  /** Por que esta área importa para a empresa — é o texto que o público lê. */
   resumo: string;
+  /** Detalhe técnico, mostrado abaixo do resumo. */
   detalhes: string[];
 }
 
@@ -64,8 +68,9 @@ export const MODULOS: Modulo[] = [
     id: 'quimica',
     nome: 'Central de Química',
     cor: PALETA.glow,
+    papel: 'Controle de qualidade',
     resumo:
-      'Onde o minério bruto é tratado antes de seguir para exportação: tanques, reatores e controle de processo.',
+      'É o laboratório que decide se a carga pode ou não ser embarcada. Aqui se mede o teor de ferro, a umidade e os contaminantes de cada lote — e o minério é tratado até chegar na especificação que o cliente comprou. Sem esse controle a carga chega ao porto de destino e é rejeitada: a empresa perde o embarque inteiro, paga o frete de volta e ainda arranha a reputação com o comprador. Por isso nenhum vagão sai da mina sem passar por aqui.',
     detalhes: [
       'Tanques de tratamento e decantação do minério',
       'Sensores de nível monitorados pelo Arduino',
@@ -77,8 +82,9 @@ export const MODULOS: Modulo[] = [
     id: 'mina',
     nome: 'Mina',
     cor: PALETA.warning,
+    papel: 'Extração',
     resumo:
-      'Dois poços de extração alimentam a esteira que carrega os caminhões basculantes rumo à ferrovia.',
+      'É onde tudo começa e é ela quem dita o ritmo da empresa inteira. Os dois poços tiram o minério bruto do solo, a esteira desce a carga até os caminhões basculantes e eles alimentam o trem. Se a mina para, para todo o resto: o trem fica ocioso, o navio espera no cais e o contrato de exportação atrasa. Por isso a produção da mina é medida hora a hora — cada tonelada que sai daqui já está vendida lá na frente.',
     detalhes: [
       'Caminhão com 3 servos: direção (D5), caçamba (D6) e motor (D7)',
       'Faróis e setas em LED nos pinos D2, D3, D8 e D9',
@@ -90,8 +96,9 @@ export const MODULOS: Modulo[] = [
     id: 'ferrorama',
     nome: 'Ferrorama',
     cor: PALETA.accent,
+    papel: 'Transporte',
     resumo:
-      'O circuito em escala HO com 3 desvios e o reversor — o coração da maquete, que liga todos os módulos.',
+      'A ferrovia é a espinha dorsal da operação. Um trem carrega numa viagem o que levaria dezenas de caminhões, com um custo por tonelada muito menor e sem depender de rodovia. Os três desvios são o que dá flexibilidade ao negócio: são eles que decidem, em tempo real, se aquela composição segue para o porto ou para o aeroporto. Mudar uma chave aqui muda para onde vai a carga — e, na prática, para qual cliente ela foi vendida.',
     detalhes: [
       'SW1, SW2 e SW3: servos SG90 nos pinos D3, D5 e D6',
       'Protocolo: CMD|SWITCH|<id>|SET|LEFT / RIGHT / CENTER',
@@ -103,8 +110,9 @@ export const MODULOS: Modulo[] = [
     id: 'aeroporto',
     nome: 'Aeroporto Logístico',
     cor: PALETA.purple,
+    papel: 'Rota rápida',
     resumo:
-      'Pista de carga para o ramal alternativo, usada para cargas de maior valor agregado.',
+      'É a saída alternativa, para quando o navio é lento demais. O frete aéreo custa muito mais caro por tonelada, então só compensa em dois casos: carga de alto valor agregado, como minério já beneficiado, e urgência — um cliente que precisa do material agora e aceita pagar pela pressa. O trem chega até aqui pelo ramal da diagonal, acionado pelo desvio SW3.',
     detalhes: [
       'Recebe a carga quando SW3 manda o trem pela diagonal',
       'Aeronaves listadas em GET /api/airport/airplanes',
@@ -116,8 +124,9 @@ export const MODULOS: Modulo[] = [
     id: 'porto',
     nome: 'Porto Logístico',
     cor: PALETA.danger,
+    papel: 'Exportação',
     resumo:
-      'Cais com guindaste e navio: o destino final do minério que sai da mina.',
+      'É aqui que o minério deixa de ser estoque e vira receita. O guindaste transfere a carga dos vagões para o navio e, no momento em que o embarque é concluído, aquela produção passa a ser venda faturada no exterior. O porto é o gargalo mais caro da cadeia: navio parado no cais cobra por dia de espera, então toda a operação a montante — mina, química e ferrovia — é planejada para que a carga chegue no momento certo.',
     detalhes: [
       'Guindaste com lança móvel sobre o cais',
       'Navios monitorados via GET /api/port/ships',

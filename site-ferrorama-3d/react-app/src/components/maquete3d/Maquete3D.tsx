@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, ContactShadows } from '@react-three/drei';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { MODULOS, PALETA, POSICOES, VITRINE } from './modulos';
 import {
@@ -34,7 +35,7 @@ import {
   EstadoDesvio,
   proximoTrecho,
 } from './tracado';
-import { usePrefersReducedMotion } from '../../lib/motion';
+import { usePrefersReducedMotion, EASE_OUT_EXPO } from '../../lib/motion';
 
 const CAMERA_INICIAL = new THREE.Vector3(21, 17, 26);
 
@@ -162,6 +163,7 @@ interface CenaProps {
   rotaAtiva: string[];
   etiquetas: boolean;
   controlsRef: React.RefObject<any>;
+  zoomAtivo: boolean;
 }
 
 function Cena(props: CenaProps) {
@@ -177,6 +179,7 @@ function Cena(props: CenaProps) {
     rotaAtiva,
     etiquetas,
     controlsRef,
+    zoomAtivo,
   } = props;
 
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
@@ -344,6 +347,10 @@ function Cena(props: CenaProps) {
       <OrbitControls
         ref={controlsRef}
         enablePan
+        /* O zoom por roda do mouse fica DESLIGADO por padrão: era ele que
+           engolia o evento `wheel` e impedia a página de rolar quando o cursor
+           passava sobre a maquete. Só liga com Ctrl/⌘ ou em tela cheia. */
+        enableZoom={zoomAtivo}
         minDistance={8}
         maxDistance={46}
         maxPolarAngle={Math.PI / 2.15}
@@ -375,8 +382,12 @@ export default function Maquete3D() {
     SW3: 0,
   });
   const [visivel, setVisivel] = useState(true);
+  const [modificadorAtivo, setModificadorAtivo] = useState(false);
+  const [emTelaCheia, setEmTelaCheia] = useState(false);
+  const [temFullscreen, setTemFullscreen] = useState(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const palcoRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
   const reduzido = usePrefersReducedMotion();
 
@@ -390,6 +401,70 @@ export default function Maquete3D() {
     return () => obs.disconnect();
   }, []);
 
+  /* ---------- Rolagem da página x zoom da cena ----------
+     A roda do mouse tem que rolar o site normalmente. O zoom da maquete só
+     entra com Ctrl/⌘ segurado, ou em tela cheia (onde não há página atrás
+     para rolar). Sem isso o OrbitControls consome o `wheel` e o usuário fica
+     preso na maquete, que era exatamente a reclamação. */
+  useEffect(() => {
+    const atualizar = (e: KeyboardEvent) => setModificadorAtivo(e.ctrlKey || e.metaKey);
+    // `blur` cobre o caso de soltar a tecla fora da janela (ex.: Alt+Tab)
+    const limpar = () => setModificadorAtivo(false);
+
+    window.addEventListener('keydown', atualizar);
+    window.addEventListener('keyup', atualizar);
+    window.addEventListener('blur', limpar);
+    return () => {
+      window.removeEventListener('keydown', atualizar);
+      window.removeEventListener('keyup', atualizar);
+      window.removeEventListener('blur', limpar);
+    };
+  }, []);
+
+  const zoomAtivo = modificadorAtivo || emTelaCheia;
+
+  /* Com Ctrl/⌘ o navegador daria zoom na PÁGINA inteira. Como nesse caso o
+     gesto é para a cena, cancelamos o padrão — mas só aí. Sem modificador o
+     evento segue livre e a página rola. Precisa de passive:false para poder
+     chamar preventDefault. */
+  useEffect(() => {
+    const el = palcoRef.current;
+    if (!el) return;
+    const aoRodar = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey || emTelaCheia) e.preventDefault();
+    };
+    el.addEventListener('wheel', aoRodar, { passive: false });
+    return () => el.removeEventListener('wheel', aoRodar);
+  }, [emTelaCheia]);
+
+  /* ---------- Tela cheia ---------- */
+  useEffect(() => {
+    setTemFullscreen(
+      typeof document !== 'undefined' &&
+        (document.fullscreenEnabled ?? false) &&
+        typeof wrapperRef.current?.requestFullscreen === 'function'
+    );
+  }, []);
+
+  // O Esc do navegador sai da tela cheia sem passar pelo nosso botão, então o
+  // estado do React precisa acompanhar o evento em vez de ser só um toggle.
+  useEffect(() => {
+    const aoTrocar = () => setEmTelaCheia(document.fullscreenElement === wrapperRef.current);
+    document.addEventListener('fullscreenchange', aoTrocar);
+    return () => document.removeEventListener('fullscreenchange', aoTrocar);
+  }, []);
+
+  const alternarTelaCheia = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await wrapperRef.current?.requestFullscreen();
+    } catch {
+      // Navegador pode negar (política de permissão). Falha em silêncio:
+      // a maquete continua utilizável no tamanho normal.
+      setTemFullscreen(false);
+    }
+  };
+
   const rotaAtiva = useMemo(() => calcularRota(desvios, sentido), [desvios, sentido]);
   const modulo = MODULOS.find((m) => m.id === selecionado);
   const animando = rodando && !reduzido;
@@ -398,11 +473,13 @@ export default function Maquete3D() {
     setDesvios((prev) => ({ ...prev, [id]: prev[id] === 0 ? 1 : 0 }));
 
   return (
-    <div className="maquete3d" ref={wrapperRef}>
-      <div className="maquete3d-palco">
+    <div className={`maquete3d ${emTelaCheia ? 'tela-cheia' : ''}`} ref={wrapperRef}>
+      <div className="maquete3d-palco" ref={palcoRef}>
         <Canvas
           shadows
-          dpr={[1, 1.75]}
+          /* Em tela cheia a área desenhada é bem maior; segurar o dpr evita
+             derrubar o FPS em notebook com vídeo integrado. */
+          dpr={emTelaCheia ? [1, 1.4] : [1, 1.75]}
           camera={{ position: CAMERA_INICIAL.toArray(), fov: 42 }}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           onPointerMissed={() => setSelecionado(null)}
@@ -422,11 +499,60 @@ export default function Maquete3D() {
             rotaAtiva={rotaAtiva}
             etiquetas={etiquetas}
             controlsRef={controlsRef}
+            zoomAtivo={zoomAtivo}
           />
         </Canvas>
 
+        {/* Ficha sobreposta à cena, perto de onde a pessoa clicou */}
+        <AnimatePresence>
+          {modulo && (
+            <motion.aside
+              key={modulo.id}
+              className="maquete3d-ficha-flutuante"
+              style={{ '--ficha-cor': modulo.cor } as React.CSSProperties}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ duration: reduzido ? 0 : 0.28, ease: EASE_OUT_EXPO }}
+            >
+              <header>
+                <span className="maquete3d-ficha-papel">{modulo.papel}</span>
+                <h4>{modulo.nome}</h4>
+                <button
+                  type="button"
+                  className="maquete3d-ficha-fechar"
+                  onClick={() => setSelecionado(null)}
+                  aria-label={`Fechar descrição de ${modulo.nome}`}
+                >
+                  <span aria-hidden="true">✕</span>
+                </button>
+              </header>
+              <p>{modulo.resumo}</p>
+              <ul>
+                {modulo.detalhes.map((d) => (
+                  <li key={d}>{d}</li>
+                ))}
+              </ul>
+            </motion.aside>
+          )}
+        </AnimatePresence>
+
+        {temFullscreen && (
+          <button
+            type="button"
+            className="maquete3d-btn-telacheia"
+            onClick={alternarTelaCheia}
+            aria-pressed={emTelaCheia}
+          >
+            <span aria-hidden="true">{emTelaCheia ? '⤡' : '⤢'}</span>
+            {emTelaCheia ? 'Sair da tela cheia' : 'Tela cheia'}
+          </button>
+        )}
+
         <p className="maquete3d-dica" aria-hidden="true">
-          Arraste para girar · Role para aproximar · Clique em uma zona
+          {emTelaCheia
+            ? 'Arraste para girar · Role para aproximar · Clique em uma área · Esc para sair'
+            : 'Arraste para girar · Ctrl + rolagem para aproximar · Clique em uma área'}
         </p>
       </div>
 
@@ -561,27 +687,21 @@ export default function Maquete3D() {
         </div>
       </div>
 
-      <div className="maquete3d-info" aria-live="polite">
-        {modulo ? (
-          <div
-            className="maquete3d-ficha"
-            style={{ '--ficha-cor': modulo.cor } as React.CSSProperties}
-          >
-            <h4>{modulo.nome}</h4>
-            <p>{modulo.resumo}</p>
-            <ul>
-              {modulo.detalhes.map((d) => (
-                <li key={d}>{d}</li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="maquete3d-vazio">
-            Vire uma chave e veja o trem mudar de linha. Clique em uma zona para ver como ela
-            funciona na maquete real.
-          </p>
-        )}
+      {/* A descrição visível agora é a ficha flutuante sobre a cena. Esta região
+          existe só para o leitor de tela anunciar a troca de área — repetir o
+          texto na tela seria conteúdo duplicado. */}
+      <div className="maquete3d-anuncio" aria-live="polite">
+        {modulo
+          ? `${modulo.nome}. ${modulo.papel}. ${modulo.resumo}`
+          : 'Nenhuma área selecionada.'}
       </div>
+
+      {!modulo && (
+        <p className="maquete3d-vazio">
+          Clique em qualquer construção da maquete para ver o que aquela área faz. Vire uma chave
+          e veja o trem mudar de linha.
+        </p>
+      )}
 
       {reduzido && (
         <p className="maquete3d-aviso">
