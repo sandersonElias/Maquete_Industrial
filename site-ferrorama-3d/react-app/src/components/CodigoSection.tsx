@@ -114,15 +114,16 @@ export default function CodigoSection() {
                 Arduino Mega 2560
               </div>
             </div>
-            <div className="code-image-card code-image-secondary">
+            <div className="code-image-card code-image-secondary code-image-circuit">
               <img
                 src="/images/circuit-traces.svg"
-                alt="Circuit traces"
+                alt="Diagrama do circuito e trilhos da maquete"
                 loading="lazy"
+                decoding="async"
               />
               <div className="code-image-badge">
                 <span className="code-badge-dot active"></span>
-                Circuit Design
+                Circuito / trilhos
               </div>
             </div>
           </motion.div>

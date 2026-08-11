@@ -508,6 +508,26 @@ to { opacity: 1; transform: translateY(0); }
   text-align: center;
   max-width: 850px;
 }
+/* Brand no hero — sinal principal, acima do headline */
+.hero-brand {
+  font-family: var(--font-display-expanded, 'Archivo', system-ui, sans-serif);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 0 0 1.25rem;
+  line-height: 1;
+}
+.hero-brand::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  margin: 0.85rem auto 0;
+  background: var(--primary);
+  border-radius: 2px;
+}
 /* Hero Badge */
 .hero-badge {
   display: inline-flex;
@@ -1347,8 +1367,9 @@ to { opacity: 1; transform: translateY(0); }
 .code-showcase {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
+  gap: clamp(2rem, 4vw, 3.5rem);
   align-items: start;
+  margin-bottom: clamp(0.5rem, 2vw, 1rem);
 }
 /* Itens de grid têm min-width: auto por padrão, então o <pre> do código
    esticava a coluna e empurrava a página inteira (~68px de rolagem
@@ -1387,10 +1408,10 @@ to { opacity: 1; transform: translateY(0); }
   color: var(--text-dim);
 }
 .code-content {
-  padding: 1.25rem;
+  padding: 1.5rem 1.5rem 1.75rem;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
-  line-height: 1.8;
+  line-height: 1.9;
   overflow-x: auto;
 }
 .code-keyword { color: #c678dd; }
@@ -2591,7 +2612,7 @@ to { opacity: 1; transform: translateY(0); }
 .code-image-stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 .code-image-card {
   position: relative;
@@ -2637,18 +2658,44 @@ to { opacity: 1; transform: translateY(0); }
 .code-image-secondary img {
   height: 160px;
 }
+/* SVG do circuito: contain + altura maior pra não cortar os trilhos */
+.code-image-circuit {
+  background: #0c0c14;
+  overflow: hidden;
+}
+.code-image-circuit img {
+  height: auto !important;
+  min-height: 200px;
+  max-height: none;
+  aspect-ratio: 441 / 189;
+  object-fit: contain !important;
+  object-position: center;
+  padding: 1rem 1.1rem 2.4rem;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255, 136, 68, 0.06), transparent 70%),
+    #0c0c14;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.code-image-circuit:hover img {
+  transform: scale(1.02) !important;
+}
+.code-image-circuit .code-image-badge {
+  bottom: 0.65rem;
+  left: 0.65rem;
+}
 /* ============================================
    CODE FEATURES ENHANCED
    ============================================ */
 .code-features-enhanced {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-  margin-top: 2.5rem;
+  gap: 1.75rem;
+  margin-top: clamp(3rem, 5vw, 4.5rem);
 }
 @media (max-width: 768px) {
   .code-features-enhanced {
     grid-template-columns: 1fr;
+    gap: 1.35rem;
   }
 }
 .feature-card-enhanced {
@@ -2665,7 +2712,7 @@ to { opacity: 1; transform: translateY(0); }
 }
 .feature-card-image {
   position: relative;
-  height: 100px;
+  height: 140px;
   overflow: hidden;
 }
 .feature-card-image img {
@@ -2683,22 +2730,40 @@ to { opacity: 1; transform: translateY(0); }
   background: linear-gradient(to bottom, transparent 40%, var(--card) 100%);
 }
 .feature-card-content {
-  padding: 1.25rem;
+  padding: 1.5rem 1.5rem 1.75rem;
 }
 .feature-card-icon {
   color: var(--accent);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 .feature-card-content h4 {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.55rem;
 }
 .feature-card-content p {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.7;
+}
+
+/* Código & Automação — respiração entre título, showcase e cards */
+#codigo .section-container {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.75rem, 5vw, 4.5rem);
+}
+#codigo .section-header {
+  margin-bottom: 0;
+}
+#codigo .code-features-enhanced {
+  margin-top: 0;
+}
+@media (max-width: 1024px) {
+  #codigo .code-showcase {
+    gap: 2rem;
+  }
 }
 /* ============================================
    PORTO ENHANCED
@@ -4161,3 +4226,592 @@ table {
   color: var(--text-dim);
 }
 
+/* ============================================
+   FOOTER — reset limpo (sobrescreve blocos antigos)
+   ============================================ */
+.footer {
+  padding: 2.5rem 1.5rem 1.75rem !important;
+  margin-top: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: #0a0a0f !important;
+  position: relative;
+  overflow: visible !important;
+}
+.footer::before,
+.footer::after {
+  content: none !important;
+  display: none !important;
+}
+.footer-inner {
+  max-width: var(--container-max, 1120px);
+  margin: 0 auto;
+}
+.footer-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+  padding-bottom: 1.5rem;
+}
+.footer-brand {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.35rem !important;
+}
+.footer-logo {
+  font-family: var(--font-display-expanded, 'Archivo', system-ui, sans-serif);
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+  color: var(--text) !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  text-transform: none;
+}
+.footer-tagline,
+.footer-brand p {
+  margin: 0;
+  color: var(--text-dim) !important;
+  font-size: 0.8125rem !important;
+  letter-spacing: 0 !important;
+  line-height: 1.4;
+}
+.footer-nav {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1.15rem !important;
+  max-width: 36rem;
+}
+.footer-nav a,
+.footer-links a {
+  color: var(--text-muted) !important;
+  text-decoration: none;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0;
+  padding: 0.15rem 0;
+  border: none;
+  background: none;
+  display: inline !important;
+  gap: 0 !important;
+  transition: color 0.2s ease;
+}
+.footer-nav a:hover,
+.footer-links a:hover {
+  color: var(--text) !important;
+}
+.footer-links {
+  display: contents;
+}
+.footer-tech,
+.footer-tech-label,
+.footer-tech-stack,
+.tech-pill,
+.footer-brand-row,
+.footer-content {
+  display: none !important;
+}
+.footer-bottom {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding-top: 1.15rem !important;
+  margin-top: 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  text-align: left !important;
+}
+.footer-bottom p {
+  margin: 0;
+  color: rgba(148, 163, 184, 0.65) !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0 !important;
+  font-style: normal !important;
+  opacity: 1 !important;
+}
+.footer-meta,
+.footer-credit {
+  color: rgba(148, 163, 184, 0.5) !important;
+  font-style: normal !important;
+}
+@media (max-width: 768px) {
+  .footer {
+    padding: 2rem 1.25rem 1.5rem !important;
+  }
+  .footer-top {
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .footer-nav {
+    max-width: none;
+    gap: 0.5rem 1rem !important;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left !important;
+  }
+}
+
+/* ============================================
+   SITE FOOTER — layout novo (evita CSS antigo)
+   ============================================ */
+.site-footer {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 2.75rem clamp(1.25rem, 4vw, 2rem) 2rem;
+  margin: 0;
+  background: #08080d;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.site-footer__inner {
+  max-width: 42rem;
+  margin: 0 auto;
+  text-align: center;
+}
+.site-footer__brand {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display-expanded, 'Archivo', system-ui, sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #e8e4dc;
+}
+.site-footer__tag {
+  margin: 0 0 1.35rem;
+  font-size: 0.8125rem;
+  color: #8b93a7;
+  line-height: 1.4;
+}
+.site-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem 0.15rem;
+  margin: 0 0 1.5rem;
+}
+.site-footer__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+.site-footer__nav a {
+  color: #a8b0c0;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.2rem 0.35rem;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+.site-footer__nav a:hover {
+  color: #f0ebe4;
+}
+.site-footer__sep {
+  color: #4a5163;
+  padding: 0 0.15rem;
+  user-select: none;
+}
+.site-footer__copy {
+  margin: 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.75rem;
+  color: #6b7385;
+  line-height: 1.5;
+}
+
+/* Esconde restos do footer antigo se ainda existirem no DOM */
+.footer:not(.site-footer) {
+  display: none !important;
+}
+
+/* ============================================
+   CINEMATIC SHELL — atrativo público (fora de maquete3d)
+   ============================================ */
+
+body {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+  background-color: #06060a;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(255, 136, 68, 0.09), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 80%, rgba(45, 139, 139, 0.05), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 0% 60%, rgba(138, 68, 0, 0.06), transparent 45%);
+  background-attachment: fixed;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.section {
+  min-height: 0 !important;
+  padding: clamp(4.5rem, 10vh, 7.5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(3.5rem, 7vh, 5.5rem) !important;
+}
+
+.section-number {
+  font-size: 0.7rem !important;
+  letter-spacing: 0.22em !important;
+  color: var(--primary) !important;
+  border-color: rgba(255, 136, 68, 0.35) !important;
+  background: rgba(255, 136, 68, 0.08) !important;
+}
+
+.section-title {
+  font-family: var(--font-display-expanded), var(--font-display), sans-serif !important;
+  font-size: clamp(2.1rem, 5.5vw, 3.75rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.05 !important;
+  text-transform: none !important;
+  color: var(--text) !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  margin-bottom: 0.85rem !important;
+}
+
+.section-subtitle {
+  font-size: clamp(1rem, 1.6vw, 1.125rem) !important;
+  color: #9a9086 !important;
+  max-width: 34rem !important;
+  line-height: 1.65 !important;
+}
+
+.section-header {
+  margin-bottom: clamp(2.5rem, 5vw, 4rem) !important;
+}
+
+/* —— Hero cinematográfico —— */
+.hero-section--cinematic {
+  min-height: 100svh;
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+  isolation: isolate;
+}
+
+.hero-section--cinematic::before {
+  opacity: 0.35;
+  z-index: 1;
+}
+
+.hero-bg-media {
+  position: absolute;
+  inset: -8% -4%;
+  will-change: transform;
+}
+
+.hero-section--cinematic .hero-bg-image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  opacity: 1 !important;
+  filter: saturate(1.05) contrast(1.08) brightness(0.55);
+  transform: scale(1.02);
+}
+
+.hero-bg-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(6, 6, 10, 0.55) 0%, rgba(6, 6, 10, 0.35) 40%, rgba(6, 6, 10, 0.75) 78%, #06060a 100%),
+    linear-gradient(90deg, rgba(6, 6, 10, 0.55) 0%, transparent 35%, transparent 65%, rgba(6, 6, 10, 0.45) 100%);
+}
+
+.hero-bg-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse 70% 60% at 50% 45%, transparent 20%, rgba(6, 6, 10, 0.75) 100%);
+  pointer-events: none;
+}
+
+.hero-bg-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18%;
+  height: 2px;
+  z-index: 2;
+  background: linear-gradient(90deg, transparent, rgba(255, 136, 68, 0.55), transparent);
+  opacity: 0.7;
+  box-shadow: 0 0 24px rgba(255, 136, 68, 0.25);
+  pointer-events: none;
+}
+
+.hero-section--cinematic .hero-content {
+  z-index: 3;
+  max-width: 46rem;
+  padding: 0 0.5rem;
+}
+
+.hero-section--cinematic .hero-brand {
+  font-size: clamp(2.4rem, 7vw, 4.25rem) !important;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.45);
+  margin-bottom: 1.5rem !important;
+}
+
+.hero-section--cinematic .hero-brand::after {
+  width: 3.25rem;
+  height: 4px;
+  margin-top: 1rem;
+  background: linear-gradient(90deg, var(--primary), #ffb07a);
+  box-shadow: 0 0 18px rgba(255, 136, 68, 0.45);
+}
+
+.hero-section--cinematic .hero-title {
+  font-size: clamp(2.35rem, 6.5vw, 4.35rem) !important;
+  margin-bottom: 1.35rem !important;
+  text-shadow: 0 4px 48px rgba(0, 0, 0, 0.5);
+}
+
+.hero-section--cinematic .title-accent {
+  filter: none !important;
+}
+
+.hero-section--cinematic .title-line:not(.title-accent) {
+  color: #f7f2ea;
+  -webkit-text-fill-color: #f7f2ea;
+}
+
+.hero-section--cinematic .hero-description {
+  font-size: clamp(1.05rem, 2vw, 1.25rem) !important;
+  color: rgba(240, 235, 228, 0.82) !important;
+  max-width: 28rem !important;
+  margin-bottom: 2.25rem !important;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+}
+
+.hero-section--cinematic .hero-cta {
+  padding: 1.05rem 1.85rem !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 28px rgba(255, 136, 68, 0.28);
+}
+
+.hero-section--cinematic .hero-cta-secondary {
+  backdrop-filter: blur(10px);
+  background: rgba(8, 8, 14, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #f0ebe4 !important;
+}
+
+.hero-section--cinematic .hero-cta-secondary:hover {
+  background: rgba(255, 136, 68, 0.12) !important;
+  border-color: rgba(255, 136, 68, 0.4) !important;
+}
+
+.hero-section--cinematic .scroll-indicator {
+  z-index: 3;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  color: rgba(240, 235, 228, 0.55);
+}
+
+/* —— Nav —— */
+.nav {
+  backdrop-filter: blur(16px) saturate(1.2) !important;
+  background: rgba(6, 6, 10, 0.72) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.nav-brand,
+.nav-title {
+  letter-spacing: -0.03em !important;
+}
+
+/* —— Dividers —— */
+.section-divider {
+  padding: 1.25rem 2rem !important;
+  opacity: 0.9;
+}
+
+.divider-number {
+  font-size: 0.65rem !important;
+  letter-spacing: 0.28em !important;
+  color: var(--primary) !important;
+  border-color: rgba(255, 136, 68, 0.28) !important;
+  background: rgba(255, 136, 68, 0.06) !important;
+  border-radius: 999px !important;
+}
+
+.divider-line {
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 136, 68, 0.35), transparent) !important;
+}
+
+/* —— Cards: menos “pulo”, mais presença —— */
+.feature-card-enhanced:hover,
+.card:hover,
+.porto-item-enhanced:hover {
+  transform: translateY(-4px) !important;
+}
+
+.card-glow {
+  opacity: 0.35 !important;
+}
+
+/* Code / montagem ritmo */
+.code-showcase,
+.porto-showcase,
+.mina-showcase {
+  gap: clamp(1.75rem, 3vw, 3rem) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    display: none;
+  }
+  .hero-bg-rail {
+    box-shadow: none;
+  }
+}
+
+/* ============================================
+   PORTO MODULES — explicação Terminal / Aeroporto / Ferrovia
+   ============================================ */
+.porto-modules {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 5vw, 4rem);
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.porto-module {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+  align-items: center;
+}
+
+.porto-module--reverse {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+}
+
+.porto-module--reverse .porto-module__media {
+  order: 2;
+}
+
+.porto-module--reverse .porto-module__body {
+  order: 1;
+}
+
+.porto-module__media {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card);
+  aspect-ratio: 16 / 11;
+}
+
+.porto-module__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.porto-module__num {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--primary);
+  margin-bottom: 0.65rem;
+}
+
+.porto-module__title {
+  font-family: var(--font-display-expanded), var(--font-display), sans-serif;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin: 0 0 0.65rem;
+  line-height: 1.15;
+}
+
+.porto-module__lead {
+  font-size: 1.05rem;
+  color: #c4bbb0;
+  margin: 0 0 1rem;
+  line-height: 1.55;
+}
+
+.porto-module__text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0 0 0.85rem;
+  line-height: 1.7;
+}
+
+.porto-module__points {
+  list-style: none;
+  margin: 1.15rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.porto-module__points li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  color: #a39a90;
+  line-height: 1.45;
+}
+
+.porto-module__points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 136, 68, 0.15);
+}
+
+@media (max-width: 860px) {
+  .porto-module,
+  .porto-module--reverse {
+    grid-template-columns: 1fr;
+  }
+
+  .porto-module--reverse .porto-module__media,
+  .porto-module--reverse .porto-module__body {
+    order: initial;
+  }
+
+  .porto-module__media {
+    aspect-ratio: 16 / 10;
+  }
+}
