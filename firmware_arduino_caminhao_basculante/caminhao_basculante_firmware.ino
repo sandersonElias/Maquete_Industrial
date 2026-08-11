@@ -10,15 +10,15 @@
  *    - Servo de Caçamba (D6)
  *
  *  MOTOR DC (via L298M):
- *    - IN1 (D10) = direção do motor
- *    - IN2 (D11) = direção do motor
+ *    - IN1 (D12) = direção do motor
+ *    - IN2 (D13) = direção do motor
  *    - ENA = jumper para 5V (velocidade constante)
  *
  *  LEDs:
  *    - Farol Esquerdo (D2)
  *    - Farol Direito (D3)
- *    - Seta Esquerda (D8)
- *    - Seta Direita (D9)
+ *    - Seta Esquerda (D4)
+ *    - Seta Direita (D7)
  *
  *  PROTOCOLO COMPOSTO:
  *    - Comandos de 1 ou 2 caracteres
@@ -44,13 +44,16 @@
 const int PIN_SERVO_DIR = 5;
 const int PIN_SERVO_BUCKET = 6;
 
+// NOTA IMPORTANTE: A biblioteca Servo.h toma conta do Timer 1 do ATMega.
+// Os pinos PWM D9 e D10 tambem dependem do Timer 1 / Timer 2 -> conflito.
+// Manter os LEDs e os sinais do motor FORA de D9/D10 evita resets
+// espurios do Arduino (brownout / watchdog) quando os servos se movimentam.
 const int PIN_FAROL_ESQ = 2;
 const int PIN_FAROL_DIR = 3;
-const int PIN_SETA_ESQ = 8;
-const int PIN_SETA_DIR = 9;
-
-const int PIN_MOTOR_IN1 = 10;
-const int PIN_MOTOR_IN2 = 11;
+const int PIN_SETA_ESQ = 4;   // antes D8 -> ainda seguro (sem conflito Timer)
+const int PIN_SETA_DIR = 7;   // antes D9 (Timer 1) -> longe do servo
+const int PIN_MOTOR_IN1 = 12; // antes D12 (Timer 1) -> pino digital puro
+const int PIN_MOTOR_IN2 = 13; // antes D13 (Timer 2) -> pino digital puro
 
 // ── Objetos Servo ────────────────────────────────────────
 Servo servoDirecao;
@@ -76,8 +79,13 @@ const unsigned long PISCA_INTERVALO = 500; // 500ms = 0.5s
 
 // ── Buffer para comando composto ─────────────────────────
 String bufferComando = "";
+const size_t MAX_CMD_LEN = 4; // nenhum comando valido passa disso; protege contra floods
 
 void setup() {
+  // D uma pequena pausa para a alimentacao 5V estabilizar apos o BT
+  // ligar. Evita brownout quando os servos ja pedem corrente no boot.
+  delay(300);
+
   Serial.begin(9600);
 
   // Configura pinos dos LEDs como saída
@@ -86,34 +94,56 @@ void setup() {
   pinMode(PIN_SETA_ESQ, OUTPUT);
   pinMode(PIN_SETA_DIR, OUTPUT);
 
-  // Configura servos
-  servoDirecao.attach(PIN_SERVO_DIR);
-  servoCacamba.attach(PIN_SERVO_BUCKET);
-
   // Configura motor DC via L298M
   pinMode(PIN_MOTOR_IN1, OUTPUT);
   pinMode(PIN_MOTOR_IN2, OUTPUT);
   digitalWrite(PIN_MOTOR_IN1, LOW);
   digitalWrite(PIN_MOTOR_IN2, LOW);
 
-  // Posição inicial (centro = 90°)
+  // Posicao inicial (centro = 90°)
   servoDirecao.write(90);
   servoCacamba.write(0);
+
+  // Configura servos  SOMENTE DEPOIS de os pinos estarem estaveis.
+  // Anexar servo antes dos LOW pode gerar um pulso espurio no motor/LEDs.
+  servoDirecao.attach(PIN_SERVO_DIR);
+  servoCacamba.attach(PIN_SERVO_BUCKET);
 
   // LEDs desligados
   atualizarLEDs();
 
   Serial.println(F("=== CAMINHAO BASCULANTE v2.0 ==="));
   Serial.println(F("Aguardando comandos BT..."));
+  Serial.println(F("ACK|TRUCK|BOOT|OK"));
 }
 
 void loop() {
   // 1. Processar comandos Bluetooth
+  // Filtra lixo binario (BT pode entregar bytes corrompidos apos reset)
+  // e só aceita os caracteres que formam comandos validos.
   while (Serial.available() > 0) {
     char c = Serial.read();
 
+    // Ignora bytes não-ASCII imprimiveis. So aceita A-Z, 0-9 e alguns simbolos.
+    // Isso evita que lixo venha como terminador/marcador de comando.
+    if (c != '\n' && c != '\r') {
+      if (c < 32 || c > 126) {
+        // byte invalido: descarta e limpa buffer se ja tinha algo
+        // (sinal de que o pacote veio corrompido)
+        if (bufferComando.length() > 0) {
+          bufferComando = "";
+        }
+        continue;
+      }
+    }
+
     if (c == '\n' || c == '\r') {
       if (bufferComando.length() > 0) {
+        bufferComando.trim();
+        if (bufferComando.length() > MAX_CMD_LEN) {
+          bufferComando = "";
+          continue;
+        }
         Serial.print(F("RX: "));
         Serial.println(bufferComando);
         executarComando(bufferComando);
@@ -121,6 +151,10 @@ void loop() {
       }
     } else {
       bufferComando += c;
+      // Protecao extra: se estourar mesmo sem \n, descarta (BT em flood)
+      if (bufferComando.length() > MAX_CMD_LEN) {
+        bufferComando = "";
+      }
     }
   }
 

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Pré-Android 12 (API ≤ 30): BLUETOOTH/ADMIN + localização p/ scan.
+         maxSdkVersion poderia ser adicionado (como no app_carro_rover), mas
+         funcionar em qualquer API é deixado genérico no momento. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-feature android:name="android.hardware.bluetooth" android:required="true" />
+
+    <!--
+      Round icon ausente de propósito (o adaptive icon é retangular; o launcher
+      do SO recorta como circular/rounded/square conforme o device).
+      Icon adaptive via mipmap-anydpi-v26.
+    -->
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MaqueteTruck">
+        <!--
+          configChanges: impede que a Activity seja recriada em rotações/teclado
+          coberto. Crucial p/ não derrubar a conexão Bluetooth em config changes,
+          já que onStop/onDestroy do serviço seriam invocados numa recriação.
+          Combinado com onDestroy -> shutdown() do service, só fecha de verdade
+          quando o usuário sai do app.
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|density|fontScale|uiMode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

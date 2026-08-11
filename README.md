@@ -42,7 +42,7 @@ maquete_industrial/
 │       └── contexts/            # AuthContext, SocketContext
 ├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi)
 ├── app_react_native/            # App React Native (Expo)
-├── firmware_arduino_ferrovia/   # Arduino - 4 servos SG90 + HC-05
+├── firmware_arduino_ferrovia/   # Arduino - 3 servos SG90 + 7 sensores + semáforo + HC-05
 └── firmware_arduino_caminho_basculante/  # Arduino - carrinho basculante RC
 ```
 
@@ -163,7 +163,7 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | POST   | `/api/auth/login`           | Login (retorna JWT)             | Não     |
 | POST   | `/api/auth/register`        | Criar usuário                   | Não     |
 | GET    | `/api/health`               | Health check (PG + Redis)       | Não     |
-| GET    | `/api/ferrovia/status`      | Status dos 4 switches           | JWT     |
+| GET    | `/api/ferrovia/status`      | Status dos 3 switches           | JWT     |
 | POST   | `/api/ferrovia/switch`      | Enviar comando ao switch        | JWT     |
 | GET    | `/api/trucks`               | Listar caminhões                | JWT     |
 | POST   | `/api/trucks/:id/telemetry` | Enviar telemetria               | JWT     |
@@ -215,19 +215,29 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 
 ## Pinagem Arduino
 
-### Ferrovia (4 Servos + HC-05)
+### Ferrovia (3 Servos + 6 LEDs + 7 Sensores + Semaforo + HC-05)
 
 | Componente            | Pino                 |
 | --------------------- | -------------------- |
-| Servo Switch 1        | D3                   |
-| Servo Switch 2        | D5                   |
-| Servo Switch 3        | D6                   |
-| Servo Switch 4        | D9                   |
-| HC-05 TX → Arduino RX | D10 (SoftwareSerial) |
-| HC-05 RX ← Arduino TX | D11 (SoftwareSerial) |
+| Servo Switch 1        | D2                   |
+| Servo Switch 2        | D3                   |
+| Servo Switch 3        | D4                   |
+| LED SW1/SW2 Esquerda  | D5 (compartilhado)  |
+| LED SW1/SW2 Direita   | D6 (compartilhado)  |
+| LED SW3 Esquerda      | D7                   |
+| LED SW3 Direita       | D8                   |
+| Semaforo Vermelho     | D9                   |
+| Semaforo Amarelo      | D10                  |
+| Semaforo Verde        | D11                  |
+| Sensor S1-S2          | D12, D13             |
+| Sensor S3-S7          | A0-A4                |
+| HC-05 TX → Arduino RX | D0 (Serial)          |
+| HC-05 RX ← Arduino TX | D1 (Serial)*         |
 | GND comum             | GND                  |
 | VCC Servos            | Fonte 5V externa     |
 | VCC HC-05             | 5V                   |
+
+*Desconectar ao programar via USB
 
 ### Caminhão Basculante (2 Servos + Motor DC L298M + 4 LEDs)
 
@@ -264,9 +274,8 @@ Paleta de cores (minimalista escuro):
 | Border  | `#2A2D3A` | Bordas                           |
 | Text    | `#E4E7EC` | Texto principal                  |
 | Muted   | `#8B8FA3` | Texto secundário                 |
-| Accent  | `#3B82F6` | Botões, links, ações primárias   |
+| Accent  | `#3D9EFF` | Botões, links, ações primárias   |
 | Success | `#22C55E` | Status ok, switches CENTER       |
 | Warning | `#F59E0B` | Alertas, bateria média           |
 | Danger  | `#EF4444` | Erros, bateria baixa, stop       |
 | Química | `#06B6D4` | Equipamentos químicos            |
-| Danger  | `#EF4444` | Erros, bateria baixa, stop       |

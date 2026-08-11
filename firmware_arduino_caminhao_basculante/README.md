@@ -24,10 +24,12 @@ Controle RC de um carrinho basculante via Bluetooth (HC-05) com 2 servos + motor
 
 ### Motor DC (via L298M)
 
+> **Atencao:** A biblioteca `Servo.h` toma conta do Timer 1 do ATMega. Os pinos D9 e D10 tambem dependem do Timer 1 / Timer 2, o que pode causar resets espurios do Arduino quando os servos se movimentam simultaneamente. Por isso IN1/IN2 e as setas usam pinos fora da regiao de conflito (D12/D13 e D4/D7).
+
 | Componente | Pino Arduino | Funcao                    |
 | ---------- | ------------ | ------------------------- |
-| L298M IN1  | D10          | Direcao do motor (frente) |
-| L298M IN2  | D11          | Direcao do motor (re)     |
+| L298M IN1  | D12          | Direcao do motor (frente) |
+| L298M IN2  | D13          | Direcao do motor (re)     |
 | L298M ENA  | Jumper 5V    | Velocidade constante      |
 | L298M GND  | GND          | Comum com Arduino         |
 | L298M 12V  | Bateria      | Alimentacao do motor      |
@@ -39,8 +41,8 @@ Controle RC de um carrinho basculante via Bluetooth (HC-05) com 2 servos + motor
 | -------------- | ------------ | -------------------- |
 | Farol Esquerdo | D2           | Iluminacao frontal   |
 | Farol Direito  | D3           | Iluminacao frontal   |
-| Seta Esquerda  | D8           | Indicador de direcao |
-| Seta Direita   | D9           | Indicador de direcao |
+| Seta Esquerda  | D4           | Indicador de direcao |
+| Seta Direita   | D7           | Indicador de direcao |
 
 ### Bluetooth
 
@@ -71,16 +73,16 @@ Controle RC de um carrinho basculante via Bluetooth (HC-05) com 2 servos + motor
                     |      D1   |---- HC-05 RX (TX Serial)
                     |      D2   |---- Farol Esquerdo (LED)
                     |      D3   |---- Farol Direito (LED)
-              Servo |      D4   |
-              Dir.  |      D5   |---- Servo Direcao
-              Servo |      D6   |---- Servo Cacamba
-              Cac.  |      D7   |
-                    |      D8   |---- Seta Esquerda (LED)
-                    |      D9   |---- Seta Direita (LED)
-              L298M |      D10  |---- IN1 (Motor Frente)
-              L298M |      D11  |---- IN2 (Motor Re)
-                    |      D12  |
-                    |      D13  |
+                    |      D4   |---- Seta Esquerda (LED)
+              Servo |      D5   |---- Servo Direcao
+              Dir.  |      D6   |---- Servo Cacamba
+              Servo |      D7   |---- Seta Direita (LED)
+              Cac.  |      D8   |
+                    |      D9   |
+                    |      D10  |
+                    |      D11  |
+              L298M |      D12  |---- IN1 (Motor Frente)
+              L298M |      D13  |---- IN2 (Motor Re)
                     |           |
                     |      5V   |---- VCC HC-05
                     |      GND  |---- GND Comum
@@ -89,8 +91,8 @@ Controle RC de um carrinho basculante via Bluetooth (HC-05) com 2 servos + motor
 
                     L298M Driver
                     +-----------+
-              IN1 --| D10       |---- Motor DC (Saida A)
-              IN2 --| D11       |
+              IN1 --| D12       |---- Motor DC (Saida A)
+              IN2 --| D13       |
              GND  --| GND       |---- GND Arduino
              12V  --| 12V       |---- Bateria
               ENA --| 5V (jump) |---- Velocidade constante
@@ -206,8 +208,26 @@ O firmware imprime no Serial Monitor (9600 baud):
 Use uma fonte externa de **minimo 1A** para servos + Arduino.
 Bateria separada para motor DC via L298M.
 
+## Troubleshooting: resets espurios e lixo no Serial
+
+Sintomas (Serial Monitor do Arduino):
+- Mensagem `=== CAMINHAO BASCULANTE v2.0 ===` aparece no meio de comandos
+- Caracteres estranhos misturados (`^M`, `^I`, `�`, `@@@@@@@`)
+- Comandos perdidos / nao confirmados por `ACK`
+
+Causas + correcoes adotadas neste firmware:
+
+1. **Conflito de Timer (Servo vs PWM)**: a biblioteca `Servo.h` desabilita o Timer 1 do ATMega. Os pinos **D9 e D10** usam o mesmo Timer (`TIMER1` e `TIMER2`). Pilotar PWM ali com servos anexados pode gerar instabilidade e reset. **Correcao:** trocamos D9/D10 por D4 e D7 (setas) e D12/D13 (motor). Apenas pinos digitais puros, fora do conflito.
+
+2. **Brownout por pico de corrente no boot**: quando o Arduino liga com servos ja demandando corrente, a tensao pode cair abaixo de 2.7V e a placa reseta. **Correcao:** `delay(300)` no inicio do `setup()` e sequencia (pinos em LOW antes de anexar servos).
+
+3. **Lixo binario via BT apos reset**: pacotes BT em transito sao parcialmente corrompidos apos um reset. Filtros no `loop()` descartam bytes fora da faixa ASCII 32-126 e limitam o buffer a 4 caracteres (`MAX_CMD_LEN`).
+
+4. **Reconexao do HC-05**: quando o HC-05 re-emparelha, ele espalha bytes estranhos. Nada a fazer no firmware alem do filtro. Caso persista, cheque a fonte de 5V.
+
 ## Versao
 
+- **v2.2** - Correcao de resets espurios (conflito Timer/Servo): pinagem alterada para D4/D7 (setas) e D12/D13 (motor); filtro de lixo binario BT; delay de brownout no boot
 - **v2.1** - Motor DC via L298M + pisca-alerta (HA)
 - **v2.0** - Comandos compostos (motor + direcao) + LEDs
 - **v1.0** - Versao inicial

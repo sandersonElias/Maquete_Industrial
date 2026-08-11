@@ -28,7 +28,7 @@ const registerSchema = Joi.object({
 });
 
 const switchCommandSchema = Joi.object({
-  switchId: Joi.number().integer().min(1).max(4).required(),
+  switchId: Joi.number().integer().min(1).max(3).required(),
   action: Joi.string().valid(...SWITCH_ACTIONS).optional(),
   angle: Joi.number().min(0).max(180).optional(),
 }).custom((value, helpers) => {

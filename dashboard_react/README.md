@@ -60,7 +60,7 @@ REACT_APP_API_URL=http://localhost:4000
 | Path | Componente | Descrição |
 |------|------------|-----------|
 | `/` | Overview | Status geral dos 5 módulos |
-| `/ferrovia` | Ferrovia | Controle dos 4 switches |
+| `/ferrovia` | Ferrovia | Controle dos 3 switches |
 | `/mina` | Mina | Mapa + telemetria dos caminhões |
 | `/porto` | Porto | Lista de navios |
 | `/aeroporto` | Aeroporto | Lista de aeronaves |
@@ -84,8 +84,8 @@ REACT_APP_API_URL=http://localhost:4000
 - Painel de Alertas e Atividade Recente
 
 ### Ferrovia (`/ferrovia`)
-- Mapa SVG esquemático da ferrovia com 4 switches coloridos por estado
-- 4 cards de controle (SwitchControl) com:
+- Mapa SVG esquemático da ferrovia com 3 switches coloridos por estado
+- 3 cards de controle (SwitchControl) com:
   - Badge de estado (LEFT/RIGHT/CENTER/TRANSITION)
   - Barra de progresso do ângulo (0-180°)
   - 3 botões: Esquerda, Centro, Direita

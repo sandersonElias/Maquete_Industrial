@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Tabela de Switches (Ferrovia)
 CREATE TABLE IF NOT EXISTS switches (
     id SERIAL PRIMARY KEY,
-    switch_id INTEGER UNIQUE NOT NULL CHECK (switch_id BETWEEN 1 AND 4),
+    switch_id INTEGER UNIQUE NOT NULL CHECK (switch_id BETWEEN 1 AND 3),
     name VARCHAR(50) NOT NULL,
     current_angle INTEGER DEFAULT 90,
     current_state VARCHAR(20) DEFAULT 'CENTER', -- LEFT, RIGHT, CENTER, TRANSITION
@@ -162,8 +162,7 @@ CREATE INDEX IF NOT EXISTS idx_alerts_module ON alerts(module, severity, created
 INSERT INTO switches (switch_id, name, current_angle, current_state) VALUES
 (1, 'Desvio Norte', 90, 'CENTER'),
 (2, 'Desvio Leste', 90, 'CENTER'),
-(3, 'Desvio Sul', 90, 'CENTER'),
-(4, 'Desvio Oeste', 90, 'CENTER')
+(3, 'Desvio Sul', 90, 'CENTER')
 ON CONFLICT (switch_id) DO NOTHING;
 
 INSERT INTO trucks (id, name, origin_x, origin_y, max_load) VALUES

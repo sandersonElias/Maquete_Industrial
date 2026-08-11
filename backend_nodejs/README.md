@@ -105,7 +105,7 @@ CORS_ORIGIN=*
 | Tabela | Descrição |
 |--------|-----------|
 | `users` | Usuários (admin/operator/viewer) |
-| `switches` | 4 switches da ferrovia (ângulo 0-180°) |
+| `switches` | 3 switches da ferrovia (ângulo 0-180°) |
 | `commands` | Histórico de comandos dos switches |
 | `trucks` | Caminhões basculantes |
 | `truck_telemetry` | Histórico de telemetria |
@@ -152,6 +152,26 @@ Migrations: `migrations/002_schema_evolution.sql` (tabelas extras, indexes, view
     "id": 1,
     "switch_id": 1,
     "name": "Desvio Norte",
+    "current_angle": 90,
+    "current_state": "CENTER",
+    "target_angle": 90,
+    "is_moving": false,
+    "last_command_at": null
+  },
+  {
+    "id": 2,
+    "switch_id": 2,
+    "name": "Desvio Leste",
+    "current_angle": 90,
+    "current_state": "CENTER",
+    "target_angle": 90,
+    "is_moving": false,
+    "last_command_at": null
+  },
+  {
+    "id": 3,
+    "switch_id": 3,
+    "name": "Desvio Sul",
     "current_angle": 90,
     "current_state": "CENTER",
     "target_angle": 90,

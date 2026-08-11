@@ -95,7 +95,7 @@ async function handleGatewayData(data, io, socket) {
       const switchId = parseInt(parts[2]);
       const state = parts[3];
 
-      if (isNaN(switchId) || switchId < 1 || switchId > 4) {
+      if (isNaN(switchId) || switchId < 1 || switchId > 3) {
         logger.warn(`switchId invalido no ACK: ${parts[2]}`);
         return;
       }
@@ -114,7 +114,7 @@ async function handleGatewayData(data, io, socket) {
       const angle = parseInt(parts[3]);
       const state = parts[4];
 
-      if (isNaN(switchId) || switchId < 1 || switchId > 4) {
+      if (isNaN(switchId) || switchId < 1 || switchId > 3) {
         logger.warn(`switchId invalido no STATUS: ${parts[2]}`);
         return;
       }

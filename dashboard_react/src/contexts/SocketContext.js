@@ -34,8 +34,15 @@ export function SocketProvider({ children }) {
     };
 
     const onGatewayStatus = (data) => {
-      if (!data.data.connected) {
-        toast.error(`Gateway ${data.gatewayId} desconectado!`);
+      // Shape real: { gatewayId, devices: [{name, connected, ...}], timestamp }
+      // Nao existe `data.data.connected` (bug original de aninhamento duplo).
+      const devices = data?.devices;
+      if (!Array.isArray(devices) || devices.length === 0) return;
+
+      // So dispara alerta se TODOS os devices estiverem desconectados.
+      const anyOnline = devices.some((d) => d.connected);
+      if (!anyOnline) {
+        toast.error(`Gateway ${data.gatewayId || ""} sem dispositivos conectados`);
       }
     };
 

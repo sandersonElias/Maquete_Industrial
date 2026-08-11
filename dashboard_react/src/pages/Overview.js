@@ -8,7 +8,7 @@ import axios from 'axios';
 import { useSocket } from '../contexts/SocketContext';
 import toast from 'react-hot-toast';
 
-const SWITCH_NAMES = { 1: 'Norte', 2: 'Leste', 3: 'Sul', 4: 'Oeste' };
+const SWITCH_NAMES = { 1: 'Norte', 2: 'Leste', 3: 'Sul' };
 
 const ModuleCard = ({ title, icon: Icon, count, status, items, onClick, color, subtitle }) => (
   <div
