@@ -16,8 +16,8 @@ const consoles = [
     role: 'OPS',
     title: 'App mobile',
     text: 'Controle na mão — Bluetooth manda o basculante avançar, virar e descarregar.',
-    image: '/images/maquete-montagem-1.png',
-    alt: 'Veículos da maquete sob controle do app',
+    image: '/images/caminhao-3d.png',
+    alt: 'Caminhão Mini Dump sob controle do app',
   },
   {
     id: 'gate',

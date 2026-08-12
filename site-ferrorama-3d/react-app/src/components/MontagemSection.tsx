@@ -24,10 +24,10 @@ const cards = [
     tag: 'Trilhos',
   },
   {
-    image: '/images/maquete-montagem-1.png',
-    alt: 'Caminhões basculantes 3D',
+    image: '/images/caminhao-3d.png',
+    alt: 'Caminhão basculante Mini Dump impresso em 3D',
     title: 'Caminhões 3D',
-    text: '3 caminhões basculantes impressos em PLA com motor DC e controle Bluetooth para transporte de minério.',
+    text: 'Basculantes Mini Dump em PLA (laranja/preto) com motor DC, caçamba móvel e Bluetooth — levam o minério da mina aos trilhos.',
     tag: 'PLA',
   },
   {
