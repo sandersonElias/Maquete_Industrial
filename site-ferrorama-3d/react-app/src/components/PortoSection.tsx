@@ -59,12 +59,81 @@ const modules = [
   },
 ];
 
+const chain = [
+  {
+    step: '01',
+    title: 'Chegada',
+    text: 'Trem HO chega com ferro e carvão vindos da mina.',
+  },
+  {
+    step: '02',
+    title: 'Desvio',
+    text: 'Servo escolhe cais (padrão) ou ramal do aeroporto.',
+  },
+  {
+    step: '03',
+    title: 'Transferência',
+    text: 'Guindaste / LED no cais, ou pista ativa no terminal aéreo.',
+  },
+  {
+    step: '04',
+    title: 'Saída',
+    text: 'Navio = volume. Avião = urgência. A história fecha no destino.',
+  },
+];
+
+const routes = [
+  {
+    id: 'sea',
+    badge: 'MAR',
+    name: 'Porto',
+    tone: 'sea',
+    rows: [
+      ['Volume', 'Alto — milhões de toneladas'],
+      ['Custo', 'Menor por tonelada'],
+      ['Tempo', 'Semanas (marítimo)'],
+      ['Carga típica', 'Minério de ferro, carvão'],
+      ['Na maquete', 'Rota padrão do trem'],
+      ['Referência', 'Terminal de Tubarão (ES)'],
+    ],
+  },
+  {
+    id: 'air',
+    badge: 'AR',
+    name: 'Aeroporto',
+    tone: 'air',
+    rows: [
+      ['Volume', 'Baixo — cargas especiais'],
+      ['Custo', 'Muito maior'],
+      ['Tempo', 'Horas (aéreo)'],
+      ['Carga típica', 'Amostras, peças urgentes'],
+      ['Na maquete', 'Via desvio ferroviário'],
+      ['Escala', 'Aeronaves ~1:500'],
+    ],
+  },
+];
+
+const hubs = [
+  {
+    label: 'Tubarão',
+    text: 'Terminal em Vitória (ES) — um dos maiores do mundo e referência do cais na maquete.',
+  },
+  {
+    label: 'EFVM',
+    text: 'Ferrovia Vitória–Minas: mina no interior → litoral. Inspira o circuito HO.',
+  },
+  {
+    label: 'Exportação',
+    text: 'Brasil entre os maiores exportadores de ferro — China, Japão e Europa no destino.',
+  },
+];
+
 export default function PortoSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="porto" className="section" data-bg="dark" ref={ref}>
+    <section id="porto" className="section section--hub" data-bg="dark" ref={ref}>
       <div className="section-container">
         <div className="section-header">
           <motion.span
@@ -125,53 +194,72 @@ export default function PortoSection() {
           ))}
         </div>
 
-        {/* Faixa de decisão: mar × ar */}
+        {/* Cadeia logística — paralelo aos modos da Central */}
         <motion.div
-          className="porto-lanes"
+          className="porto-chain"
           initial={{ opacity: 0, y: 28 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.75, delay: 0.4, ease: EASE_OUT_EXPO }}
+          transition={{ duration: 0.75, delay: 0.35, ease: EASE_OUT_EXPO }}
         >
-          <h3 className="porto-lanes__heading">Qual rota?</h3>
-          <div className="porto-lanes__track">
-            <article className="porto-lane porto-lane--sea">
-              <span className="porto-lane__badge">VOLUME</span>
-              <h4 className="porto-lane__title">Porto</h4>
-              <ul className="porto-lane__stats">
-                <li>
-                  <strong>Custo</strong> menor / tonelada
-                </li>
-                <li>
-                  <strong>Tempo</strong> semanas
-                </li>
-                <li>
-                  <strong>Na maquete</strong> rota padrão
-                </li>
-              </ul>
-            </article>
-            <div className="porto-lanes__switch" aria-hidden="true">
-              <span>DESVIO</span>
-            </div>
-            <article className="porto-lane porto-lane--air">
-              <span className="porto-lane__badge">URGÊNCIA</span>
-              <h4 className="porto-lane__title">Aeroporto</h4>
-              <ul className="porto-lane__stats">
-                <li>
-                  <strong>Custo</strong> muito maior
-                </li>
-                <li>
-                  <strong>Tempo</strong> horas
-                </li>
-                <li>
-                  <strong>Na maquete</strong> via desvio
-                </li>
-              </ul>
-            </article>
+          <h3 className="porto-chain__heading">Fluxo na maquete</h3>
+          <ol className="porto-chain__list">
+            {chain.map((c, i) => (
+              <li key={c.step} className="porto-chain__node">
+                <span className="porto-chain__step">{c.step}</span>
+                <h4 className="porto-chain__title">{c.title}</h4>
+                <p className="porto-chain__text">{c.text}</p>
+                {i < chain.length - 1 ? (
+                  <span className="porto-chain__arrow" aria-hidden="true" />
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </motion.div>
+
+        {/* Fichas mar × ar — paralelo às fichas de minério da Mina */}
+        <motion.div
+          className="porto-routes"
+          initial={{ opacity: 0, y: 28 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.75, delay: 0.45, ease: EASE_OUT_EXPO }}
+        >
+          <h3 className="porto-routes__heading">Duas saídas, um desvio</h3>
+          <div className="porto-routes__grid">
+            {routes.map((r) => (
+              <article key={r.id} className={`porto-route porto-route--${r.tone}`}>
+                <header className="porto-route__head">
+                  <span className="porto-route__badge">{r.badge}</span>
+                  <h4 className="porto-route__name">{r.name}</h4>
+                </header>
+                <dl className="porto-route__dl">
+                  {r.rows.map(([k, v]) => (
+                    <div key={k} className="porto-route__row">
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            ))}
           </div>
-          <p className="porto-lanes__note">
-            Tubarão (Vitória–ES) e a EFVM inspiram o circuito: mina → litoral, com alternativa aérea
-            para carga especial.
-          </p>
+        </motion.div>
+
+        {/* Hubs reais — fechamento no mesmo peso dos fatos da mina/central */}
+        <motion.div
+          className="porto-hubs"
+          initial={{ opacity: 0, y: 24 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.55, ease: EASE_OUT_EXPO }}
+        >
+          <h3 className="porto-hubs__heading">No Brasil</h3>
+          <ul className="porto-hubs__list">
+            {hubs.map((h) => (
+              <li key={h.label} className="porto-hub">
+                <span className="porto-hub__label">{h.label}</span>
+                <p className="porto-hub__text">{h.text}</p>
+              </li>
+            ))}
+          </ul>
         </motion.div>
       </div>
     </section>
