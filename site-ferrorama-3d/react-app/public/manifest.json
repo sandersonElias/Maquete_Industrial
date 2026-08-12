@@ -4,8 +4,8 @@
   "description": "Documentação da maquete ferroviária com automação Arduino.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0a0e14",
-  "theme_color": "#004a8f",
+  "background_color": "#06060a",
+  "theme_color": "#ff8844",
   "lang": "pt-BR",
   "icons": [
     {

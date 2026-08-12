@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EASE_OUT_EXPO } from '../lib/motion';
+import { scrollToSection } from '../lib/scroll';
 
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-2.png' },
@@ -12,19 +13,6 @@ const NAV_ITEMS = [
   { id: 'controle', label: 'Controle', thumb: '/images/controle.svg' },
 ];
 
-/** Rola até a seção descontando a altura real da navbar (--nav-h). */
-function scrollToSection(id: string) {
-  const target = document.getElementById(id);
-  if (!target) return;
-  const navH =
-    parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'), 10) || 64;
-  const top = target.getBoundingClientRect().top + window.scrollY - navH - 8;
-  window.scrollTo({ top, behavior: 'smooth' });
-  // Devolve o foco ao destino para quem navega por teclado/leitor de tela
-  target.setAttribute('tabindex', '-1');
-  target.focus({ preventScroll: true });
-}
-
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -35,7 +23,6 @@ export default function Navigation() {
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
-      // Progresso de scroll (0–100) para barra superior
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       setScrollProgress(docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0);
     };
@@ -64,7 +51,6 @@ export default function Navigation() {
     return () => observer.disconnect();
   }, []);
 
-  // Menu mobile: fecha no Esc, trava o scroll do fundo e devolve o foco ao botão
   useEffect(() => {
     if (!mobileOpen) return;
 
@@ -87,12 +73,11 @@ export default function Navigation() {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     setMobileOpen(false);
-    scrollToSection(id);
+    window.requestAnimationFrame(() => scrollToSection(id));
   };
 
   return (
     <>
-      {/* Barra de progresso de scroll no topo — gesto Awwwards sutil */}
       <div
         className="scroll-progress-bar"
         style={{ width: `${scrollProgress}%` }}
@@ -161,7 +146,6 @@ export default function Navigation() {
       <AnimatePresence>
         {mobileOpen && (
           <>
-            {/* Clicar fora fecha o menu */}
             <motion.div
               className="mobile-menu-backdrop"
               onClick={() => setMobileOpen(false)}

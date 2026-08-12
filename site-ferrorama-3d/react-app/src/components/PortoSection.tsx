@@ -126,12 +126,13 @@ export default function PortoSection() {
         </div>
 
         <motion.div
-          className="porto-comparison"
+          className="shell-block"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.45 }}
         >
-          <h3 className="porto-comparison-title">Porto vs. Aeroporto — Quando usar cada um?</h3>
+          <h3 className="shell-block__title">Porto vs. aeroporto</h3>
+          <p className="shell-block__lead">Quando a carga segue o mar ou o ar.</p>
           <div className="table-wrap">
             <table className="data-table">
               <thead>
@@ -173,35 +174,33 @@ export default function PortoSection() {
         </motion.div>
 
         <motion.div
-          className="porto-export-info"
+          className="shell-block"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.55 }}
         >
-          <h3 className="porto-comparison-title">Exportação no Brasil</h3>
-          <div className="porto-export-grid">
-            <div className="porto-export-item">
-              <strong>2º maior exportador</strong>
-              <p>
-                O Brasil é um dos maiores exportadores mundiais de minério de ferro, principalmente
-                para China, Japão e Europa.
+          <h3 className="shell-block__title">Exportação no Brasil</h3>
+          <ul className="shell-facts">
+            <li className="shell-fact">
+              <span className="shell-fact__label">Exportação</span>
+              <p className="shell-fact__text">
+                O Brasil está entre os maiores exportadores mundiais de minério de ferro —
+                principalmente para China, Japão e Europa.
               </p>
-            </div>
-            <div className="porto-export-item">
-              <strong>Porto de Tubarão</strong>
-              <p>
-                Um dos maiores terminais de minério do mundo, em Vitória (ES) — referência para nossa
-                maquete portuária.
+            </li>
+            <li className="shell-fact">
+              <span className="shell-fact__label">Tubarão</span>
+              <p className="shell-fact__text">
+                Terminal em Vitória (ES) — um dos maiores do mundo e referência da maquete portuária.
               </p>
-            </div>
-            <div className="porto-export-item">
-              <strong>Ferrovia Vitória–Minas</strong>
-              <p>
-                EFVM liga as minas de Minas Gerais ao litoral — inspirou o circuito ferroviário da
-                maquete.
+            </li>
+            <li className="shell-fact">
+              <span className="shell-fact__label">EFVM</span>
+              <p className="shell-fact__text">
+                A ferrovia Vitória–Minas liga as minas de MG ao litoral — inspirou o circuito da maquete.
               </p>
-            </div>
-          </div>
+            </li>
+          </ul>
         </motion.div>
       </div>
     </section>

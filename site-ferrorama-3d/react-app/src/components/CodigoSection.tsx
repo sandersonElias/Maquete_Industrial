@@ -2,68 +2,45 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { EASE_OUT_EXPO } from '../lib/motion';
 
-const featureVariants = {
-  hidden: { y: 40, opacity: 0, scale: 0.95 },
+const itemVariants = {
+  hidden: { y: 24, opacity: 0 },
   visible: (i: number) => ({
     y: 0,
     opacity: 1,
-    scale: 1,
     transition: {
-      duration: 0.6,
-      delay: 0.4 + i * 0.1,
+      duration: 0.55,
+      delay: 0.35 + i * 0.08,
       ease: EASE_OUT_EXPO,
     },
   }),
 };
 
+const features = [
+  {
+    num: '01',
+    title: 'Bluetooth HC-05',
+    text: 'Comunicação sem fio entre o app e os dispositivos Arduino.',
+  },
+  {
+    num: '02',
+    title: '4 Servos SG90',
+    text: 'Direção, caçamba, motor e guincho — cada um com ângulo preciso.',
+  },
+  {
+    num: '03',
+    title: 'Sensores IR',
+    text: 'TCRT5000 e reed switch para proximidade e presença nos trilhos.',
+  },
+  {
+    num: '04',
+    title: 'LEDs indicadores',
+    text: 'Faróis, setas, pisca-alerta e status no painel de controle.',
+  },
+];
+
 export default function CodigoSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
-
-  const features = [
-    {
-      icon: (
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 2a8 8 0 1 1-8 8 8 8 0 0 1 8-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-      ),
-      title: 'Bluetooth HC-05',
-      text: 'Comunicação sem fio entre o app e os dispositivos',
-      image: '/images/controle.svg',
-    },
-    {
-      icon: (
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-      ),
-      title: '4 Servos SG90',
-      text: 'Direção, caçamba, motor e guincho — cada um com controle preciso de ângulo',
-      image: '/images/arduino.svg',
-    },
-    {
-      icon: (
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-          <line x1="4" y1="22" x2="4" y2="15"/>
-        </svg>
-      ),
-      title: 'Sensores IR',
-      text: 'Sensores TCRT5000 de proximidade e reed switch para detecção de presença',
-      image: '/images/montagem-geral.svg',
-    },
-    {
-      icon: (
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-      ),
-      title: 'LEDs Indicadores',
-      text: 'Faróis, setas, pisca-alerta e LEDs de status no painel de controle',
-      image: '/images/trem.svg',
-    },
-  ];
 
   return (
     <section id="codigo" className="section" data-bg="dark" ref={ref}>
@@ -96,7 +73,6 @@ export default function CodigoSection() {
         </div>
 
         <div className="code-showcase">
-          {/* Arduino images side */}
           <motion.div
             className="code-image-stack"
             initial={{ x: -80, opacity: 0 }}
@@ -109,10 +85,7 @@ export default function CodigoSection() {
                 alt="Arduino Mega utilizado na automação"
                 loading="lazy"
               />
-              <div className="code-image-badge">
-                <span className="code-badge-dot"></span>
-                Arduino Mega 2560
-              </div>
+              <span className="code-image-caption">Arduino Mega 2560</span>
             </div>
             <div className="code-image-card code-image-secondary code-image-circuit">
               <img
@@ -121,14 +94,10 @@ export default function CodigoSection() {
                 loading="lazy"
                 decoding="async"
               />
-              <div className="code-image-badge">
-                <span className="code-badge-dot active"></span>
-                Circuito / trilhos
-              </div>
+              <span className="code-image-caption">Circuito / trilhos</span>
             </div>
           </motion.div>
 
-          {/* Code block */}
           <motion.div
             className="code-block"
             initial={{ x: 100, opacity: 0 }}
@@ -163,31 +132,24 @@ export default function CodigoSection() {
           </motion.div>
         </div>
 
-        {/* Features with images */}
-        <div className="code-features-enhanced">
+        <ul className="code-kit">
           {features.map((f, i) => (
-            <motion.div
-              key={i}
-              className="feature-card-enhanced"
+            <motion.li
+              key={f.num}
+              className="code-kit__item"
               custom={i}
-              variants={featureVariants}
+              variants={itemVariants}
               initial="hidden"
               animate={isInView ? 'visible' : 'hidden'}
-              whileHover={{ y: -8, scale: 1.02 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
             >
-              <div className="feature-card-image">
-                <img src={f.image} alt={f.title} loading="lazy" />
-                <div className="feature-card-image-overlay"></div>
+              <span className="code-kit__num">{f.num}</span>
+              <div className="code-kit__body">
+                <h4 className="code-kit__title">{f.title}</h4>
+                <p className="code-kit__text">{f.text}</p>
               </div>
-              <div className="feature-card-content">
-                <div className="feature-card-icon">{f.icon}</div>
-                <h4>{f.title}</h4>
-                <p>{f.text}</p>
-              </div>
-            </motion.div>
+            </motion.li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

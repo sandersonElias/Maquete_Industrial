@@ -1,13 +1,5 @@
 import { useRef } from 'react';
-
-function scrollToId(id: string) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const navH =
-    parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'), 10) || 64;
-  const top = el.getBoundingClientRect().top + window.scrollY - navH - 8;
-  window.scrollTo({ top, behavior: 'smooth' });
-}
+import { scrollToSection } from '../lib/scroll';
 
 const FOOTER_LINKS = [
   { id: 'inicio', label: 'Início' },
@@ -36,7 +28,7 @@ export default function Footer() {
                 href={`#${id}`}
                 onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                   e.preventDefault();
-                  scrollToId(id);
+                  scrollToSection(id);
                 }}
               >
                 {label}

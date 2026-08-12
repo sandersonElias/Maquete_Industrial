@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import CtaLink from './CtaLink';
 import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
+import { scrollToSection } from '../lib/scroll';
 
 const textReveal = {
   hidden: { y: '115%', opacity: 0 },
@@ -29,14 +30,14 @@ const fadeUp = {
   }),
 };
 
-function scrollToId(id: string) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const navH =
-    parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'), 10) || 64;
-  const top = el.getBoundingClientRect().top + window.scrollY - navH - 8;
-  window.scrollTo({ top, behavior: 'smooth' });
-}
+const SECTION_JUMPS = [
+  { id: 'maquete', label: 'Maquete' },
+  { id: 'montagem', label: 'Montagem' },
+  { id: 'codigo', label: 'Automação' },
+  { id: 'porto', label: 'Porto' },
+  { id: 'mina', label: 'Mina' },
+  { id: 'controle', label: 'Controle' },
+];
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -50,6 +51,11 @@ export default function HeroSection() {
   const bgY = useTransform(scrollYProgress, [0, 1], ['0%', reduced ? '0%' : '18%']);
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, reduced ? 1 : 1.08]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+
+  const go = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    scrollToSection(id);
+  };
 
   return (
     <section id="inicio" className="hero-section hero-section--cinematic" data-bg="dark" ref={sectionRef}>
@@ -100,7 +106,7 @@ export default function HeroSection() {
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
-          Uma maquete viva: mineração, trilhos e automação Arduino numa experiência interativa.
+          Mineração, trilhos e automação Arduino — uma experiência interativa em escala.
         </motion.p>
 
         <motion.div
@@ -110,41 +116,48 @@ export default function HeroSection() {
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
-          <CtaLink
-            href="#maquete"
-            className="hero-cta"
-            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              scrollToId('maquete');
-            }}
-          >
+          <CtaLink href="#maquete" className="hero-cta" onClick={(e) => go(e, 'maquete')}>
             <span>Explorar maquete 3D</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6"/>
             </svg>
           </CtaLink>
-          <CtaLink
-            href="#codigo"
-            className="hero-cta-secondary"
-            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              scrollToId('codigo');
-            }}
-          >
+          <CtaLink href="#codigo" className="hero-cta-secondary" onClick={(e) => go(e, 'codigo')}>
             <span>Ver automação</span>
           </CtaLink>
         </motion.div>
+
+        <motion.nav
+          className="hero-jumps"
+          aria-label="Ir para seções"
+          custom={4}
+          variants={fadeUp}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+        >
+          {SECTION_JUMPS.map(({ id, label }, i) => (
+            <span key={id} className="hero-jumps__item">
+              {i > 0 && <span className="hero-jumps__sep" aria-hidden="true">·</span>}
+              <a href={`#${id}`} onClick={(e) => go(e, id)}>
+                {label}
+              </a>
+            </span>
+          ))}
+        </motion.nav>
       </motion.div>
 
-      <motion.div
+      <motion.a
+        href="#maquete"
         className="scroll-indicator"
+        aria-label="Ir para a maquete 3D"
+        onClick={(e) => go(e, 'maquete')}
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.35, duration: 0.6 }}
       >
         <span>Desça a linha</span>
         <div className="scroll-arrow" />
-      </motion.div>
+      </motion.a>
     </section>
   );
 }
