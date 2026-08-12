@@ -89,7 +89,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Três elos da exportação: terminal marítimo, aeroporto e a ferrovia que os conecta
+            Rotas de saída — mar, ar e o trilho que decide o destino
           </motion.p>
         </div>
 
@@ -125,82 +125,53 @@ export default function PortoSection() {
           ))}
         </div>
 
+        {/* Faixa de decisão: mar × ar */}
         <motion.div
-          className="shell-block"
-          initial={{ opacity: 0, y: 30 }}
+          className="porto-lanes"
+          initial={{ opacity: 0, y: 28 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.45 }}
+          transition={{ duration: 0.75, delay: 0.4, ease: EASE_OUT_EXPO }}
         >
-          <h3 className="shell-block__title">Porto vs. aeroporto</h3>
-          <p className="shell-block__lead">Quando a carga segue o mar ou o ar.</p>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Critério</th>
-                  <th>Porto</th>
-                  <th>Aeroporto</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Volume transportado</td>
-                  <td>Alto (milhões de toneladas)</td>
-                  <td>Baixo (cargas especiais)</td>
-                </tr>
-                <tr>
-                  <td>Custo</td>
-                  <td>Menor por tonelada</td>
-                  <td>Muito maior</td>
-                </tr>
-                <tr>
-                  <td>Velocidade</td>
-                  <td>Semanas (marítimo)</td>
-                  <td>Horas (aéreo)</td>
-                </tr>
-                <tr>
-                  <td>Na maquete</td>
-                  <td>Rota padrão do trem</td>
-                  <td>Rota alternativa via desvio</td>
-                </tr>
-                <tr>
-                  <td>Material típico</td>
-                  <td>Minério de ferro, carvão</td>
-                  <td>Amostras, peças urgentes</td>
-                </tr>
-              </tbody>
-            </table>
+          <h3 className="porto-lanes__heading">Qual rota?</h3>
+          <div className="porto-lanes__track">
+            <article className="porto-lane porto-lane--sea">
+              <span className="porto-lane__badge">VOLUME</span>
+              <h4 className="porto-lane__title">Porto</h4>
+              <ul className="porto-lane__stats">
+                <li>
+                  <strong>Custo</strong> menor / tonelada
+                </li>
+                <li>
+                  <strong>Tempo</strong> semanas
+                </li>
+                <li>
+                  <strong>Na maquete</strong> rota padrão
+                </li>
+              </ul>
+            </article>
+            <div className="porto-lanes__switch" aria-hidden="true">
+              <span>DESVIO</span>
+            </div>
+            <article className="porto-lane porto-lane--air">
+              <span className="porto-lane__badge">URGÊNCIA</span>
+              <h4 className="porto-lane__title">Aeroporto</h4>
+              <ul className="porto-lane__stats">
+                <li>
+                  <strong>Custo</strong> muito maior
+                </li>
+                <li>
+                  <strong>Tempo</strong> horas
+                </li>
+                <li>
+                  <strong>Na maquete</strong> via desvio
+                </li>
+              </ul>
+            </article>
           </div>
-        </motion.div>
-
-        <motion.div
-          className="shell-block"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.55 }}
-        >
-          <h3 className="shell-block__title">Exportação no Brasil</h3>
-          <ul className="shell-facts">
-            <li className="shell-fact">
-              <span className="shell-fact__label">Exportação</span>
-              <p className="shell-fact__text">
-                O Brasil está entre os maiores exportadores mundiais de minério de ferro —
-                principalmente para China, Japão e Europa.
-              </p>
-            </li>
-            <li className="shell-fact">
-              <span className="shell-fact__label">Tubarão</span>
-              <p className="shell-fact__text">
-                Terminal em Vitória (ES) — um dos maiores do mundo e referência da maquete portuária.
-              </p>
-            </li>
-            <li className="shell-fact">
-              <span className="shell-fact__label">EFVM</span>
-              <p className="shell-fact__text">
-                A ferrovia Vitória–Minas liga as minas de MG ao litoral — inspirou o circuito da maquete.
-              </p>
-            </li>
-          </ul>
+          <p className="porto-lanes__note">
+            Tubarão (Vitória–ES) e a EFVM inspiram o circuito: mina → litoral, com alternativa aérea
+            para carga especial.
+          </p>
         </motion.div>
       </div>
     </section>

@@ -2,59 +2,48 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { EASE_OUT_EXPO } from '../lib/motion';
 
-const modules = [
+const strata = [
   {
-    id: 'real',
-    num: '01',
+    depth: '0 m',
     title: 'Mina real',
-    lead: 'Onde começa a cadeia — a extração do minério de ferro no Brasil.',
-    image: '/images/mina-real.jpg',
-    alt: 'Mina de ferro real',
-    body: [
-      'O Brasil está entre os maiores exportadores mundiais de minério de ferro. A extração envolve perfuração, detonação, escavação e beneficiamento antes do embarque ferroviário.',
-      'Na narrativa da maquete, essa etapa é o “ponto de origem”: sem a mina, não há carga para trilhos, porto ou aeroporto.',
-    ],
-    points: [
-      'Extração a céu aberto',
-      'Britagem e beneficiamento',
-      'Separação magnética do ferro',
-      'Referência às minas de Minas Gerais',
-    ],
+    text: 'Extração a céu aberto, britagem e beneficiamento — o Brasil entre os maiores exportadores de ferro do mundo.',
+    accent: 'terra',
   },
   {
-    id: 'maquete',
-    num: '02',
+    depth: '−1',
     title: 'Na maquete',
-    lead: 'Como reproduzimos a mina em escala — poços, cores e carga.',
-    image: '/images/mina-maquete.jpg',
-    alt: 'Mina reproduzida na maquete',
-    body: [
-      'Na maquete, a mina aparece como poços e áreas de carga. Minério de ferro ganha tom avermelhado / ferrugem; o carvão fica preto ou cinza escuro, para leitura imediata do material.',
-      'Caminhões basculantes e o trem fazem a ponte: enchem na mina e levam a carga até o porto ou o desvio do aeroporto.',
-    ],
-    points: [
-      'Poço principal (ferro) e secundário (carvão)',
-      'Cores distintas por material',
-      'Carga pelos caminhões 3D e vagões',
-      'Integração com o circuito HO',
+    text: 'Poços em escala, ferro avermelhado e carvão escuro. Caminhões e vagões carregam ali.',
+    accent: 'ferrugem',
+  },
+  {
+    depth: '−2',
+    title: 'Até o trem',
+    text: 'Extração → britagem → trilhos HO → porto (rota padrão) ou aeroporto (desvio).',
+    accent: 'trilhos',
+  },
+];
+
+const materials = [
+  {
+    id: 'ferro',
+    name: 'Minério de ferro',
+    color: '#c45c2a',
+    rows: [
+      ['Cor', 'Avermelhado / ferrugem'],
+      ['Função', 'Matéria-prima do aço'],
+      ['Poço', 'Principal (maior)'],
+      ['Vagões', 'Basculante 1 e 2'],
     ],
   },
   {
-    id: 'processo',
-    num: '03',
-    title: 'Da extração ao trem',
-    lead: 'O fluxo que a maquete simula — da rocha ao vagão.',
-    image: '/images/trem.jpg',
-    alt: 'Trem e transporte a partir da mina',
-    body: [
-      'O processo na maquete resume a cadeia industrial: extração → britagem → beneficiamento → transporte ferroviário → alto-forno (na narrativa).',
-      'O minério e o carvão seguem juntos na história do aço: um é matéria-prima, o outro alimenta o forno — ambos saem da mina pelos mesmos trilhos.',
-    ],
-    points: [
-      'Extração e britagem',
-      'Beneficiamento / separação',
-      'Trem até o porto (rota padrão)',
-      'Carvão e ferro em vagões distintos',
+    id: 'carvao',
+    name: 'Carvão mineral',
+    color: '#3a3a42',
+    rows: [
+      ['Cor', 'Preto / cinza escuro'],
+      ['Função', 'Combustível do alto-forno'],
+      ['Poço', 'Secundário'],
+      ['Vagões', 'Basculante 3'],
     ],
   },
 ];
@@ -64,7 +53,7 @@ export default function MinaSection() {
   const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="mina" className="section" data-bg="dark" ref={ref}>
+    <section id="mina" className="section section--pit" data-bg="dark" ref={ref}>
       <div className="section-container">
         <div className="section-header">
           <motion.span
@@ -89,114 +78,94 @@ export default function MinaSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Três olhares sobre a origem da carga: mina real, maquete e o caminho até o trem
+            Corte do poço — da terra real à carga nos trilhos
           </motion.p>
         </div>
 
-        <div className="porto-modules">
-          {modules.map((mod, i) => (
-            <motion.article
-              key={mod.id}
-              id={`mina-${mod.id}`}
-              className={`porto-module${i % 2 === 1 ? ' porto-module--reverse' : ''}`}
-              initial={{ opacity: 0, y: 40 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.75, delay: 0.15 + i * 0.12, ease: EASE_OUT_EXPO }}
-            >
-              <div className="porto-module__media">
-                <img src={mod.image} alt={mod.alt} loading="lazy" decoding="async" />
-              </div>
-              <div className="porto-module__body">
-                <span className="porto-module__num">{mod.num}</span>
-                <h3 className="porto-module__title">{mod.title}</h3>
-                <p className="porto-module__lead">{mod.lead}</p>
-                {mod.body.map((p) => (
-                  <p key={p.slice(0, 24)} className="porto-module__text">
-                    {p}
-                  </p>
-                ))}
-                <ul className="porto-module__points">
-                  {mod.points.map((point) => (
-                    <li key={point}>{point}</li>
-                  ))}
-                </ul>
-              </div>
-            </motion.article>
-          ))}
-        </div>
-
+        {/* Split: real × maquete */}
         <motion.div
-          className="shell-block"
-          initial={{ opacity: 0, y: 30 }}
+          className="pit-split"
+          initial={{ opacity: 0, y: 36 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.45 }}
+          transition={{ duration: 0.9, ease: EASE_OUT_EXPO }}
         >
-          <h3 className="shell-block__title">Ferro vs. carvão</h3>
-          <p className="shell-block__lead">Como cada material aparece e se move na maquete.</p>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Aspecto</th>
-                  <th>Minério de Ferro</th>
-                  <th>Carvão Mineral</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Cor na maquete</td>
-                  <td>Tom avermelhado / ferrugem</td>
-                  <td>Preto / cinza escuro</td>
-                </tr>
-                <tr>
-                  <td>Função</td>
-                  <td>Matéria-prima do aço</td>
-                  <td>Combustível do alto-forno</td>
-                </tr>
-                <tr>
-                  <td>Poço na mina</td>
-                  <td>Poço principal (maior)</td>
-                  <td>Poço secundário</td>
-                </tr>
-                <tr>
-                  <td>Transporte</td>
-                  <td>Vagão basculante 1 e 2</td>
-                  <td>Vagão basculante 3</td>
-                </tr>
-              </tbody>
-            </table>
+          <figure className="pit-split__pane">
+            <img
+              src="/images/mina-real.jpg"
+              alt="Mina de ferro real"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <span className="pit-split__tag">REAL</span>
+              Origem da cadeia
+            </figcaption>
+          </figure>
+          <div className="pit-split__fault" aria-hidden="true">
+            <span>CORTE</span>
           </div>
+          <figure className="pit-split__pane">
+            <img
+              src="/images/mina-maquete.jpg"
+              alt="Mina reproduzida na maquete"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <span className="pit-split__tag pit-split__tag--maquete">ESCALA</span>
+              Poços na maquete
+            </figcaption>
+          </figure>
         </motion.div>
 
+        {/* Estratificação vertical */}
+        <div className="pit-shaft">
+          <div className="pit-shaft__cable" aria-hidden="true" />
+          <ol className="pit-shaft__layers">
+            {strata.map((s, i) => (
+              <motion.li
+                key={s.title}
+                className={`pit-layer pit-layer--${s.accent}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, delay: 0.25 + i * 0.12, ease: EASE_OUT_EXPO }}
+              >
+                <span className="pit-layer__depth">{s.depth}</span>
+                <div className="pit-layer__body">
+                  <h3 className="pit-layer__title">{s.title}</h3>
+                  <p className="pit-layer__text">{s.text}</p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Dois materiais — não tabela de Porto */}
         <motion.div
-          className="shell-block"
-          initial={{ opacity: 0, y: 30 }}
+          className="pit-ores"
+          initial={{ opacity: 0, y: 28 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.55 }}
+          transition={{ duration: 0.75, delay: 0.45, ease: EASE_OUT_EXPO }}
         >
-          <h3 className="shell-block__title">Contexto no Brasil</h3>
-          <ul className="shell-facts">
-            <li className="shell-fact">
-              <span className="shell-fact__label">Exportação</span>
-              <p className="shell-fact__text">
-                Mais de 400 milhões de toneladas de minério de ferro saem do país por ano — um dos
-                maiores volumes do mundo.
-              </p>
-            </li>
-            <li className="shell-fact">
-              <span className="shell-fact__label">Origem</span>
-              <p className="shell-fact__text">
-                Minas Gerais concentra grande parte da produção; a ferrovia leva a carga ao litoral.
-              </p>
-            </li>
-            <li className="shell-fact">
-              <span className="shell-fact__label">Na maquete</span>
-              <p className="shell-fact__text">
-                A mina é o início da história: dali o material segue para porto ou aeroporto pelos
-                trilhos HO.
-              </p>
-            </li>
-          </ul>
+          <h3 className="pit-ores__heading">Dois materiais, um poço</h3>
+          <div className="pit-ores__grid">
+            {materials.map((m) => (
+              <article key={m.id} className="pit-ore" style={{ ['--ore' as string]: m.color }}>
+                <header className="pit-ore__head">
+                  <span className="pit-ore__swatch" aria-hidden="true" />
+                  <h4 className="pit-ore__name">{m.name}</h4>
+                </header>
+                <dl className="pit-ore__dl">
+                  {m.rows.map(([k, v]) => (
+                    <div key={k} className="pit-ore__row">
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>

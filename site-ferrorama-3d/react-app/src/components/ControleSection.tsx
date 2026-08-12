@@ -1,73 +1,66 @@
 import { motion, useInView } from 'framer-motion';
-import { useRef, ReactNode } from 'react';
+import { useRef } from 'react';
 import { EASE_OUT_EXPO } from '../lib/motion';
 
-const cardVariants = {
-  hidden: { y: 40, opacity: 0 },
-  visible: (i: number) => ({
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.65,
-      delay: i * 0.1,
-      ease: EASE_OUT_EXPO,
-    },
-  }),
-};
-
-const layers: { icon: ReactNode; title: string; text: string; role: string; image: string }[] = [
+const consoles = [
   {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-      </svg>
-    ),
-    title: 'Dashboard Web',
-    text: 'Interface React com monitoramento em tempo real via Socket.IO',
-    role: 'Monitoramento',
-    image: '/images/controle.svg',
+    id: 'dash',
+    role: 'MONITOR',
+    title: 'Dashboard',
+    text: 'Sala de operação na web: Socket.IO empurra mina, trilhos e porto para a tela.',
+    image: '/images/maquete-montagem-2.png',
+    alt: 'Maquete vista do painel de monitoramento',
   },
   {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>
-      </svg>
-    ),
-    title: 'App Mobile',
-    text: 'React Native com controle Bluetooth dos caminhões',
-    role: 'Operação',
-    image: '/images/controle.svg',
+    id: 'app',
+    role: 'OPS',
+    title: 'App mobile',
+    text: 'Controle na mão — Bluetooth manda o basculante avançar, virar e descarregar.',
+    image: '/images/maquete-montagem-1.png',
+    alt: 'Veículos da maquete sob controle do app',
   },
   {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-      </svg>
-    ),
-    title: 'Backend',
-    text: 'Node.js com Express, PostgreSQL e Redis para dados em tempo real',
-    role: 'Dados',
-    image: '/images/circuit-traces.svg',
-  },
-  {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-      </svg>
-    ),
+    id: 'gate',
+    role: 'RADIO',
     title: 'Gateway',
-    text: 'Ponte entre Arduino e servidor via Bluetooth/Serial',
-    role: 'Ponte',
-    image: '/images/arduino.svg',
+    text: 'Ponte Serial ↔ rede. O que o Mega fala vira evento; o que o painel manda vira pino.',
+    image: '/images/arduino.jpg',
+    alt: 'Arduino na ponte com o gateway',
+  },
+  {
+    id: 'data',
+    role: 'CORE',
+    title: 'Backend',
+    text: 'Express, Postgres e Redis — memória e API da usina em escala escolar.',
+    image: '/images/maquete-montagem-3.png',
+    alt: 'Base física que o backend representa em dados',
+  },
+];
+
+const modes = [
+  {
+    id: 'manual',
+    title: 'Manual',
+    blurb: 'Cada subsistema no botão — ideal para explicar peça a peça.',
+  },
+  {
+    id: 'auto',
+    title: 'Automático',
+    blurb: 'Sequência mina → trem → exportação sem intervenção.',
+  },
+  {
+    id: 'e-stop',
+    title: 'Emergência',
+    blurb: 'Para geral. Prioridade máxima se algo esquentar ou travar.',
   },
 ];
 
 export default function ControleSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="controle" className="section" data-bg="dark" ref={ref}>
+    <section id="controle" className="section section--scada" data-bg="dark" ref={ref}>
       <div className="section-container">
         <div className="section-header">
           <motion.span
@@ -92,128 +85,75 @@ export default function ControleSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Camadas que coordenam a maquete — do Arduino ao painel
+            Console SCADA da maquete — quatro monitores, um comando
           </motion.p>
         </div>
 
+        {/* Banner de console */}
         <motion.div
-          className="controle-architecture"
-          initial={{ opacity: 0, y: 40 }}
+          className="scada-banner"
+          initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: EASE_OUT_EXPO }}
+          transition={{ duration: 0.9, ease: EASE_OUT_EXPO }}
         >
-          <div className="architecture-flow">
-            <div className="arch-node">
-              <img src="/images/arduino.jpg" alt="" aria-hidden="true" />
-              <span>Arduino</span>
-            </div>
-            <div className="arch-connector" aria-hidden="true">
-              <svg width="40" height="20" viewBox="0 0 40 20">
-                <path d="M0 10 L35 10" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 2"/>
-                <path d="M30 5 L40 10 L30 15" fill="var(--accent)"/>
-              </svg>
-            </div>
-            <div className="arch-node">
-              <img src="/images/controle.svg" alt="" aria-hidden="true" />
-              <span>Gateway</span>
-            </div>
-            <div className="arch-connector" aria-hidden="true">
-              <svg width="40" height="20" viewBox="0 0 40 20">
-                <path d="M0 10 L35 10" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 2"/>
-                <path d="M30 5 L40 10 L30 15" fill="var(--accent)"/>
-              </svg>
-            </div>
-            <div className="arch-node">
-              <img src="/images/montagem-geral.svg" alt="" aria-hidden="true" />
-              <span>Backend</span>
-            </div>
-            <div className="arch-connector" aria-hidden="true">
-              <svg width="40" height="20" viewBox="0 0 40 20">
-                <path d="M0 10 L35 10" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 2"/>
-                <path d="M30 5 L40 10 L30 15" fill="var(--accent)"/>
-              </svg>
-            </div>
-            <div className="arch-node">
-              <img src="/images/porto.svg" alt="" aria-hidden="true" />
-              <span>Dashboard</span>
-            </div>
+          <img
+            src="/images/porto.jpg"
+            alt=""
+            aria-hidden="true"
+            className="scada-banner__bg"
+            loading="lazy"
+          />
+          <div className="scada-banner__wash" aria-hidden="true" />
+          <div className="scada-banner__copy">
+            <p className="scada-banner__eyebrow">LINHA AO VIVO</p>
+            <p className="scada-banner__line">
+              Arduino → Gateway → Backend → Dashboard / App
+            </p>
+            <p className="scada-banner__sub">
+              O mesmo pulso que move o trem aparece no painel em milissegundos.
+            </p>
           </div>
         </motion.div>
 
-        <div className="controle-dashboard">
-          {layers.map((d, i) => (
-            <motion.div
-              key={d.title}
-              className="dashboard-card-enhanced controle-layer"
-              custom={i}
-              variants={cardVariants}
-              initial="hidden"
-              animate={isInView ? 'visible' : 'hidden'}
+        {/* Grade de monitores — identidade própria */}
+        <div className="scada-wall">
+          {consoles.map((c, i) => (
+            <motion.article
+              key={c.id}
+              className="scada-monitor"
+              initial={{ opacity: 0, y: 28 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.65, delay: 0.15 + i * 0.08, ease: EASE_OUT_EXPO }}
             >
-              <div className="dashboard-card-header">
-                <div className="dashboard-icon">{d.icon}</div>
-                <span className="controle-layer__role">{d.role}</span>
+              <div className="scada-monitor__screen">
+                <img src={c.image} alt={c.alt} loading="lazy" decoding="async" />
+                <div className="scada-monitor__bezel" aria-hidden="true" />
               </div>
-              <h4>{d.title}</h4>
-              <p>{d.text}</p>
-              <div className="dashboard-card-image">
-                <img src={d.image} alt="" aria-hidden="true" loading="lazy" />
+              <div className="scada-monitor__hud">
+                <span className="scada-monitor__role">{c.role}</span>
+                <h3 className="scada-monitor__title">{c.title}</h3>
+                <p className="scada-monitor__text">{c.text}</p>
               </div>
-            </motion.div>
+            </motion.article>
           ))}
         </div>
 
+        {/* Três alavancas de modo */}
         <motion.div
-          className="controle-glossary"
-          initial={{ opacity: 0, y: 30 }}
+          className="scada-modes"
+          initial={{ opacity: 0, y: 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.35 }}
+          transition={{ duration: 0.7, delay: 0.4, ease: EASE_OUT_EXPO }}
         >
-          <h3 className="controle-subtitle">Glossário rápido</h3>
-          <div className="glossary-grid">
-            <div className="glossary-item"><strong>HO</strong><p>Escala 1:87, padrão em modelismo ferroviário.</p></div>
-            <div className="glossary-item"><strong>L298N</strong><p>Driver que controla motores DC com Arduino.</p></div>
-            <div className="glossary-item"><strong>PWM</strong><p>Modulação de largura de pulso — controla velocidade.</p></div>
-            <div className="glossary-item"><strong>Reed switch</strong><p>Sensor magnético de proximidade.</p></div>
-            <div className="glossary-item"><strong>PLA</strong><p>Plástico biodegradável usado na impressão 3D.</p></div>
-            <div className="glossary-item"><strong>DCC</strong><p>Digital Command Control — controle digital de trens.</p></div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="controle-modes"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.45 }}
-        >
-          <h3 className="controle-subtitle">Modos de operação</h3>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Modo</th>
-                  <th>Descrição</th>
-                  <th>Quando usar</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Manual</td>
-                  <td>Cada botão liga/desliga um subsistema</td>
-                  <td>Demonstrações, testes, manutenção</td>
-                </tr>
-                <tr>
-                  <td>Automático</td>
-                  <td>Sequência completa mina → exportação</td>
-                  <td>Apresentações e feiras de ciências</td>
-                </tr>
-                <tr>
-                  <td>Emergência</td>
-                  <td>Botão vermelho para todos os motores</td>
-                  <td>Imprevistos ou superaquecimento</td>
-                </tr>
-              </tbody>
-            </table>
+          <h3 className="scada-modes__heading">Modos de operação</h3>
+          <div className="scada-modes__row">
+            {modes.map((m) => (
+              <div key={m.id} className={`scada-mode scada-mode--${m.id}`}>
+                <span className="scada-mode__lever" aria-hidden="true" />
+                <h4 className="scada-mode__title">{m.title}</h4>
+                <p className="scada-mode__blurb">{m.blurb}</p>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
