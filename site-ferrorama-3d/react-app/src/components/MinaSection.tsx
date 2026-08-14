@@ -62,7 +62,7 @@ export default function MinaSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            05
+            04
           </motion.span>
           <motion.h2
             className="section-title"

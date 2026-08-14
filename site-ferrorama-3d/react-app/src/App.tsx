@@ -46,13 +46,13 @@ export default function App() {
 
         <SectionDivider />
 
-        {/* Section 04: Porto & Aeroporto */}
-        <PortoSection />
+        {/* Section 04: Mina de Ferro */}
+        <MinaSection />
 
         <SectionDivider />
 
-        {/* Section 05: Mina de Ferro */}
-        <MinaSection />
+        {/* Section 05: Porto & Aeroporto */}
+        <PortoSection />
 
         <SectionDivider />
 
