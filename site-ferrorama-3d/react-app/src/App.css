@@ -5565,6 +5565,15 @@ body::after {
   filter: saturate(0.9) contrast(1.05);
 }
 
+.scada-monitor--diagram .scada-monitor__screen {
+  background: #0a1220;
+}
+
+.scada-monitor--diagram .scada-monitor__screen img {
+  object-fit: contain;
+  filter: none;
+}
+
 .scada-monitor__bezel {
   position: absolute;
   inset: 0;

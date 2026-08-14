@@ -2,38 +2,45 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { EASE_OUT_EXPO } from '../lib/motion';
 
-const consoles = [
+const consoles: Array<{
+  id: string;
+  role: string;
+  title: string;
+  text: string;
+  image: string;
+  alt: string;
+}> = [
   {
     id: 'dash',
     role: 'MONITOR',
     title: 'Dashboard',
     text: 'Sala de operação na web: Socket.IO empurra mina, trilhos e porto para a tela.',
-    image: '/images/maquete-montagem-2.png',
-    alt: 'Maquete vista do painel de monitoramento',
+    image: '/images/scada-dashboard.jpg',
+    alt: 'Painel de monitoramento com gráficos e status em tempo real',
   },
   {
     id: 'app',
     role: 'OPS',
     title: 'App mobile',
     text: 'Controle na mão — Bluetooth manda o basculante avançar, virar e descarregar.',
-    image: '/images/caminhao-3d.png',
-    alt: 'Caminhão Mini Dump sob controle do app',
+    image: '/images/scada-app.jpg',
+    alt: 'Celular com app de monitoramento e controle',
   },
   {
     id: 'gate',
     role: 'RADIO',
     title: 'Gateway',
     text: 'Ponte Serial ↔ rede. O que o Mega fala vira evento; o que o painel manda vira pino.',
-    image: '/images/arduino.jpg',
-    alt: 'Arduino na ponte com o gateway',
+    image: '/images/scada-gateway.jpg',
+    alt: 'Placa eletrônica — ponte entre o hardware e a rede',
   },
   {
     id: 'data',
     role: 'CORE',
     title: 'Backend',
     text: 'Express, Postgres e Redis — memória e API da usina em escala escolar.',
-    image: '/images/maquete-montagem-3.png',
-    alt: 'Base física que o backend representa em dados',
+    image: '/images/scada-backend.jpg',
+    alt: 'Racks de servidor — API, banco e tempo real',
   },
 ];
 
@@ -97,7 +104,7 @@ export default function ControleSection() {
           transition={{ duration: 0.9, ease: EASE_OUT_EXPO }}
         >
           <img
-            src="/images/porto.jpg"
+            src="/images/scada-backend.jpg"
             alt=""
             aria-hidden="true"
             className="scada-banner__bg"

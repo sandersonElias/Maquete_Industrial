@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { id: 'codigo', label: 'Automação', thumb: '/images/arduino.jpg' },
   { id: 'porto', label: 'Porto', thumb: '/images/porto.jpg' },
   { id: 'mina', label: 'Mina', thumb: '/images/mina-real.jpg' },
-  { id: 'controle', label: 'Controle', thumb: '/images/controle.svg' },
+  { id: 'controle', label: 'Controle', thumb: '/images/scada-dashboard.jpg' },
 ];
 
 export default function Navigation() {
