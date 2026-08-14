@@ -2535,6 +2535,19 @@ to { opacity: 1; transform: translateY(0); }
 .card-image:hover .card-image-wrapper img {
   transform: scale(1.08);
 }
+.card-image--diagram .card-image-wrapper {
+  background: #f4f1ea;
+}
+.card-image--diagram .card-image-wrapper img {
+  object-fit: contain;
+  padding: 0.35rem 0.5rem 0;
+}
+.card-image--diagram:hover .card-image-wrapper img {
+  transform: none;
+}
+.card-image--diagram .card-image-overlay {
+  background: linear-gradient(to top, var(--card) 0%, transparent 35%);
+}
 .card-image-overlay {
   position: absolute;
   inset: 0;

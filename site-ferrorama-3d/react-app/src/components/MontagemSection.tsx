@@ -15,7 +15,14 @@ const cardVariants = {
   }),
 };
 
-const cards = [
+const cards: Array<{
+  image: string;
+  alt: string;
+  title: string;
+  text: string;
+  tag: string;
+  fit?: 'contain';
+}> = [
   {
     image: '/images/trem.jpg',
     alt: 'Trem ferroviário em escala HO',
@@ -38,11 +45,12 @@ const cards = [
     tag: 'Eletrônica',
   },
   {
-    image: '/images/controle.svg',
-    alt: 'Módulo Bluetooth HC-05',
+    image: '/images/hc-05.png',
+    alt: 'Ligação do módulo Bluetooth HC-05 ao Arduino (VCC, GND, TX e RX)',
     title: 'Bluetooth HC-05',
     text: 'Comunicação sem fio entre app mobile e caminhões. Protocolo serial de baixa energia para controle remoto.',
     tag: 'Wireless',
+    fit: 'contain',
   },
 ];
 
@@ -103,7 +111,7 @@ export default function MontagemSection() {
           {cards.map((card, i) => (
             <motion.div
               key={card.title}
-              className="card card-image montagem-part"
+              className={`card card-image montagem-part${card.fit === 'contain' ? ' card-image--diagram' : ''}`}
               custom={i}
               variants={cardVariants}
               initial="hidden"
