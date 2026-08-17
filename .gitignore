@@ -8,6 +8,7 @@
 .env
 .env.local
 .env.production
+.env.development
 backend_nodejs/.env
 gateway_bluetooth/.env
 dashboard_react/.env
@@ -19,3 +20,38 @@ redis_data/
 
 # Ferramentas locais do Claude Code
 .claude/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+build/
+dist/
+.next/
+.nuxt/
+
+# Expo
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Kotlin/Android build
+app_kotlin/.gradle/
+app_kotlin/build/
+app_kotlin/local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

@@ -4,8 +4,6 @@ WORKDIR /app
 
 # Build args para variaveis de ambiente do React (build time)
 ARG REACT_APP_API_URL=http://localhost:4000
-ARG REACT_APP_SUPABASE_URL
-ARG REACT_APP_SUPABASE_ANON_KEY
 
 # Copiar dependencias
 COPY package*.json ./
