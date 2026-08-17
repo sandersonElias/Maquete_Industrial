@@ -15,7 +15,14 @@ const cardVariants = {
   }),
 };
 
-const cards = [
+const cards: Array<{
+  image: string;
+  alt: string;
+  title: string;
+  text: string;
+  tag: string;
+  fit?: 'contain';
+}> = [
   {
     image: '/images/trem.jpg',
     alt: 'Trem ferroviário em escala HO',
@@ -24,10 +31,10 @@ const cards = [
     tag: 'Trilhos',
   },
   {
-    image: '/images/maquete-montagem-1.png',
-    alt: 'Caminhões basculantes 3D',
+    image: '/images/caminhao-3d.png',
+    alt: 'Caminhão basculante Mini Dump impresso em 3D',
     title: 'Caminhões 3D',
-    text: '3 caminhões basculantes impressos em PLA com motor DC e controle Bluetooth para transporte de minério.',
+    text: 'Basculantes Mini Dump em PLA (laranja/preto) com motor DC, caçamba móvel e Bluetooth — levam o minério da mina aos trilhos.',
     tag: 'PLA',
   },
   {
@@ -38,11 +45,12 @@ const cards = [
     tag: 'Eletrônica',
   },
   {
-    image: '/images/controle.svg',
-    alt: 'Módulo Bluetooth HC-05',
+    image: '/images/hc-05.png',
+    alt: 'Ligação do módulo Bluetooth HC-05 ao Arduino (VCC, GND, TX e RX)',
     title: 'Bluetooth HC-05',
     text: 'Comunicação sem fio entre app mobile e caminhões. Protocolo serial de baixa energia para controle remoto.',
     tag: 'Wireless',
+    fit: 'contain',
   },
 ];
 
@@ -103,7 +111,7 @@ export default function MontagemSection() {
           {cards.map((card, i) => (
             <motion.div
               key={card.title}
-              className="card card-image montagem-part"
+              className={`card card-image montagem-part${card.fit === 'contain' ? ' card-image--diagram' : ''}`}
               custom={i}
               variants={cardVariants}
               initial="hidden"

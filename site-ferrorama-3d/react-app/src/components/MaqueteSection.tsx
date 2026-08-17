@@ -71,12 +71,11 @@ const objectives = [
   },
 ];
 
-const pipeline = [
-  'Arduino',
-  'Gateway',
-  'Backend',
-  'Dashboard',
-  'App mobile',
+const chain = [
+  'Mina',
+  'Caminhões',
+  'Trem',
+  'Porto / Aeroporto',
 ];
 
 export default function MaqueteSection() {
@@ -93,11 +92,7 @@ export default function MaqueteSection() {
           </p>
         </div>
 
-        {/* `maquete3d-palco-wrap` fura o container de 1240px — a maquete é o
-            destaque do site. Fica no wrapper, e não no componente, para que o
-            placeholder de carregamento já ocupe a mesma largura e a página não
-            salte quando a cena 3D entra. */}
-        <div className="maquete3d-palco-wrap" ref={ref}>
+        <div ref={ref}>
           {proximo ? (
             <Suspense fallback={<Placeholder />}>
               <Maquete3D />
@@ -124,19 +119,21 @@ export default function MaqueteSection() {
         </div>
 
         <div className="shell-block">
-          <h3 className="shell-block__title">Como os módulos conversam</h3>
+          <h3 className="shell-block__title">A cadeia na maquete</h3>
           <p className="shell-block__lead">
-            Do Arduino ao painel: o mesmo caminho para cada comando.
+            Extração, transporte e exportação — o mesmo caminho do minério no Brasil, em escala HO.
           </p>
-          <ol className="shell-pipeline" aria-label="Fluxo do sistema">
-            {pipeline.map((step, i) => (
+          <ol className="shell-pipeline" aria-label="Cadeia logística">
+            {chain.map((step, i) => (
               <li key={step} className="shell-pipeline__step">
                 {i > 0 && <span className="shell-pipeline__rail" aria-hidden="true" />}
                 <span className="shell-pipeline__node">{step}</span>
               </li>
             ))}
           </ol>
-          <p className="shell-pipeline__note">Persistência: PostgreSQL + Redis</p>
+          <p className="shell-pipeline__note">
+            Rota padrão: porto. Desvio: aeroporto, para carga urgente.
+          </p>
         </div>
 
         <div className="shell-block shell-block--faq">

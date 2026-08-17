@@ -34,8 +34,8 @@ const SECTION_JUMPS = [
   { id: 'maquete', label: 'Maquete' },
   { id: 'montagem', label: 'Montagem' },
   { id: 'codigo', label: 'Automação' },
-  { id: 'porto', label: 'Porto' },
   { id: 'mina', label: 'Mina' },
+  { id: 'porto', label: 'Porto' },
   { id: 'controle', label: 'Controle' },
 ];
 
@@ -62,7 +62,7 @@ export default function HeroSection() {
       <div className="hero-bg">
         <motion.div className="hero-bg-media" style={{ y: bgY, scale: bgScale }}>
           <img
-            src="/images/maquete-montagem-2.png"
+            src="/images/maquete-montagem-1.png"
             alt=""
             aria-hidden="true"
             className="hero-bg-image"

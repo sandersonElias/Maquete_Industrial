@@ -6,8 +6,8 @@ const FOOTER_LINKS = [
   { id: 'maquete', label: 'Maquete' },
   { id: 'montagem', label: 'Montagem' },
   { id: 'codigo', label: 'Automação' },
-  { id: 'porto', label: 'Porto' },
   { id: 'mina', label: 'Mina' },
+  { id: 'porto', label: 'Porto' },
   { id: 'controle', label: 'Controle' },
 ];
 
@@ -18,7 +18,22 @@ export default function Footer() {
     <footer className="site-footer" ref={ref}>
       <div className="site-footer__inner">
         <p className="site-footer__brand">Ferrorama</p>
-        <p className="site-footer__tag">Projeto escolar · Feira de ciências</p>
+        <p className="site-footer__tag">Terceirão · Feira de ciências · 2026</p>
+
+        <ul className="site-footer__credits">
+          <li>
+            <span className="site-footer__credit-name">Caio</span>
+            <span className="site-footer__credit-role">Maquete 3D</span>
+          </li>
+          <li>
+            <span className="site-footer__credit-name">Marco</span>
+            <span className="site-footer__credit-role">Site</span>
+          </li>
+          <li>
+            <span className="site-footer__credit-name">Sanderson</span>
+            <span className="site-footer__credit-role">App e sistemas</span>
+          </li>
+        </ul>
 
         <nav className="site-footer__nav" aria-label="Rodapé">
           {FOOTER_LINKS.map(({ id, label }, i) => (
