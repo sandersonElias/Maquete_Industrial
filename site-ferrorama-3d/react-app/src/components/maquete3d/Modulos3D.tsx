@@ -2,7 +2,7 @@ import { useRef, useMemo, useLayoutEffect, ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
-import { criarTracado, curvaParalela, matrizesDormentes, posicionarNaCurva } from './geometria';
+import { criarTracado, curvaParalela, matrizesDormentes, posicionarNaCurva, tracadoComDesvio, criarRamoVisual, ramoAtivo } from './geometria';
 
 /* ============================================================
    Wrapper interativo: destaca o módulo no hover e na seleção
@@ -118,7 +118,11 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
   const progresso = useRef(0);
   const dormentesRef = useRef<THREE.InstancedMesh>(null);
 
-  const curva = useMemo(() => criarTracado(), []);
+  const principal = useMemo(() => criarTracado(), []);
+  const curva = useMemo(() => tracadoComDesvio(principal, desvios), [principal, desvios]);
+  const ramo = ramoAtivo(desvios);
+  const ramoPorto = useMemo(() => criarRamoVisual(principal, 'porto'), [principal]);
+  const ramoAero = useMemo(() => criarRamoVisual(principal, 'aeroporto'), [principal]);
   const trilhoEsq = useMemo(() => curvaParalela(curva, 0.42), [curva]);
   const trilhoDir = useMemo(() => curvaParalela(curva, -0.42), [curva]);
   const matrizes = useMemo(() => matrizesDormentes(curva, 96), [curva]);
@@ -129,7 +133,6 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
     dormentesRef.current.instanceMatrix.needsUpdate = true;
   }, [matrizes]);
 
-  // Posicionamento inicial antes do primeiro quadro
   useLayoutEffect(() => {
     if (trem.current) posicionarNaCurva(trem.current, curva, 0, 0.16);
   }, [curva]);
@@ -138,11 +141,31 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
     if (rodando) progresso.current += delta * 0.035 * velocidade;
 
     if (trem.current) posicionarNaCurva(trem.current, curva, progresso.current, 0.16);
-    // Cada vagão fica um pouco atrás na MESMA curva, por isso acompanha as voltas
     vagoes.current.forEach((v, i) => {
       if (v) posicionarNaCurva(v, curva, progresso.current - 0.016 * (i + 1), 0.15);
     });
   });
+
+  const desenharRamo = (ramoCurva: THREE.CatmullRomCurve3, ativo: boolean, cor: string) => (
+    <group>
+      <mesh position={[0, 0.008, 0]}>
+        <tubeGeometry args={[ramoCurva, 48, 0.55, 4, false]} />
+        <meshStandardMaterial color="#2a2824" roughness={1} transparent opacity={ativo ? 1 : 0.35} />
+      </mesh>
+      {[curvaParalela(ramoCurva, 0.38), curvaParalela(ramoCurva, -0.38)].map((trilho, i) => (
+        <mesh key={i} position={[0, 0.05, 0]}>
+          <tubeGeometry args={[trilho, 64, 0.04, 6, false]} />
+          <meshStandardMaterial
+            color={ativo ? cor : '#6a7078'}
+            roughness={0.35}
+            metalness={0.85}
+            transparent
+            opacity={ativo ? 1 : 0.4}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
 
   return (
     <group>
@@ -151,6 +174,10 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
         <tubeGeometry args={[curva, 160, 0.75, 4, true]} />
         <meshStandardMaterial color="#3a3630" roughness={1} />
       </mesh>
+
+      {/* Ramos secundários sempre visíveis — brilham quando ativos */}
+      {desenharRamo(ramoPorto, ramo === 'porto', PALETA.glow)}
+      {desenharRamo(ramoAero, ramo === 'aeroporto', PALETA.purple)}
 
       {/* Dormentes instanciados — 96 peças, uma chamada de desenho */}
       <instancedMesh ref={dormentesRef} args={[undefined, undefined, matrizes.length]} castShadow>
@@ -242,27 +269,42 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
    Mineradora — poços, esteira e caminhão basculante
    ============================================================ */
 
-export function Mineradora({ rodando }: { rodando: boolean }) {
+export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
   const cacamba = useRef<THREE.Group>(null);
   const caminhao = useRef<THREE.Group>(null);
+  const particulas = useRef<THREE.InstancedMesh>(null);
   const tempo = useRef(0);
+  const COUNT = 18;
 
   useFrame((_, delta) => {
     if (!rodando) return;
     tempo.current += delta;
 
-    // Caminhão faz o vaivém entre a mina e o ponto de carga do trem
     if (caminhao.current) {
       const ciclo = (Math.sin(tempo.current * 0.4) + 1) / 2;
       caminhao.current.position.x = -1.6 + ciclo * 3.2;
       caminhao.current.rotation.y = Math.cos(tempo.current * 0.4) > 0 ? Math.PI / 2 : -Math.PI / 2;
     }
-    // A caçamba bascula ao chegar no fim do trajeto
     if (cacamba.current) {
       const despejo = Math.max(0, Math.sin(tempo.current * 0.4));
       cacamba.current.rotation.x = -despejo * 0.7;
     }
+
+    // Poeira de minério na esteira
+    if (particulas.current) {
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < COUNT; i++) {
+        const fase = (tempo.current * 0.9 + i * 0.17) % 1;
+        dummy.position.set(1.2 + fase * 2.8, 0.55 + Math.sin(fase * Math.PI) * 0.35, (i % 3 - 1) * 0.12);
+        dummy.scale.setScalar(0.04 + (i % 4) * 0.015);
+        dummy.updateMatrix();
+        particulas.current.setMatrixAt(i, dummy.matrix);
+      }
+      particulas.current.instanceMatrix.needsUpdate = true;
+    }
   });
+
+  const intensidadeFarol = noite ? 4.5 : 2.5;
 
   return (
     <group>
@@ -292,6 +334,12 @@ export function Mineradora({ rodando }: { rodando: boolean }) {
         <meshStandardMaterial color={PALETA.surface} roughness={0.6} metalness={0.3} />
       </mesh>
 
+      {/* Grãos de minério descendo a esteira */}
+      <instancedMesh ref={particulas} args={[undefined, undefined, COUNT]}>
+        <sphereGeometry args={[1, 5, 5]} />
+        <meshStandardMaterial color="#5a3520" roughness={1} emissive="#3a2010" emissiveIntensity={noite ? 0.8 : 0.2} />
+      </instancedMesh>
+
       {/* Caminhão basculante — 3 servos: direção, caçamba e motor */}
       <group ref={caminhao} position={[0, 0, 2.4]} rotation={[0, Math.PI / 2, 0]}>
         <mesh castShadow position={[0, 0.22, 0.28]}>
@@ -308,7 +356,12 @@ export function Mineradora({ rodando }: { rodando: boolean }) {
         {[-0.14, 0.14].map((x) => (
           <mesh key={x} position={[x, 0.22, 0.5]}>
             <sphereGeometry args={[0.05, 8, 8]} />
-            <meshStandardMaterial color="#fff8dc" emissive="#ffe9a0" emissiveIntensity={2.5} toneMapped={false} />
+            <meshStandardMaterial
+              color="#fff8dc"
+              emissive="#ffe9a0"
+              emissiveIntensity={intensidadeFarol}
+              toneMapped={false}
+            />
           </mesh>
         ))}
         {[-0.26, 0.26].map((x) =>
@@ -328,7 +381,7 @@ export function Mineradora({ rodando }: { rodando: boolean }) {
    Porto — água, cais, guindaste e navio
    ============================================================ */
 
-export function Porto({ rodando }: { rodando: boolean }) {
+export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
   const lanca = useRef<THREE.Group>(null);
   const navio = useRef<THREE.Group>(null);
   const agua = useRef<THREE.Mesh>(null);
@@ -373,6 +426,9 @@ export function Porto({ rodando }: { rodando: boolean }) {
           <cylinderGeometry args={[0.11, 0.13, 2.1, 8]} />
           <meshStandardMaterial color={PALETA.glow} roughness={0.45} metalness={0.5} />
         </mesh>
+        {noite && (
+          <pointLight position={[0, 2.2, 0.5]} color={PALETA.glow} intensity={2.2} distance={6} decay={2} />
+        )}
         <group ref={lanca} position={[0, 2.1, 0]}>
           <mesh castShadow position={[1.1, 0, 0]}>
             <boxGeometry args={[2.4, 0.12, 0.16]} />
@@ -429,7 +485,7 @@ export function Porto({ rodando }: { rodando: boolean }) {
    Aeroporto — pista, balizamento e aeronave
    ============================================================ */
 
-export function Aeroporto({ rodando }: { rodando: boolean }) {
+export function Aeroporto({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
   const aviao = useRef<THREE.Group>(null);
   const tempo = useRef(0);
 
@@ -467,11 +523,15 @@ export function Aeroporto({ rodando }: { rodando: boolean }) {
             <meshStandardMaterial
               color={PALETA.purple}
               emissive={PALETA.purple}
-              emissiveIntensity={2.4}
+              emissiveIntensity={noite ? 4.2 : 2.4}
               toneMapped={false}
             />
           </mesh>
         ))
+      )}
+
+      {noite && (
+        <pointLight position={[0, 1.5, 0]} color={PALETA.purple} intensity={1.8} distance={8} decay={2} />
       )}
 
       {/* Terminal de carga */}
@@ -509,7 +569,7 @@ export function Aeroporto({ rodando }: { rodando: boolean }) {
    Central de Controle — Arduino, gateway e telas
    ============================================================ */
 
-export function Controle({ rodando }: { rodando: boolean }) {
+export function Controle({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
   const leds = useRef<THREE.Group>(null);
   const tempo = useRef(0);
 
@@ -570,10 +630,14 @@ export function Controle({ rodando }: { rodando: boolean }) {
         <meshStandardMaterial
           color={PALETA.dark}
           emissive={PALETA.accent}
-          emissiveIntensity={0.4}
+          emissiveIntensity={noite ? 1.2 : 0.4}
           roughness={0.3}
         />
       </mesh>
+
+      {noite && (
+        <pointLight position={[0, 1.2, 0]} color={PALETA.accent} intensity={1.5} distance={5} decay={2} />
+      )}
 
       {/* Botões físicos do painel */}
       {[-0.5, -0.2, 0.1].map((x, i) => (

@@ -3744,6 +3744,73 @@ table {
   user-select: none;
   pointer-events: none;
 }
+.maquete3d-tag-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+.maquete3d-tag-sub {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(13, 15, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.maquete3d-tour {
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  top: 0.85rem;
+  z-index: 2;
+  padding: 0.75rem 1rem;
+  background: rgba(13, 15, 20, 0.88);
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  pointer-events: none;
+}
+.maquete3d-tour-badge {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.maquete3d-tour-texto {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+.maquete3d-btn-tour {
+  --btn-cor: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--card-border));
+}
+.maquete3d-btn-tour.ativo {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.maquete3d-telemetria {
+  margin: 0 0 0.5rem !important;
+  font-family: var(--font-mono);
+  font-size: 0.72rem !important;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ficha-cor) !important;
+  text-transform: uppercase;
+}
 /* ---------- Painel de controle ---------- */
 .maquete3d-painel {
   display: grid;

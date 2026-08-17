@@ -29,6 +29,49 @@ export const PALETA = {
   purple: '#A855F7',
 } as const;
 
+/** Passos do tour cinematográfico automático. */
+export const PASSOS_TOUR = [
+  {
+    moduloId: 'mineradora' as const,
+    legenda: 'Extração a céu aberto — caminhões basculantes carregam o minério',
+    duracao: 5,
+  },
+  {
+    moduloId: 'ferrovia' as const,
+    legenda: 'Circuito HO — desvios SG90 definem se a carga vai ao porto ou ao aeroporto',
+    duracao: 5,
+  },
+  {
+    moduloId: 'porto' as const,
+    legenda: 'Terminal marítimo — guindaste embarca o minério para exportação',
+    duracao: 5,
+  },
+  {
+    moduloId: 'aeroporto' as const,
+    legenda: 'Ramal aéreo — cargas de alto valor agregado decolam da pista',
+    duracao: 5,
+  },
+  {
+    moduloId: 'controle' as const,
+    legenda: 'Central SCADA — Arduino, gateway e dashboard em tempo real',
+    duracao: 5,
+  },
+  {
+    moduloId: null,
+    legenda: 'Visão geral da operação integrada',
+    duracao: 4,
+  },
+];
+
+/** Telemetria simulada exibida nas etiquetas 3D. */
+export const TELEMETRIA: Record<string, string> = {
+  mineradora: 'Caminhão · ciclo ativo',
+  ferrovia: '3 vagões · loop contínuo',
+  porto: 'Navio atracado · embarque',
+  aeroporto: 'Pista livre · decolagem',
+  controle: 'Gateway · 4 módulos online',
+};
+
 export const MODULOS: Modulo[] = [
   {
     id: 'mineradora',

@@ -1,8 +1,8 @@
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Html, ContactShadows, Stars } from '@react-three/drei';
 import * as THREE from 'three';
-import { MODULOS, PALETA } from './modulos';
+import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA } from './modulos';
 import {
   Base,
   Ferrovia,
@@ -24,6 +24,8 @@ const POSICOES: Record<string, [number, number, number]> = {
 };
 
 const CAMERA_INICIAL = new THREE.Vector3(16, 13, 18);
+const COR_NOITE = '#040508';
+const COR_DIA = PALETA.dark;
 
 /* ============================================================
    Câmera: aproxima suavemente do módulo selecionado
@@ -32,32 +34,90 @@ const CAMERA_INICIAL = new THREE.Vector3(16, 13, 18);
 function CameraFoco({
   selecionado,
   controlsRef,
+  tourAtivo,
 }: {
   selecionado: string | null;
   controlsRef: React.RefObject<any>;
+  tourAtivo: boolean;
 }) {
   const { camera } = useThree();
   const alvoPos = useRef(new THREE.Vector3());
   const alvoOlhar = useRef(new THREE.Vector3(0, 0, 0));
 
   useEffect(() => {
+    if (tourAtivo) return;
     const mod = MODULOS.find((m) => m.id === selecionado);
     if (mod) {
       const [x, , z] = POSICOES[mod.id];
-      // Aproxima na diagonal, mantendo o módulo enquadrado
       alvoOlhar.current.set(x, 0.6, z);
       alvoPos.current.set(x + 7, 5.5, z + 8);
     } else {
       alvoOlhar.current.set(0, 0, 0);
       alvoPos.current.copy(CAMERA_INICIAL);
     }
-  }, [selecionado]);
+  }, [selecionado, tourAtivo]);
 
   useFrame((_, delta) => {
+    if (tourAtivo) return;
     const k = Math.min(delta * 2.4, 1);
     camera.position.lerp(alvoPos.current, k);
     if (controlsRef.current) {
       controlsRef.current.target.lerp(alvoOlhar.current, k);
+      controlsRef.current.update();
+    }
+  });
+
+  return null;
+}
+
+/* ============================================================
+   Tour cinematográfico — orbita cada módulo automaticamente
+   ============================================================ */
+
+function CameraTour({
+  passo,
+  controlsRef,
+}: {
+  passo: number;
+  controlsRef: React.RefObject<any>;
+}) {
+  const { camera } = useThree();
+  const tempo = useRef(0);
+
+  useEffect(() => {
+    tempo.current = 0;
+  }, [passo]);
+
+  useFrame((_, delta) => {
+    tempo.current += delta;
+    const config = PASSOS_TOUR[passo];
+    const modId = config.moduloId;
+    const ang = tempo.current * 0.28;
+
+    let olharX = 0;
+    let olharZ = 0;
+    let camX: number;
+    let camY: number;
+    let camZ: number;
+
+    if (modId) {
+      const [x, , z] = POSICOES[modId];
+      olharX = x;
+      olharZ = z;
+      const raio = modId === 'ferrovia' ? 11 : 8.5;
+      camX = x + Math.cos(ang) * raio;
+      camZ = z + Math.sin(ang) * raio + 5;
+      camY = 4.8 + Math.sin(tempo.current * 0.6) * 0.6;
+    } else {
+      camX = 15 + Math.cos(ang * 0.5) * 2;
+      camY = 12 + Math.sin(tempo.current * 0.4) * 0.5;
+      camZ = 17 + Math.sin(ang * 0.5) * 2;
+    }
+
+    const k = Math.min(delta * 1.8, 1);
+    camera.position.lerp(new THREE.Vector3(camX, camY, camZ), k);
+    if (controlsRef.current) {
+      controlsRef.current.target.lerp(new THREE.Vector3(olharX, 0.55, olharZ), k);
       controlsRef.current.update();
     }
   });
@@ -86,11 +146,13 @@ function PausarForaDaTela({ ativo }: { ativo: boolean }) {
 
 function Etiqueta({
   texto,
+  subtitulo,
   cor,
   position,
   visivel,
 }: {
   texto: string;
+  subtitulo?: string;
   cor: string;
   position: [number, number, number];
   visivel: boolean;
@@ -98,9 +160,12 @@ function Etiqueta({
   if (!visivel) return null;
   return (
     <Html position={position} center distanceFactor={26} zIndexRange={[10, 0]}>
-      <span className="maquete3d-tag" style={{ '--tag-cor': cor } as React.CSSProperties}>
-        {texto}
-      </span>
+      <div className="maquete3d-tag-wrap">
+        <span className="maquete3d-tag" style={{ '--tag-cor': cor } as React.CSSProperties}>
+          {texto}
+        </span>
+        {subtitulo && <span className="maquete3d-tag-sub">{subtitulo}</span>}
+      </div>
     </Html>
   );
 }
@@ -118,6 +183,9 @@ interface CenaProps {
   velocidade: number;
   desvios: number[];
   etiquetas: boolean;
+  noite: boolean;
+  tourAtivo: boolean;
+  passoTour: number;
   controlsRef: React.RefObject<any>;
 }
 
@@ -130,37 +198,60 @@ function Cena({
   velocidade,
   desvios,
   etiquetas,
+  noite,
+  tourAtivo,
+  passoTour,
   controlsRef,
 }: CenaProps) {
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
 
   const conteudo = useMemo(
     () => ({
-      mineradora: <Mineradora rodando={rodando} />,
+      mineradora: <Mineradora rodando={rodando} noite={noite} />,
       ferrovia: <Ferrovia rodando={rodando} velocidade={velocidade} desvios={desvios} />,
-      porto: <Porto rodando={rodando} />,
-      aeroporto: <Aeroporto rodando={rodando} />,
-      controle: <Controle rodando={rodando} />,
+      porto: <Porto rodando={rodando} noite={noite} />,
+      aeroporto: <Aeroporto rodando={rodando} noite={noite} />,
+      controle: <Controle rodando={rodando} noite={noite} />,
     }),
-    [rodando, velocidade, desvios]
+    [rodando, velocidade, desvios, noite]
   );
 
   return (
     <>
-      {/* Luz ambiente fria + key light quente: contraste de maquete iluminada */}
-      <ambientLight intensity={0.55} color="#b8c4d4" />
-      <directionalLight
-        position={[12, 18, 10]}
-        intensity={1.7}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
-      />
-      <directionalLight position={[-10, 8, -8]} intensity={0.5} color={PALETA.accent} />
-      <hemisphereLight args={['#5a6b7d', '#1a1410', 0.6]} />
+      {noite ? (
+        <>
+          <ambientLight intensity={0.12} color="#1a2030" />
+          <directionalLight position={[8, 14, 6]} intensity={0.35} color="#8899bb" castShadow={false} />
+          <hemisphereLight args={['#0a1020', '#020204', 0.25]} />
+          <Stars radius={80} depth={40} count={1200} factor={3} saturation={0.2} fade speed={0.4} />
+          {MODULOS.map((mod) => (
+            <pointLight
+              key={`luz-${mod.id}`}
+              position={[POSICOES[mod.id][0], 2.2, POSICOES[mod.id][2]]}
+              color={mod.cor}
+              intensity={0.35}
+              distance={14}
+              decay={2}
+            />
+          ))}
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.55} color="#b8c4d4" />
+          <directionalLight
+            position={[12, 18, 10]}
+            intensity={1.7}
+            castShadow
+            shadow-mapSize={[1024, 1024]}
+            shadow-camera-left={-20}
+            shadow-camera-right={20}
+            shadow-camera-top={20}
+            shadow-camera-bottom={-20}
+          />
+          <directionalLight position={[-10, 8, -8]} intensity={0.5} color={PALETA.accent} />
+          <hemisphereLight args={['#5a6b7d', '#1a1410', 0.6]} />
+        </>
+      )}
 
       <Base />
 
@@ -180,10 +271,11 @@ function Cena({
 
           <Etiqueta
             texto={mod.nome}
+            subtitulo={TELEMETRIA[mod.id]}
             cor={mod.cor}
             position={[
               POSICOES[mod.id][0],
-              mod.id === 'mineradora' ? 3.2 : 2.4,
+              mod.id === 'mineradora' ? 3.4 : 2.6,
               POSICOES[mod.id][2],
             ]}
             visivel={etiquetas}
@@ -191,11 +283,18 @@ function Cena({
         </group>
       ))}
 
-      <ContactShadows position={[0, 0.02, 0]} opacity={0.45} scale={34} blur={2.4} far={6} />
+      <ContactShadows
+        position={[0, 0.02, 0]}
+        opacity={noite ? 0.65 : 0.45}
+        scale={34}
+        blur={2.4}
+        far={6}
+      />
 
       <OrbitControls
         ref={controlsRef}
-        enablePan
+        enablePan={!tourAtivo}
+        enabled={!tourAtivo}
         minDistance={7}
         maxDistance={38}
         maxPolarAngle={Math.PI / 2.15}
@@ -204,7 +303,11 @@ function Cena({
         makeDefault
       />
 
-      <CameraFoco selecionado={selecionado} controlsRef={controlsRef} />
+      {tourAtivo ? (
+        <CameraTour passo={passoTour} controlsRef={controlsRef} />
+      ) : (
+        <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} />
+      )}
     </>
   );
 }
@@ -219,16 +322,16 @@ export default function Maquete3D() {
   const [rodando, setRodando] = useState(true);
   const [velocidade, setVelocidade] = useState(1);
   const [etiquetas, setEtiquetas] = useState(true);
+  const [noite, setNoite] = useState(false);
   const [desvios, setDesvios] = useState([0, 1, 0, 2]);
-  // Começa ligado de propósito: se o IntersectionObserver demorar a responder,
-  // o usuário vê a maquete montada e não um retângulo preto.
+  const [tourAtivo, setTourAtivo] = useState(false);
+  const [passoTour, setPassoTour] = useState(0);
   const [visivel, setVisivel] = useState(true);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
   const reduzido = usePrefersReducedMotion();
 
-  // Só renderiza enquanto a maquete estiver na tela — fora dela, zero GPU
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
@@ -240,26 +343,57 @@ export default function Maquete3D() {
     return () => obs.disconnect();
   }, []);
 
+  // Avança o tour automaticamente
+  useEffect(() => {
+    if (!tourAtivo || reduzido) return;
+    const config = PASSOS_TOUR[passoTour];
+    const timer = window.setTimeout(() => {
+      const proximo = (passoTour + 1) % PASSOS_TOUR.length;
+      setPassoTour(proximo);
+      const modId = PASSOS_TOUR[proximo].moduloId;
+      setSelecionado(modId);
+    }, config.duracao * 1000);
+    return () => window.clearTimeout(timer);
+  }, [tourAtivo, passoTour, reduzido]);
+
+  const iniciarTour = useCallback(() => {
+    setTourAtivo(true);
+    setPassoTour(0);
+    setSelecionado(PASSOS_TOUR[0].moduloId);
+  }, []);
+
+  const pararTour = useCallback(() => {
+    setTourAtivo(false);
+    setSelecionado(null);
+  }, []);
+
   const modulo = MODULOS.find((m) => m.id === selecionado);
   const animando = rodando && !reduzido;
+  const passoAtual = PASSOS_TOUR[passoTour];
 
   const girarDesvio = (i: number) =>
     setDesvios((prev) => prev.map((d, j) => (j === i ? (d + 1) % 3 : d)));
 
   const ESTADOS = ['CENTER', 'LEFT', 'RIGHT'];
+  const destinoTrem =
+    desvios[2] === 1 || desvios[3] === 1
+      ? 'Porto'
+      : desvios[2] === 2 || desvios[3] === 2
+        ? 'Aeroporto'
+        : 'Loop principal';
 
   return (
     <div className="maquete3d" ref={wrapperRef}>
       <div className="maquete3d-palco">
         <Canvas
-          shadows
+          shadows={!noite}
           dpr={[1, 1.75]}
           camera={{ position: CAMERA_INICIAL.toArray(), fov: 42 }}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
-          onPointerMissed={() => setSelecionado(null)}
+          onPointerMissed={() => !tourAtivo && setSelecionado(null)}
         >
-          <color attach="background" args={[PALETA.dark]} />
-          <fog attach="fog" args={[PALETA.dark, 34, 62]} />
+          <color attach="background" args={[noite ? COR_NOITE : COR_DIA]} />
+          <fog attach="fog" args={[noite ? COR_NOITE : COR_DIA, noite ? 28 : 34, noite ? 52 : 62]} />
           <PausarForaDaTela ativo={visivel} />
           <Cena
             selecionado={selecionado}
@@ -270,16 +404,27 @@ export default function Maquete3D() {
             velocidade={velocidade}
             desvios={desvios}
             etiquetas={etiquetas}
+            noite={noite}
+            tourAtivo={tourAtivo}
+            passoTour={passoTour}
             controlsRef={controlsRef}
           />
         </Canvas>
 
+        {tourAtivo && (
+          <div className="maquete3d-tour" role="status" aria-live="polite">
+            <span className="maquete3d-tour-badge">Tour · {passoTour + 1}/{PASSOS_TOUR.length}</span>
+            <p className="maquete3d-tour-texto">{passoAtual.legenda}</p>
+          </div>
+        )}
+
         <p className="maquete3d-dica" aria-hidden="true">
-          Arraste para girar · Role para aproximar · Clique em um módulo
+          {tourAtivo
+            ? 'Tour em andamento — clique Parar tour para interagir'
+            : 'Arraste para girar · Role para aproximar · Clique em um módulo'}
         </p>
       </div>
 
-      {/* Controles em HTML de verdade: funcionam no teclado e no leitor de tela */}
       <div className="maquete3d-painel">
         <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-modulos">
@@ -293,7 +438,10 @@ export default function Maquete3D() {
                 className={`maquete3d-btn ${selecionado === m.id ? 'ativo' : ''}`}
                 style={{ '--btn-cor': m.cor } as React.CSSProperties}
                 aria-pressed={selecionado === m.id}
-                onClick={() => setSelecionado(selecionado === m.id ? null : m.id)}
+                onClick={() => {
+                  pararTour();
+                  setSelecionado(selecionado === m.id ? null : m.id);
+                }}
                 onMouseEnter={() => setDestacado(m.id)}
                 onMouseLeave={() => setDestacado(null)}
                 onFocus={() => setDestacado(m.id)}
@@ -308,7 +456,7 @@ export default function Maquete3D() {
 
         <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-desvios">
-            Desvios (servos SG90)
+            Desvios (servos SG90) · destino: {destinoTrem}
           </span>
           <div className="maquete3d-botoes" role="group" aria-labelledby="rot-desvios">
             {desvios.map((estado, i) => (
@@ -327,6 +475,32 @@ export default function Maquete3D() {
         </div>
 
         <div className="maquete3d-grupo maquete3d-grupo-linha">
+          {tourAtivo ? (
+            <button type="button" className="maquete3d-btn maquete3d-btn-tour ativo" onClick={pararTour}>
+              Parar tour
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="maquete3d-btn maquete3d-btn-tour"
+              onClick={iniciarTour}
+              disabled={reduzido}
+              title={reduzido ? 'Tour indisponível com movimento reduzido' : undefined}
+            >
+              Iniciar tour
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={`maquete3d-btn maquete3d-btn-acao ${noite ? 'ativo' : ''}`}
+            onClick={() => setNoite((n) => !n)}
+            aria-pressed={noite}
+            style={{ '--btn-cor': PALETA.purple } as React.CSSProperties}
+          >
+            {noite ? 'Modo dia' : 'Modo noite'}
+          </button>
+
           <button
             type="button"
             className="maquete3d-btn maquete3d-btn-acao"
@@ -362,18 +536,21 @@ export default function Maquete3D() {
           <button
             type="button"
             className="maquete3d-btn maquete3d-btn-acao"
-            onClick={() => setSelecionado(null)}
+            onClick={() => {
+              pararTour();
+              setSelecionado(null);
+            }}
           >
             Ver tudo
           </button>
         </div>
       </div>
 
-      {/* Detalhes do módulo — anunciado a quem usa leitor de tela */}
       <div className="maquete3d-info" aria-live="polite">
         {modulo ? (
           <div className="maquete3d-ficha" style={{ '--ficha-cor': modulo.cor } as React.CSSProperties}>
             <h4>{modulo.nome}</h4>
+            <p className="maquete3d-telemetria">{TELEMETRIA[modulo.id]}</p>
             <p>{modulo.resumo}</p>
             <ul>
               {modulo.detalhes.map((d) => (
@@ -383,7 +560,7 @@ export default function Maquete3D() {
           </div>
         ) : (
           <p className="maquete3d-vazio">
-            Selecione um módulo para ver como ele funciona na maquete real.
+            Selecione um módulo ou inicie o tour para percorrer a operação completa.
           </p>
         )}
       </div>

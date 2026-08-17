@@ -98,3 +98,77 @@ export function posicionarNaCurva(
   objeto.position.set(p.x, p.y + alturaY, p.z);
   objeto.rotation.set(0, Math.atan2(tangente.x, tangente.z), 0);
 }
+
+/** Ramo visual até o porto ou aeroporto (desvios SW3/SW4). */
+export type RamoFerroviario = 'nenhum' | 'porto' | 'aeroporto';
+
+const DESTINO_PORTO = new THREE.Vector3(7.5, 0, 3.8);
+const DESTINO_AEROPORTO = new THREE.Vector3(6.5, 0, -5.2);
+
+/** Curva só do ramo — usada para desenhar trilhos secundários. */
+export function criarRamoVisual(
+  principal: THREE.CatmullRomCurve3,
+  tipo: Exclude<RamoFerroviario, 'nenhum'>
+): THREE.CatmullRomCurve3 {
+  const destino = tipo === 'porto' ? DESTINO_PORTO : DESTINO_AEROPORTO;
+  const tEntrada = tipo === 'porto' ? 0.3 : 0.38;
+  const tSaida = tipo === 'porto' ? 0.46 : 0.54;
+  const entrada = principal.getPointAt(tEntrada);
+  const saida = principal.getPointAt(tSaida);
+  const meio = new THREE.Vector3().lerpVectors(entrada, destino, 0.55);
+  meio.y = 0;
+  return new THREE.CatmullRomCurve3(
+    [entrada, meio, destino.clone(), new THREE.Vector3().lerpVectors(destino, saida, 0.45), saida],
+    false,
+    'catmullrom',
+    0.5
+  );
+}
+
+/**
+ * Loop principal com desvio pelo porto ou aeroporto conforme SW3/SW4.
+ * LEFT → porto · RIGHT → aeroporto · CENTER → oval padrão.
+ */
+export function tracadoComDesvio(
+  principal: THREE.CatmullRomCurve3,
+  desvios: number[]
+): THREE.CatmullRomCurve3 {
+  const sw3 = desvios[2];
+  const sw4 = desvios[3];
+  const tipo: RamoFerroviario =
+    sw3 === 1 || sw4 === 1 ? 'porto' : sw3 === 2 || sw4 === 2 ? 'aeroporto' : 'nenhum';
+
+  if (tipo === 'nenhum') return principal;
+
+  const destino = tipo === 'porto' ? DESTINO_PORTO : DESTINO_AEROPORTO;
+  const tEntrada = tipo === 'porto' ? 0.3 : 0.38;
+  const tSaida = tipo === 'porto' ? 0.46 : 0.54;
+  const entrada = principal.getPointAt(tEntrada);
+  const saida = principal.getPointAt(tSaida);
+  const pontos: THREE.Vector3[] = [];
+
+  const amostras = 36;
+  for (let i = 0; i <= amostras; i++) {
+    pontos.push(principal.getPointAt((i / amostras) * tEntrada));
+  }
+
+  pontos.push(
+    entrada.clone(),
+    new THREE.Vector3().lerpVectors(entrada, destino, 0.35),
+    destino.clone(),
+    new THREE.Vector3().lerpVectors(destino, saida, 0.35),
+    saida.clone()
+  );
+
+  for (let i = 0; i <= amostras; i++) {
+    pontos.push(principal.getPointAt(tSaida + (i / amostras) * (1 - tSaida)));
+  }
+
+  return new THREE.CatmullRomCurve3(pontos, true, 'catmullrom', 0.5);
+}
+
+export function ramoAtivo(desvios: number[]): RamoFerroviario {
+  if (desvios[2] === 1 || desvios[3] === 1) return 'porto';
+  if (desvios[2] === 2 || desvios[3] === 2) return 'aeroporto';
+  return 'nenhum';
+}
