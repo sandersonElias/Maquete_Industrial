@@ -304,7 +304,7 @@ export default function Quimica() {
 
     const handleNewAlert = (alert) => {
       if (alert.module === 'quimica') {
-        toast.warning(alert.message);
+        toast(alert.message, { icon: '⚠️' });
       }
     };
 

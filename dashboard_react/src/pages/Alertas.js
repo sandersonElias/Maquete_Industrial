@@ -41,7 +41,7 @@ export default function Alertas() {
       if (alert.severity === 'critical') {
         toast.error(`CRITICO: ${alert.message}`);
       } else {
-        toast.warning(alert.message);
+        toast(alert.message, { icon: '⚠️' });
       }
     };
 

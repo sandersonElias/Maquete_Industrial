@@ -27,6 +27,12 @@ const registerSchema = Joi.object({
   role: Joi.string().valid("admin", "operator", "viewer").optional().default("operator"),
 });
 
+const updateUserSchema = Joi.object({
+  username: Joi.string().min(3).max(50).optional(),
+  email: Joi.string().email().max(100).optional(),
+  role: Joi.string().valid("admin", "operator", "viewer").optional(),
+}).min(1);
+
 const switchCommandSchema = Joi.object({
   switchId: Joi.number().integer().min(1).max(3).required(),
   action: Joi.string().valid(...SWITCH_ACTIONS).optional(),
@@ -75,7 +81,6 @@ const reportExportSchema = Joi.object({
 const alertSchema = Joi.object({
   severity: Joi.string().valid("info", "warning", "critical").required(),
   module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto").required(),
-  title: Joi.string().min(1).max(200).required(),
   message: Joi.string().min(1).max(1000).required(),
   details: Joi.object().optional(),
 });
@@ -113,6 +118,7 @@ const airplaneSchema = Joi.object({
 module.exports = {
   loginSchema,
   registerSchema,
+  updateUserSchema,
   switchCommandSchema,
   telemetrySchema,
   truckCommandSchema,

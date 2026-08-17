@@ -301,11 +301,11 @@ void processCommand(String& cmd) {
     
     if (action == "OPEN") {
       setGateState(GATE_GREEN);
-      Serial.println(F("EVENT|GATE|OPEN|"));
+      Serial.print(F("EVENT|GATE|OPEN|"));
       Serial.println(millis());
     } else if (action == "CLOSE") {
       setGateState(GATE_RED);
-      Serial.println(F("EVENT|GATE|RED|"));
+      Serial.print(F("EVENT|GATE|RED|"));
       Serial.println(millis());
     }
   }
@@ -449,7 +449,7 @@ void setGateState(GateState newState) {
       digitalWrite(SEM_RED, LOW);
       digitalWrite(SEM_YELLOW, LOW);
       digitalWrite(SEM_GREEN, HIGH);
-      Serial.println(F("EVENT|GATE|GREEN|"));
+      Serial.print(F("EVENT|GATE|GREEN|"));
       Serial.println(millis());
       break;
       
@@ -461,7 +461,7 @@ void setGateState(GateState newState) {
       digitalWrite(SEM_GREEN, LOW);
       digitalWrite(SEM_YELLOW, LOW);
       digitalWrite(SEM_RED, HIGH);
-      Serial.println(F("EVENT|GATE|RED|"));
+      Serial.print(F("EVENT|GATE|RED|"));
       Serial.println(millis());
       break;
       
