@@ -1,12 +1,16 @@
 package com.maquete.industrial.truck.ui.screens
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +25,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -32,31 +40,46 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maquete.industrial.truck.ui.components.DevicePickerDialog
-import com.maquete.industrial.truck.ui.components.DPadDirection
+import com.maquete.industrial.truck.ui.components.JoystickAxis
 import com.maquete.industrial.truck.ui.components.JoystickComposable
+import com.maquete.industrial.truck.ui.viewmodel.TurnSignalState
 import com.maquete.industrial.truck.ui.viewmodel.TruckViewModel
-import kotlin.math.abs
+
+// ── Cores do tema ──────────────────────────────────────────────────────────────
+private val DarkBackground = Color(0xFF0D1117)
+private val DarkCard = Color(0xFF161B22)
+private val DarkButton = Color(0xFF21262D)
+private val PrimaryGreen = Color(0xFF3FB950)
+private val SecondaryBlue = Color(0xFF58A6FF)
+private val ErrorRed = Color(0xFFF85149)
+private val SignalOrange = Color(0xFFFF8C00)
+private val RecordRed = Color(0xFFE63946)
+private val TextDim = Color(0xFFC9D1D9)
 
 /**
  * Tela única do app — painel de controle do caminhão basculante.
  *
- * Layout (alinhado ao mockup, mas com joystick no lugar das setas):
- *  - Esquerda:  joystick azul (movimento + direção combinados → 8 direções)
- *  - Centro:    caçamba (▲/▼ verdes) + iluminação (◄ laranja / Farol cinza / ► laranja)
- *  - Linha inferior: PARAR + EMERGÊNCIA
+ * Layout (joystick 2D à direita):
+ *  - Topo (full width):    Barra de conexão + status
+ *  - Corpo (Row):
+ *      Esquerda (weight 1):  Caçamba + Iluminação + Gravação (em coluna)
+ *      Direita  (weight 2):  Joystick 2D (maior)
+ *  - Inferior (full width): Monitor CMD/ACK
  *
- * Sem navegação inferior. Sem scroll. Joystick mapeia para [DPadDirection]
- * por zona (dead-zone 0.3, y invertido, 8-way) e despacha via
- * [TruckViewModel.sendDirection] — mesmo caminho do D-Pad antigo.
+ * Mapeamento do joystick:
+ *  - Cima = FC, Baixo = BC, Esquerda = C, Direita = C
+ *  - Diagonais = FL/FR/BL/BR
+ *  - Centro = S (parar motor, direção mantém)
+ *  - Soltar = SC (parada total + centraliza)
  */
 @Composable
-@Suppress("UNUSED_PARAMETER")
 fun ControlScreen(
     viewModel: TruckViewModel,
     onRequestBluetoothPermissions: () -> Unit,
@@ -67,158 +90,87 @@ fun ControlScreen(
         mutableStateOf<List<android.bluetooth.BluetoothDevice>>(emptyList())
     }
 
-    val bucketGreen   = Color(0xFF3FB950)        // verde  (caçamba)
-    val signalOrange   = Color(0xFFFF8C00)        // laranja (pisca)
-    val farolGray      = Color(0xFF3A4A5A)         // cinza   (toggle Farol)
-    val farolBlueText  = Color(0xFF58A6FF)        // azul    (texto "Farol")
-    val stopGray       = Color(0xFF21262D)        // cinza escuro (PARAR)
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D1117))
-            .padding(16.dp)
+            .background(DarkBackground)
+            .padding(12.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // ── Linha de conexão no topo (compacta) ──────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = if (viewModel.isConnected) "Conectado: ${viewModel.deviceName ?: "?"}"
-                           else "Desconectado",
-                    color = if (viewModel.isConnected) Color(0xFF3FB950) else Color(0xFFC9D1D9),
-                    fontSize = 14.sp
-                )
-                Button(
-                    onClick = {
-                        onRequestBluetoothPermissions()
-                        onEnableBluetooth()
-                        pairedDevices = viewModel.getPairedDevices()
-                        showDevicePicker = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0E7C86))
-                ) {
-                    Icon(
-                        Icons.Default.Bluetooth, contentDescription = null,
-                        modifier = Modifier.size(18.dp), tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Conectar", color = Color.White)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // ── Barra de conexão no topo ────────────────────────────────────────
+            ConnectionBar(
+                isConnected = viewModel.isConnected,
+                deviceName = viewModel.deviceName,
+                autoReconnectInProgress = viewModel.autoReconnectInProgress,
+                errorMessage = viewModel.errorMessage,
+                onConnectClick = {
+                    onRequestBluetoothPermissions()
+                    onEnableBluetooth()
+                    pairedDevices = viewModel.getPairedDevices()
+                    showDevicePicker = true
                 }
-            }
-            if (viewModel.autoReconnectInProgress) {
-                Text("Reconectando...", color = Color(0xFFC9D1D9), fontSize = 12.sp)
-            }
-            viewModel.errorMessage?.let { msg ->
-                Text(msg, color = Color(0xFFF85149), fontSize = 12.sp)
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // ── Comando/ACK ───────────────────────────────────────────────────────
-            Text(
-                text = "CMD: ${viewModel.lastCommand}    ACK: ${viewModel.lastAck ?: "--"}",
-                color = Color(0xFF3FB950),
-                fontSize = 11.sp,
-                fontFamily = FontFamily.Monospace
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Painel principal: joystick à esquerda, centro à direita ───────────
+            // ── Corpo: esquerda (controles) + direita (joystick) ───────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // ── ESQUERDA: Joystick (azul) — movimento + direção combinados ────
-                JoystickMovement(
-                    onDirection = { dir -> viewModel.sendDirection(dir) }
-                )
-
-                // ── CENTRO/RIGHT: caçamba + iluminação (moldura única) ─────────────
+                // ── Coluna esquerda: controles ──────────────────────────────────
                 Column(
                     modifier = Modifier
-                        .padding(start = 16.dp)
-                        .background(Color(0xFF161B22), shape = RoundedCornerShape(16.dp))
-                        .padding(14.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Caçamba
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("caçamba", color = Color.White, fontSize = 13.sp)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            BucketButton(
-                                icon = Icons.Default.ArrowUpward,
-                                color = bucketGreen,
-                                onClick = { viewModel.bucketUp() }
-                            )
-                            BucketButton(
-                                icon = Icons.Default.ArrowDownward,
-                                color = bucketGreen,
-                                onClick = { viewModel.bucketDown() }
-                            )
-                        }
-                    }
-                    // Iluminação
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("iluminação", color = Color.White, fontSize = 13.sp)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            SignalButton(
-                                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                                color = signalOrange,
-                                onClick = { viewModel.turnLeft() }
-                            )
-                            FarolButton(
-                                color = farolGray,
-                                textColor = farolBlueText,
-                                isOn = viewModel.headlightsOn,
-                                onClick = { viewModel.toggleHeadlights() }
-                            )
-                            SignalButton(
-                                icon = Icons.AutoMirrored.Filled.ArrowForward,
-                                color = signalOrange,
-                                onClick = { viewModel.turnRight() }
-                            )
-                        }
-                    }
-                }
-            }
+                    // Caçamba + Iluminação
+                    ControlPanel(
+                        bucketState = viewModel.bucketState,
+                        headlightsOn = viewModel.headlightsOn,
+                        hazardOn = viewModel.hazardOn,
+                        turnSignal = viewModel.turnSignal,
+                        onBucketUp = { viewModel.bucketUp() },
+                        onBucketDown = { viewModel.bucketDown() },
+                        onToggleHeadlights = { viewModel.toggleHeadlights() },
+                        onTurnLeft = { viewModel.turnLeft() },
+                        onTurnRight = { viewModel.turnRight() },
+                        onToggleHazard = { viewModel.toggleHazard() }
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    // Gravação
+                    RecordingBar(
+                        isRecording = viewModel.isRecording,
+                        isPlaying = viewModel.isPlaying,
+                        recordedCount = viewModel.recordedCount,
+                        onToggleRecording = { viewModel.toggleRecording() },
+                        onTogglePlayback = { viewModel.togglePlayback() },
+                        onClear = { viewModel.clearRecording() }
+                    )
 
-            // ── Parar / Emergência (linha inferior) ────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = { viewModel.sendDirection(DPadDirection.STOP) },
-                    colors = ButtonDefaults.buttonColors(containerColor = stopGray),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f).height(48.dp)
-                ) {
-                    Text("PARAR", color = Color.White)
+                    // Monitor CMD/ACK
+                    Text(
+                        text = "CMD: ${viewModel.lastCommand}    ACK: ${viewModel.lastAck ?: "--"}",
+                        color = PrimaryGreen,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
-                Button(
-                    onClick = { viewModel.emergencyStop() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE63946)),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f).height(48.dp)
-                ) {
-                    Text("EMERGÊNCIA", color = Color.White, fontWeight = FontWeight.Bold)
-                }
+
+                // ── Coluna direita: joystick 2D (maior) ────────────────────────
+                JoystickComposable(
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxHeight(),
+                    axis = JoystickAxis.BOTH,
+                    onMove = { x, y -> viewModel.onJoystickMove(x, y) },
+                    onRelease = { viewModel.onJoystickRelease() }
+                )
             }
         }
     }
@@ -237,125 +189,272 @@ fun ControlScreen(
     }
 }
 
-// ── Componentes ────────────────────────────────────────────────────────────────
+// ── Componentes auxiliares ──────────────────────────────────────────────────────
 
 /**
- * Joystick azul (port do app_carro_rover, via [JoystickComposable]).
- * Mapeia X/Y normalizados [-1..1] do [JoystickView] para uma [DPadDirection]
- * por zona e despacha via [onDirection].
- *
- *  - Centro morto (|x|<0.3 && |y|<0.3) → STOP.
- *  - y é INVERTIDO (View y = +para baixo, mas "cima" no joystick = forward).
- *  - 8-way → FORWARD/BACK/LEFT/RIGHT + diagonais.
+ * Barra de conexão no topo da tela.
  */
 @Composable
-fun JoystickMovement(
-    onDirection: (DPadDirection) -> Unit
+private fun ConnectionBar(
+    isConnected: Boolean,
+    deviceName: String?,
+    autoReconnectInProgress: Boolean,
+    errorMessage: String?,
+    onConnectClick: () -> Unit
 ) {
-    var lastDir by remember { mutableStateOf(DPadDirection.STOP) }
-
-    JoystickComposable(
-        modifier = Modifier
-            .size(220.dp)
-            .aspectRatio(1f),
-        onMove = { x, y ->
-            val dir = mapJoystickToDirection(x, y)
-            if (dir != lastDir) {
-                lastDir = dir
-                onDirection(dir)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(
+                text = if (isConnected) "Conectado: $deviceName" else "Desconectado",
+                color = if (isConnected) PrimaryGreen else TextDim,
+                fontSize = 14.sp
+            )
+            if (autoReconnectInProgress) {
+                Text("Reconectando...", color = TextDim, fontSize = 12.sp)
             }
-        },
-        // Ao soltar o stick, força STOP incondicionalmente — a animação de
-        // spring-back pode pular frames da dead-zone e deixar o último comando
-        // travado (ex.: FORWARD sem nunca enviar STOP ao chegar ao centro).
-        onRelease = {
-            if (lastDir != DPadDirection.STOP) {
-                lastDir = DPadDirection.STOP
-                onDirection(DPadDirection.STOP)
+            errorMessage?.let { msg ->
+                Text(msg, color = ErrorRed, fontSize = 12.sp)
             }
         }
-    )
+        Button(
+            onClick = onConnectClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0E7C86))
+        ) {
+            Icon(
+                Icons.Default.Bluetooth, contentDescription = null,
+                modifier = Modifier.size(18.dp), tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text("Conectar", color = Color.White)
+        }
+    }
 }
 
 /**
- * Conversão de coordenadas raw do joystick para direção discreta.
+ * Painel com caçamba e iluminação.
  */
-private fun mapJoystickToDirection(x: Float, y: Float): DPadDirection {
-    val nx = x
-    val ny = -y                    // inverte y (View +down → humano +up)
-    val dead = 0.3f
-    if (abs(nx) < dead && abs(ny) < dead) return DPadDirection.STOP
+@Composable
+private fun ControlPanel(
+    bucketState: String,
+    headlightsOn: Boolean,
+    hazardOn: Boolean,
+    turnSignal: TurnSignalState,
+    onBucketUp: () -> Unit,
+    onBucketDown: () -> Unit,
+    onToggleHeadlights: () -> Unit,
+    onTurnLeft: () -> Unit,
+    onTurnRight: () -> Unit,
+    onToggleHazard: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DarkCard, shape = RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        // Caçamba
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Text("CAÇAMBA", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SmallButton(
+                    icon = Icons.Default.ArrowUpward,
+                    isActive = bucketState == "SUBINDO",
+                    activeColor = PrimaryGreen,
+                    onClick = onBucketUp
+                )
+                SmallButton(
+                    icon = Icons.Default.ArrowDownward,
+                    isActive = bucketState == "DESCENDO",
+                    activeColor = PrimaryGreen,
+                    onClick = onBucketDown
+                )
+            }
+        }
 
-    val isLeft  = nx < -dead
-    val isRight = nx > dead
-    val isFwd   = ny > dead
-    val isBack  = ny < -dead
-
-    return when {
-        isFwd && isLeft   -> DPadDirection.FORWARD_LEFT
-        isFwd && isRight  -> DPadDirection.FORWARD_RIGHT
-        isBack && isLeft  -> DPadDirection.BACK_LEFT
-        isBack && isRight -> DPadDirection.BACK_RIGHT
-        isFwd  -> DPadDirection.FORWARD
-        isBack -> DPadDirection.BACK
-        isLeft -> DPadDirection.LEFT
-        isRight -> DPadDirection.RIGHT
-        else -> DPadDirection.STOP
+        // Iluminação
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Text("ILUMINAÇÃO", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                SmallButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    isActive = turnSignal == TurnSignalState.LEFT,
+                    activeColor = SignalOrange,
+                    onClick = onTurnLeft
+                )
+                FarolButton(
+                    isActive = headlightsOn,
+                    onClick = onToggleHeadlights
+                )
+                SmallButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowForward,
+                    isActive = turnSignal == TurnSignalState.RIGHT,
+                    activeColor = SignalOrange,
+                    onClick = onTurnRight
+                )
+                SmallButton(
+                    icon = Icons.Default.Warning,
+                    isActive = hazardOn,
+                    activeColor = SignalOrange,
+                    onClick = onToggleHazard
+                )
+            }
+        }
     }
 }
 
-/** Botão quadrado médio (caçamba), verde. */
+/**
+ * Barra de gravação de movimentos: REC / PLAY / CLR + contador.
+ */
 @Composable
-private fun BucketButton(
+private fun RecordingBar(
+    isRecording: Boolean,
+    isPlaying: Boolean,
+    recordedCount: Int,
+    onToggleRecording: () -> Unit,
+    onTogglePlayback: () -> Unit,
+    onClear: () -> Unit
+) {
+    // Animação de piscar quando gravando
+    val infiniteTransition = rememberInfiniteTransition(label = "rec")
+    val blinkAlpha by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "blink"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DarkCard, shape = RoundedCornerShape(12.dp))
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Botão REC
+        Button(
+            onClick = onToggleRecording,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isRecording) RecordRed else DarkButton
+            ),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                Icons.Default.FiberManualRecord,
+                contentDescription = "Gravar",
+                tint = if (isRecording) Color.White else RecordRed,
+                modifier = Modifier
+                    .size(22.dp)
+                    .alpha(if (isRecording) blinkAlpha else 1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        // Botão PLAY
+        Button(
+            onClick = onTogglePlayback,
+            enabled = recordedCount > 0 || isPlaying,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isPlaying) PrimaryGreen else DarkButton,
+                disabledContainerColor = DarkButton
+            ),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
+                contentDescription = "Play",
+                tint = if (isPlaying) Color.White else PrimaryGreen,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        // Botão CLR
+        Button(
+            onClick = onClear,
+            colors = ButtonDefaults.buttonColors(containerColor = DarkButton),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.size(40.dp)
+        ) {
+            Text("CLR", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        // Contador de frames
+        Text(
+            text = "$recordedCount frames",
+            color = TextDim,
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace
+        )
+    }
+}
+
+/**
+ * Botão pequeno genérico.
+ */
+@Composable
+private fun SmallButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
+    isActive: Boolean,
+    activeColor: Color,
     onClick: () -> Unit
 ) {
+    val backgroundColor = if (isActive) activeColor else DarkButton
+
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = color),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.size(58.dp)
+        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.size(44.dp)
     ) {
-        Icon(icon, contentDescription = null, tint = Color.White,
-             modifier = Modifier.size(32.dp))
+        Icon(
+            icon, contentDescription = null,
+            tint = if (isActive) Color.White else activeColor,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 
-/** Botão quadrado pequeno (pisca), laranja. */
-@Composable
-private fun SignalButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = color),
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.size(48.dp)
-    ) {
-        Icon(icon, contentDescription = null, tint = Color.White,
-             modifier = Modifier.size(26.dp))
-    }
-}
-
-/** Botão "Farol" (toggle central, cinza com texto azul). */
+/**
+ * Botão de farol (toggle).
+ */
 @Composable
 private fun FarolButton(
-    color: Color,
-    textColor: Color,
-    isOn: Boolean,
+    isActive: Boolean,
     onClick: () -> Unit
 ) {
+    val backgroundColor = if (isActive) SecondaryBlue else DarkButton
+
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = color),
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.size(56.dp)
+        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.size(50.dp)
     ) {
-        Text("Farol", color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(
+            "Farol",
+            color = if (isActive) Color.White else SecondaryBlue,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
-    // isOn reflete o estado do VM; a aparência cinza é fixa no mockup (sem LED).
-    @Suppress("UNUSED_EXPRESSION") isOn
 }

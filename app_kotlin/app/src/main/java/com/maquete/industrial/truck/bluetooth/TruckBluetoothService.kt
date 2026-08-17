@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothSocket
 import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -20,17 +21,16 @@ import java.util.UUID
  * Gerencia conexao RFCOMM com HC-05 e envio de comandos com throttle.
  *
  * Protocolo: comandos simples (F, B, S, L, R, etc.) terminados em \n.
- *   As strings crûas vivem centralizadas em [TruckCommand]; este service só
- *   expõe wrappers tipados que repassam o `.cmd`.
+ * As strings crûas vivem centralizadas em [TruckCommand].
  *
  * Throttle: 80ms minimo entre envios para evitar overflow do buffer serial.
  *
- * Estado exposto:
- *  - [state] (StateFlow): ciclo de vida da conexao
- *  - [lastError] (StateFlow): ultima mensagem de erro amigavel p/ Snackbar
- *  - [incoming] (StateFlow): ultima linha lida do Arduino — tipicamente o ACK
- *    `ACK|TRUCK|<cmd>|OK`. Hoje o firmware não envia telemetria, mas deixar
- *    exposto permite à UI confirmar comandos e detectar conexao silenciosa.
+ * Correções aplicadas (vs. versão original):
+ *  - [startReading] recebe o socket por parâmetro (evita race de leitura fora do mutex)
+ *  - [shutdown] fecha o socket antes de cancelar o scope
+ *  - Buffer do BufferedReader é fechado no finally da coroutine de leitura
+ *  - Erro de envio fecha o socket (não deixa stream quebrado aberto)
+ *  - Throttle via conflated channel (não serializa coroutines no mutex)
  */
 object TruckBluetoothService {
 
@@ -47,25 +47,34 @@ object TruckBluetoothService {
     private val _lastError = MutableStateFlow<String?>(null)
     val lastError: StateFlow<String?> = _lastError
 
-    // Linha mais recente vinda do Arduino (ACK|TRUCK|...|OK em firmware atual).
-    // StateFlow (em vez de SharedFlow como no rover) retém o último ACK para a
-    // UI exibir persistente — útil p/ confirmar comandos.
     private val _incoming = MutableStateFlow<String?>(null)
     val incoming: StateFlow<String?> = _incoming
 
     private var socket: BluetoothSocket? = null
     private var connectJob: Job? = null
     private var readJob: Job? = null
+    private var sendJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val socketMutex = Mutex()
 
-    // Throttle tracking - atualizado dentro do mutex
-    private var lastSendTime = 0L
+    // Channel conflated: mantém apenas o último comando. Um único consumidor
+    // aplica o throttle de 80ms. Evita o lag cumulativo do delay-in-mutex.
+    private val commandChannel = Channel<String>(Channel.CONFLATED)
+
+    init {
+        // Único consumidor do channel — aplica throttle entre comandos.
+        scope.launch {
+            for (cmd in commandChannel) {
+                sendThrottled(cmd)
+            }
+        }
+    }
 
     /**
      * Lista dispositivos pareados.
      */
     fun getPairedDevices(): List<BluetoothDevice> {
+        @Suppress("DEPRECATION")
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: run {
             Log.w(TAG, "getDefaultAdapter() null — device sem Bluetooth")
             return emptyList()
@@ -99,7 +108,8 @@ object TruckBluetoothService {
                     socket = s
                     _state.value = State.CONNECTED
                     Log.d(TAG, "Conectado a ${device.address}")
-                    startReading()
+                    // Passa o socket por parâmetro para evitar race (item 1.5)
+                    startReading(s)
                 } catch (e: IOException) {
                     try { s?.close() } catch (_: IOException) {}
                     _state.value = State.ERROR
@@ -131,11 +141,10 @@ object TruckBluetoothService {
 
     /**
      * Reconecta por endereço MAC (usado pela auto-reconexão no init do VM).
-     * Retorna false se o adaptador estiver indisponível, MAC for nulo/vazio
-     * ou não houver permissão — o chamador decide como tratar (ex.: Snackbar).
      */
     fun connectByMac(mac: String?): Boolean {
         if (mac.isNullOrBlank()) return false
+        @Suppress("DEPRECATION")
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: run {
             Log.w(TAG, "connectByMac: adaptador null")
             return false
@@ -156,23 +165,27 @@ object TruckBluetoothService {
 
     /**
      * Le dados recebidos do Arduino continuamente.
-     * Publica cada linha em [_incoming] para a UI acompanhar ACKs.
+     * Recebe o socket por parâmetro para evitar race (item 1.5).
+     * Fecha o BufferedReader no finally (item 1.10).
      */
-    private fun startReading() {
+    private fun startReading(s: BluetoothSocket) {
         readJob?.cancel()
         readJob = scope.launch {
+            var reader: BufferedReader? = null
             try {
-                val s = socket ?: return@launch
-                val reader = BufferedReader(InputStreamReader(s.inputStream))
+                reader = BufferedReader(InputStreamReader(s.inputStream))
                 while (isActive) {
                     val line = reader.readLine() ?: break
-                    // Resposta do Arduino: ACK|TRUCK|<cmd>|OK
                     _incoming.value = line
                     Log.d(TAG, "RX: $line")
                 }
             } catch (e: IOException) {
                 Log.w(TAG, "Leitura interrompida: ${e.message}")
             } finally {
+                // Garante fechamento do reader (item 1.10)
+                withContext(NonCancellable) {
+                    try { reader?.close() } catch (_: IOException) {}
+                }
                 if (_state.value == State.CONNECTED) {
                     _state.value = State.DISCONNECTED
                     Log.d(TAG, "Conexao perdida → DISCONNECTED")
@@ -199,23 +212,46 @@ object TruckBluetoothService {
 
     /**
      * Envia comando com throttle (80ms minimo entre envios).
-     * Comando e terminado com \n automaticamente.
-     * Throttle e verificado DENTRO do mutex para evitar race condition.
+     * Comando é terminado com \n automaticamente.
+     * Vai pelo conflated channel — não bloqueia o chamador (item 1.11).
      */
     suspend fun send(command: String) {
+        commandChannel.send(command)
+    }
+
+    /**
+     * Envia comando sem esperar (wrapper para callbacks).
+     */
+    fun sendAsync(command: String) {
+        // trySend (não-suspend) no conflated channel nunca falha com buffer cheio
+        commandChannel.trySend(command)
+    }
+
+    /** Versão tipada que aceita um [TruckCommand]. */
+    fun sendAsync(command: TruckCommand) = sendAsync(command.cmd)
+
+    /**
+     * Consumidor do channel — aplica throttle de 80ms entre envios.
+     * Em caso de IOException, fecha o socket e seta ERROR (item 1.9).
+     */
+    private suspend fun sendThrottled(command: String) {
         socketMutex.withLock {
             val now = SystemClock.elapsedRealtime()
-            val timeSinceLastSend = now - lastSendTime
-
-            if (timeSinceLastSend < THROTTLE_MS) {
-                delay(THROTTLE_MS - timeSinceLastSend)
+            val lastSent = lastSendTime
+            val elapsed = now - lastSent
+            if (elapsed < THROTTLE_MS) {
+                delay(THROTTLE_MS - elapsed)
             }
 
-            val s = socket ?: return
+            val s = socket ?: return@withLock
             try {
                 s.outputStream.write("$command\n".toByteArray())
+                s.outputStream.flush()
                 lastSendTime = SystemClock.elapsedRealtime()
             } catch (e: IOException) {
+                // Fecha socket inválido para próximas chamadas não falharem (1.9)
+                try { socket?.close() } catch (_: IOException) {}
+                socket = null
                 _state.value = State.ERROR
                 _lastError.value = "Erro ao enviar: ${e.message}"
                 Log.w(TAG, "IOException enviando '$command': ${e.message}")
@@ -223,39 +259,34 @@ object TruckBluetoothService {
         }
     }
 
-    /**
-     * Envia comando sem esperar (wrapper para callbacks).
-     */
-    fun sendAsync(command: String) {
-        scope.launch { send(command) }
-    }
-
-    /** Versão tipada de [sendAsync] que aceita um [TruckCommand]. */
-    fun sendAsync(command: TruckCommand) = sendAsync(command.cmd)
+    // Throttle tracking — só acessado dentro do socketMutex
+    private var lastSendTime = 0L
 
     val isConnected: Boolean get() = _state.value == State.CONNECTED
 
     /**
-     * Desliga o servico completamente (cancela o scope). Usar no onDestroy da
-     * Activity quando o usuario realmente sai — nunca em recompositions.
+     * Desliga o servico completamente (cancela o scope). Usado no onCleared do
+     * ViewModel — a Activity NÃO deve chamar isto (ver item 1.7 do plano).
+     *
+     * Fecha o socket ANTES de cancelar o scope (item 1.6) para evitar
+     * CancellationException dentro do withLock que pulasse o close.
      */
     fun shutdown() {
         Log.d(TAG, "shutdown()")
         readJob?.cancel()
         connectJob?.cancel()
-        scope.launch {
-            socketMutex.withLock {
-                try { socket?.close() } catch (_: IOException) {}
-                socket = null
-            }
-            _state.value = State.DISCONNECTED
-            scope.cancel()
-        }
+        sendJob?.cancel()
+        // Fecha o socket sincronamente antes de cancelar o scope
+        try {
+            socket?.close()
+        } catch (_: IOException) {}
+        socket = null
+        _state.value = State.DISCONNECTED
+        scope.cancel()
     }
 
     // -- Comandos do Caminhao --
-    // Cada wrapper repassa a string crua do TruckCommand correspondente, mantendo
-    // a API tipada e centralizando as literais no enum.
+    // Cada wrapper repassa a string crua do TruckCommand correspondente.
 
     // Movimento
     fun moveForward() = sendAsync(TruckCommand.FORWARD)

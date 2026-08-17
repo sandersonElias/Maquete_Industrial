@@ -16,10 +16,22 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
+ * Eixo do joystick — controla quais eixos são reportados.
+ */
+enum class JoystickAxis {
+    /** Movimenta apenas no eixo Y (vertical) — para frente/ré. */
+    VERTICAL,
+    /** Movimenta apenas no eixo X (horizontal) — para esquerda/direita. */
+    HORIZONTAL,
+    /** Movimenta nos dois eixos — modo original (8 direções). */
+    BOTH
+}
+
+/**
  * Joystick circular customizado com animação de spring-back.
  *
  * Port fiel do `JoystickView` do app_carro_rover (`com.rover.control.ui.drive.JoystickView`),
- * adaptado ao pacote do caminhão. Apenas mudanças cosméticas (TAG de log + docs).
+ * adaptado ao pacote do caminhão. Suporta modo 1D via [axis].
  *
  * Retorna valores normalizados em [-1, 1] para X e Y via [onMove]:
  *  - x: -1 (esquerda) .. +1 (direita)
@@ -32,6 +44,14 @@ class JoystickView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
+
+    /**
+     * Controla quais eixos são reportados no callback [onMove].
+     * - [JoystickAxis.VERTICAL]: só reporta Y (X sempre = 0)
+     * - [JoystickAxis.HORIZONTAL]: só reporta X (Y sempre = 0)
+     * - [JoystickAxis.BOTH]: reporta X e Y (modo original)
+     */
+    var axis: JoystickAxis = JoystickAxis.BOTH
 
     var onMove: ((x: Float, y: Float) -> Unit)? = null
 
@@ -111,24 +131,47 @@ class JoystickView @JvmOverloads constructor(
         canvas.drawCircle(centerX, centerY, baseRadius, paintBase)
         canvas.drawCircle(centerX, centerY, baseRadius, paintBaseBorder)
 
-        // Draw crosshair lines (subtle)
+        // Draw crosshair lines (subtle) — conforme o eixo
         val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.parseColor("#21262D")
             strokeWidth = 1f
         }
-        canvas.drawLine(centerX - baseRadius, centerY, centerX + baseRadius, centerY, linePaint)
-        canvas.drawLine(centerX, centerY - baseRadius, centerX, centerY + baseRadius, linePaint)
+        when (axis) {
+            JoystickAxis.VERTICAL -> {
+                // Só linha vertical
+                canvas.drawLine(centerX, centerY - baseRadius, centerX, centerY + baseRadius, linePaint)
+            }
+            JoystickAxis.HORIZONTAL -> {
+                // Só linha horizontal
+                canvas.drawLine(centerX - baseRadius, centerY, centerX + baseRadius, centerY, linePaint)
+            }
+            JoystickAxis.BOTH -> {
+                // Ambas as linhas (crosshair)
+                canvas.drawLine(centerX - baseRadius, centerY, centerX + baseRadius, centerY, linePaint)
+                canvas.drawLine(centerX, centerY - baseRadius, centerX, centerY + baseRadius, linePaint)
+            }
+        }
+
+        // Posição visual do stick conforme o eixo
+        val visualX = when (axis) {
+            JoystickAxis.VERTICAL -> centerX
+            else -> stickX
+        }
+        val visualY = when (axis) {
+            JoystickAxis.HORIZONTAL -> centerY
+            else -> stickY
+        }
 
         // Draw stick with border
-        canvas.drawCircle(stickX, stickY, stickRadius + 2f, paintStickBorder)
-        canvas.drawCircle(stickX, stickY, stickRadius, paintStick)
+        canvas.drawCircle(visualX, visualY, stickRadius + 2f, paintStickBorder)
+        canvas.drawCircle(visualX, visualY, stickRadius, paintStick)
 
         // Draw center dot on stick
         val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.FILL
         }
-        canvas.drawCircle(stickX, stickY, stickRadius * 0.2f, dotPaint)
+        canvas.drawCircle(visualX, visualY, stickRadius * 0.2f, dotPaint)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -142,19 +185,52 @@ class JoystickView @JvmOverloads constructor(
                 val dist = sqrt(dx * dx + dy * dy)
                 val maxDist = baseRadius - stickRadius
 
-                if (dist <= maxDist) {
-                    stickX = event.x
-                    stickY = event.y
-                } else {
-                    val ratio = maxDist / dist
-                    stickX = centerX + dx * ratio
-                    stickY = centerY + dy * ratio
+                // Calcula posição do stick conforme o eixo
+                when (axis) {
+                    JoystickAxis.VERTICAL -> {
+                        // Só permite movimento vertical
+                        stickX = centerX
+                        stickY = if (dist <= maxDist) event.y else {
+                            val ratio = maxDist / dist
+                            centerY + dy * ratio
+                        }
+                        stickY = stickY.coerceIn(centerY - maxDist, centerY + maxDist)
+                    }
+                    JoystickAxis.HORIZONTAL -> {
+                        // Só permite movimento horizontal
+                        stickY = centerY
+                        stickX = if (dist <= maxDist) event.x else {
+                            val ratio = maxDist / dist
+                            centerX + dx * ratio
+                        }
+                        stickX = stickX.coerceIn(centerX - maxDist, centerX + maxDist)
+                    }
+                    JoystickAxis.BOTH -> {
+                        // Movimento livre em ambos os eixos
+                        if (dist <= maxDist) {
+                            stickX = event.x
+                            stickY = event.y
+                        } else {
+                            val ratio = maxDist / dist
+                            stickX = centerX + dx * ratio
+                            stickY = centerY + dy * ratio
+                        }
+                    }
                 }
                 if (maxDist > 0f) {
-                    onMove?.invoke(
-                        (stickX - centerX) / maxDist,
-                        (stickY - centerY) / maxDist
-                    )
+                    val rawX = (stickX - centerX) / maxDist
+                    val rawY = (stickY - centerY) / maxDist
+                    val reportX = when (axis) {
+                        JoystickAxis.HORIZONTAL -> rawX
+                        JoystickAxis.BOTH -> rawX
+                        else -> 0f
+                    }
+                    val reportY = when (axis) {
+                        JoystickAxis.VERTICAL -> rawY
+                        JoystickAxis.BOTH -> rawY
+                        else -> 0f
+                    }
+                    onMove?.invoke(reportX, reportY)
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -174,22 +250,41 @@ class JoystickView @JvmOverloads constructor(
         val startY = stickY
         val duration = 350L
 
+        // Destino final conforme o eixo
+        val targetX = when (axis) {
+            JoystickAxis.VERTICAL -> centerX   // mantém X centralizado
+            else -> centerX                    // sempre volta ao centro
+        }
+        val targetY = when (axis) {
+            JoystickAxis.HORIZONTAL -> centerY // mantém Y centralizado
+            else -> centerY                    // sempre volta ao centro
+        }
+
         springAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             this.duration = duration
             interpolator = DecelerateInterpolator(2f)
             addUpdateListener { animation ->
                 val progress = animation.animatedValue as Float
-                stickX = startX + (centerX - startX) * progress
-                stickY = startY + (centerY - startY) * progress
+                stickX = startX + (targetX - startX) * progress
+                stickY = startY + (targetY - startY) * progress
                 invalidate()
 
                 // Invoke callback with interpolated values
                 val maxDist = baseRadius - stickRadius
                 if (maxDist > 0f) {
-                    onMove?.invoke(
-                        (stickX - centerX) / maxDist,
-                        (stickY - centerY) / maxDist
-                    )
+                    val rawX = (stickX - centerX) / maxDist
+                    val rawY = (stickY - centerY) / maxDist
+                    val reportX = when (axis) {
+                        JoystickAxis.HORIZONTAL -> rawX
+                        JoystickAxis.BOTH -> rawX
+                        else -> 0f
+                    }
+                    val reportY = when (axis) {
+                        JoystickAxis.VERTICAL -> rawY
+                        JoystickAxis.BOTH -> rawY
+                        else -> 0f
+                    }
+                    onMove?.invoke(reportX, reportY)
                 }
             }
             start()

@@ -126,6 +126,9 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         // Com `configChanges` no manifest, isto só dispara quando o usuário
         // realmente sai — rotações não recriam a Activity.
-        com.maquete.industrial.truck.bluetooth.TruckBluetoothService.shutdown()
+        // NÃO chamamos shutdown() aqui — o onCleared() do ViewModel é o único
+        // ponto de cleanup (ele já chama TruckBluetoothService.shutdown()).
+        // Chamar shutdown() aqui cancelaria o scope do singleton antes do
+        // onCleared() do VM, fazendo o disconnect() não executar.
     }
 }
