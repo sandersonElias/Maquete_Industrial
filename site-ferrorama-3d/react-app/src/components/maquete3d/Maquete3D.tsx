@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, ContactShadows, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -12,6 +12,7 @@ import {
   Controle,
   GrupoInterativo,
 } from './Modulos3D';
+import { Cenario3D } from './Cenario3D';
 import { usePrefersReducedMotion } from '../../lib/motion';
 
 /** Posições de cada módulo sobre a placa. */
@@ -76,68 +77,114 @@ function CameraFoco({
 
 function CameraTour({
   passo,
-  controlsRef,
+  ativo,
 }: {
   passo: number;
-  controlsRef: React.RefObject<any>;
+  ativo: boolean;
 }) {
   const { camera } = useThree();
   const tempo = useRef(0);
+  const alvoPos = useRef(new THREE.Vector3());
+  const alvoOlhar = useRef(new THREE.Vector3());
 
-  useEffect(() => {
-    tempo.current = 0;
-  }, [passo]);
-
-  useFrame((_, delta) => {
-    tempo.current += delta;
-    const config = PASSOS_TOUR[passo];
+  const calcularPosicao = (passoAtual: number, t: number) => {
+    const config = PASSOS_TOUR[passoAtual];
     const modId = config.moduloId;
-    const ang = tempo.current * 0.28;
-
-    let olharX = 0;
-    let olharZ = 0;
-    let camX: number;
-    let camY: number;
-    let camZ: number;
+    const ang = t * 0.28;
 
     if (modId) {
       const [x, , z] = POSICOES[modId];
-      olharX = x;
-      olharZ = z;
       const raio = modId === 'ferrovia' ? 11 : 8.5;
-      camX = x + Math.cos(ang) * raio;
-      camZ = z + Math.sin(ang) * raio + 5;
-      camY = 4.8 + Math.sin(tempo.current * 0.6) * 0.6;
+      alvoOlhar.current.set(x, 0.55, z);
+      alvoPos.current.set(
+        x + Math.cos(ang) * raio,
+        4.8 + Math.sin(t * 0.6) * 0.6,
+        z + Math.sin(ang) * raio + 5
+      );
     } else {
-      camX = 15 + Math.cos(ang * 0.5) * 2;
-      camY = 12 + Math.sin(tempo.current * 0.4) * 0.5;
-      camZ = 17 + Math.sin(ang * 0.5) * 2;
+      alvoOlhar.current.set(0, 0.55, 0);
+      alvoPos.current.set(
+        15 + Math.cos(ang * 0.5) * 2,
+        12 + Math.sin(t * 0.4) * 0.5,
+        17 + Math.sin(ang * 0.5) * 2
+      );
     }
+  };
 
-    const k = Math.min(delta * 1.8, 1);
-    camera.position.lerp(new THREE.Vector3(camX, camY, camZ), k);
-    if (controlsRef.current) {
-      controlsRef.current.target.lerp(new THREE.Vector3(olharX, 0.55, olharZ), k);
-      controlsRef.current.update();
-    }
+  useEffect(() => {
+    if (!ativo) return;
+    tempo.current = 0;
+    calcularPosicao(passo, 0);
+    camera.position.copy(alvoPos.current);
+    camera.lookAt(alvoOlhar.current);
+  }, [passo, ativo, camera]);
+
+  useFrame((_, delta) => {
+    if (!ativo) return;
+    tempo.current += delta;
+    calcularPosicao(passo, tempo.current);
+    const k = Math.min(delta * 2.2, 1);
+    camera.position.lerp(alvoPos.current, k);
+    camera.lookAt(alvoOlhar.current);
   });
 
   return null;
 }
 
 /* ============================================================
-   Pausa o render quando a maquete sai da tela
+   Pausa o render quando a maquete sai da tela (só invalida — nunca para o loop)
    ============================================================ */
 
 function PausarForaDaTela({ ativo }: { ativo: boolean }) {
-  const { invalidate, setFrameloop } = useThree();
+  const invalidate = useThree((s) => s.invalidate);
 
   useEffect(() => {
-    setFrameloop(ativo ? 'always' : 'never');
     if (ativo) invalidate();
-  }, [ativo, setFrameloop, invalidate]);
+  }, [ativo, invalidate]);
 
   return null;
+}
+
+/** Luzes — remonta ao trocar dia/noite para evitar acúmulo. */
+function Iluminacao({ noite }: { noite: boolean }) {
+  return (
+    <group key={noite ? 'noite' : 'dia'}>
+      {noite ? (
+        <>
+          <ambientLight intensity={0.12} color="#1a2030" />
+          <directionalLight position={[8, 14, 6]} intensity={0.35} color="#8899bb" />
+          <hemisphereLight args={['#0a1020', '#020204', 0.25]} />
+          <Stars radius={80} depth={40} count={1200} factor={3} saturation={0.2} fade speed={0.4} />
+          {MODULOS.map((mod) => (
+            <pointLight
+              key={`luz-${mod.id}`}
+              position={[POSICOES[mod.id][0], 2.2, POSICOES[mod.id][2]]}
+              color={mod.cor}
+              intensity={0.35}
+              distance={14}
+              decay={2}
+            />
+          ))}
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.55} color="#b8c4d4" />
+          <directionalLight
+            position={[12, 18, 10]}
+            intensity={1.7}
+            castShadow
+            shadow-mapSize={[1024, 1024]}
+            shadow-camera-left={-20}
+            shadow-camera-right={20}
+            shadow-camera-top={20}
+            shadow-camera-bottom={-20}
+          />
+          <directionalLight position={[-10, 8, -8]} intensity={0.5} color={PALETA.accent} />
+          <hemisphereLight args={['#5a6b7d', '#1a1410', 0.6]} />
+        </>
+      )}
+    </group>
+  );
 }
 
 /* ============================================================
@@ -184,9 +231,55 @@ interface CenaProps {
   desvios: number[];
   etiquetas: boolean;
   noite: boolean;
+  cenario: boolean;
   tourAtivo: boolean;
   passoTour: number;
   controlsRef: React.RefObject<any>;
+}
+
+function Modulo3D({
+  id,
+  rodando,
+  velocidade,
+  desvios,
+  noite,
+}: {
+  id: string;
+  rodando: boolean;
+  velocidade: number;
+  desvios: number[];
+  noite: boolean;
+}) {
+  switch (id) {
+    case 'mineradora':
+      return <Mineradora rodando={rodando} noite={noite} />;
+    case 'ferrovia':
+      return <Ferrovia rodando={rodando} velocidade={velocidade} desvios={desvios} />;
+    case 'porto':
+      return <Porto rodando={rodando} noite={noite} />;
+    case 'aeroporto':
+      return <Aeroporto rodando={rodando} noite={noite} />;
+    case 'controle':
+      return <Controle rodando={rodando} noite={noite} />;
+    default:
+      return null;
+  }
+}
+
+/** Aplica cor de fundo e névoa — mais confiável que `<color attach>` com R3F 9 + Three r185. */
+function Ambiente({ noite }: { noite: boolean }) {
+  const { scene } = useThree();
+  const cor = noite ? COR_NOITE : COR_DIA;
+
+  useEffect(() => {
+    scene.background = new THREE.Color(cor);
+    scene.fog = new THREE.Fog(cor, noite ? 28 : 34, noite ? 52 : 62);
+    return () => {
+      scene.fog = null;
+    };
+  }, [scene, cor, noite]);
+
+  return null;
 }
 
 function Cena({
@@ -199,61 +292,21 @@ function Cena({
   desvios,
   etiquetas,
   noite,
+  cenario,
   tourAtivo,
   passoTour,
   controlsRef,
 }: CenaProps) {
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
 
-  const conteudo = useMemo(
-    () => ({
-      mineradora: <Mineradora rodando={rodando} noite={noite} />,
-      ferrovia: <Ferrovia rodando={rodando} velocidade={velocidade} desvios={desvios} />,
-      porto: <Porto rodando={rodando} noite={noite} />,
-      aeroporto: <Aeroporto rodando={rodando} noite={noite} />,
-      controle: <Controle rodando={rodando} noite={noite} />,
-    }),
-    [rodando, velocidade, desvios, noite]
-  );
-
   return (
     <>
-      {noite ? (
-        <>
-          <ambientLight intensity={0.12} color="#1a2030" />
-          <directionalLight position={[8, 14, 6]} intensity={0.35} color="#8899bb" castShadow={false} />
-          <hemisphereLight args={['#0a1020', '#020204', 0.25]} />
-          <Stars radius={80} depth={40} count={1200} factor={3} saturation={0.2} fade speed={0.4} />
-          {MODULOS.map((mod) => (
-            <pointLight
-              key={`luz-${mod.id}`}
-              position={[POSICOES[mod.id][0], 2.2, POSICOES[mod.id][2]]}
-              color={mod.cor}
-              intensity={0.35}
-              distance={14}
-              decay={2}
-            />
-          ))}
-        </>
-      ) : (
-        <>
-          <ambientLight intensity={0.55} color="#b8c4d4" />
-          <directionalLight
-            position={[12, 18, 10]}
-            intensity={1.7}
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-            shadow-camera-left={-20}
-            shadow-camera-right={20}
-            shadow-camera-top={20}
-            shadow-camera-bottom={-20}
-          />
-          <directionalLight position={[-10, 8, -8]} intensity={0.5} color={PALETA.accent} />
-          <hemisphereLight args={['#5a6b7d', '#1a1410', 0.6]} />
-        </>
-      )}
+      <Ambiente noite={noite} />
+      <Iluminacao noite={noite} />
 
       <Base />
+
+      {cenario && <Cenario3D rodando={rodando} noite={noite} />}
 
       {MODULOS.map((mod) => (
         <group key={mod.id}>
@@ -266,7 +319,13 @@ function Cena({
             onDestacar={setDestacado}
             position={POSICOES[mod.id]}
           >
-            {conteudo[mod.id as keyof typeof conteudo]}
+            <Modulo3D
+              id={mod.id}
+              rodando={rodando}
+              velocidade={velocidade}
+              desvios={desvios}
+              noite={noite}
+            />
           </GrupoInterativo>
 
           <Etiqueta
@@ -291,21 +350,21 @@ function Cena({
         far={6}
       />
 
-      <OrbitControls
-        ref={controlsRef}
-        enablePan={!tourAtivo}
-        enabled={!tourAtivo}
-        minDistance={7}
-        maxDistance={38}
-        maxPolarAngle={Math.PI / 2.15}
-        enableDamping
-        dampingFactor={0.07}
-        makeDefault
-      />
+      {!tourAtivo && (
+        <OrbitControls
+          ref={controlsRef}
+          enablePan
+          minDistance={7}
+          maxDistance={38}
+          maxPolarAngle={Math.PI / 2.15}
+          enableDamping
+          dampingFactor={0.07}
+          makeDefault
+        />
+      )}
 
-      {tourAtivo ? (
-        <CameraTour passo={passoTour} controlsRef={controlsRef} />
-      ) : (
+      <CameraTour passo={passoTour} ativo={tourAtivo} />
+      {!tourAtivo && (
         <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} />
       )}
     </>
@@ -323,6 +382,7 @@ export default function Maquete3D() {
   const [velocidade, setVelocidade] = useState(1);
   const [etiquetas, setEtiquetas] = useState(true);
   const [noite, setNoite] = useState(false);
+  const [cenario, setCenario] = useState(true);
   const [desvios, setDesvios] = useState([0, 1, 0, 2]);
   const [tourAtivo, setTourAtivo] = useState(false);
   const [passoTour, setPassoTour] = useState(0);
@@ -357,14 +417,20 @@ export default function Maquete3D() {
   }, [tourAtivo, passoTour, reduzido]);
 
   const iniciarTour = useCallback(() => {
-    setTourAtivo(true);
     setPassoTour(0);
     setSelecionado(PASSOS_TOUR[0].moduloId);
+    setTourAtivo(true);
   }, []);
 
   const pararTour = useCallback(() => {
     setTourAtivo(false);
     setSelecionado(null);
+    requestAnimationFrame(() => {
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    });
   }, []);
 
   const modulo = MODULOS.find((m) => m.id === selecionado);
@@ -386,14 +452,21 @@ export default function Maquete3D() {
     <div className="maquete3d" ref={wrapperRef}>
       <div className="maquete3d-palco">
         <Canvas
-          shadows={!noite}
+          shadows
+          frameloop="always"
           dpr={[1, 1.75]}
-          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42 }}
-          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 200 }}
+          gl={{
+            alpha: false,
+            antialias: true,
+            powerPreference: 'high-performance',
+          }}
+          onCreated={({ gl, scene }) => {
+            gl.setClearColor(new THREE.Color(COR_DIA), 1);
+            scene.background = new THREE.Color(COR_DIA);
+          }}
           onPointerMissed={() => !tourAtivo && setSelecionado(null)}
         >
-          <color attach="background" args={[noite ? COR_NOITE : COR_DIA]} />
-          <fog attach="fog" args={[noite ? COR_NOITE : COR_DIA, noite ? 28 : 34, noite ? 52 : 62]} />
           <PausarForaDaTela ativo={visivel} />
           <Cena
             selecionado={selecionado}
@@ -405,6 +478,7 @@ export default function Maquete3D() {
             desvios={desvios}
             etiquetas={etiquetas}
             noite={noite}
+            cenario={cenario}
             tourAtivo={tourAtivo}
             passoTour={passoTour}
             controlsRef={controlsRef}
@@ -522,6 +596,15 @@ export default function Maquete3D() {
               aria-valuetext={`${velocidade} vezes`}
             />
             <span className="maquete3d-valor">{velocidade}x</span>
+          </label>
+
+          <label className="maquete3d-check">
+            <input
+              type="checkbox"
+              checked={cenario}
+              onChange={(e) => setCenario(e.target.checked)}
+            />
+            <span>Cenário (árvores, fluxo)</span>
           </label>
 
           <label className="maquete3d-check">

@@ -1,21 +1,16 @@
 ---
-description: Não alterar a maquete 3D interativa do Caio; resto do site pode mudar
+description: Maquete 3D do Caio — Marco autorizou editar; usar skills Three.js
 alwaysApply: true
 ---
 
-# Maquete do Caio — NÃO ALTERAR
+# Maquete 3D — autorização do Marco
 
-**Regra fixa:** a maquete 3D interativa é do Caio. Zero edição sem autorização explícita.
+**Marco autorizou** editar `site-ferrorama-3d/react-app/src/components/maquete3d/**` (Caio está sem notebook). Pode mexer quando ele pedir.
 
-Hands-off absoluto:
+Cuidados:
 
-- `site-ferrorama-3d/react-app/src/components/maquete3d/**`
-- Não “melhorar”, refatorar, otimizar, renomear nem reformular a cena 3D nesses arquivos
+- Não reescrever a cena inteira sem ele pedir. Manter a arquitetura do Caio (R3F, loaders, hierarquia) e alterar o que foi pedido.
+- Ao trabalhar na maquete, ler as skills pessoais `threejs-*` em `~/.cursor/skills/` (fundamentals, geometry, materials, lighting, textures, animation, loaders, shaders, postprocessing, interaction).
+- Resto do site (`Hero`, seções, nav, CSS, motion, textos) continua livre.
 
-Pode sapecar a rodo:
-
-- Todo o resto de `site-ferrorama-3d/react-app/` (Hero, seções, nav, CSS, motion, textos, layout…)
-- `Site _Ferrorama/`
-- Backend, dashboard, gateway, firmwares
-
-Se precisar tocar na maquete interativa: **parar e perguntar** antes.
+Publicar: se ele pedir “publica o site”, deploy Vercel em `site-ferrorama-3d/react-app` (`npx vercel --prod`). Link: https://react-app-nine-weld.vercel.app

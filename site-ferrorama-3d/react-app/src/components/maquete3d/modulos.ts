@@ -65,11 +65,11 @@ export const PASSOS_TOUR = [
 
 /** Telemetria simulada exibida nas etiquetas 3D. */
 export const TELEMETRIA: Record<string, string> = {
-  mineradora: 'Caminhão · ciclo ativo',
-  ferrovia: '3 vagões · loop contínuo',
-  porto: 'Navio atracado · embarque',
-  aeroporto: 'Pista livre · decolagem',
-  controle: 'Gateway · 4 módulos online',
+  mineradora: '2 caminhões · 2 poços ativos',
+  ferrovia: 'Loco + 3 vagões · 4 desvios',
+  porto: 'Navio atracado · esteira ligada',
+  aeroporto: '2 aeronaves · torre ativa',
+  controle: 'Arduino + Gateway + App',
 };
 
 export const MODULOS: Modulo[] = [
