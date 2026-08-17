@@ -80,13 +80,13 @@ const reportExportSchema = Joi.object({
 
 const alertSchema = Joi.object({
   severity: Joi.string().valid("info", "warning", "critical").required(),
-  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto").required(),
+  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto", "quimica", "sistema").required(),
   message: Joi.string().min(1).max(1000).required(),
   details: Joi.object().optional(),
 });
 
 const alertQuerySchema = Joi.object({
-  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto").optional(),
+  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto", "quimica", "sistema").optional(),
   severity: Joi.string().valid("info", "warning", "critical").optional(),
   acknowledged: Joi.boolean().optional(),
   limit: Joi.number().integer().min(1).max(100).optional().default(50),

@@ -10,7 +10,8 @@ API REST + WebSocket para o sistema de monitoramento da maquete industrial.
 - Redis (via `redis`)
 - JWT (`jsonwebtoken`) + bcryptjs
 - Winston (logging)
-- Joi (validação - disponível mas não utilizado nas rotas atuais)
+- Joi (validação)
+- Jest (testes)
 
 ## Estrutura
 
@@ -75,6 +76,7 @@ scripts/
 npm install          # Instalar dependências
 npm run dev          # Desenvolvimento (nodemon, porta 4000)
 npm start            # Produção (node)
+npm test             # Executar testes (Jest)
 npm run migrate      # Executar migrations do banco
 npm run seed         # Popular dados iniciais (usuarios, equipamentos)
 ```
@@ -84,12 +86,8 @@ npm run seed         # Popular dados iniciais (usuarios, equipamentos)
 ```env
 PORT=4000
 NODE_ENV=development
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=maquete_industrial
-DB_USER=postgres
-DB_PASSWORD=sua_senha
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql://user:pass@host:5432/db  # Render PostgreSQL
+REDIS_URL=redis://localhost:6379                   # Opcional (sem cache se não configurado)
 JWT_SECRET=seu_secret_aqui
 JWT_EXPIRES_IN=24h
 GATEWAY_API_KEY=sua_api_key

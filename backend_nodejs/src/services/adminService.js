@@ -22,6 +22,14 @@ async function getUserById(id) {
 
 // Criar usuário
 async function createUser({ username, email, password_hash, role }) {
+  // Verificar se email já existe
+  const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+  if (existing.rows.length > 0) {
+    const err = new Error("Email ja cadastrado");
+    err.code = "23505";
+    throw err;
+  }
+
   const result = await pool.query(
     `INSERT INTO users (username, email, password_hash, role) 
      VALUES ($1, $2, $3, $4) RETURNING id, username, email, role, created_at`,

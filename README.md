@@ -51,8 +51,8 @@ maquete_industrial/
 ### Pré-requisitos
 
 - Node.js 18+
-- PostgreSQL 14+
-- Redis 6+
+- PostgreSQL 14+ (ou Render PostgreSQL)
+- Redis 6+ (opcional)
 - Arduino IDE (para firmware)
 - Expo CLI (para app mobile)
 
@@ -262,6 +262,7 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | Gateway      | Node.js, SerialPort, Socket.IO Client, Winston                    |
 | Mobile       | React Native (Expo SDK 49), Axios, Socket.IO Client, AsyncStorage |
 | Hardware     | Arduino, Servos SG90, HC-05 Bluetooth, Motor DC                   |
+| Testes       | Jest (backend) - 52 testes unitários                              |
 
 ## Tema Visual
 
