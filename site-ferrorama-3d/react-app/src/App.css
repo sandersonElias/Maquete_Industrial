@@ -6680,8 +6680,8 @@ body::after {
 
 .maquete3d--cheia .maquete3d-palco {
   aspect-ratio: auto;
-  min-height: min(72svh, 820px);
-  height: min(72svh, 820px);
+  min-height: min(78svh, 880px);
+  height: min(78svh, 880px);
   max-height: none;
 }
 

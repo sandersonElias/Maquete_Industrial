@@ -5,12 +5,12 @@ import * as THREE from 'three';
 export type PovId = 'overview' | 'sala' | 'volvo' | 'cat' | 'mrs' | 'navio' | 'c5';
 
 const OFFSET: Record<Exclude<PovId, 'overview'>, { pos: [number, number, number]; look: [number, number, number] }> = {
-  sala: { pos: [0, 0.55, 1.35], look: [0, 0.45, -0.6] },
-  volvo: { pos: [-0.05, 0.62, 0.35], look: [1.4, 0.15, 0] },
-  cat: { pos: [-0.05, 0.62, 0.85], look: [0, 0.2, -1.4] },
-  mrs: { pos: [0, 0.62, -1.55], look: [0, 0.25, 2.2] },
-  navio: { pos: [0, 0.85, 0.4], look: [-2.4, 0.9, 1.2] },
-  c5: { pos: [0, 0.16, 0.45], look: [0, -0.05, -1.9] },
+  sala: { pos: [0, 0.5, 1.45], look: [0, 0.42, -0.7] },
+  volvo: { pos: [-0.08, 0.72, 0.28], look: [1.6, 0.1, 0] },
+  cat: { pos: [-0.08, 0.72, 0.95], look: [0, 0.15, -1.5] },
+  mrs: { pos: [0, 0.72, -0.95], look: [0, 0.28, 1.4] },
+  navio: { pos: [0, 0.95, 0.2], look: [-2.6, 0.7, 1.1] },
+  c5: { pos: [0, 0.18, 0.55], look: [0, 0, -1.8] },
 };
 
 export function CameraPov({

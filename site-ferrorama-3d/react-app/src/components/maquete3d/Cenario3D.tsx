@@ -1,6 +1,5 @@
 import { useRef, useMemo, useLayoutEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
 
@@ -100,8 +99,8 @@ export function FluxoMinério({ rodando }: { rodando: boolean }) {
   return (
     <group>
       <mesh position={[0, 0.06, 0]}>
-        <tubeGeometry args={[curva, 64, 0.12, 6, false]} />
-        <meshStandardMaterial color={PALETA.warning} transparent opacity={0.15} roughness={1} />
+        <tubeGeometry args={[curva, 64, 0.06, 6, false]} />
+        <meshStandardMaterial color={PALETA.warning} transparent opacity={0.08} roughness={1} />
       </mesh>
       <instancedMesh ref={bolas} args={[undefined, undefined, COUNT]}>
         <sphereGeometry args={[1, 6, 6]} />
@@ -134,20 +133,6 @@ export function Sinalizacao({ noite }: { noite: boolean }) {
           roughness={0.5}
         />
       </mesh>
-      <Html position={[0, 1.05, 10.2]} center distanceFactor={18} zIndexRange={[5, 0]}>
-        <span className="maquete3d-placa">FERRORAMA · EFVM</span>
-      </Html>
-
-      {[
-        { pos: [-10.5, 0.5, -7.8] as [number, number, number], txt: 'MINA' },
-        { pos: [10.5, 0.5, 6.8] as [number, number, number], txt: 'PORTO' },
-        { pos: [10, 0.5, -8.5] as [number, number, number], txt: 'AERO' },
-        { pos: [-2, 0.5, 10.5] as [number, number, number], txt: 'SCADA' },
-      ].map(({ pos, txt }) => (
-        <Html key={txt} position={pos} center distanceFactor={22}>
-          <span className="maquete3d-placa-zona">{txt}</span>
-        </Html>
-      ))}
     </group>
   );
 }

@@ -25,7 +25,7 @@ const POSICOES: Record<string, [number, number, number]> = {
   controle: [-2, 0, 8],
 };
 
-const CAMERA_INICIAL = new THREE.Vector3(16, 13, 18);
+const CAMERA_INICIAL = new THREE.Vector3(13.5, 10.5, 15.5);
 const COR_NOITE = '#040508';
 /** Céu de dia claro — o paleta.dark deixava o “modo dia” quase tão escuro quanto a noite. */
 const COR_DIA = '#c5d4e2';
@@ -209,7 +209,7 @@ function Etiqueta({
 }) {
   if (!visivel) return null;
   return (
-    <Html position={position} center distanceFactor={26} zIndexRange={[10, 0]}>
+    <Html position={position} center distanceFactor={36} zIndexRange={[10, 0]}>
       <div className="maquete3d-tag-wrap">
         <span className="maquete3d-tag" style={{ '--tag-cor': cor } as React.CSSProperties}>
           {texto}
@@ -392,7 +392,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   const [destacado, setDestacado] = useState<string | null>(null);
   const [rodando, setRodando] = useState(true);
   const [velocidade, setVelocidade] = useState(1);
-  const [etiquetas, setEtiquetas] = useState(true);
+  const [etiquetas, setEtiquetas] = useState(!telaCheia);
   const [noite, setNoite] = useState(false);
   const [cenario, setCenario] = useState(true);
   const [desvios, setDesvios] = useState([0, 1, 1, 1]);

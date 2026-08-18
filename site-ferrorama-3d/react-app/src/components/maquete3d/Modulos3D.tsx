@@ -1,6 +1,5 @@
-import { useRef, useMemo, useLayoutEffect, useState, useEffect, ReactNode } from 'react';
+import { useRef, useMemo, useLayoutEffect, ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
 import { criarTracado, curvaParalela, matrizesDormentes, posicionarNaCurva, tracadoComDesvio, criarRamoVisual, ramoAtivo } from './geometria';
@@ -90,12 +89,12 @@ export function Base() {
     <group>
       <mesh receiveShadow position={[0, -0.15, 0]}>
         <boxGeometry args={[30, 0.3, 22]} />
-        <meshStandardMaterial color="#2a2118" roughness={0.9} metalness={0} />
+        <meshStandardMaterial color="#6b5340" roughness={0.9} metalness={0} />
       </mesh>
-      {/* Superfície: verde de paisagismo bem dessaturado */}
+      {/* Superfície: feltro verde de maquete, legível de dia */}
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
         <planeGeometry args={[29.4, 21.4]} />
-        <meshStandardMaterial color="#1d2a20" roughness={1} />
+        <meshStandardMaterial color="#4a6b42" roughness={1} />
       </mesh>
       {/* Borda da placa */}
       <lineSegments position={[0, 0.01, 0]}>
@@ -138,27 +137,27 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
   }, [matrizes]);
 
   useLayoutEffect(() => {
-    if (trem.current) posicionarNaCurva(trem.current, curva, 0, 0.16);
+    if (trem.current) posicionarNaCurva(trem.current, curva, 0, 0.22);
   }, [curva]);
 
   useFrame((_, delta) => {
     if (rodando) progresso.current += delta * 0.035 * velocidade;
 
-    if (trem.current) posicionarNaCurva(trem.current, curva, progresso.current, 0.16);
+    if (trem.current) posicionarNaCurva(trem.current, curva, progresso.current, 0.22);
     vagoes.current.forEach((v, i) => {
-      if (v) posicionarNaCurva(v, curva, progresso.current - 0.016 * (i + 1), 0.15);
+      if (v) posicionarNaCurva(v, curva, progresso.current - 0.02 * (i + 1), 0.2);
     });
   });
 
   const desenharRamo = (ramoCurva: THREE.CatmullRomCurve3, ativo: boolean, cor: string) => (
     <group>
       <mesh position={[0, 0.008, 0]}>
-        <tubeGeometry args={[ramoCurva, 48, 0.55, 4, false]} />
+        <tubeGeometry args={[ramoCurva, 48, 0.32, 4, false]} />
         <meshStandardMaterial color="#2a2824" roughness={1} transparent opacity={ativo ? 1 : 0.35} />
       </mesh>
       {[curvaParalela(ramoCurva, 0.38), curvaParalela(ramoCurva, -0.38)].map((trilho, i) => (
         <mesh key={i} position={[0, 0.05, 0]}>
-          <tubeGeometry args={[trilho, 64, 0.04, 6, false]} />
+          <tubeGeometry args={[trilho, 64, 0.055, 6, false]} />
           <meshStandardMaterial
             color={ativo ? cor : '#6a7078'}
             roughness={0.35}
@@ -175,8 +174,8 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
     <group>
       {/* Leito de brita */}
       <mesh position={[0, 0.01, 0]}>
-        <tubeGeometry args={[curva, 160, 0.75, 4, true]} />
-        <meshStandardMaterial color="#3a3630" roughness={1} />
+        <tubeGeometry args={[curva, 160, 0.38, 4, true]} />
+        <meshStandardMaterial color="#4a443c" roughness={1} />
       </mesh>
 
       {/* Ramos secundários sempre visíveis — brilham quando ativos */}
@@ -192,7 +191,7 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
       {/* Os dois trilhos */}
       {[trilhoEsq, trilhoDir].map((trilho, i) => (
         <mesh key={i} position={[0, 0.06, 0]}>
-          <tubeGeometry args={[trilho, 200, 0.045, 6, true]} />
+          <tubeGeometry args={[trilho, 200, 0.07, 6, true]} />
           <meshStandardMaterial color="#9aa5b1" roughness={0.35} metalness={0.85} />
         </mesh>
       ))}
@@ -295,8 +294,8 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
     else cargaRef.current = 0.05;
 
     if (caminhao.current) {
-      const pit = { x: -1.35, z: -0.48 };
-      const logistica = { x: 2.35, z: 2.05 };
+      const pit = { x: -1.5, z: 2.15 };
+      const logistica = { x: 2.2, z: 2.15 };
       let t = 0;
       if (c < 0.28) t = 0;
       else if (c < 0.48) t = (c - 0.28) / 0.2;
@@ -359,7 +358,7 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
       </instancedMesh>
 
       {/* Escavadeira Volvo — cava e despeja na caçamba */}
-      <group position={[-1.85, 0, -1.15]} rotation={[0, 0.85, 0]}>
+      <group position={[-1.55, 0, 1.2]} rotation={[0, -Math.PI / 2, 0]}>
         <EscavadeiraVolvo rodando={rodando} cicloRef={cicloRef} />
       </group>
 
@@ -373,8 +372,8 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
         <meshStandardMaterial color="#3a3028" roughness={0.9} />
       </mesh>
 
-      {/* CAT 793 — poço → área logística (em direção aos trilhos) */}
-      <group ref={caminhao} position={[-1.35, 0, -0.48]}>
+      {/* CAT 793 — poço → área logística, na frente da mina */}
+      <group ref={caminhao} position={[-1.5, 0, 2.15]}>
         <CaminhaoCAT cargaRef={cargaRef} cicloRef={cicloRef} />
       </group>
     </group>
@@ -438,7 +437,7 @@ export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: bo
       {/* Lâmina d'água */}
       <mesh ref={agua} rotation={[-Math.PI / 2, 0, 0]} position={[1.6, 0.03, 0]}>
         <planeGeometry args={[6.5, 7]} />
-        <meshStandardMaterial color="#0d3b4a" roughness={0.15} metalness={0.6} transparent opacity={0.8} />
+        <meshStandardMaterial color="#1a6a82" roughness={0.18} metalness={0.55} transparent opacity={0.82} />
       </mesh>
 
       {/* Cais de concreto */}
@@ -554,25 +553,17 @@ export function Aeroporto({ rodando, noite = false }: { rodando: boolean; noite?
     cicloRef.current = c;
     const a = aviao.current;
 
-    if (c < 0.18) {
-      const t = c / 0.18;
-      a.position.set(0, 0.28, -3.2 + t * 4.6);
+    if (c < 0.4) {
+      const t = c / 0.4;
+      a.position.set(0, 0.32, -3.1 + t * 5.4);
       a.rotation.set(0, 0, 0);
-    } else if (c < 0.36) {
-      a.position.set(0, 0.28, 1.4);
+    } else if (c < 0.58) {
+      a.position.set(0, 0.32, 2.3);
       a.rotation.set(0, 0, 0);
-    } else if (c < 0.48) {
-      const t = (c - 0.36) / 0.12;
-      a.position.set(0, 0.28, 1.4 - t * 2.2);
-      a.rotation.set(0, 0, 0);
-    } else if (c < 0.78) {
-      const t = (c - 0.48) / 0.3;
-      a.position.set(0, 0.28 + t * t * 6.5, -0.8 + t * 8);
-      a.rotation.set(-0.28 * t, 0, 0);
     } else {
-      const t = (c - 0.78) / 0.22;
-      a.position.set(0, 5.5 * (1 - t), -6 + t * 2.8);
-      a.rotation.set(-0.18 * (1 - t), 0, 0);
+      const t = (c - 0.58) / 0.42;
+      a.position.set(0, 0.32, 2.3 - t * 5.4);
+      a.rotation.set(0, Math.PI, 0);
     }
   });
 
@@ -653,20 +644,8 @@ export function Aeroporto({ rodando, noite = false }: { rodando: boolean; noite?
         <meshStandardMaterial color="#3a4048" roughness={0.85} />
       </mesh>
 
-      {/* Aeronave estacionada no hangar */}
-      <group position={[-1.8, 0.18, -2.5]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh castShadow>
-          <capsuleGeometry args={[0.12, 0.9, 4, 8]} />
-          <meshStandardMaterial color="#c8ccd2" roughness={0.5} metalness={0.3} />
-        </mesh>
-        <mesh castShadow position={[0, -0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <boxGeometry args={[0.06, 1.6, 0.35]} />
-          <meshStandardMaterial color="#b0b4ba" roughness={0.5} />
-        </mesh>
-      </group>
-
-      {/* C-5 — taxi, rampa, decolagem e aproximação */}
-      <group ref={aviao} position={[0, 0.28, -3.2]}>
+      {/* C-5 — taxi, rampa e volta na pista */}
+      <group ref={aviao} position={[0, 0.32, -3.1]}>
         <AviaoC5 cicloRef={cicloRef} />
       </group>
     </group>
@@ -688,7 +667,6 @@ export function Controle({
 }) {
   const leds = useRef<THREE.Group>(null);
   const tempo = useRef(0);
-  const [lcdLinha, setLcdLinha] = useState('SW1:CENTER TRK:OK');
 
   useFrame((_, delta) => {
     if (!rodando || !leds.current) return;
@@ -700,43 +678,27 @@ export function Controle({
     });
   });
 
-  useEffect(() => {
-    if (!rodando) return;
-    const msgs = [
-      'SW1:CENTER TRK:OK',
-      'GW:ONLINE BT:9600',
-      'TRK:3 WGN LD:78%',
-      'API:WS CONNECTED',
-    ];
-    let i = 0;
-    const id = window.setInterval(() => {
-      i = (i + 1) % msgs.length;
-      setLcdLinha(msgs[i]);
-    }, 2200);
-    return () => window.clearInterval(id);
-  }, [rodando]);
-
   return (
     <group>
-      {/* Bancada */}
       <mesh castShadow receiveShadow position={[0, 0.3, 0]}>
-        <boxGeometry args={[4.4, 0.6, 2.4]} />
-        <meshStandardMaterial color={PALETA.card} roughness={0.8} />
+        <boxGeometry args={[4.6, 0.6, 2.5]} />
+        <meshStandardMaterial color="#2a3344" roughness={0.75} />
+      </mesh>
+      <mesh receiveShadow position={[0, 0.62, 0.15]}>
+        <boxGeometry args={[4.5, 0.04, 2.2]} />
+        <meshStandardMaterial color="#3d4658" roughness={0.7} />
       </mesh>
 
       <MesaControle onEscolher={onPov} />
 
-      {/* Placa Arduino Mega */}
-      <mesh castShadow position={[-1.2, 0.64, 0.2]}>
-        <boxGeometry args={[1.1, 0.08, 0.75]} />
+      <mesh castShadow position={[-1.55, 0.68, 0.7]}>
+        <boxGeometry args={[0.95, 0.07, 0.55]} />
         <meshStandardMaterial color="#0f6b5c" roughness={0.6} />
       </mesh>
-
-      {/* LEDs de status do gateway */}
-      <group ref={leds} position={[-1.2, 0.72, 0.2]}>
-        {[-0.32, -0.1, 0.12, 0.34].map((x, i) => (
-          <mesh key={x} position={[x, 0, 0.2]}>
-            <sphereGeometry args={[0.055, 8, 8]} />
+      <group ref={leds} position={[-1.55, 0.76, 0.7]}>
+        {[-0.28, -0.1, 0.08, 0.26].map((x, i) => (
+          <mesh key={x} position={[x, 0, 0.18]}>
+            <sphereGeometry args={[0.05, 8, 8]} />
             <meshStandardMaterial
               color={[PALETA.glow, PALETA.accent, PALETA.warning, PALETA.danger][i]}
               emissive={[PALETA.glow, PALETA.accent, PALETA.warning, PALETA.danger][i]}
@@ -747,78 +709,17 @@ export function Controle({
         ))}
       </group>
 
-      {/* Display LCD 16x2 */}
-      <mesh castShadow position={[0.3, 0.75, 0]} rotation={[-0.35, 0, 0]}>
-        <boxGeometry args={[1, 0.5, 0.06]} />
-        <meshStandardMaterial
-          color="#0a3d2e"
-          emissive={PALETA.glow}
-          emissiveIntensity={0.55}
-          roughness={0.4}
-        />
-      </mesh>
-      <Html position={[0.3, 0.88, 0.08]} transform distanceFactor={8} zIndexRange={[8, 0]}>
-        <span className="maquete3d-lcd">{lcdLinha}</span>
-      </Html>
-
-      {/* Gateway Node.js (Raspberry) */}
-      <mesh castShadow position={[-0.5, 0.64, -0.35]}>
-        <boxGeometry args={[0.55, 0.12, 0.85]} />
-        <meshStandardMaterial color="#2a2a2a" roughness={0.7} />
-      </mesh>
-      <mesh position={[-0.5, 0.72, -0.05]}>
-        <sphereGeometry args={[0.04, 6, 6]} />
-        <meshStandardMaterial color={PALETA.glow} emissive={PALETA.glow} emissiveIntensity={2} toneMapped={false} />
-      </mesh>
-
-      {/* Módulo HC-05 Bluetooth */}
-      <mesh castShadow position={[0.85, 0.64, 0.35]}>
-        <boxGeometry args={[0.35, 0.06, 0.5]} />
-        <meshStandardMaterial color="#1565c0" roughness={0.5} />
-      </mesh>
-      <Html position={[0.85, 0.78, 0.35]} transform distanceFactor={10}>
-        <span className="maquete3d-hc05">HC-05</span>
-      </Html>
-
-      {/* Smartphone do app */}
-      <group position={[1.1, 0.62, 0.55]} rotation={[-0.5, -0.3, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[0.22, 0.42, 0.04]} />
-          <meshStandardMaterial color="#111" roughness={0.4} metalness={0.3} />
-        </mesh>
-        <mesh position={[0, 0, 0.025]}>
-          <boxGeometry args={[0.18, 0.36, 0.01]} />
-          <meshStandardMaterial
-            color={PALETA.dark}
-            emissive={PALETA.glow}
-            emissiveIntensity={noite ? 1 : 0.5}
-            roughness={0.3}
-          />
-        </mesh>
-      </group>
-
-      {/* Monitor do dashboard */}
-      <mesh castShadow position={[1.6, 0.95, -0.3]} rotation={[-0.18, -0.4, 0]}>
-        <boxGeometry args={[1.3, 0.85, 0.06]} />
-        <meshStandardMaterial
-          color={PALETA.dark}
-          emissive={PALETA.accent}
-          emissiveIntensity={noite ? 1.2 : 0.4}
-          roughness={0.3}
-        />
-      </mesh>
-
       {noite && (
         <pointLight position={[0, 1.2, 0]} color={PALETA.accent} intensity={1.5} distance={5} decay={2} />
       )}
 
-      {/* Botões físicos do painel */}
-      {[-0.5, -0.2, 0.1].map((x, i) => (
-        <mesh key={x} castShadow position={[x, 0.63, -0.75]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.08, 12]} />
+      {[-0.25, 0.05, 0.35].map((x, i) => (
+        <mesh key={x} castShadow position={[x, 0.68, 0.85]}>
+          <cylinderGeometry args={[0.09, 0.09, 0.07, 12]} />
           <meshStandardMaterial color={[PALETA.glow, PALETA.warning, PALETA.danger][i]} roughness={0.5} />
         </mesh>
       ))}
     </group>
   );
 }
+
