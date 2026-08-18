@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, ContactShadows, Stars } from '@react-three/drei';
 import * as THREE from 'three';
-import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA } from './modulos';
+import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA, CAMERAS_POV } from './modulos';
 import {
   Base,
   Ferrovia,
@@ -13,6 +13,7 @@ import {
   GrupoInterativo,
 } from './Modulos3D';
 import { Cenario3D } from './Cenario3D';
+import { CameraPov, type PovId } from './CameraPov';
 import { usePrefersReducedMotion } from '../../lib/motion';
 
 /** Posições de cada módulo sobre a placa. */
@@ -26,7 +27,8 @@ const POSICOES: Record<string, [number, number, number]> = {
 
 const CAMERA_INICIAL = new THREE.Vector3(16, 13, 18);
 const COR_NOITE = '#040508';
-const COR_DIA = PALETA.dark;
+/** Céu de dia claro — o paleta.dark deixava o “modo dia” quase tão escuro quanto a noite. */
+const COR_DIA = '#c5d4e2';
 
 /* ============================================================
    Câmera: aproxima suavemente do módulo selecionado
@@ -168,10 +170,11 @@ function Iluminacao({ noite }: { noite: boolean }) {
         </>
       ) : (
         <>
-          <ambientLight intensity={0.55} color="#b8c4d4" />
+          <ambientLight intensity={0.95} color="#fff6ea" />
           <directionalLight
             position={[12, 18, 10]}
-            intensity={1.7}
+            intensity={2.35}
+            color="#fff4dc"
             castShadow
             shadow-mapSize={[1024, 1024]}
             shadow-camera-left={-20}
@@ -179,8 +182,8 @@ function Iluminacao({ noite }: { noite: boolean }) {
             shadow-camera-top={20}
             shadow-camera-bottom={-20}
           />
-          <directionalLight position={[-10, 8, -8]} intensity={0.5} color={PALETA.accent} />
-          <hemisphereLight args={['#5a6b7d', '#1a1410', 0.6]} />
+          <directionalLight position={[-10, 8, -8]} intensity={0.65} color="#dce8f4" />
+          <hemisphereLight args={['#9ec4e6', '#c4b49a', 0.95]} />
         </>
       )}
     </group>
@@ -234,6 +237,8 @@ interface CenaProps {
   cenario: boolean;
   tourAtivo: boolean;
   passoTour: number;
+  pov: PovId;
+  onPov: (id: string) => void;
   controlsRef: React.RefObject<any>;
 }
 
@@ -243,12 +248,14 @@ function Modulo3D({
   velocidade,
   desvios,
   noite,
+  onPov,
 }: {
   id: string;
   rodando: boolean;
   velocidade: number;
   desvios: number[];
   noite: boolean;
+  onPov?: (id: string) => void;
 }) {
   switch (id) {
     case 'mineradora':
@@ -260,7 +267,7 @@ function Modulo3D({
     case 'aeroporto':
       return <Aeroporto rodando={rodando} noite={noite} />;
     case 'controle':
-      return <Controle rodando={rodando} noite={noite} />;
+      return <Controle rodando={rodando} noite={noite} onPov={onPov} />;
     default:
       return null;
   }
@@ -273,7 +280,7 @@ function Ambiente({ noite }: { noite: boolean }) {
 
   useEffect(() => {
     scene.background = new THREE.Color(cor);
-    scene.fog = new THREE.Fog(cor, noite ? 28 : 34, noite ? 52 : 62);
+    scene.fog = new THREE.Fog(cor, noite ? 28 : 42, noite ? 52 : 78);
     return () => {
       scene.fog = null;
     };
@@ -295,9 +302,12 @@ function Cena({
   cenario,
   tourAtivo,
   passoTour,
+  pov,
+  onPov,
   controlsRef,
 }: CenaProps) {
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
+  const livre = pov === 'overview' && !tourAtivo;
 
   return (
     <>
@@ -318,6 +328,7 @@ function Cena({
             onSelecionar={alternar}
             onDestacar={setDestacado}
             position={POSICOES[mod.id]}
+            elevar={livre}
           >
             <Modulo3D
               id={mod.id}
@@ -325,6 +336,7 @@ function Cena({
               velocidade={velocidade}
               desvios={desvios}
               noite={noite}
+              onPov={onPov}
             />
           </GrupoInterativo>
 
@@ -337,36 +349,36 @@ function Cena({
               mod.id === 'mineradora' ? 3.4 : 2.6,
               POSICOES[mod.id][2],
             ]}
-            visivel={etiquetas}
+            visivel={etiquetas && livre}
           />
         </group>
       ))}
 
       <ContactShadows
         position={[0, 0.02, 0]}
-        opacity={noite ? 0.65 : 0.45}
+        opacity={noite ? 0.65 : 0.28}
         scale={34}
         blur={2.4}
         far={6}
       />
 
-      {!tourAtivo && (
-        <OrbitControls
-          ref={controlsRef}
-          enablePan
-          minDistance={7}
-          maxDistance={38}
-          maxPolarAngle={Math.PI / 2.15}
-          enableDamping
-          dampingFactor={0.07}
-          makeDefault
-        />
-      )}
+      <OrbitControls
+        ref={controlsRef}
+        enabled={livre}
+        enablePan={livre}
+        minDistance={7}
+        maxDistance={38}
+        maxPolarAngle={Math.PI / 2.15}
+        enableDamping
+        dampingFactor={0.07}
+        makeDefault
+      />
 
-      <CameraTour passo={passoTour} ativo={tourAtivo} />
-      {!tourAtivo && (
+      <CameraTour passo={passoTour} ativo={tourAtivo && pov === 'overview'} />
+      {livre && (
         <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} />
       )}
+      <CameraPov modo={pov} />
     </>
   );
 }
@@ -375,7 +387,7 @@ function Cena({
    Componente exportado
    ============================================================ */
 
-export default function Maquete3D() {
+export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }) {
   const [selecionado, setSelecionado] = useState<string | null>(null);
   const [destacado, setDestacado] = useState<string | null>(null);
   const [rodando, setRodando] = useState(true);
@@ -383,14 +395,16 @@ export default function Maquete3D() {
   const [etiquetas, setEtiquetas] = useState(true);
   const [noite, setNoite] = useState(false);
   const [cenario, setCenario] = useState(true);
-  const [desvios, setDesvios] = useState([0, 1, 0, 2]);
+  const [desvios, setDesvios] = useState([0, 1, 1, 1]);
   const [tourAtivo, setTourAtivo] = useState(false);
   const [passoTour, setPassoTour] = useState(0);
   const [visivel, setVisivel] = useState(true);
+  const [pov, setPov] = useState<PovId>('overview');
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
   const reduzido = usePrefersReducedMotion();
+  const leve = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -402,6 +416,18 @@ export default function Maquete3D() {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!rodando) return;
+    const id = window.setInterval(() => {
+      setDesvios((prev) => {
+        const porto = prev[2] === 1 || prev[3] === 1;
+        const alvo = porto ? 2 : 1;
+        return [prev[0], prev[1], alvo, alvo];
+      });
+    }, 20000);
+    return () => window.clearInterval(id);
+  }, [rodando]);
 
   // Avança o tour automaticamente
   useEffect(() => {
@@ -417,6 +443,7 @@ export default function Maquete3D() {
   }, [tourAtivo, passoTour, reduzido]);
 
   const iniciarTour = useCallback(() => {
+    setPov('overview');
     setPassoTour(0);
     setSelecionado(PASSOS_TOUR[0].moduloId);
     setTourAtivo(true);
@@ -433,8 +460,25 @@ export default function Maquete3D() {
     });
   }, []);
 
+  const entrarPov = useCallback((id: string) => {
+    const cam = CAMERAS_POV.find((c) => c.id === id);
+    pararTour();
+    setPov(id as PovId);
+    if (cam) setSelecionado(cam.modulo);
+  }, [pararTour]);
+
+  const voltarSala = useCallback(() => {
+    setTourAtivo(false);
+    setPov('sala');
+    setSelecionado('controle');
+  }, []);
+
+  const vistaGeral = useCallback(() => {
+    setPov('overview');
+    pararTour();
+  }, [pararTour]);
+
   const modulo = MODULOS.find((m) => m.id === selecionado);
-  const animando = rodando && !reduzido;
   const passoAtual = PASSOS_TOUR[passoTour];
 
   const girarDesvio = (i: number) =>
@@ -449,23 +493,23 @@ export default function Maquete3D() {
         : 'Loop principal';
 
   return (
-    <div className="maquete3d" ref={wrapperRef}>
+    <div className={`maquete3d${telaCheia ? ' maquete3d--cheia' : ''}`} ref={wrapperRef}>
       <div className="maquete3d-palco">
         <Canvas
-          shadows
+          shadows={!leve}
           frameloop="always"
-          dpr={[1, 1.75]}
+          dpr={leve ? [1, 1.25] : [1, 1.75]}
           camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 200 }}
           gl={{
             alpha: false,
-            antialias: true,
+            antialias: !leve,
             powerPreference: 'high-performance',
           }}
           onCreated={({ gl, scene }) => {
             gl.setClearColor(new THREE.Color(COR_DIA), 1);
             scene.background = new THREE.Color(COR_DIA);
           }}
-          onPointerMissed={() => !tourAtivo && setSelecionado(null)}
+          onPointerMissed={() => !tourAtivo && pov === 'overview' && setSelecionado(null)}
         >
           <PausarForaDaTela ativo={visivel} />
           <Cena
@@ -473,7 +517,7 @@ export default function Maquete3D() {
             destacado={destacado}
             setSelecionado={setSelecionado}
             setDestacado={setDestacado}
-            rodando={animando}
+            rodando={rodando}
             velocidade={velocidade}
             desvios={desvios}
             etiquetas={etiquetas}
@@ -481,6 +525,8 @@ export default function Maquete3D() {
             cenario={cenario}
             tourAtivo={tourAtivo}
             passoTour={passoTour}
+            pov={pov}
+            onPov={entrarPov}
             controlsRef={controlsRef}
           />
         </Canvas>
@@ -492,14 +538,64 @@ export default function Maquete3D() {
           </div>
         )}
 
+        {pov !== 'overview' && (
+          <div className="maquete3d-tour" role="status">
+            <span className="maquete3d-tour-badge">
+              {pov === 'sala' ? 'Sala de controle' : CAMERAS_POV.find((c) => c.id === pov)?.label}
+            </span>
+            <p className="maquete3d-tour-texto">
+              {pov === 'sala'
+                ? 'Clique num monitor (ou nos botões abaixo) para entrar na visão'
+                : 'Sensação a bordo — volte à sala ou à vista geral'}
+            </p>
+          </div>
+        )}
+
         <p className="maquete3d-dica" aria-hidden="true">
-          {tourAtivo
-            ? 'Tour em andamento — clique Parar tour para interagir'
-            : 'Arraste para girar · Role para aproximar · Clique em um módulo'}
+          {pov !== 'overview'
+            ? 'Você está na visão embarcada'
+            : tourAtivo
+              ? 'Tour em andamento — clique Parar tour para interagir'
+              : 'Arraste para girar · Role para aproximar · Clique em um módulo'}
         </p>
       </div>
 
       <div className="maquete3d-painel">
+        <div className="maquete3d-grupo">
+          <span className="maquete3d-rotulo" id="rot-cameras">
+            Monitores da sala
+          </span>
+          <div className="maquete3d-botoes maquete3d-cameras" role="group" aria-labelledby="rot-cameras">
+            <button
+              type="button"
+              className={`maquete3d-btn ${pov === 'sala' ? 'ativo' : ''}`}
+              aria-pressed={pov === 'sala'}
+              onClick={voltarSala}
+            >
+              Sala SCADA
+            </button>
+            {CAMERAS_POV.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`maquete3d-btn ${pov === c.id ? 'ativo' : ''}`}
+                aria-pressed={pov === c.id}
+                onClick={() => entrarPov(c.id)}
+              >
+                {c.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`maquete3d-btn ${pov === 'overview' ? 'ativo' : ''}`}
+              aria-pressed={pov === 'overview'}
+              onClick={vistaGeral}
+            >
+              Vista geral
+            </button>
+          </div>
+        </div>
+
         <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-modulos">
             Módulos
@@ -513,6 +609,7 @@ export default function Maquete3D() {
                 style={{ '--btn-cor': m.cor } as React.CSSProperties}
                 aria-pressed={selecionado === m.id}
                 onClick={() => {
+                  setPov('overview');
                   pararTour();
                   setSelecionado(selecionado === m.id ? null : m.id);
                 }}
@@ -619,10 +716,7 @@ export default function Maquete3D() {
           <button
             type="button"
             className="maquete3d-btn maquete3d-btn-acao"
-            onClick={() => {
-              pararTour();
-              setSelecionado(null);
-            }}
+            onClick={vistaGeral}
           >
             Ver tudo
           </button>
@@ -650,8 +744,8 @@ export default function Maquete3D() {
 
       {reduzido && (
         <p className="maquete3d-aviso">
-          As animações estão pausadas porque seu sistema pede movimento reduzido.
-          A maquete continua girando e clicável.
+          O sistema pediu movimento reduzido: o tour automático fica desligado.
+          Trem, caminhões e avião continuam na operação.
         </p>
       )}
     </div>

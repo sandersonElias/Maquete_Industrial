@@ -132,6 +132,12 @@ export default function MaqueteSection() {
           )}
         </div>
 
+        <p className="maquete-abrir">
+          <a className="hero-cta" href="/maquete">
+            Abrir maquete em tela cheia
+          </a>
+        </p>
+
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>
           <p className="shell-block__lead">

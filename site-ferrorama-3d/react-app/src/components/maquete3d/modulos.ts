@@ -33,27 +33,27 @@ export const PALETA = {
 export const PASSOS_TOUR = [
   {
     moduloId: 'mineradora' as const,
-    legenda: 'Extração a céu aberto — caminhões basculantes carregam o minério',
+    legenda: 'Volvo enche o CAT 793 — o caminhão leva o minério à logística',
     duracao: 5,
   },
   {
     moduloId: 'ferrovia' as const,
-    legenda: 'Circuito HO — desvios SG90 definem se a carga vai ao porto ou ao aeroporto',
+    legenda: 'MRS ES44ACi nos trilhos — ramal automático para porto ou aeroporto',
     duracao: 5,
   },
   {
     moduloId: 'porto' as const,
-    legenda: 'Terminal marítimo — guindaste embarca o minério para exportação',
+    legenda: 'Guindaste embarca o contêiner no porta-contêineres',
     duracao: 5,
   },
   {
     moduloId: 'aeroporto' as const,
-    legenda: 'Ramal aéreo — cargas de alto valor agregado decolam da pista',
+    legenda: 'C-5 Galaxy: taxi, carga na rampa e decolagem',
     duracao: 5,
   },
   {
     moduloId: 'controle' as const,
-    legenda: 'Central SCADA — Arduino, gateway e dashboard em tempo real',
+    legenda: 'Sala SCADA — clique nos monitores para entrar na visão',
     duracao: 5,
   },
   {
@@ -63,13 +63,19 @@ export const PASSOS_TOUR = [
   },
 ];
 
-/** Telemetria simulada exibida nas etiquetas 3D. */
+export const CAMERAS_POV = [
+  { id: 'volvo' as const, label: 'Escavadeira Volvo', modulo: 'mineradora' },
+  { id: 'cat' as const, label: 'Caminhão CAT', modulo: 'mineradora' },
+  { id: 'mrs' as const, label: 'Trem MRS', modulo: 'ferrovia' },
+  { id: 'navio' as const, label: 'Porta-contêineres', modulo: 'porto' },
+  { id: 'c5' as const, label: 'Avião C-5', modulo: 'aeroporto' },
+];
 export const TELEMETRIA: Record<string, string> = {
-  mineradora: '2 caminhões · 2 poços ativos',
-  ferrovia: 'Loco + 3 vagões · 4 desvios',
-  porto: 'Navio atracado · esteira ligada',
-  aeroporto: '2 aeronaves · torre ativa',
-  controle: 'Arduino + Gateway + App',
+  mineradora: 'Volvo + CAT 793 · ciclo da mina',
+  ferrovia: 'MRS ES44ACi · ramal automático',
+  porto: 'Porta-contêineres · guindaste no cais',
+  aeroporto: 'C-5 Galaxy · pista ativa',
+  controle: '5 monitores · sala SCADA',
 };
 
 export const MODULOS: Modulo[] = [

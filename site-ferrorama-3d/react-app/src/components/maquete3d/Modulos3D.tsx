@@ -4,6 +4,7 @@ import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
 import { criarTracado, curvaParalela, matrizesDormentes, posicionarNaCurva, tracadoComDesvio, criarRamoVisual, ramoAtivo } from './geometria';
+import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, PortaConteineres, AviaoC5, MesaControle } from './veiculos';
 
 /* ============================================================
    Wrapper interativo: destaca o módulo no hover e na seleção
@@ -17,6 +18,7 @@ interface GrupoInterativoProps {
   onSelecionar: (id: string) => void;
   onDestacar: (id: string | null) => void;
   position?: [number, number, number];
+  elevar?: boolean;
   children: ReactNode;
 }
 
@@ -28,6 +30,7 @@ export function GrupoInterativo({
   onSelecionar,
   onDestacar,
   position = [0, 0, 0],
+  elevar = true,
   children,
 }: GrupoInterativoProps) {
   const grupo = useRef<THREE.Group>(null);
@@ -37,7 +40,7 @@ export function GrupoInterativo({
   useFrame((_, delta) => {
     if (!grupo.current) return;
     // Módulo ativo sobe um pouco — leitura imediata de "isto está selecionado"
-    const alvoY = ativo ? 0.35 : 0;
+    const alvoY = elevar && ativo ? 0.35 : 0;
     grupo.current.position.y += (alvoY - grupo.current.position.y) * Math.min(delta * 8, 1);
 
     if (anel.current) {
@@ -252,53 +255,15 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
         ))}
       </group>
 
-      {/* Locomotiva */}
+      {/* Locomotiva MRS */}
       <group ref={trem}>
-        <mesh castShadow position={[0, 0.16, 0]}>
-          <boxGeometry args={[0.5, 0.32, 1.05]} />
-          <meshStandardMaterial color={PALETA.accent} roughness={0.4} metalness={0.3} />
-        </mesh>
-        {/* Cabine */}
-        <mesh castShadow position={[0, 0.42, -0.18]}>
-          <boxGeometry args={[0.44, 0.26, 0.42]} />
-          <meshStandardMaterial color="#2b6fb8" roughness={0.4} />
-        </mesh>
-        {/* Farol dianteiro */}
-        <mesh position={[0, 0.2, 0.55]}>
-          <sphereGeometry args={[0.07, 10, 10]} />
-          <meshStandardMaterial color="#fff3c4" emissive="#ffd700" emissiveIntensity={3} toneMapped={false} />
-        </mesh>
-        {/* Rodas */}
-        {[-0.3, 0.3].map((z) =>
-          [-0.26, 0.26].map((x) => (
-            <mesh key={`${x}-${z}`} position={[x, 0.06, z]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.09, 0.09, 0.05, 10]} />
-              <meshStandardMaterial color="#15181d" roughness={0.7} />
-            </mesh>
-          ))
-        )}
+        <LocoMRS />
       </group>
 
       {/* Vagões basculantes carregados de minério */}
       {[0, 1, 2].map((i) => (
         <group key={i} ref={(el) => { vagoes.current[i] = el; }}>
-          <mesh castShadow position={[0, 0.15, 0]}>
-            <boxGeometry args={[0.46, 0.26, 0.8]} />
-            <meshStandardMaterial color="#7a4a2a" roughness={0.7} />
-          </mesh>
-          {/* Carga de minério */}
-          <mesh position={[0, 0.3, 0]}>
-            <boxGeometry args={[0.36, 0.1, 0.62]} />
-            <meshStandardMaterial color="#4a2f22" roughness={1} />
-          </mesh>
-          {[-0.22, 0.22].map((z) =>
-            [-0.24, 0.24].map((x) => (
-              <mesh key={`${x}-${z}`} position={[x, 0.06, z]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.08, 0.08, 0.04, 8]} />
-                <meshStandardMaterial color="#15181d" roughness={0.7} />
-              </mesh>
-            ))
-          )}
+          <VagaoMinerio />
         </group>
       ))}
     </group>
@@ -310,29 +275,44 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
    ============================================================ */
 
 export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
-  const cacamba = useRef<THREE.Group>(null);
   const caminhao = useRef<THREE.Group>(null);
   const particulas = useRef<THREE.InstancedMesh>(null);
   const tempo = useRef(0);
+  const cicloRef = useRef(0);
+  const cargaRef = useRef(0.2);
   const COUNT = 18;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
 
   useFrame((_, delta) => {
     if (!rodando) return;
     tempo.current += delta;
+    const c = (tempo.current * 0.1) % 1;
+    cicloRef.current = c;
+
+    if (c < 0.28) cargaRef.current = Math.min(1, c / 0.28);
+    else if (c < 0.48) cargaRef.current = 1;
+    else if (c < 0.62) cargaRef.current = Math.max(0.04, 1 - (c - 0.48) / 0.14);
+    else cargaRef.current = 0.05;
 
     if (caminhao.current) {
-      const ciclo = (Math.sin(tempo.current * 0.4) + 1) / 2;
-      caminhao.current.position.x = -1.6 + ciclo * 3.2;
-      caminhao.current.rotation.y = Math.cos(tempo.current * 0.4) > 0 ? Math.PI / 2 : -Math.PI / 2;
-    }
-    if (cacamba.current) {
-      const despejo = Math.max(0, Math.sin(tempo.current * 0.4));
-      cacamba.current.rotation.x = -despejo * 0.7;
+      const pit = { x: -1.35, z: -0.48 };
+      const logistica = { x: 2.35, z: 2.05 };
+      let t = 0;
+      if (c < 0.28) t = 0;
+      else if (c < 0.48) t = (c - 0.28) / 0.2;
+      else if (c < 0.62) t = 1;
+      else t = 1 - (c - 0.62) / 0.38;
+
+      caminhao.current.position.x = pit.x + (logistica.x - pit.x) * t;
+      caminhao.current.position.z = pit.z + (logistica.z - pit.z) * t;
+
+      const indo = c >= 0.28 && c < 0.62;
+      const dx = logistica.x - pit.x;
+      const dz = logistica.z - pit.z;
+      caminhao.current.rotation.y = indo ? Math.atan2(dx, dz) : Math.atan2(-dx, -dz);
     }
 
-    // Poeira de minério na esteira
     if (particulas.current) {
-      const dummy = new THREE.Object3D();
       for (let i = 0; i < COUNT; i++) {
         const fase = (tempo.current * 0.9 + i * 0.17) % 1;
         dummy.position.set(1.2 + fase * 2.8, 0.55 + Math.sin(fase * Math.PI) * 0.35, (i % 3 - 1) * 0.12);
@@ -343,8 +323,6 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
       particulas.current.instanceMatrix.needsUpdate = true;
     }
   });
-
-  const intensidadeFarol = noite ? 4.5 : 2.5;
 
   return (
     <group>
@@ -380,20 +358,9 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
         <meshStandardMaterial color="#5a3520" roughness={1} emissive="#3a2010" emissiveIntensity={noite ? 0.8 : 0.2} />
       </instancedMesh>
 
-      {/* Escavadeira estática (silhueta) */}
-      <group position={[-1.8, 0, -1.2]} rotation={[0, 0.6, 0]}>
-        <mesh castShadow position={[0, 0.2, 0]}>
-          <boxGeometry args={[0.5, 0.25, 0.7]} />
-          <meshStandardMaterial color={PALETA.warning} roughness={0.6} />
-        </mesh>
-        <mesh castShadow position={[0.45, 0.55, 0]} rotation={[0, 0, -0.8]}>
-          <boxGeometry args={[0.9, 0.08, 0.12]} />
-          <meshStandardMaterial color={PALETA.warning} roughness={0.5} />
-        </mesh>
-        <mesh castShadow position={[0.85, 0.15, 0]} rotation={[0, 0, 0.5]}>
-          <boxGeometry args={[0.35, 0.06, 0.2]} />
-          <meshStandardMaterial color="#333" roughness={0.7} />
-        </mesh>
+      {/* Escavadeira Volvo — cava e despeja na caçamba */}
+      <group position={[-1.85, 0, -1.15]} rotation={[0, 0.85, 0]}>
+        <EscavadeiraVolvo rodando={rodando} cicloRef={cicloRef} />
       </group>
 
       {/* Barracão de operação */}
@@ -406,58 +373,9 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
         <meshStandardMaterial color="#3a3028" roughness={0.9} />
       </mesh>
 
-      {/* Caminhão basculante 1 */}
-      <group ref={caminhao} position={[0, 0, 2.4]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh castShadow position={[0, 0.22, 0.28]}>
-          <boxGeometry args={[0.44, 0.3, 0.42]} />
-          <meshStandardMaterial color={PALETA.warning} roughness={0.5} metalness={0.2} />
-        </mesh>
-        <group ref={cacamba} position={[0, 0.24, -0.18]}>
-          <mesh castShadow position={[0, 0.06, -0.16]}>
-            <boxGeometry args={[0.48, 0.24, 0.6]} />
-            <meshStandardMaterial color="#c98a1a" roughness={0.6} />
-          </mesh>
-        </group>
-        {/* Faróis em LED (pinos D2 e D3) */}
-        {[-0.14, 0.14].map((x) => (
-          <mesh key={x} position={[x, 0.22, 0.5]}>
-            <sphereGeometry args={[0.05, 8, 8]} />
-            <meshStandardMaterial
-              color="#fff8dc"
-              emissive="#ffe9a0"
-              emissiveIntensity={intensidadeFarol}
-              toneMapped={false}
-            />
-          </mesh>
-        ))}
-        {[-0.26, 0.26].map((x) =>
-          [-0.28, 0.26].map((z) => (
-            <mesh key={`${x}-${z}`} position={[x, 0.1, z]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.1, 0.1, 0.07, 10]} />
-              <meshStandardMaterial color="#15181d" roughness={0.8} />
-            </mesh>
-          ))
-        )}
-      </group>
-
-      {/* Caminhão basculante 2 — estacionado no poço */}
-      <group position={[0.8, 0, -0.6]} rotation={[0, -0.4, 0]}>
-        <mesh castShadow position={[0, 0.22, 0.28]}>
-          <boxGeometry args={[0.44, 0.3, 0.42]} />
-          <meshStandardMaterial color="#d4a017" roughness={0.5} metalness={0.2} />
-        </mesh>
-        <mesh castShadow position={[0, 0.3, -0.18]}>
-          <boxGeometry args={[0.48, 0.24, 0.6]} />
-          <meshStandardMaterial color="#b87810" roughness={0.6} />
-        </mesh>
-        {[-0.26, 0.26].map((x) =>
-          [-0.28, 0.26].map((z) => (
-            <mesh key={`b2-${x}-${z}`} position={[x, 0.1, z]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.1, 0.1, 0.07, 10]} />
-              <meshStandardMaterial color="#15181d" roughness={0.8} />
-            </mesh>
-          ))
-        )}
+      {/* CAT 793 — poço → área logística (em direção aos trilhos) */}
+      <group ref={caminhao} position={[-1.35, 0, -0.48]}>
+        <CaminhaoCAT cargaRef={cargaRef} cicloRef={cicloRef} />
       </group>
     </group>
   );
@@ -469,6 +387,9 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
 
 export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
   const lanca = useRef<THREE.Group>(null);
+  const gancho = useRef<THREE.Group>(null);
+  const cabo = useRef<THREE.Mesh>(null);
+  const caixa = useRef<THREE.Mesh>(null);
   const navio = useRef<THREE.Group>(null);
   const agua = useRef<THREE.Mesh>(null);
   const esteira = useRef<THREE.Group>(null);
@@ -477,7 +398,28 @@ export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: bo
   useFrame((_, delta) => {
     if (!rodando) return;
     tempo.current += delta;
-    if (lanca.current) lanca.current.rotation.y = Math.sin(tempo.current * 0.5) * 0.55;
+    const c = (tempo.current * 0.14) % 1;
+
+    if (lanca.current) {
+      const sobreNavio = c > 0.38 && c < 0.78;
+      const alvo = sobreNavio ? 0.72 : 0.08;
+      lanca.current.rotation.y += (alvo - lanca.current.rotation.y) * 0.08;
+    }
+
+    let queda = 0.55;
+    if (c < 0.22) queda = 0.45 + (c / 0.22) * 1.05;
+    else if (c < 0.4) queda = 1.5 - ((c - 0.22) / 0.18) * 1.0;
+    else if (c < 0.55) queda = 0.5;
+    else if (c < 0.72) queda = 0.5 + ((c - 0.55) / 0.17) * 1.05;
+    else queda = 1.55 - ((c - 0.72) / 0.28) * 1.05;
+
+    if (gancho.current) gancho.current.position.y = -queda;
+    if (cabo.current) {
+      cabo.current.scale.y = Math.max(0.2, queda / 0.8);
+      cabo.current.position.y = queda / 2;
+    }
+    if (caixa.current) caixa.current.visible = c < 0.7 || c > 0.94;
+
     if (navio.current) {
       navio.current.position.y = Math.sin(tempo.current * 1.1) * 0.04;
       navio.current.rotation.z = Math.sin(tempo.current * 0.9) * 0.02;
@@ -569,48 +511,26 @@ export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: bo
             <boxGeometry args={[2.4, 0.12, 0.16]} />
             <meshStandardMaterial color={PALETA.glow} roughness={0.45} metalness={0.5} />
           </mesh>
-          {/* Cabo e gancho */}
-          <mesh position={[2, -0.42, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.8, 4]} />
-            <meshStandardMaterial color="#8a8f98" />
-          </mesh>
-          <mesh castShadow position={[2, -0.9, 0]}>
-            <boxGeometry args={[0.26, 0.2, 0.26]} />
-            <meshStandardMaterial color={PALETA.warning} roughness={0.5} />
-          </mesh>
+          <group ref={gancho} position={[2, 0, 0]}>
+            <mesh ref={cabo} position={[0, -0.4, 0]}>
+              <cylinderGeometry args={[0.015, 0.015, 0.8, 4]} />
+              <meshStandardMaterial color="#8a8f98" />
+            </mesh>
+            <mesh castShadow position={[0, 0, 0]}>
+              <boxGeometry args={[0.22, 0.16, 0.22]} />
+              <meshStandardMaterial color={PALETA.warning} roughness={0.5} />
+            </mesh>
+            <mesh ref={caixa} castShadow position={[0, -0.22, 0]}>
+              <boxGeometry args={[0.42, 0.26, 0.38]} />
+              <meshStandardMaterial color="#e85d04" roughness={0.65} />
+            </mesh>
+          </group>
         </group>
       </group>
 
       {/* Navio atracado */}
-      <group ref={navio} position={[1.8, 0.22, -0.4]}>
-        <mesh castShadow>
-          <boxGeometry args={[1.5, 0.42, 4.2]} />
-          <meshStandardMaterial color="#8c2f3a" roughness={0.6} />
-        </mesh>
-        <mesh castShadow position={[0, 0.34, -1.2]}>
-          <boxGeometry args={[1.1, 0.5, 1]} />
-          <meshStandardMaterial color="#e8e4dd" roughness={0.7} />
-        </mesh>
-        {/* Contêineres */}
-        {[0.6, 0.05, -0.5].map((z, i) => (
-          <mesh key={z} castShadow position={[0, 0.34, z]}>
-            <boxGeometry args={[1.1, 0.28, 0.5]} />
-            <meshStandardMaterial
-              color={[PALETA.accent, PALETA.warning, PALETA.glow][i]}
-              roughness={0.7}
-            />
-          </mesh>
-        ))}
-        {/* LED vermelho: navio atracado */}
-        <mesh position={[0, 0.68, -1.2]}>
-          <sphereGeometry args={[0.07, 8, 8]} />
-          <meshStandardMaterial
-            color={PALETA.danger}
-            emissive={PALETA.danger}
-            emissiveIntensity={3}
-            toneMapped={false}
-          />
-        </mesh>
+      <group ref={navio} position={[1.9, 0.12, -0.35]} rotation={[0, 0, 0]}>
+        <PortaConteineres />
       </group>
     </group>
   );
@@ -624,16 +544,36 @@ export function Aeroporto({ rodando, noite = false }: { rodando: boolean; noite?
   const aviao = useRef<THREE.Group>(null);
   const radar = useRef<THREE.Mesh>(null);
   const tempo = useRef(0);
+  const cicloRef = useRef(0);
 
   useFrame((_, delta) => {
-    if (rodando && aviao.current) {
-      tempo.current += delta;
-      const ciclo = (tempo.current * 0.16) % 1;
-      aviao.current.position.z = -3 + ciclo * 6;
-      aviao.current.position.y = ciclo > 0.72 ? (ciclo - 0.72) * 5 : 0.18;
-      aviao.current.rotation.x = ciclo > 0.72 ? -0.22 : 0;
-    }
     if (radar.current) radar.current.rotation.y += delta * 1.2;
+    if (!rodando || !aviao.current) return;
+    tempo.current += delta;
+    const c = (tempo.current * 0.075) % 1;
+    cicloRef.current = c;
+    const a = aviao.current;
+
+    if (c < 0.18) {
+      const t = c / 0.18;
+      a.position.set(0, 0.28, -3.2 + t * 4.6);
+      a.rotation.set(0, 0, 0);
+    } else if (c < 0.36) {
+      a.position.set(0, 0.28, 1.4);
+      a.rotation.set(0, 0, 0);
+    } else if (c < 0.48) {
+      const t = (c - 0.36) / 0.12;
+      a.position.set(0, 0.28, 1.4 - t * 2.2);
+      a.rotation.set(0, 0, 0);
+    } else if (c < 0.78) {
+      const t = (c - 0.48) / 0.3;
+      a.position.set(0, 0.28 + t * t * 6.5, -0.8 + t * 8);
+      a.rotation.set(-0.28 * t, 0, 0);
+    } else {
+      const t = (c - 0.78) / 0.22;
+      a.position.set(0, 5.5 * (1 - t), -6 + t * 2.8);
+      a.rotation.set(-0.18 * (1 - t), 0, 0);
+    }
   });
 
   return (
@@ -725,22 +665,9 @@ export function Aeroporto({ rodando, noite = false }: { rodando: boolean; noite?
         </mesh>
       </group>
 
-      {/* Aeronave de carga — em movimento */}
-      <group ref={aviao} position={[0, 0.18, -3]}>
-        <mesh castShadow>
-          <capsuleGeometry args={[0.16, 1.2, 4, 10]} />
-          <meshStandardMaterial color="#e6e9ee" roughness={0.45} metalness={0.3} />
-        </mesh>
-        {/* Asas */}
-        <mesh castShadow position={[0, -0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <boxGeometry args={[0.07, 2.1, 0.42]} />
-          <meshStandardMaterial color="#d4d8de" roughness={0.5} metalness={0.3} />
-        </mesh>
-        {/* Cauda */}
-        <mesh castShadow position={[0, 0.24, -0.66]}>
-          <boxGeometry args={[0.06, 0.44, 0.3]} />
-          <meshStandardMaterial color={PALETA.purple} roughness={0.5} />
-        </mesh>
+      {/* C-5 — taxi, rampa, decolagem e aproximação */}
+      <group ref={aviao} position={[0, 0.28, -3.2]}>
+        <AviaoC5 cicloRef={cicloRef} />
       </group>
     </group>
   );
@@ -750,7 +677,15 @@ export function Aeroporto({ rodando, noite = false }: { rodando: boolean; noite?
    Central de Controle — Arduino, gateway e telas
    ============================================================ */
 
-export function Controle({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
+export function Controle({
+  rodando,
+  noite = false,
+  onPov,
+}: {
+  rodando: boolean;
+  noite?: boolean;
+  onPov?: (id: string) => void;
+}) {
   const leds = useRef<THREE.Group>(null);
   const tempo = useRef(0);
   const [lcdLinha, setLcdLinha] = useState('SW1:CENTER TRK:OK');
@@ -788,6 +723,8 @@ export function Controle({ rodando, noite = false }: { rodando: boolean; noite?:
         <boxGeometry args={[4.4, 0.6, 2.4]} />
         <meshStandardMaterial color={PALETA.card} roughness={0.8} />
       </mesh>
+
+      <MesaControle onEscolher={onPov} />
 
       {/* Placa Arduino Mega */}
       <mesh castShadow position={[-1.2, 0.64, 0.2]}>

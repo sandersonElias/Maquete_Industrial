@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/maquete", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/",

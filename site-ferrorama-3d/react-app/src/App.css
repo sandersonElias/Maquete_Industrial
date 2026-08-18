@@ -6665,3 +6665,123 @@ body::after {
     height: min(78svh, 420px);
   }
 }
+
+/* ============================================
+   MAQUETE — página cheia, POV, paisagem
+   ============================================ */
+.maquete-abrir {
+  margin: 1.25rem 0 0;
+  text-align: center;
+}
+
+.maquete-abrir .hero-cta {
+  display: inline-flex;
+}
+
+.maquete3d--cheia .maquete3d-palco {
+  aspect-ratio: auto;
+  min-height: min(72svh, 820px);
+  height: min(72svh, 820px);
+  max-height: none;
+}
+
+.maquete3d-cameras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.maquete-page {
+  min-height: 100svh;
+  background: #08080d;
+  display: flex;
+  flex-direction: column;
+}
+
+.maquete-page__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: max(0.65rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) 0.65rem max(1rem, env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.maquete-page__voltar {
+  color: #ffb07a;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.maquete-page__titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.maquete-page__palco {
+  flex: 1;
+  padding: 0.75rem 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
+.maquete-page__palco .maquete3d {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.maquete-vire {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgba(8, 8, 13, 0.92);
+  color: var(--text);
+}
+
+.maquete-vire p {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.maquete3d-monitor-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f4f1ea;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .maquete3d-monitor-label {
+    display: none;
+  }
+
+  .maquete3d-cameras {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .maquete3d-cameras .maquete3d-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .maquete3d--cheia .maquete3d-palco {
+    min-height: min(58svh, 520px);
+    height: min(58svh, 520px);
+  }
+}

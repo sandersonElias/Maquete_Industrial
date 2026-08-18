@@ -5,9 +5,9 @@ alwaysApply: true
 
 # Gaveta de ideias — maquete 3D
 
-Ideias **estacionadas**. Não implementar, não redesenhar trilhos, não deploy destas ideias até o Marco puxar explicitamente (ex.: “vamos fazer o tour de trem”, “puxa da gaveta”).
+Ideias **puxadas** (18 ago 2026). A cena 3D passou a ter vitrine viva, sala SCADA com monitores/POV, veículos estilizados e página `/maquete`. Não reimplementar do zero; evoluir o que já está em `maquete3d/` e `MaquetePage.tsx`.
 
-Não misturar com bugs, git, ou melhorias pontuais da cena atual.
+Não misturar com bugs pontuais sem o Marco pedir. Página da experiência: `/maquete`.
 
 ## Tour imersivo
 
@@ -71,4 +71,4 @@ Na maquete, no celular:
 - POV com movimento suave; opção de só assistir no “monitor” se enjoar.
 - **Paisagem automática** na seção/página da maquete 3D: o celular **vira de lado** (landscape) pra ver melhor o palco. Preferir `Screen Orientation` + tela cheia após um toque (“Abrir maquete”). Se o navegador não deixar travar (iPhone/Safari costuma bloquear), mostrar **“Vire o celular”** até estar deitado — a home em pé continua normal.
 
-Não implementar até puxar da gaveta.
+Não reabrir esta gaveta como “não implementar”.
