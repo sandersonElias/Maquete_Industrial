@@ -1,7 +1,10 @@
 const { Pool } = require("pg");
 const logger = require("./logger");
 
-const useSSL = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost");
+const useSSL =
+  process.env.DATABASE_URL &&
+  !process.env.DATABASE_URL.includes("localhost") &&
+  !process.env.DATABASE_URL.includes("@postgres:");
 
 const pool = new Pool(
   process.env.DATABASE_URL
