@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows, Stars } from '@react-three/drei';
+import { OrbitControls, Html, ContactShadows, Stars, Sky } from '@react-three/drei';
 import * as THREE from 'three';
 import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA, CAMERAS_POV } from './modulos';
 import {
@@ -16,16 +16,12 @@ import { Cenario3D } from './Cenario3D';
 import { CameraPov, type PovId } from './CameraPov';
 import { usePrefersReducedMotion } from '../../lib/motion';
 
-/** Posições de cada módulo sobre a placa. */
-const POSICOES: Record<string, [number, number, number]> = {
-  mineradora: [-10.5, 0, -5.5],
-  ferrovia: [0, 0, 0],
-  porto: [10.5, 0, 4],
-  aeroporto: [10, 0, -6],
-  controle: [-2, 0, 8],
-};
+import { LAYOUT } from './geometria';
 
-const CAMERA_INICIAL = new THREE.Vector3(13.5, 10.5, 15.5);
+/** Posições de cada módulo sobre a placa. */
+const POSICOES: Record<string, [number, number, number]> = LAYOUT;
+
+const CAMERA_INICIAL = new THREE.Vector3(22, 16.5, 24);
 const COR_NOITE = '#040508';
 /** Céu de dia claro — o paleta.dark deixava o “modo dia” quase tão escuro quanto a noite. */
 const COR_DIA = '#c5d4e2';
@@ -53,7 +49,7 @@ function CameraFoco({
     if (mod) {
       const [x, , z] = POSICOES[mod.id];
       alvoOlhar.current.set(x, 0.6, z);
-      alvoPos.current.set(x + 7, 5.5, z + 8);
+      alvoPos.current.set(x + 9, 7.2, z + 10);
     } else {
       alvoOlhar.current.set(0, 0, 0);
       alvoPos.current.copy(CAMERA_INICIAL);
@@ -96,7 +92,7 @@ function CameraTour({
 
     if (modId) {
       const [x, , z] = POSICOES[modId];
-      const raio = modId === 'ferrovia' ? 11 : 8.5;
+      const raio = modId === 'ferrovia' ? 15 : 11;
       alvoOlhar.current.set(x, 0.55, z);
       alvoPos.current.set(
         x + Math.cos(ang) * raio,
@@ -170,20 +166,21 @@ function Iluminacao({ noite }: { noite: boolean }) {
         </>
       ) : (
         <>
-          <ambientLight intensity={0.95} color="#fff6ea" />
+          <ambientLight intensity={0.42} color="#fff4e6" />
           <directionalLight
-            position={[12, 18, 10]}
-            intensity={2.35}
-            color="#fff4dc"
+            position={[14, 20, 9]}
+            intensity={1.85}
+            color="#fff3d4"
             castShadow
             shadow-mapSize={[1024, 1024]}
-            shadow-camera-left={-20}
-            shadow-camera-right={20}
-            shadow-camera-top={20}
-            shadow-camera-bottom={-20}
+            shadow-camera-left={-32}
+            shadow-camera-right={32}
+            shadow-camera-top={32}
+            shadow-camera-bottom={-32}
+            shadow-bias={-0.00025}
           />
-          <directionalLight position={[-10, 8, -8]} intensity={0.65} color="#dce8f4" />
-          <hemisphereLight args={['#9ec4e6', '#c4b49a', 0.95]} />
+          <directionalLight position={[-12, 7, -8]} intensity={0.45} color="#c5d8ee" />
+          <hemisphereLight args={['#9ec8ea', '#b8a078', 0.62]} />
         </>
       )}
     </group>
@@ -259,13 +256,25 @@ function Modulo3D({
 }) {
   switch (id) {
     case 'mineradora':
-      return <Mineradora rodando={rodando} noite={noite} />;
+      return (
+        <group scale={1.22}>
+          <Mineradora rodando={rodando} noite={noite} />
+        </group>
+      );
     case 'ferrovia':
       return <Ferrovia rodando={rodando} velocidade={velocidade} desvios={desvios} />;
     case 'porto':
-      return <Porto rodando={rodando} noite={noite} />;
+      return (
+        <group scale={1.48}>
+          <Porto rodando={rodando} noite={noite} />
+        </group>
+      );
     case 'aeroporto':
-      return <Aeroporto rodando={rodando} noite={noite} />;
+      return (
+        <group scale={1.52}>
+          <Aeroporto rodando={rodando} noite={noite} />
+        </group>
+      );
     case 'controle':
       return <Controle rodando={rodando} noite={noite} onPov={onPov} />;
     default:
@@ -280,7 +289,7 @@ function Ambiente({ noite }: { noite: boolean }) {
 
   useEffect(() => {
     scene.background = new THREE.Color(cor);
-    scene.fog = new THREE.Fog(cor, noite ? 28 : 42, noite ? 52 : 78);
+    scene.fog = new THREE.Fog(cor, noite ? 36 : 70, noite ? 68 : 125);
     return () => {
       scene.fog = null;
     };
@@ -313,6 +322,7 @@ function Cena({
     <>
       <Ambiente noite={noite} />
       <Iluminacao noite={noite} />
+      {!noite && <Sky sunPosition={[40, 28, 18]} turbidity={6} rayleigh={0.85} mieCoefficient={0.008} mieDirectionalG={0.8} />}
 
       <Base />
 
@@ -346,7 +356,7 @@ function Cena({
             cor={mod.cor}
             position={[
               POSICOES[mod.id][0],
-              mod.id === 'mineradora' ? 3.4 : 2.6,
+              mod.id === 'mineradora' ? 4.8 : 3.2,
               POSICOES[mod.id][2],
             ]}
             visivel={etiquetas && livre}
@@ -357,17 +367,17 @@ function Cena({
       <ContactShadows
         position={[0, 0.02, 0]}
         opacity={noite ? 0.65 : 0.28}
-        scale={34}
-        blur={2.4}
-        far={6}
+        scale={52}
+        blur={2.6}
+        far={8}
       />
 
       <OrbitControls
         ref={controlsRef}
         enabled={livre}
         enablePan={livre}
-        minDistance={7}
-        maxDistance={38}
+        minDistance={9}
+        maxDistance={58}
         maxPolarAngle={Math.PI / 2.15}
         enableDamping
         dampingFactor={0.07}
@@ -499,13 +509,16 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
           shadows={!leve}
           frameloop="always"
           dpr={leve ? [1, 1.25] : [1, 1.75]}
-          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 200 }}
+          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 280 }}
           gl={{
             alpha: false,
             antialias: !leve,
             powerPreference: 'high-performance',
           }}
           onCreated={({ gl, scene }) => {
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 1.08;
+            gl.outputColorSpace = THREE.SRGBColorSpace;
             gl.setClearColor(new THREE.Color(COR_DIA), 1);
             scene.background = new THREE.Color(COR_DIA);
           }}
@@ -545,15 +558,15 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             </span>
             <p className="maquete3d-tour-texto">
               {pov === 'sala'
-                ? 'Clique num monitor (ou nos botões abaixo) para entrar na visão'
-                : 'Sensação a bordo — volte à sala ou à vista geral'}
+                ? 'Clique num monitor (ou nos botões abaixo) para entrar na cabine'
+                : 'Visão da cabine — volte à sala ou à vista geral'}
             </p>
           </div>
         )}
 
         <p className="maquete3d-dica" aria-hidden="true">
           {pov !== 'overview'
-            ? 'Você está na visão embarcada'
+            ? 'Você está na cabine'
             : tourAtivo
               ? 'Tour em andamento — clique Parar tour para interagir'
               : 'Arraste para girar · Role para aproximar · Clique em um módulo'}

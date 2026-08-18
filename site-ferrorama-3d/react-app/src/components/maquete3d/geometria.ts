@@ -3,13 +3,40 @@ import * as THREE from 'three';
 /** Bitola visual das fotos: dois ferros prateados sobre dormente preto. */
 export const BITOLA = 0.2;
 
-const RX = 6.15;
-const RZ = 3.75;
-const R_CANTO = 1.85;
+export const RX = 8.55;
+export const RZ = 5.2;
+const R_CANTO = 2.25;
 
-function yPonte(z: number) {
-  const u = 1 - Math.min(1, Math.abs(z) / 1.7);
-  return u > 0 ? u * u * 0.42 : 0;
+/** Subida do morro leste — trilho assentado no terreno, não flutuando. */
+export function yMorroLeste(z: number) {
+  const u = 1 - Math.min(1, Math.abs(z) / 2.7);
+  return u > 0 ? Math.pow(u, 1.35) * 0.98 : 0;
+}
+
+/** Piso do túnel no morro oeste. */
+export function yTunelOeste(z: number) {
+  const u = 1 - Math.min(1, Math.abs(z) / 2.2);
+  return u > 0 ? 0.1 + Math.pow(u, 1.5) * 0.28 : 0;
+}
+
+export const LAYOUT = {
+  mineradora: [-17.2, 0, -9.4] as [number, number, number],
+  ferrovia: [0, 0, 0] as [number, number, number],
+  porto: [17.6, 0, 8.6] as [number, number, number],
+  aeroporto: [17.2, 0, -10.2] as [number, number, number],
+  controle: [-5.8, 0, 13.2] as [number, number, number],
+};
+
+export function geometriaMorro(raio: number, altura: number, segs = 36) {
+  const pts = [
+    new THREE.Vector2(0.04, 0),
+    new THREE.Vector2(raio * 1.05, 0.03),
+    new THREE.Vector2(raio * 0.9, altura * 0.28),
+    new THREE.Vector2(raio * 0.58, altura * 0.6),
+    new THREE.Vector2(raio * 0.24, altura * 0.9),
+    new THREE.Vector2(0.05, altura),
+  ];
+  return new THREE.LatheGeometry(pts, segs);
 }
 
 function arco(
@@ -40,8 +67,7 @@ function reta(a: THREE.Vector3, b: THREE.Vector3, n: number): THREE.Vector3[] {
 }
 
 /**
- * Circuito das fotos de montagem: estádio HO (retas + cantos em arco),
- * ponte elevada no leste, diagonal interna em S.
+ * Estádio HO maior: morro leste (subida/descida), túnel no oeste.
  */
 export function criarTracado(): THREE.CatmullRomCurve3 {
   const cxE = RX - R_CANTO;
@@ -50,47 +76,24 @@ export function criarTracado(): THREE.CatmullRomCurve3 {
   const czS = -(RZ - R_CANTO);
 
   const pts: THREE.Vector3[] = [];
-  // Leste (ponte) — de sul para norte
-  const lesteSul = new THREE.Vector3(RX, yPonte(czS), czS);
-  const lesteNorte = new THREE.Vector3(RX, yPonte(czN), czN);
+  const lesteSul = new THREE.Vector3(RX, yMorroLeste(czS), czS);
+  const lesteNorte = new THREE.Vector3(RX, yMorroLeste(czN), czN);
   pts.push(lesteSul);
-  for (let i = 1; i < 18; i++) {
-    const z = czS + ((czN - czS) * i) / 18;
-    pts.push(new THREE.Vector3(RX, yPonte(z), z));
+  for (let i = 1; i < 22; i++) {
+    const z = czS + ((czN - czS) * i) / 22;
+    pts.push(new THREE.Vector3(RX, yMorroLeste(z), z));
   }
   pts.push(lesteNorte);
-  // Canto NE
-  pts.push(...arco(cxE, czN, R_CANTO, 0, Math.PI / 2, 12).slice(1));
-  // Norte
-  pts.push(
-    ...reta(
-      new THREE.Vector3(cxE, 0, RZ),
-      new THREE.Vector3(cxW, 0, RZ),
-      14
-    )
-  );
-  // Canto NW
-  pts.push(...arco(cxW, czN, R_CANTO, Math.PI / 2, Math.PI, 12).slice(1));
-  // Oeste
-  pts.push(
-    ...reta(
-      new THREE.Vector3(-RX, 0, czN),
-      new THREE.Vector3(-RX, 0, czS),
-      14
-    )
-  );
-  // Canto SW
-  pts.push(...arco(cxW, czS, R_CANTO, Math.PI, (3 * Math.PI) / 2, 12).slice(1));
-  // Sul
-  pts.push(
-    ...reta(
-      new THREE.Vector3(cxW, 0, -RZ),
-      new THREE.Vector3(cxE, 0, -RZ),
-      14
-    )
-  );
-  // Canto SE
-  pts.push(...arco(cxE, czS, R_CANTO, (3 * Math.PI) / 2, Math.PI * 2, 12).slice(1, -1));
+  pts.push(...arco(cxE, czN, R_CANTO, 0, Math.PI / 2, 14).slice(1));
+  pts.push(...reta(new THREE.Vector3(cxE, 0, RZ), new THREE.Vector3(cxW, 0, RZ), 16));
+  pts.push(...arco(cxW, czN, R_CANTO, Math.PI / 2, Math.PI, 14).slice(1));
+  for (let i = 1; i <= 20; i++) {
+    const z = czN + ((czS - czN) * i) / 20;
+    pts.push(new THREE.Vector3(-RX, yTunelOeste(z), z));
+  }
+  pts.push(...arco(cxW, czS, R_CANTO, Math.PI, (3 * Math.PI) / 2, 14).slice(1));
+  pts.push(...reta(new THREE.Vector3(cxW, 0, -RZ), new THREE.Vector3(cxE, 0, -RZ), 16));
+  pts.push(...arco(cxE, czS, R_CANTO, (3 * Math.PI) / 2, Math.PI * 2, 14).slice(1, -1));
 
   return new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.2);
 }
@@ -99,16 +102,54 @@ export function criarTracado(): THREE.CatmullRomCurve3 {
 export function criarDiagonal(): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(
     [
-      new THREE.Vector3(-3.6, 0, 2.15),
-      new THREE.Vector3(-1.5, 0, 1.05),
+      new THREE.Vector3(-5.1, 0, 3.05),
+      new THREE.Vector3(-2.1, 0, 1.4),
       new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(1.5, 0, -1.05),
-      new THREE.Vector3(3.6, 0, -2.15),
+      new THREE.Vector3(2.1, 0, -1.4),
+      new THREE.Vector3(5.1, 0, -3.05),
     ],
     false,
     'centripetal',
     0.25
   );
+}
+
+export function criarEstradasLogistica(): THREE.CatmullRomCurve3[] {
+  const m = LAYOUT.mineradora;
+  const p = LAYOUT.porto;
+  const a = LAYOUT.aeroporto;
+  return [
+    new THREE.CatmullRomCurve3(
+      [
+        new THREE.Vector3(m[0] + 4.2, 0.03, m[2] + 2.2),
+        new THREE.Vector3(-12.4, 0.03, -5.2),
+        new THREE.Vector3(-8.8, 0.03, -1.4),
+      ],
+      false,
+      'centripetal',
+      0.35
+    ),
+    new THREE.CatmullRomCurve3(
+      [
+        new THREE.Vector3(2.4, 0.03, -6.2),
+        new THREE.Vector3(9.2, 0.03, -8.1),
+        new THREE.Vector3(a[0] - 3.2, 0.03, a[2] + 1.4),
+      ],
+      false,
+      'centripetal',
+      0.35
+    ),
+    new THREE.CatmullRomCurve3(
+      [
+        new THREE.Vector3(8.6, 0.03, 3.4),
+        new THREE.Vector3(12.8, 0.03, 6.1),
+        new THREE.Vector3(p[0] - 3.4, 0.03, p[2] - 1.2),
+      ],
+      false,
+      'centripetal',
+      0.35
+    ),
+  ];
 }
 
 export function curvaParalela(
@@ -269,9 +310,28 @@ export function geometriaFita(
     idx.push(a, b, n, b, d, n);
   }
 
+  const uv: number[] = [];
+  let comprimento = 0;
+  const wrapUv = fechada ? amostras : amostras + 1;
+  const lens: number[] = [0];
+  for (let i = 1; i < wrapUv; i++) {
+    const ax = pos[(i - 1) * 6];
+    const az = pos[(i - 1) * 6 + 2];
+    const bx = pos[i * 6];
+    const bz = pos[i * 6 + 2];
+    comprimento += Math.hypot(bx - ax, bz - az);
+    lens.push(comprimento);
+  }
+  const uScale = Math.max(comprimento / largura, 1);
+  for (let i = 0; i < wrapUv; i++) {
+    const u = (lens[i] / (comprimento || 1)) * uScale;
+    uv.push(0, u, 1, u);
+  }
+
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   g.setIndex(idx);
   return g;
 }
@@ -298,13 +358,13 @@ export function posicionarNaCurva(
 export type RamoFerroviario = 'nenhum' | 'porto' | 'aeroporto' | 'diagonal';
 
 /** Plataformas por dentro do oval — o trem não atravessa o prédio. */
-export const ESTACAO_MINA = new THREE.Vector3(-5.15, 0, -1.15);
-export const DESTINO_PORTO = new THREE.Vector3(4.55, 0, 2.65);
-export const DESTINO_AEROPORTO = new THREE.Vector3(4.55, 0, -2.65);
-/** Pontos no trilho onde o trem para (ao lado da estação). */
-export const PARADA_MINA = new THREE.Vector3(-6.15, 0, -1.15);
-export const PARADA_PORTO = new THREE.Vector3(6.15, 0, 2.45);
-export const PARADA_AERO = new THREE.Vector3(6.15, 0, -2.45);
+export const ESTACAO_MINA = new THREE.Vector3(-7.15, 0, -1.45);
+export const DESTINO_PORTO = new THREE.Vector3(6.35, 0, 3.55);
+export const DESTINO_AEROPORTO = new THREE.Vector3(6.35, 0, -3.55);
+/** Pontos no trilho onde o trem reduz (ao lado da estação). */
+export const PARADA_MINA = new THREE.Vector3(-RX, 0, -1.45);
+export const PARADA_PORTO = new THREE.Vector3(RX, yMorroLeste(2.55), 2.55);
+export const PARADA_AERO = new THREE.Vector3(RX, yMorroLeste(-2.55), -2.55);
 
 const RAMO = {
   porto: { tEntrada: 0.08, tSaida: 0.22 },
@@ -382,19 +442,18 @@ export function ramoAtivo(desvios: number[]): RamoFerroviario {
 
 export function criarPercursoCaminhao(): THREE.CatmullRomCurve3 {
   const pts: THREE.Vector3[] = [];
-  const n = 20;
-  const a0 = Math.atan2(1.35, 3.15);
+  const n = 24;
+  const a0 = Math.atan2(1.7, 4.05);
   for (let i = 0; i < n; i++) {
     const a = a0 + (i / n) * Math.PI * 2;
-    pts.push(new THREE.Vector3(Math.cos(a) * 3.55, 0, Math.sin(a) * 3.35));
+    pts.push(new THREE.Vector3(Math.cos(a) * 5.15, 0, Math.sin(a) * 4.85));
   }
   return new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.2);
 }
 
-/** Pilares da ponte no leste, como nas fotos. */
-export const PILARES_PONTE: [number, number, number][] = [
-  [6.15, 0, -1.15],
-  [6.15, 0, -0.4],
-  [6.15, 0, 0.4],
-  [6.15, 0, 1.15],
-];
+/** Centro do túnel no oeste e do morro leste. */
+export const TUNEL_OESTE = { x: -RX, y: 0.48, z: 0, comprimento: 3.55, raio: 0.46 };
+export const MORRO_LESTE = { x: RX, z: 0, raio: 2.65, altura: 1.22 };
+
+/** @deprecated — o morro substituiu os pilares. */
+export const PILARES_PONTE: [number, number, number][] = [];

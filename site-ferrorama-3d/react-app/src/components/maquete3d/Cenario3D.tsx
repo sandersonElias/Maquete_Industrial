@@ -2,82 +2,93 @@ import { useRef, useMemo, useLayoutEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
+import { texTerra, texMadeira, texAsfalto } from './texturas';
+import { criarEstradasLogistica, geometriaFita, LAYOUT } from './geometria';
 
-/** Pontos do fluxo logístico: mina → trem → porto (narrativa principal). */
 const FLUXO_PONTOS = [
-  new THREE.Vector3(-10, 0.08, -4),
-  new THREE.Vector3(-6, 0.08, -2),
-  new THREE.Vector3(-2, 0.08, 0),
-  new THREE.Vector3(3, 0.08, 2),
-  new THREE.Vector3(8, 0.08, 3.5),
-  new THREE.Vector3(10, 0.08, 4),
+  new THREE.Vector3(LAYOUT.mineradora[0] + 2, 0.1, LAYOUT.mineradora[2] + 2),
+  new THREE.Vector3(-8.5, 0.1, -2),
+  new THREE.Vector3(0, 0.1, 0.4),
+  new THREE.Vector3(8.2, 0.1, 3.2),
+  new THREE.Vector3(LAYOUT.porto[0] - 2, 0.1, LAYOUT.porto[2] - 1),
 ];
 
-const ARVORES: [number, number][] = [
-  [-13, -8], [-12, 3], [-8, 8], [-4, -9], [4, -8], [5, 9], [13, -2], [14, 6],
-  [-11, -2], [7, -3], [12, -7], [-6, 6], [2, 7], [-14, 5], [0, -10], [9, 8],
+const ARVORES: [number, number, number][] = [
+  [-20, -12, 1.1], [-18, 4, 0.85], [-14, 11, 1], [-8, -13, 0.9], [6, -12, 1.05],
+  [8, 13, 0.8], [19, -4, 1.15], [20, 10, 0.95], [-16, 0, 0.75], [11, -5, 0.88],
+  [18, -14, 1.2], [-10, 9, 0.82], [3, 12, 0.7], [-21, 8, 1], [1, -14, 0.92],
+  [14, 12, 0.86], [-6, -11, 0.78], [22, 2, 1.05], [-19, -6, 0.9], [9, 8, 0.72],
 ];
 
 function Arvores() {
   const troncos = useRef<THREE.InstancedMesh>(null);
-  const copas = useRef<THREE.InstancedMesh>(null);
+  const copasA = useRef<THREE.InstancedMesh>(null);
+  const copasB = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
   useLayoutEffect(() => {
-    ARVORES.forEach(([x, z], i) => {
-      const escala = 0.7 + (i % 5) * 0.12;
-      dummy.position.set(x, 0.22 * escala, z);
+    ARVORES.forEach(([x, z, escala], i) => {
+      dummy.position.set(x, 0.28 * escala, z);
       dummy.scale.set(escala, escala, escala);
       dummy.updateMatrix();
       troncos.current?.setMatrixAt(i, dummy.matrix);
-      dummy.position.y = 0.55 * escala;
+      dummy.position.y = 0.85 * escala;
       dummy.updateMatrix();
-      copas.current?.setMatrixAt(i, dummy.matrix);
+      copasA.current?.setMatrixAt(i, dummy.matrix);
+      dummy.position.y = 1.12 * escala;
+      dummy.scale.set(escala * 0.72, escala * 0.72, escala * 0.72);
+      dummy.updateMatrix();
+      copasB.current?.setMatrixAt(i, dummy.matrix);
     });
     if (troncos.current) troncos.current.instanceMatrix.needsUpdate = true;
-    if (copas.current) copas.current.instanceMatrix.needsUpdate = true;
+    if (copasA.current) copasA.current.instanceMatrix.needsUpdate = true;
+    if (copasB.current) copasB.current.instanceMatrix.needsUpdate = true;
   }, [dummy]);
 
   return (
     <group>
       <instancedMesh ref={troncos} args={[undefined, undefined, ARVORES.length]} castShadow>
-        <cylinderGeometry args={[0.08, 0.1, 0.45, 6]} />
-        <meshStandardMaterial color="#3a2a18" roughness={1} />
+        <cylinderGeometry args={[0.07, 0.11, 0.58, 10]} />
+        <meshStandardMaterial map={texMadeira()} color="#6a4a30" roughness={0.95} />
       </instancedMesh>
-      <instancedMesh ref={copas} args={[undefined, undefined, ARVORES.length]} castShadow>
-        <coneGeometry args={[0.38, 0.7, 7]} />
-        <meshStandardMaterial color="#1a3320" roughness={0.95} flatShading />
+      <instancedMesh ref={copasA} args={[undefined, undefined, ARVORES.length]} castShadow>
+        <sphereGeometry args={[0.42, 14, 12]} />
+        <meshStandardMaterial color="#2f5c36" roughness={0.88} />
+      </instancedMesh>
+      <instancedMesh ref={copasB} args={[undefined, undefined, ARVORES.length]} castShadow>
+        <sphereGeometry args={[0.32, 12, 10]} />
+        <meshStandardMaterial color="#3a6e40" roughness={0.86} />
       </instancedMesh>
     </group>
   );
 }
 
-/** Estradas de terra ligando os módulos. */
 function Estradas() {
-  const trechos: { pos: [number, number, number]; size: [number, number, number]; rot: number }[] = [
-    { pos: [-7, 0.04, -3], size: [5.5, 0.02, 1.1], rot: 0.35 },
-    { pos: [-3, 0.04, 0.5], size: [4, 0.02, 1], rot: 0.1 },
-    { pos: [4, 0.04, 2.5], size: [6, 0.02, 1.1], rot: -0.15 },
-    { pos: [8, 0.04, -1], size: [1.1, 0.02, 5], rot: 0 },
-  ];
+  const curvas = useMemo(() => criarEstradasLogistica(), []);
+  const geos = useMemo(() => curvas.map((c) => geometriaFita(c, 1.15, 0.02, 48, false)), [curvas]);
+  const asfalto = useMemo(() => texAsfalto(), []);
+  const terra = useMemo(() => texTerra(), []);
 
   return (
     <group>
-      {trechos.map((t, i) => (
-        <mesh key={i} position={t.pos} rotation={[0, t.rot, 0]} receiveShadow>
-          <boxGeometry args={t.size} />
-          <meshStandardMaterial color="#2a2418" roughness={1} />
+      {geos.map((g, i) => (
+        <mesh key={i} geometry={g} receiveShadow>
+          <meshStandardMaterial
+            map={i === 0 ? terra : asfalto}
+            color={i === 0 ? '#8a6e50' : '#9aa0a8'}
+            roughness={0.92}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       ))}
     </group>
   );
 }
 
-/** Partículas animadas ao longo do fluxo mina → porto. */
 export function FluxoMinério({ rodando }: { rodando: boolean }) {
   const curva = useMemo(() => new THREE.CatmullRomCurve3(FLUXO_PONTOS, false, 'catmullrom', 0.4), []);
   const bolas = useRef<THREE.InstancedMesh>(null);
-  const COUNT = 14;
+  const COUNT = 16;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const tempo = useRef(0);
 
@@ -89,7 +100,7 @@ export function FluxoMinério({ rodando }: { rodando: boolean }) {
       const t = (tempo.current + i / COUNT) % 1;
       const p = curva.getPointAt(t);
       dummy.position.set(p.x, p.y + Math.sin(t * Math.PI * 4) * 0.04, p.z);
-      dummy.scale.setScalar(0.06 + (i % 3) * 0.02);
+      dummy.scale.setScalar(0.07 + (i % 3) * 0.02);
       dummy.updateMatrix();
       bolas.current.setMatrixAt(i, dummy.matrix);
     }
@@ -99,7 +110,7 @@ export function FluxoMinério({ rodando }: { rodando: boolean }) {
   return (
     <group>
       <instancedMesh ref={bolas} args={[undefined, undefined, COUNT]}>
-        <sphereGeometry args={[1, 6, 6]} />
+        <sphereGeometry args={[1, 8, 8]} />
         <meshStandardMaterial
           color="#8b4513"
           emissive={PALETA.warning}
@@ -112,16 +123,15 @@ export function FluxoMinério({ rodando }: { rodando: boolean }) {
   );
 }
 
-/** Placa central do projeto + legendas de zona. */
 export function Sinalizacao({ noite }: { noite: boolean }) {
   return (
     <group>
-      <mesh castShadow position={[0, 0.35, 10.2]}>
-        <boxGeometry args={[0.12, 0.7, 1.8]} />
+      <mesh castShadow position={[0, 0.4, 15.4]}>
+        <cylinderGeometry args={[0.07, 0.09, 0.8, 10]} />
         <meshStandardMaterial color="#3a3a3a" roughness={0.8} metalness={0.4} />
       </mesh>
-      <mesh castShadow position={[0, 0.78, 10.2]} rotation={[0, 0, 0]}>
-        <boxGeometry args={[0.08, 0.55, 1.6]} />
+      <mesh castShadow position={[0, 0.92, 15.4]}>
+        <boxGeometry args={[0.08, 0.55, 1.7]} />
         <meshStandardMaterial
           color={PALETA.dark}
           emissive={PALETA.glow}
@@ -133,22 +143,21 @@ export function Sinalizacao({ noite }: { noite: boolean }) {
   );
 }
 
-/** Postes de energia e cabos entre módulos. */
 function Infraestrutura() {
   const postes: [number, number][] = [
-    [-5, -4], [2, -5], [6, 2], [-3, 5],
+    [-8, -6], [3, -7], [10, 3], [-5, 8], [12, -10],
   ];
 
   return (
     <group>
       {postes.map(([x, z], i) => (
         <group key={i} position={[x, 0, z]}>
-          <mesh castShadow position={[0, 0.55, 0]}>
-            <cylinderGeometry args={[0.04, 0.06, 1.1, 6]} />
+          <mesh castShadow position={[0, 0.7, 0]}>
+            <cylinderGeometry args={[0.04, 0.06, 1.4, 10]} />
             <meshStandardMaterial color="#4a4a4a" roughness={0.7} metalness={0.5} />
           </mesh>
-          <mesh position={[0, 1.05, 0]}>
-            <boxGeometry args={[0.6, 0.04, 0.04]} />
+          <mesh position={[0, 1.38, 0]}>
+            <boxGeometry args={[0.7, 0.04, 0.04]} />
             <meshStandardMaterial color="#333" roughness={0.6} />
           </mesh>
         </group>
