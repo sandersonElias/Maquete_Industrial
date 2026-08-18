@@ -44,7 +44,7 @@ export function LocoMRS() {
         <boxGeometry args={[0.22, 0.08, 0.02]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.5} />
       </mesh>
-      {[-0.3, 0.3].map((x) =>
+      {[-0.22, 0.22].map((x) =>
         [-0.42, 0.05, 0.48].map((z) => (
           <mesh key={`${x}-${z}`} position={[x, 0.1, z]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.1, 0.1, 0.06, 10]} />
@@ -93,7 +93,7 @@ export function EscavadeiraVolvo({
   useFrame(() => {
     if (!lanca.current) return;
     const c = cicloRef?.current ?? 0;
-    const dumping = rodando && c < 0.28;
+    const dumping = rodando && c < 0.18;
     const alvo = dumping ? -0.72 : -0.28;
     lanca.current.rotation.z += (alvo - lanca.current.rotation.z) * 0.1;
     if (jorro.current) jorro.current.visible = dumping && c > 0.06 && c < 0.24;
@@ -162,7 +162,7 @@ export function CaminhaoCAT({
     }
     if (cacamba.current) {
       const c = cicloRef?.current ?? 0;
-      const dump = c > 0.48 && c < 0.62;
+      const dump = c > 0.38 && c < 0.52;
       cacamba.current.rotation.x += ((dump ? -0.5 : 0) - cacamba.current.rotation.x) * 0.12;
     }
   });

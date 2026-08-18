@@ -9,7 +9,7 @@ const OFFSET: Record<Exclude<PovId, 'overview'>, { pos: [number, number, number]
   volvo: { pos: [-0.08, 0.72, 0.28], look: [1.6, 0.1, 0] },
   cat: { pos: [-0.08, 0.72, 0.95], look: [0, 0.15, -1.5] },
   mrs: { pos: [0, 0.72, -0.95], look: [0, 0.28, 1.4] },
-  navio: { pos: [0, 0.95, 0.2], look: [-2.6, 0.7, 1.1] },
+  navio: { pos: [0, 0.95, 0.2], look: [-1.5, 0.7, 0] },
   c5: { pos: [0, 0.18, 0.55], look: [0, 0, -1.8] },
 };
 

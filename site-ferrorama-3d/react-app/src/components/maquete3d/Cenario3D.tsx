@@ -98,10 +98,6 @@ export function FluxoMinério({ rodando }: { rodando: boolean }) {
 
   return (
     <group>
-      <mesh position={[0, 0.06, 0]}>
-        <tubeGeometry args={[curva, 64, 0.06, 6, false]} />
-        <meshStandardMaterial color={PALETA.warning} transparent opacity={0.08} roughness={1} />
-      </mesh>
       <instancedMesh ref={bolas} args={[undefined, undefined, COUNT]}>
         <sphereGeometry args={[1, 6, 6]} />
         <meshStandardMaterial
