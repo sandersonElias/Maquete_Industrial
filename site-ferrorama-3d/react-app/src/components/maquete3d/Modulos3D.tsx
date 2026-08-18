@@ -2,7 +2,7 @@ import { useRef, useMemo, useLayoutEffect, ReactNode, type RefObject } from 'rea
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
-import { criarTracado, criarDiagonal, curvaParalela, matrizesDormentes, posicionarNaCurva, tracadoComDesvio, criarRamoVisual, ramoAtivo, geometriaFita, geometriaPrisma, DESTINO_PORTO, DESTINO_AEROPORTO, ESTACAO_MINA, criarPercursoCaminhao, BITOLA, PILARES_PONTE } from './geometria';
+import { criarTracado, criarDiagonal, matrizesDormentes, posicionarNaCurva, ramoAtivo, geometriaFita, geometriaTrilho, DESTINO_PORTO, DESTINO_AEROPORTO, ESTACAO_MINA, PARADA_MINA, PARADA_PORTO, PARADA_AERO, criarPercursoCaminhao, BITOLA, PILARES_PONTE, tMaisProximo } from './geometria';
 import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, PortaConteineres, AviaoC5, MesaControle } from './veiculos';
 
 /* ============================================================
@@ -120,58 +120,65 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
   const vagoes = useRef<(THREE.Group | null)[]>([]);
   const progresso = useRef(0);
   const espera = useRef(0);
-  const jaParou = useRef(false);
+  const paradaAtual = useRef(-1);
 
   const principal = useMemo(() => criarTracado(), []);
-  const curva = useMemo(() => tracadoComDesvio(principal, desvios), [principal, desvios]);
-  const ramo = ramoAtivo(desvios);
-  const ramoPorto = useMemo(() => criarRamoVisual(principal, 'porto'), [principal]);
-  const ramoAero = useMemo(() => criarRamoVisual(principal, 'aeroporto'), [principal]);
   const diagonal = useMemo(() => criarDiagonal(), []);
+  const ramo = ramoAtivo(desvios);
+  const tParadas = useMemo(
+    () => [
+      tMaisProximo(principal, PARADA_MINA),
+      tMaisProximo(principal, PARADA_PORTO),
+      tMaisProximo(principal, PARADA_AERO),
+    ],
+    [principal]
+  );
 
   useLayoutEffect(() => {
-    if (trem.current) posicionarNaCurva(trem.current, curva, 0, 0.08);
-  }, [curva]);
+    if (trem.current) posicionarNaCurva(trem.current, principal, 0, 0.08);
+  }, [principal]);
 
   useFrame((_, delta) => {
     const frac = ((progresso.current % 1) + 1) % 1;
-    const p = curva.getPointAt(frac);
-    const destinos: THREE.Vector3[] = [ESTACAO_MINA];
-    if (ramo === 'porto') destinos.push(DESTINO_PORTO);
-    if (ramo === 'aeroporto') destinos.push(DESTINO_AEROPORTO);
-    const naEstacao = destinos.some((d) => p.distanceTo(d) < 0.75);
-
-    if (naEstacao) {
-      if (!jaParou.current) {
-        espera.current += delta;
-        if (espera.current < 2.4) {
-          if (trem.current) posicionarNaCurva(trem.current, curva, progresso.current, 0.08);
-          vagoes.current.forEach((v, i) => {
-            if (v) posicionarNaCurva(v, curva, progresso.current - 0.018 * (i + 1), 0.07);
-          });
-          return;
-        }
-        jaParou.current = true;
+    let id = -1;
+    for (let i = 0; i < tParadas.length; i++) {
+      let d = Math.abs(frac - tParadas[i]);
+      if (d > 0.5) d = 1 - d;
+      if (d < 0.016) {
+        id = i;
+        break;
       }
-    } else {
-      jaParou.current = false;
+    }
+
+    if (id >= 0 && paradaAtual.current !== id) {
+      espera.current += delta;
+      if (espera.current < 1.6) {
+        if (trem.current) posicionarNaCurva(trem.current, principal, progresso.current, 0.08);
+        vagoes.current.forEach((v, i) => {
+          if (v) posicionarNaCurva(v, principal, progresso.current - 0.018 * (i + 1), 0.07);
+        });
+        return;
+      }
+      paradaAtual.current = id;
+      progresso.current = frac + 0.022;
+      espera.current = 0;
+    } else if (id < 0) {
+      paradaAtual.current = -1;
       espera.current = 0;
     }
 
-    if (rodando) progresso.current += delta * 0.04 * velocidade;
+    if (rodando) progresso.current += delta * 0.045 * velocidade;
 
-    if (trem.current) posicionarNaCurva(trem.current, curva, progresso.current, 0.08);
+    if (trem.current) posicionarNaCurva(trem.current, principal, progresso.current, 0.08);
     vagoes.current.forEach((v, i) => {
-      if (v) posicionarNaCurva(v, curva, progresso.current - 0.018 * (i + 1), 0.07);
+      if (v) posicionarNaCurva(v, principal, progresso.current - 0.018 * (i + 1), 0.07);
     });
   });
 
   return (
     <group>
       <TrilhoHO curva={principal} fechada />
-      <TrilhoHO curva={diagonal} fechada={false} opacidade={ramo === 'diagonal' ? 1 : 0.7} />
-      <TrilhoHO curva={ramoPorto} fechada={false} corTrilho={ramo === 'porto' ? PALETA.glow : '#c5ced6'} opacidade={ramo === 'porto' ? 1 : 0.55} />
-      <TrilhoHO curva={ramoAero} fechada={false} corTrilho={ramo === 'aeroporto' ? PALETA.purple : '#c5ced6'} opacidade={ramo === 'aeroporto' ? 1 : 0.55} />
+      <TrilhoHO curva={diagonal} fechada={false} opacidade={ramo === 'diagonal' ? 1 : 0.55} />
 
       {PILARES_PONTE.map((p, i) => (
         <group key={i} position={p}>
@@ -204,9 +211,9 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
         );
       })}
 
-      <EstacaoTrem position={[ESTACAO_MINA.x, 0, ESTACAO_MINA.z]} rotacao={0.12} cor={PALETA.warning} />
-      <EstacaoTrem position={[DESTINO_PORTO.x, 0, DESTINO_PORTO.z]} rotacao={-1.05} cor={PALETA.glow} />
-      <EstacaoTrem position={[DESTINO_AEROPORTO.x, 0, DESTINO_AEROPORTO.z]} rotacao={1.05} cor={PALETA.purple} />
+      <EstacaoTrem position={[ESTACAO_MINA.x, 0, ESTACAO_MINA.z]} rotacao={Math.PI / 2} cor={PALETA.warning} />
+      <EstacaoTrem position={[DESTINO_PORTO.x, 0, DESTINO_PORTO.z]} rotacao={-Math.PI / 2} cor={PALETA.glow} />
+      <EstacaoTrem position={[DESTINO_AEROPORTO.x, 0, DESTINO_AEROPORTO.z]} rotacao={-Math.PI / 2} cor={PALETA.purple} />
 
       <group position={[2.8, 0, -3.6]}>
         <mesh castShadow position={[0, 0.35, 0]}>
@@ -260,10 +267,10 @@ function TrilhoHO({
 }) {
   const localRef = useRef<THREE.InstancedMesh>(null);
   const ref = dormentesRef ?? localRef;
-  const nDorm = fechada ? 320 : 48;
+  const nDorm = fechada ? 280 : 40;
   const dorm = useMemo(() => matrizes ?? matrizesDormentes(curva, nDorm), [curva, matrizes, nDorm]);
-  const e = useMemo(() => geometriaPrisma(curvaParalela(curva, BITOLA), 0.028, 0.04, fechada ? 240 : 80, fechada), [curva, fechada]);
-  const d = useMemo(() => geometriaPrisma(curvaParalela(curva, -BITOLA), 0.028, 0.04, fechada ? 240 : 80, fechada), [curva, fechada]);
+  const e = useMemo(() => geometriaTrilho(curva, BITOLA, 0.026, 0.038, fechada ? 240 : 64, fechada), [curva, fechada]);
+  const d = useMemo(() => geometriaTrilho(curva, -BITOLA, 0.026, 0.038, fechada ? 240 : 64, fechada), [curva, fechada]);
 
   useLayoutEffect(() => {
     if (!ref.current || matrizes) return;
@@ -359,7 +366,7 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
     if (particulas.current) {
       for (let i = 0; i < COUNT; i++) {
         const fase = (tempo.current * 0.9 + i * 0.17) % 1;
-        dummy.position.set(1.2 + fase * 2.8, 0.55 + Math.sin(fase * Math.PI) * 0.35, (i % 3 - 1) * 0.12);
+        dummy.position.set(0.55 + fase * 1.4, 1.15 + Math.sin(fase * Math.PI) * 0.28, (i % 3 - 1) * 0.1);
         dummy.scale.setScalar(0.04 + (i % 4) * 0.015);
         dummy.updateMatrix();
         particulas.current.setMatrixAt(i, dummy.matrix);
@@ -371,17 +378,17 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
   return (
     <group>
       <mesh geometry={pistaGeo} receiveShadow>
-        <meshStandardMaterial color="#5c4c3a" roughness={1} side={THREE.DoubleSide} />
+        <meshStandardMaterial color="#3a3c40" roughness={0.95} side={THREE.DoubleSide} />
       </mesh>
 
       {/* Montanha em degraus, como uma mina a céu aberto */}
       {[
-        { r: 2.6, h: 0.5, y: 0.25 },
-        { r: 1.9, h: 0.5, y: 0.75 },
-        { r: 1.2, h: 0.5, y: 1.25 },
+        { r: 2.45, h: 0.5, y: 0.25 },
+        { r: 1.75, h: 0.5, y: 0.75 },
+        { r: 1.05, h: 0.48, y: 1.24 },
       ].map((n, i) => (
         <mesh key={i} castShadow receiveShadow position={[0, n.y, 0]}>
-          <cylinderGeometry args={[n.r - 0.35, n.r, n.h, 10]} />
+          <cylinderGeometry args={[n.r - 0.32, n.r, n.h, 10]} />
           <meshStandardMaterial color={i === 2 ? '#5a4632' : '#4a3a2a'} roughness={1} flatShading />
         </mesh>
       ))}
@@ -394,9 +401,9 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
         </mesh>
       ))}
 
-      {/* Esteira transportadora descendo da mina */}
-      <mesh castShadow position={[1.7, 0.85, 0]} rotation={[0, 0, -0.5]}>
-        <boxGeometry args={[3, 0.09, 0.5]} />
+      {/* Esteira do poço até a borda — não cruza a estrada */}
+      <mesh castShadow position={[1.15, 0.95, 0]} rotation={[0, 0, -0.42]}>
+        <boxGeometry args={[1.7, 0.09, 0.42]} />
         <meshStandardMaterial color={PALETA.surface} roughness={0.6} metalness={0.3} />
       </mesh>
 
@@ -406,22 +413,22 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
         <meshStandardMaterial color="#5a3520" roughness={1} emissive="#3a2010" emissiveIntensity={noite ? 0.8 : 0.2} />
       </instancedMesh>
 
-      {/* Escavadeira Volvo — cava e despeja na caçamba */}
-      <group position={[-1.55, 0, 1.2]} rotation={[0, -Math.PI / 2, 0]}>
+      {/* Volvo na borda do poço, cavando para dentro; caminhão só na estrada */}
+      <group position={[2.72, 0.02, 1.22]} rotation={[0, Math.PI * 0.12, 0]} scale={1.35}>
         <EscavadeiraVolvo rodando={rodando} cicloRef={cicloRef} />
       </group>
 
-      {/* Barracão de operação */}
-      <mesh castShadow position={[-2.2, 0.28, 1.5]}>
-        <boxGeometry args={[1.2, 0.56, 0.9]} />
+      {/* Barracão fora da estrada */}
+      <mesh castShadow position={[-3.95, 0.28, -0.15]}>
+        <boxGeometry args={[1.15, 0.56, 0.85]} />
         <meshStandardMaterial color={PALETA.card} roughness={0.85} />
       </mesh>
-      <mesh castShadow position={[-2.2, 0.62, 1.5]}>
-        <boxGeometry args={[1.25, 0.12, 0.95]} />
+      <mesh castShadow position={[-3.95, 0.62, -0.15]}>
+        <boxGeometry args={[1.2, 0.12, 0.9]} />
         <meshStandardMaterial color="#3a3028" roughness={0.9} />
       </mesh>
 
-      {/* CAT 793 — loop: Volvo carrega, curva até a logística, volta sem meia-volta */}
+      {/* CAT 793 — anel de asfalto em volta da mina */}
       <group ref={caminhao}>
         <CaminhaoCAT cargaRef={cargaRef} cicloRef={cicloRef} />
       </group>

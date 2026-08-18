@@ -93,10 +93,12 @@ export function EscavadeiraVolvo({
   useFrame(() => {
     if (!lanca.current) return;
     const c = cicloRef?.current ?? 0;
-    const dumping = rodando && c < 0.18;
-    const alvo = dumping ? -0.72 : -0.28;
-    lanca.current.rotation.z += (alvo - lanca.current.rotation.z) * 0.1;
-    if (jorro.current) jorro.current.visible = dumping && c > 0.06 && c < 0.24;
+    const despeja = rodando && c < 0.18;
+    const cava = rodando && !despeja;
+    const mergulho = 0.35 + Math.sin(c * Math.PI * 6) * 0.28;
+    const alvo = !rodando ? -0.2 : despeja ? -0.78 : mergulho;
+    lanca.current.rotation.z += (alvo - lanca.current.rotation.z) * 0.12;
+    if (jorro.current) jorro.current.visible = cava && mergulho > 0.45;
   });
 
   return (
