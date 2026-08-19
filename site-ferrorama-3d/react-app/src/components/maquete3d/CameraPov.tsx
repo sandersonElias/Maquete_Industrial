@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export type PovId = 'overview' | 'sala' | 'volvo' | 'cat' | 'mrs' | 'navio' | 'c5';
+export type PovId = 'overview' | 'sala' | 'volvo' | 'cat' | 'mrs' | 'navio';
 
 /** Offsets locais a partir do grupo da cabine (olho + para onde olha). */
 const CABINE: Record<Exclude<PovId, 'overview'>, { pos: [number, number, number]; look: [number, number, number]; fov: number }> = {
@@ -11,7 +11,6 @@ const CABINE: Record<Exclude<PovId, 'overview'>, { pos: [number, number, number]
   cat: { pos: [0, 0.04, 0], look: [0.05, -0.18, 2.6], fov: 56 },
   mrs: { pos: [0, 0.02, -0.06], look: [0, -0.22, 4.2], fov: 52 },
   navio: { pos: [0, 0.04, 0], look: [0, -0.28, 5.5], fov: 60 },
-  c5: { pos: [0, 0.02, 0], look: [0, -0.18, 4.5], fov: 55 },
 };
 
 export function CameraPov({

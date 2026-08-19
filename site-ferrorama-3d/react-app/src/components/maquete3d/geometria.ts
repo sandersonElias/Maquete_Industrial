@@ -23,7 +23,6 @@ export const LAYOUT = {
   mineradora: [-17.2, 0, -9.4] as [number, number, number],
   ferrovia: [0, 0, 0] as [number, number, number],
   porto: [17.6, 0, 8.6] as [number, number, number],
-  aeroporto: [17.2, 0, -10.2] as [number, number, number],
   controle: [-5.8, 0, 13.2] as [number, number, number],
 };
 
@@ -117,23 +116,12 @@ export function criarDiagonal(): THREE.CatmullRomCurve3 {
 export function criarEstradasLogistica(): THREE.CatmullRomCurve3[] {
   const m = LAYOUT.mineradora;
   const p = LAYOUT.porto;
-  const a = LAYOUT.aeroporto;
   return [
     new THREE.CatmullRomCurve3(
       [
         new THREE.Vector3(m[0] + 4.2, 0.03, m[2] + 2.2),
         new THREE.Vector3(-12.4, 0.03, -5.2),
         new THREE.Vector3(-8.8, 0.03, -1.4),
-      ],
-      false,
-      'centripetal',
-      0.35
-    ),
-    new THREE.CatmullRomCurve3(
-      [
-        new THREE.Vector3(2.4, 0.03, -6.2),
-        new THREE.Vector3(9.2, 0.03, -8.1),
-        new THREE.Vector3(a[0] - 3.2, 0.03, a[2] + 1.4),
       ],
       false,
       'centripetal',
@@ -355,33 +343,30 @@ export function posicionarNaCurva(
   );
 }
 
-export type RamoFerroviario = 'nenhum' | 'porto' | 'aeroporto' | 'diagonal';
+export type RamoFerroviario = 'nenhum' | 'porto' | 'diagonal';
 
 /** Plataformas por dentro do oval — o trem não atravessa o prédio. */
 export const ESTACAO_MINA = new THREE.Vector3(-7.15, 0, -1.45);
 export const DESTINO_PORTO = new THREE.Vector3(6.35, 0, 3.55);
-export const DESTINO_AEROPORTO = new THREE.Vector3(6.35, 0, -3.55);
 /** Pontos no trilho onde o trem reduz (ao lado da estação). */
 export const PARADA_MINA = new THREE.Vector3(-RX, 0, -1.45);
 export const PARADA_PORTO = new THREE.Vector3(RX, yMorroLeste(2.55), 2.55);
-export const PARADA_AERO = new THREE.Vector3(RX, yMorroLeste(-2.55), -2.55);
 
 const RAMO = {
   porto: { tEntrada: 0.08, tSaida: 0.22 },
-  aeroporto: { tEntrada: 0.78, tSaida: 0.92 },
 } as const;
 
 function pontosDoRamo(
   principal: THREE.CatmullRomCurve3,
-  tipo: 'porto' | 'aeroporto'
+  tipo: 'porto'
 ): THREE.Vector3[] {
-  const destino = tipo === 'porto' ? DESTINO_PORTO : DESTINO_AEROPORTO;
+  const destino = DESTINO_PORTO;
   const { tEntrada, tSaida } = RAMO[tipo];
   const entrada = principal.getPointAt(tEntrada);
   const saida = principal.getPointAt(tSaida);
   const tanE = principal.getTangentAt(tEntrada);
   const tanS = principal.getTangentAt(tSaida);
-  const lado = tipo === 'porto' ? 1 : -1;
+  const lado = 1;
 
   return [
     entrada.clone(),
@@ -396,7 +381,7 @@ function pontosDoRamo(
 
 export function criarRamoVisual(
   principal: THREE.CatmullRomCurve3,
-  tipo: 'porto' | 'aeroporto'
+  tipo: 'porto'
 ): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(pontosDoRamo(principal, tipo), false, 'catmullrom', 0.32);
 }
@@ -435,7 +420,6 @@ export function tracadoComDesvio(
 
 export function ramoAtivo(desvios: number[]): RamoFerroviario {
   if (desvios[2] === 1 || desvios[3] === 1) return 'porto';
-  if (desvios[2] === 2 || desvios[3] === 2) return 'aeroporto';
   if (desvios[0] === 1 || desvios[1] === 1) return 'diagonal';
   return 'nenhum';
 }

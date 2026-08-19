@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, ContactShadows, Stars, Sky } from '@react-three/drei';
 import * as THREE from 'three';
@@ -8,12 +8,12 @@ import {
   Ferrovia,
   Mineradora,
   Porto,
-  Aeroporto,
   Controle,
   GrupoInterativo,
 } from './Modulos3D';
 import { Cenario3D } from './Cenario3D';
 import { CameraPov, type PovId } from './CameraPov';
+import { MaqueteBlender } from './MaqueteBlender';
 import { usePrefersReducedMotion } from '../../lib/motion';
 
 import { LAYOUT } from './geometria';
@@ -21,10 +21,10 @@ import { LAYOUT } from './geometria';
 /** Posições de cada módulo sobre a placa. */
 const POSICOES: Record<string, [number, number, number]> = LAYOUT;
 
-const CAMERA_INICIAL = new THREE.Vector3(22, 16.5, 24);
+const CAMERA_INICIAL = new THREE.Vector3(24, 18, 28);
 const COR_NOITE = '#040508';
-/** Céu de dia claro — o paleta.dark deixava o “modo dia” quase tão escuro quanto a noite. */
-const COR_DIA = '#c5d4e2';
+/** Céu de oficina — cinza-azulado, sem estourar o PBR. */
+const COR_DIA = '#5a7a96';
 
 /* ============================================================
    Câmera: aproxima suavemente do módulo selecionado
@@ -166,21 +166,22 @@ function Iluminacao({ noite }: { noite: boolean }) {
         </>
       ) : (
         <>
-          <ambientLight intensity={0.42} color="#fff4e6" />
+          <ambientLight intensity={0.16} color="#d8c8a8" />
           <directionalLight
-            position={[14, 20, 9]}
-            intensity={1.85}
-            color="#fff3d4"
+            position={[18, 24, 8]}
+            intensity={1.35}
+            color="#ffe8c4"
             castShadow
-            shadow-mapSize={[1024, 1024]}
-            shadow-camera-left={-32}
-            shadow-camera-right={32}
-            shadow-camera-top={32}
-            shadow-camera-bottom={-32}
-            shadow-bias={-0.00025}
+            shadow-mapSize={[2048, 2048]}
+            shadow-camera-left={-34}
+            shadow-camera-right={34}
+            shadow-camera-top={34}
+            shadow-camera-bottom={-34}
+            shadow-bias={-0.0002}
+            shadow-normalBias={0.04}
           />
-          <directionalLight position={[-12, 7, -8]} intensity={0.45} color="#c5d8ee" />
-          <hemisphereLight args={['#9ec8ea', '#b8a078', 0.62]} />
+          <directionalLight position={[-10, 6, -9]} intensity={0.28} color="#7a9bb8" />
+          <hemisphereLight args={['#6ea0cc', '#4a3d28', 0.38]} />
         </>
       )}
     </group>
@@ -236,6 +237,7 @@ interface CenaProps {
   passoTour: number;
   pov: PovId;
   onPov: (id: string) => void;
+  fonte: 'codigo' | 'blender';
   controlsRef: React.RefObject<any>;
 }
 
@@ -269,12 +271,6 @@ function Modulo3D({
           <Porto rodando={rodando} noite={noite} />
         </group>
       );
-    case 'aeroporto':
-      return (
-        <group scale={1.52}>
-          <Aeroporto rodando={rodando} noite={noite} />
-        </group>
-      );
     case 'controle':
       return <Controle rodando={rodando} noite={noite} onPov={onPov} />;
     default:
@@ -289,7 +285,7 @@ function Ambiente({ noite }: { noite: boolean }) {
 
   useEffect(() => {
     scene.background = new THREE.Color(cor);
-    scene.fog = new THREE.Fog(cor, noite ? 36 : 70, noite ? 68 : 125);
+    scene.fog = new THREE.Fog(cor, noite ? 36 : 70, noite ? 68 : 140);
     return () => {
       scene.fog = null;
     };
@@ -313,56 +309,66 @@ function Cena({
   passoTour,
   pov,
   onPov,
+  fonte,
   controlsRef,
 }: CenaProps) {
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
+  const blender = fonte === 'blender';
   const livre = pov === 'overview' && !tourAtivo;
 
   return (
     <>
       <Ambiente noite={noite} />
       <Iluminacao noite={noite} />
-      {!noite && <Sky sunPosition={[40, 28, 18]} turbidity={6} rayleigh={0.85} mieCoefficient={0.008} mieDirectionalG={0.8} />}
+      {!noite && !blender && (
+        <Sky sunPosition={[100, 42, 24]} turbidity={2.2} rayleigh={1.15} mieCoefficient={0.004} mieDirectionalG={0.82} />
+      )}
 
-      <Base />
+      {blender ? (
+        <Suspense fallback={null}>
+          <MaqueteBlender rodando={rodando} velocidade={velocidade} />
+        </Suspense>
+      ) : (
+        <>
+          <Base />
+          {cenario && <Cenario3D rodando={rodando} noite={noite} />}
+          {MODULOS.map((mod) => (
+            <group key={mod.id}>
+              <GrupoInterativo
+                id={mod.id}
+                cor={mod.cor}
+                selecionado={selecionado === mod.id}
+                destacado={destacado === mod.id}
+                onSelecionar={alternar}
+                onDestacar={setDestacado}
+                position={POSICOES[mod.id]}
+                elevar={livre}
+              >
+                <Modulo3D
+                  id={mod.id}
+                  rodando={rodando}
+                  velocidade={velocidade}
+                  desvios={desvios}
+                  noite={noite}
+                  onPov={onPov}
+                />
+              </GrupoInterativo>
 
-      {cenario && <Cenario3D rodando={rodando} noite={noite} />}
-
-      {MODULOS.map((mod) => (
-        <group key={mod.id}>
-          <GrupoInterativo
-            id={mod.id}
-            cor={mod.cor}
-            selecionado={selecionado === mod.id}
-            destacado={destacado === mod.id}
-            onSelecionar={alternar}
-            onDestacar={setDestacado}
-            position={POSICOES[mod.id]}
-            elevar={livre}
-          >
-            <Modulo3D
-              id={mod.id}
-              rodando={rodando}
-              velocidade={velocidade}
-              desvios={desvios}
-              noite={noite}
-              onPov={onPov}
-            />
-          </GrupoInterativo>
-
-          <Etiqueta
-            texto={mod.nome}
-            subtitulo={TELEMETRIA[mod.id]}
-            cor={mod.cor}
-            position={[
-              POSICOES[mod.id][0],
-              mod.id === 'mineradora' ? 4.8 : 3.2,
-              POSICOES[mod.id][2],
-            ]}
-            visivel={etiquetas && livre}
-          />
-        </group>
-      ))}
+              <Etiqueta
+                texto={mod.nome}
+                subtitulo={TELEMETRIA[mod.id]}
+                cor={mod.cor}
+                position={[
+                  POSICOES[mod.id][0],
+                  mod.id === 'mineradora' ? 4.8 : 3.2,
+                  POSICOES[mod.id][2],
+                ]}
+                visivel={etiquetas && livre}
+              />
+            </group>
+          ))}
+        </>
+      )}
 
       <ContactShadows
         position={[0, 0.02, 0]}
@@ -376,7 +382,7 @@ function Cena({
         ref={controlsRef}
         enabled={livre}
         enablePan={livre}
-        minDistance={9}
+        minDistance={5}
         maxDistance={58}
         maxPolarAngle={Math.PI / 2.15}
         enableDamping
@@ -384,11 +390,11 @@ function Cena({
         makeDefault
       />
 
-      <CameraTour passo={passoTour} ativo={tourAtivo && pov === 'overview'} />
+      <CameraTour passo={passoTour} ativo={!blender && tourAtivo && pov === 'overview'} />
       {livre && (
         <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} />
       )}
-      <CameraPov modo={pov} />
+      {!blender && <CameraPov modo={pov} />}
     </>
   );
 }
@@ -410,6 +416,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   const [passoTour, setPassoTour] = useState(0);
   const [visivel, setVisivel] = useState(true);
   const [pov, setPov] = useState<PovId>('overview');
+  const [fonte, setFonte] = useState<'codigo' | 'blender'>('blender');
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
@@ -498,9 +505,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   const destinoTrem =
     desvios[2] === 1 || desvios[3] === 1
       ? 'Porto'
-      : desvios[2] === 2 || desvios[3] === 2
-        ? 'Aeroporto'
-        : 'Loop principal';
+      : 'Loop principal';
 
   return (
     <div className={`maquete3d${telaCheia ? ' maquete3d--cheia' : ''}`} ref={wrapperRef}>
@@ -517,7 +522,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
           }}
           onCreated={({ gl, scene }) => {
             gl.toneMapping = THREE.ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.08;
+            gl.toneMappingExposure = 0.88;
             gl.outputColorSpace = THREE.SRGBColorSpace;
             gl.setClearColor(new THREE.Color(COR_DIA), 1);
             scene.background = new THREE.Color(COR_DIA);
@@ -540,6 +545,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             passoTour={passoTour}
             pov={pov}
             onPov={entrarPov}
+            fonte={fonte}
             controlsRef={controlsRef}
           />
         </Canvas>
@@ -575,6 +581,34 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
 
       <div className="maquete3d-painel">
         <div className="maquete3d-grupo">
+          <span className="maquete3d-rotulo" id="rot-fonte">
+            Fonte 3D
+          </span>
+          <div className="maquete3d-botoes" role="group" aria-labelledby="rot-fonte">
+            <button
+              type="button"
+              className={`maquete3d-btn ${fonte === 'blender' ? 'ativo' : ''}`}
+              aria-pressed={fonte === 'blender'}
+              onClick={() => {
+                setFonte('blender');
+                setPov('overview');
+                pararTour();
+              }}
+            >
+              Blender
+            </button>
+            <button
+              type="button"
+              className={`maquete3d-btn ${fonte === 'codigo' ? 'ativo' : ''}`}
+              aria-pressed={fonte === 'codigo'}
+              onClick={() => setFonte('codigo')}
+            >
+              Código (atual)
+            </button>
+          </div>
+        </div>
+
+        <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-cameras">
             Monitores da sala
           </span>
@@ -583,6 +617,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
               type="button"
               className={`maquete3d-btn ${pov === 'sala' ? 'ativo' : ''}`}
               aria-pressed={pov === 'sala'}
+              disabled={fonte === 'blender'}
               onClick={voltarSala}
             >
               Sala SCADA
@@ -593,6 +628,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
                 type="button"
                 className={`maquete3d-btn ${pov === c.id ? 'ativo' : ''}`}
                 aria-pressed={pov === c.id}
+                disabled={fonte === 'blender'}
                 onClick={() => entrarPov(c.id)}
               >
                 {c.label}
@@ -668,8 +704,14 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
               type="button"
               className="maquete3d-btn maquete3d-btn-tour"
               onClick={iniciarTour}
-              disabled={reduzido}
-              title={reduzido ? 'Tour indisponível com movimento reduzido' : undefined}
+              disabled={reduzido || fonte === 'blender'}
+              title={
+                fonte === 'blender'
+                  ? 'Tour dos módulos está no modo Código'
+                  : reduzido
+                    ? 'Tour indisponível com movimento reduzido'
+                    : undefined
+              }
             >
               Iniciar tour
             </button>
@@ -758,7 +800,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
       {reduzido && (
         <p className="maquete3d-aviso">
           O sistema pediu movimento reduzido: o tour automático fica desligado.
-          Trem, caminhões e avião continuam na operação.
+          Trem, caminhões e navio continuam na operação.
         </p>
       )}
     </div>

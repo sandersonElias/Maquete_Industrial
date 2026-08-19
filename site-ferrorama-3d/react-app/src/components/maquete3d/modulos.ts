@@ -38,17 +38,12 @@ export const PASSOS_TOUR = [
   },
   {
     moduloId: 'ferrovia' as const,
-    legenda: 'MRS ES44ACi nos trilhos — ramal automático para porto ou aeroporto',
+    legenda: 'MRS ES44ACi nos trilhos — ramal automático para o porto',
     duracao: 5,
   },
   {
     moduloId: 'porto' as const,
     legenda: 'Guindaste embarca o contêiner no porta-contêineres',
-    duracao: 5,
-  },
-  {
-    moduloId: 'aeroporto' as const,
-    legenda: 'C-5 Galaxy: taxi, carga na rampa e decolagem',
     duracao: 5,
   },
   {
@@ -68,14 +63,12 @@ export const CAMERAS_POV = [
   { id: 'cat' as const, label: 'Caminhão CAT', modulo: 'mineradora' },
   { id: 'mrs' as const, label: 'Trem MRS', modulo: 'ferrovia' },
   { id: 'navio' as const, label: 'Porta-contêineres', modulo: 'porto' },
-  { id: 'c5' as const, label: 'Avião C-5', modulo: 'aeroporto' },
 ];
 export const TELEMETRIA: Record<string, string> = {
   mineradora: 'Volvo + CAT 793 · ciclo da mina',
   ferrovia: 'MRS ES44ACi · ramal automático',
   porto: 'Porta-contêineres · guindaste no cais',
-  aeroporto: 'C-5 Galaxy · pista ativa',
-  controle: '5 monitores · sala SCADA',
+  controle: '4 monitores · sala SCADA',
 };
 
 export const MODULOS: Modulo[] = [
@@ -122,26 +115,12 @@ export const MODULOS: Modulo[] = [
     ],
   },
   {
-    id: 'aeroporto',
-    nome: 'Aeroporto Logístico',
-    cor: PALETA.purple,
-    alvo: [8, 0.5, -6],
-    resumo:
-      'Pista de carga para o ramal alternativo, com aeronaves em escala 1:500.',
-    detalhes: [
-      'Ramal secundário acionado pelos desvios 3 e 4',
-      'Aeronaves listadas em GET /api/airport/airplanes',
-      'Balizamento de pista em LED',
-      'Usado para cargas de maior valor agregado',
-    ],
-  },
-  {
     id: 'controle',
     nome: 'Central de Controle',
     cor: PALETA.danger,
     alvo: [0, 0.5, 7],
     resumo:
-      'Arduino Mega, gateway e dashboard: o cérebro que coordena os quatro módulos.',
+      'Arduino Mega, gateway e dashboard: o cérebro que coordena os módulos.',
     detalhes: [
       'Arduino ↔ Gateway Node.js por Serial/Bluetooth',
       'Gateway ↔ Backend Express por WebSocket',

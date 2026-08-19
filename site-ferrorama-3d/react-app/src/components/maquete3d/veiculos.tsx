@@ -332,68 +332,11 @@ export function PortaConteineres() {
   );
 }
 
-/** C-5 — POV no cockpit, olhando a pista. */
-export function AviaoC5({ cicloRef }: { cicloRef?: CicloRef }) {
-  const rampa = useRef<Group>(null);
-
-  useFrame((_, delta) => {
-    if (!rampa.current) return;
-    const c = cicloRef?.current ?? 0;
-    const aberta = c > 0.38 && c < 0.58;
-    rampa.current.rotation.x += ((aberta ? 0.85 : 0.08) - rampa.current.rotation.x) * Math.min(delta * 4, 1);
-  });
-
-  return (
-    <group name="pov-c5">
-      <mesh castShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <capsuleGeometry args={[0.26, 2.2, 6, 12]} />
-        <meshStandardMaterial color="#9aa3ab" roughness={0.42} metalness={0.28} />
-      </mesh>
-      <mesh castShadow position={[0, 0.24, 1.12]}>
-        <boxGeometry args={[0.36, 0.24, 0.5]} />
-        <meshStandardMaterial color="#7e868e" roughness={0.4} metalness={0.22} />
-      </mesh>
-      <Vidro args={[0.32, 0.14, 0.04]} position={[0, 0.28, 1.38]} />
-      {[-0.18, 0.18].map((x) => (
-        <Vidro key={x} args={[0.03, 0.12, 0.22]} position={[x, 0.26, 1.18]} />
-      ))}
-      <group name="cabine-c5" position={[0, 0.36, 1.46]}>
-        <MolduraCabine largura={0.38} compacto />
-      </group>
-      <mesh castShadow position={[0, 0.16, 0.1]} rotation={[0, 0, Math.PI / 2]}>
-        <boxGeometry args={[0.06, 3.2, 0.55]} />
-        <meshStandardMaterial color="#a8b0b8" roughness={0.44} metalness={0.2} />
-      </mesh>
-      {[-0.85, 0.85, -1.25, 1.25].map((x) => (
-        <mesh key={x} castShadow position={[x, -0.02, 0.22]}>
-          <cylinderGeometry args={[0.09, 0.1, 0.32, 10]} />
-          <meshStandardMaterial color="#5c6168" roughness={0.35} metalness={0.4} />
-        </mesh>
-      ))}
-      <mesh castShadow position={[0, 0.52, -1.05]}>
-        <boxGeometry args={[0.1, 0.7, 0.32]} />
-        <meshStandardMaterial color="#9aa3ab" roughness={0.45} metalness={0.22} />
-      </mesh>
-      <mesh castShadow position={[0, 0.86, -1.05]}>
-        <boxGeometry args={[0.95, 0.08, 0.28]} />
-        <meshStandardMaterial color="#9aa3ab" roughness={0.45} metalness={0.22} />
-      </mesh>
-      <group ref={rampa} position={[0, -0.12, -1.2]}>
-        <mesh castShadow position={[0, 0, -0.32]}>
-          <boxGeometry args={[0.38, 0.04, 0.62]} />
-          <meshStandardMaterial color="#4e545c" roughness={0.65} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
-
 const MONITORS: { id: string; label: string; cor: string }[] = [
   { id: 'volvo', label: 'VOLVO', cor: VOLVO_AMARELO },
   { id: 'cat', label: 'CAT', cor: CAT_AMARELO },
   { id: 'mrs', label: 'MRS', cor: '#3d9eff' },
   { id: 'navio', label: 'NAVIO', cor: '#5dade2' },
-  { id: 'c5', label: 'C-5', cor: '#9aa3ab' },
 ];
 
 export function MesaControle({
@@ -405,7 +348,7 @@ export function MesaControle({
     <group name="pov-sala" position={[0, 0.62, 0.1]}>
       <group name="cabine-sala" position={[0, 0.42, 0.55]} />
       {MONITORS.map((m, i) => {
-        const x = (i - 2) * 0.78;
+        const x = (i - 1.5) * 0.9;
         return (
           <group key={m.id} position={[x, 0.38, -0.55]} rotation={[-0.28, 0, 0]}>
             <mesh castShadow>

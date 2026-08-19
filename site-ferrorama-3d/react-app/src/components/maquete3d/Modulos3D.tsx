@@ -2,9 +2,9 @@ import { useRef, useMemo, useLayoutEffect, ReactNode, type RefObject } from 'rea
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
-import { criarTracado, criarDiagonal, matrizesDormentes, posicionarNaCurva, ramoAtivo, geometriaFita, geometriaTrilho, DESTINO_PORTO, DESTINO_AEROPORTO, ESTACAO_MINA, PARADA_MINA, PARADA_PORTO, PARADA_AERO, criarPercursoCaminhao, BITOLA, tMaisProximo, geometriaMorro, TUNEL_OESTE, MORRO_LESTE } from './geometria';
-import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, PortaConteineres, AviaoC5, MesaControle } from './veiculos';
-import { texGrama, texAsfalto, texConcreto, texAgua, texPista, texMetal, texMadeira, texLastro, texTerra, texRocha } from './texturas';
+import { criarTracado, criarDiagonal, matrizesDormentes, posicionarNaCurva, ramoAtivo, geometriaFita, geometriaTrilho, DESTINO_PORTO, ESTACAO_MINA, PARADA_MINA, PARADA_PORTO, criarPercursoCaminhao, BITOLA, tMaisProximo, geometriaMorro, TUNEL_OESTE, MORRO_LESTE } from './geometria';
+import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, PortaConteineres, MesaControle } from './veiculos';
+import { texGrama, texAsfalto, texConcreto, texAgua, texMetal, texMadeira, texLastro, texTerra, texRocha } from './texturas';
 
 /* ============================================================
    Wrapper interativo: destaca o módulo no hover e na seleção
@@ -130,7 +130,6 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
     () => [
       tMaisProximo(principal, PARADA_MINA),
       tMaisProximo(principal, PARADA_PORTO),
-      tMaisProximo(principal, PARADA_AERO),
     ],
     [principal]
   );
@@ -190,7 +189,6 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
 
       <EstacaoTrem position={[ESTACAO_MINA.x, 0, ESTACAO_MINA.z]} rotacao={Math.PI / 2} cor={PALETA.warning} />
       <EstacaoTrem position={[DESTINO_PORTO.x, 0, DESTINO_PORTO.z]} rotacao={-Math.PI / 2} cor={PALETA.glow} />
-      <EstacaoTrem position={[DESTINO_AEROPORTO.x, 0, DESTINO_AEROPORTO.z]} rotacao={-Math.PI / 2} cor={PALETA.purple} />
 
       <group position={[2.8, 0, -3.6]}>
         <mesh castShadow position={[0, 0.35, 0]}>
@@ -639,156 +637,6 @@ export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: bo
       {/* Navio colado no cais — casco encosta na face leste do píer */}
       <group ref={navio} position={[0.22, 0.08, 0.2]}>
         <PortaConteineres />
-      </group>
-    </group>
-  );
-}
-
-/* ============================================================
-   Aeroporto — pista, balizamento e aeronave
-   ============================================================ */
-
-export function Aeroporto({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
-  const aviao = useRef<THREE.Group>(null);
-  const radar = useRef<THREE.Mesh>(null);
-  const tempo = useRef(0);
-  const cicloRef = useRef(0);
-  const alvoPos = useRef(new THREE.Vector3(0, 0.32, -3.1));
-  const alvoQuat = useRef(new THREE.Quaternion());
-  const euler = useRef(new THREE.Euler());
-  const pista = useMemo(() => texPista(), []);
-  const concreto = useMemo(() => texConcreto(), []);
-
-  useFrame((_, delta) => {
-    if (radar.current) radar.current.rotation.y += delta * 1.2;
-    if (!aviao.current) return;
-    if (rodando) tempo.current += delta;
-    const c = (tempo.current * 0.072) % 1;
-    cicloRef.current = c;
-
-    let x = 0;
-    let y = 0.32;
-    let z = -3.1;
-    let yaw = 0;
-    let pitch = 0;
-    let roll = 0;
-
-    const ease = (t: number) => t * t * (3 - 2 * t);
-
-    if (c < 0.2) {
-      const t = ease(c / 0.2);
-      z = -7.2 + t * 4.1;
-      y = 2.15 * (1 - t) + 0.32 * t;
-      pitch = -0.22 * (1 - t);
-    } else if (c < 0.38) {
-      const t = (c - 0.2) / 0.18;
-      z = -3.1 + t * 5.4;
-      y = 0.32;
-    } else if (c < 0.56) {
-      z = 2.3;
-      y = 0.32;
-    } else if (c < 0.66) {
-      const t = ease((c - 0.56) / 0.1);
-      z = 2.3;
-      yaw = Math.PI * t;
-      y = 0.32 + Math.sin(t * Math.PI) * 0.04;
-    } else if (c < 0.82) {
-      const t = (c - 0.66) / 0.16;
-      const e = ease(t);
-      z = 2.3 - e * 5.6;
-      y = 0.32 + e * e * 2.4;
-      pitch = 0.28 * e;
-      yaw = Math.PI;
-    } else {
-      const t = ease((c - 0.82) / 0.18);
-      x = Math.sin(t * Math.PI) * 3.6;
-      z = -3.1 - (1 - t) * 3.4;
-      y = 2.2;
-      yaw = Math.PI + t * Math.PI;
-      pitch = -0.12;
-      roll = Math.sin(t * Math.PI) * 0.22;
-    }
-
-    alvoPos.current.set(x, y, z);
-    euler.current.set(pitch, yaw, roll, 'YXZ');
-    alvoQuat.current.setFromEuler(euler.current);
-    const k = 1 - Math.exp(-delta * 5.5);
-    aviao.current.position.lerp(alvoPos.current, k);
-    aviao.current.quaternion.slerp(alvoQuat.current, k);
-  });
-
-  return (
-    <group>
-      {/* Pista */}
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <planeGeometry args={[2.2, 8]} />
-        <meshStandardMaterial map={pista} roughness={0.86} />
-      </mesh>
-
-      {/* Balizamento em LED nas bordas */}
-      {Array.from({ length: 8 }, (_, i) =>
-        [-1.25, 1.25].map((x) => (
-          <mesh key={`${i}-${x}`} position={[x, 0.08, -3.4 + i * 1]}>
-            <sphereGeometry args={[0.055, 6, 6]} />
-            <meshStandardMaterial
-              color={PALETA.purple}
-              emissive={PALETA.purple}
-              emissiveIntensity={noite ? 4.2 : 2.4}
-              toneMapped={false}
-            />
-          </mesh>
-        ))
-      )}
-
-      {noite && (
-        <pointLight position={[0, 1.5, 0]} color={PALETA.purple} intensity={1.8} distance={8} decay={2} />
-      )}
-
-      {/* Terminal de carga */}
-      <mesh castShadow position={[2.1, 0.4, 1.4]}>
-        <boxGeometry args={[1.7, 0.8, 2.4]} />
-        <meshStandardMaterial map={concreto} color="#c8ccd2" roughness={0.72} />
-      </mesh>
-      <mesh castShadow position={[2.1, 0.95, 1.4]}>
-        <boxGeometry args={[1.8, 0.3, 2.5]} />
-        <meshStandardMaterial color={PALETA.surface} roughness={0.6} />
-      </mesh>
-
-      {/* Torre de controle */}
-      <group position={[-2.2, 0, 2.2]}>
-        <mesh castShadow position={[0, 0.55, 0]}>
-          <boxGeometry args={[0.5, 1.1, 0.5]} />
-          <meshStandardMaterial color={PALETA.card} roughness={0.75} />
-        </mesh>
-        <mesh castShadow position={[0, 1.25, 0]}>
-          <boxGeometry args={[0.65, 0.35, 0.65]} />
-          <meshStandardMaterial
-            color={PALETA.dark}
-            emissive={PALETA.purple}
-            emissiveIntensity={noite ? 0.8 : 0.2}
-            roughness={0.4}
-          />
-        </mesh>
-        {/* Radar */}
-        <mesh ref={radar} position={[0, 1.55, 0]} rotation={[0.3, 0, 0]}>
-          <boxGeometry args={[0.5, 0.04, 0.08]} />
-          <meshStandardMaterial color="#aaa" roughness={0.4} metalness={0.7} />
-        </mesh>
-      </group>
-
-      {/* Hangar */}
-      <mesh castShadow position={[-1.8, 0.35, -2.5]}>
-        <boxGeometry args={[2.2, 0.7, 1.8]} />
-        <meshStandardMaterial color={PALETA.surface} roughness={0.8} />
-      </mesh>
-      <mesh castShadow position={[-1.8, 0.78, -2.5]}>
-        <boxGeometry args={[2.3, 0.08, 1.9]} />
-        <meshStandardMaterial color="#3a4048" roughness={0.85} />
-      </mesh>
-
-      {/* C-5 — taxi, rampa e volta na pista */}
-      <group ref={aviao} position={[0, 0.32, -3.1]}>
-        <AviaoC5 cicloRef={cicloRef} />
       </group>
     </group>
   );

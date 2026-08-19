@@ -103,7 +103,7 @@ const chain = [
   'Mina',
   'Caminhões',
   'Trem',
-  'Porto / Aeroporto',
+  'Porto',
 ];
 
 export default function MaqueteSection() {
@@ -141,8 +141,8 @@ export default function MaqueteSection() {
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>
           <p className="shell-block__lead">
-            O Ferrorama simula a cadeia do minério de ferro e carvão — da mina ao porto ou
-            aeroporto — com modelismo ferroviário, impressão 3D e Arduino.
+            O Ferrorama simula a cadeia do minério de ferro e carvão — da mina ao porto —
+            com modelismo ferroviário, impressão 3D e Arduino.
           </p>
           <ul className="shell-facts">
             {objectives.map((item) => (
@@ -168,7 +168,7 @@ export default function MaqueteSection() {
             ))}
           </ol>
           <p className="shell-pipeline__note">
-            Rota padrão: porto. Desvio: aeroporto, para carga urgente.
+            Rota de exportação: o trem segue ao porto.
           </p>
         </div>
 
@@ -179,7 +179,7 @@ export default function MaqueteSection() {
               <summary>Qual escala foi usada na maquete?</summary>
               <p>
                 Utilizamos escala HO (1:87) para trilhos, locomotiva e vagões. Os caminhões foram
-                impressos em escala compatível (~1:87) e o aeroporto usa aviões em escala 1:500.
+                impressos em escala compatível (~1:87).
               </p>
             </details>
             <details className="maquete-accordion-item">
@@ -193,7 +193,7 @@ export default function MaqueteSection() {
               <summary>É possível controlar cada parte separadamente?</summary>
               <p>
                 Sim. A central possui modo manual (cada subsistema independente) e modo automático
-                (sequência completa mina → caminhões → trem → porto/aeroporto).
+                (sequência completa mina → caminhões → trem → porto).
               </p>
             </details>
             <details className="maquete-accordion-item">

@@ -63,7 +63,7 @@ function Site() {
 
         <SectionDivider />
 
-        {/* Section 05: Porto & Aeroporto */}
+        {/* Section 05: Porto */}
         <PortoSection />
 
         <SectionDivider />
