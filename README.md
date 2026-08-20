@@ -10,12 +10,12 @@ Sistema completo de monitoramento e controle para maquete industrial com 4 módu
 │  React/CRA  │  WS │  Express +   │  WS │  Node.js +  │   BT/Serial
 │  Tailwind   │     │  PostgreSQL  │     │  SerialPort │
 └─────────────┘     │  + Redis     │     └─────────────┘
-                    └──────┬───────┘
-                           │ WS/HTTP
-                    ┌──────┴───────┐
-                    │ App React    │
-                    │ Native/Expo  │
                     └──────────────┘
+
+┌─────────────┐      Bluetooth
+│  App Kotlin │◄──────────────────► HC-05 (caminhão)
+│  (Android)  │
+└─────────────┘
 ```
 
 ## Estrutura do Projeto
@@ -41,9 +41,10 @@ maquete_industrial/
 │       ├── components/          # Sidebar, Header
 │       └── contexts/            # AuthContext, SocketContext
 ├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi)
-├── app_react_native/            # App React Native (Expo)
+├── app_kotlin/                  # App Android (Kotlin) - controle BT do caminhão
+├── site-ferrorama-3d/           # Site 3D da maquete (React + Three.js)
 ├── firmware_arduino_ferrovia/   # Arduino - 3 servos SG90 + 7 sensores + semáforo + HC-05
-└── firmware_arduino_caminho_basculante/  # Arduino - carrinho basculante RC
+└── firmware_arduino_caminhao_basculante/  # Arduino - carrinho basculante RC
 ```
 
 ## Início Rápido
@@ -54,7 +55,7 @@ maquete_industrial/
 - PostgreSQL 14+ (ou Render PostgreSQL)
 - Redis 6+ (opcional)
 - Arduino IDE (para firmware)
-- Expo CLI (para app mobile)
+- Android Studio (para app mobile)
 
 ### 1. Banco de Dados
 
@@ -94,22 +95,17 @@ cp .env.exemplo .env   # REACT_APP_API_URL=http://localhost:4000
 npm start               # Porta 3000
 ```
 
-### 5. App React Native (controle BT do caminhão)
+### 5. App Android (controle BT do caminhão)
 
-```bash
-cd app_react_native
-npm install
-npx expo prebuild --clean   # Gera pasta android/
-npx expo run:android         # Compila e instala no celular
-```
-
-> O app se conecta diretamente ao HC-05 via Bluetooth. Pareie o celular com o HC-05 antes de abrir o app.
+- Abra a pasta `app_kotlin` no Android Studio
+- Aguarde o Gradle sync, conecte o celular via USB e rode o app
+- O app se conecta diretamente ao HC-05 via Bluetooth. Pareie o celular com o HC-05 (PIN 1234 ou 0000) antes de abrir o app.
 
 ### 6. Arduino
 
 - Abra o sketch correspondente no Arduino IDE
-- Para ferrovia: `firmware_arduino_ferrovia/ferrovia_firmware.ino`
-- Para caminhão: `firmware_arduino_caminho_basculante/caminhao_basculante_firmware.ino`
+- Para ferrovia: `firmware_arduino_ferrovia/ferrovia_firmware.ino` (v4.0 - 3 switches + semáforo + 7 sensores)
+- Para caminhão: `firmware_arduino_caminhao_basculante/caminhao_basculante_firmware.ino`
 - Conecte o HC-05 e carregue o sketch
 
 ## Variáveis de Ambiente
@@ -121,7 +117,6 @@ Cada módulo possui um arquivo `.env.exemplo`. Copie para `.env` e preencha:
 | Backend   | `backend_nodejs/.env`     | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `REDIS_URL`, `JWT_SECRET`, `GATEWAY_API_KEY` |
 | Gateway   | `gateway_bluetooth/.env`  | `BACKEND_WS_URL`, `BACKEND_API_URL`, `GATEWAY_API_KEY`, `BT_DEVICE_FERROVIA`, `SIMULATION_MODE`         |
 | Dashboard | `dashboard_react/.env`    | `REACT_APP_API_URL=http://localhost:4000`                                                               |
-| App       | `app_react_native/App.js` | `API_BASE_URL`, `WS_URL` (hardcoded, editar direto no código)                                           |
 
 ## Protocolo de Comunicação
 
@@ -259,7 +254,7 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | Frontend Web | React 18, Tailwind CSS, Socket.IO Client, Recharts, Lucide Icons  |
 | Backend      | Node.js, Express, Socket.IO, PostgreSQL, Redis, JWT, bcryptjs     |
 | Gateway      | Node.js, SerialPort, Socket.IO Client, Winston                    |
-| Mobile       | React Native (Expo SDK 49), Axios, Socket.IO Client, AsyncStorage |
+| Mobile       | Kotlin, Jetpack Compose, Material 3, Bluetooth RFCOMM          |
 | Hardware     | Arduino, Servos SG90, HC-05 Bluetooth, Motor DC                   |
 | Testes       | Jest (backend) - 52 testes unitários                              |
 

@@ -87,6 +87,17 @@ services:
     networks:
       - maquete-network
 
+  # Site 3D da maquete (React + Three.js)
+  site-ferrorama-3d:
+    build:
+      context: ./site-ferrorama-3d/react-app
+      dockerfile: Dockerfile
+    container_name: maquete-site-3d
+    ports:
+      - "5173:5173"
+    networks:
+      - maquete-network
+
   # Redis
   redis:
     image: redis:7-alpine
