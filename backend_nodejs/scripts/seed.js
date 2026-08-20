@@ -65,13 +65,8 @@ async function seed() {
     const shipsRes = await client.query("SELECT COUNT(*) as count FROM ships");
     console.log(`   ${shipsRes.rows[0].count} navios existentes\n`);
 
-    // 6. Aeronaves
-    console.log("6. Verificando aeronaves...");
-    const airplanesRes = await client.query("SELECT COUNT(*) as count FROM airplanes");
-    console.log(`   ${airplanesRes.rows[0].count} aeronaves existentes\n`);
-
-    // 7. Dados de quimica (exemplo)
-    console.log("7. Verificando dados de quimica...");
+    // 6. Dados de quimica (exemplo)
+    console.log("6. Verificando dados de quimica...");
     try {
       await client.query(`
         CREATE TABLE IF NOT EXISTS chemistry_equipment (

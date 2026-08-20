@@ -51,7 +51,7 @@ export default function App() {
 
         <SectionDivider />
 
-        {/* Section 05: Porto & Aeroporto */}
+        {/* Section 05: Porto */}
         <PortoSection />
 
         <SectionDivider />

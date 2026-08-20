@@ -106,60 +106,6 @@ module.exports = (io) => {
     }
   }
 
-  // Simular movimentacao de avioes
-  async function simulateAirport() {
-    try {
-      const pool = require("../config/db");
-      const result = await pool.query("SELECT * FROM airplanes WHERE status != 'in_air'");
-      const airplanes = result.rows;
-
-      const statusFlow = {
-        arriving: "landed",
-        landed: "boarding",
-        boarding: "departing",
-        departing: "in_air",
-      };
-
-      for (const plane of airplanes) {
-        if (Math.random() < 0.2) {
-          const newStatus = statusFlow[plane.status] || plane.status;
-          await pool.query(
-            "UPDATE airplanes SET status = $2 WHERE id = $1",
-            [plane.id, newStatus]
-          );
-
-          io.to("dashboard").emit("airport:airplane_update", {
-            airplaneId: plane.id,
-            status: newStatus,
-            timestamp: Date.now(),
-          });
-        }
-      }
-
-      // Criar novos voos ocasionalmente
-      if (Math.random() < 0.05 && airplanes.length < 10) {
-        const allPlanes = await pool.query("SELECT id FROM airplanes");
-        const maxNum = allPlanes.rows.reduce((max, r) => {
-          const n = parseInt(r.id.replace("FL-", ""), 10);
-          return n > max ? n : max;
-        }, 0);
-        const flightId = `FL-${String(maxNum + 1).padStart(3, "0")}`;
-        const flightNumber = `CARGO-${2024 + Math.floor(Math.random() * 3)}`;
-        const cargoTypes = ["Equipamentos", "Alimentos", "Medicamentos", "Eletronicos"];
-        const cargoType = cargoTypes[Math.floor(Math.random() * cargoTypes.length)];
-        const cargoWeight = Math.floor(Math.random() * 8000) + 1000;
-
-        await pool.query(
-          `INSERT INTO airplanes (id, flight_number, cargo_type, cargo_weight, eta, gate) 
-           VALUES ($1, $2, $3, $4, NOW() + INTERVAL '2 hours', $5)`,
-          [flightId, flightNumber, cargoType, cargoWeight, `G${(airplanes.length % 6) + 1}`]
-        );
-      }
-    } catch (e) {
-      logger.error(`Erro na simulacao do aeroporto: ${e.message}`);
-    }
-  }
-
   // Simular movimentação da locomotiva
   async function simulateLocomotive() {
     try {
@@ -179,7 +125,6 @@ module.exports = (io) => {
     markTimedOutCommands,
     simulateChemistry,
     simulatePort,
-    simulateAirport,
     simulateLocomotive,
   };
 };

@@ -1,6 +1,6 @@
 # Maquete Industrial - Sistema Integrado
 
-Sistema completo de monitoramento e controle para maquete industrial com 5 módulos: Ferrovia, Mineradora, Porto Logístico, Aeroporto Logístico e Química.
+Sistema completo de monitoramento e controle para maquete industrial com 4 módulos: Ferrovia, Mineradora, Porto Logístico e Química.
 
 ## Arquitetura
 
@@ -37,7 +37,7 @@ maquete_industrial/
 │       └── seed.js              # Popula dados iniciais
 ├── dashboard_react/             # Dashboard React.js
 │   └── src/
-│       ├── pages/               # 7 páginas (Overview, Ferrovia, Mina, Porto, Aeroporto, Química, Relatórios)
+│       ├── pages/               # 6 páginas (Overview, Ferrovia, Mina, Porto, Química, Relatórios)
 │       ├── components/          # Sidebar, Header
 │       └── contexts/            # AuthContext, SocketContext
 ├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi)
@@ -170,7 +170,6 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | POST   | `/api/trucks/:id/command`   | Enviar comando ao caminhão      | JWT     |
 | POST   | `/api/locomotive/position`  | Registrar posição da locomotiva | JWT     |
 | GET    | `/api/port/ships`           | Listar navios                   | JWT     |
-| GET    | `/api/airport/airplanes`    | Listar aeronaves                | JWT     |
 | GET    | `/api/chemistry/equipment`  | Listar equipamentos químicos    | Não     |
 | GET    | `/api/reports`              | Listar relatórios gerados       | JWT     |
 | POST   | `/api/reports/export`       | Gerar relatório                 | JWT     |

@@ -9,7 +9,6 @@ import {
   CentralQuimica,
   Mina,
   Porto,
-  Aeroporto,
   Predio,
   PlantaIndustrial,
 } from './Modulos3D';
@@ -44,7 +43,6 @@ const TAMANHOS: Record<string, [number, number]> = {
   quimica: [7, 6.6],
   mina: [7, 8.4],
   ferrorama: [15.5, 12.5],
-  aeroporto: [7, 6.6],
   porto: [7, 8.4],
 };
 
@@ -238,13 +236,7 @@ function Cena(props: CenaProps) {
         </group>
         <FeixeLuz position={[3.4, 2.2, 0]} altura={4.4} raio={0.5} />
       </group>
-    ),
-    aeroporto: (
-      <group>
-        <Aeroporto rodando={rodando} />
-        <Predio position={[-2, 0, -2.2]} tamanho={[1.2, 1.4, 1]} andares={3} />
-      </group>
-    ),
+),
     porto: (
       <group>
         <Porto rodando={rodando} />

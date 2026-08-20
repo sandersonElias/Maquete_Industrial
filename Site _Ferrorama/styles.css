@@ -595,7 +595,6 @@ body {
 .map-caminhoes { border-left: 3px solid var(--border-strong); }
 .map-trem { border-left: 3px solid var(--gerdau-blue); }
 .map-porto { border-left: 3px solid var(--gerdau-blue-light); }
-.map-aeroporto { border-left: 3px solid #5b8def; }
 
 .map-arrow {
   width: 20px;

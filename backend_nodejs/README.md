@@ -29,7 +29,7 @@ src/
 │   ├── ferroviaRoutes.js     # GET /status, POST /switch
 │   ├── trucksRoutes.js       # GET /, POST /:id/telemetry, POST /:id/command
 │   ├── locomotiveRoutes.js   # POST /position
-│   ├── portAirportRoutes.js  # GET /ships, GET /airplanes
+│   ├── portRoutes.js         # GET /ships, POST /ships
 │   ├── chemistryRoutes.js    # GET /equipment
 │   ├── reportRoutes.js       # GET /, POST /export, GET /:id/download
 │   ├── alertRoutes.js        # Rotas de alertas
@@ -40,7 +40,7 @@ src/
 │   ├── ferroviaController.js # Controle de switches
 │   ├── trucksController.js   # Telemetria e comandos
 │   ├── locomotiveController.js # Posição da locomotiva
-│   ├── portAirportController.js # Navios e aeronaves
+│   ├── portController.js     # Navios do porto
 │   ├── reportController.js   # Geração de relatórios
 │   ├── alertController.js    # Alertas do sistema
 │   └── gatewayController.js  # Notificações do gateway
@@ -49,7 +49,7 @@ src/
 │   ├── ferroviaService.js    # CRUD switches + comandos
 │   ├── trucksService.js      # Telemetria + comandos
 │   ├── locomotiveService.js  # Posição locomotiva
-│   ├── portAirportService.js # Navios e aeronaves
+│   ├── portService.js        # Navios do porto
 │   ├── reportService.js      # Criação de relatórios
 │   ├── alertService.js       # Serviço de alertas
 │   └── redisService.js       # Operações Redis (set/del)
@@ -110,7 +110,6 @@ CORS_ORIGIN=*
 | `truck_commands` | Comandos enviados aos caminhões |
 | `locomotive_position` | Posições da locomotiva |
 | `ships` | Navios do porto |
-| `airplanes` | Aeronaves do aeroporto |
 | `alerts` | Alertas do sistema |
 | `reports` | Relatórios gerados |
 | `chemistry_equipment` | Equipamentos da área química |
@@ -226,11 +225,11 @@ Migrations: `migrations/002_schema_evolution.sql` (tabelas extras, indexes, view
 { "success": true, "command": { "id": "uuid", "truck_id": "T01", "command": "F", "status": "pending" } }
 ```
 
-### Porto e Aeroporto
+### Porto
 
-**GET `/api/port/ships`** e **GET `/api/airport/airplanes`** (JWT obrigatório)
+**GET `/api/port/ships`** (JWT obrigatório)
 
-Retornam arrays de navios/aeronaves ordenados por ETA.
+Retorna array de navios ordenados por ETA.
 
 ### Química
 

@@ -10,7 +10,7 @@
     maquete: 'A Maquete — Ferrorama',
     montagem: 'Montagem — Ferrorama',
     codigo: 'Código e automação — Ferrorama',
-    'porto-aeroporto': 'Porto e aeroporto — Ferrorama',
+    'porto': 'Porto — Ferrorama',
     mina: 'Mina de ferro — Ferrorama',
     controle: 'Central de controle — Ferrorama',
   };

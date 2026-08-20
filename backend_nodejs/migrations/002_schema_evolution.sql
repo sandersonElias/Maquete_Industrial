@@ -26,7 +26,7 @@ ON CONFLICT (name) DO NOTHING;
 CREATE TABLE IF NOT EXISTS permissions (
     id SERIAL PRIMARY KEY,
     role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
-    resource VARCHAR(50) NOT NULL,          -- ferrovia, trucks, port, airport, reports, alerts, admin
+    resource VARCHAR(50) NOT NULL,          -- ferrovia, trucks, port, reports, alerts, admin
     action VARCHAR(30) NOT NULL,            -- read, write, command, delete, manage
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(role_id, resource, action)
@@ -39,7 +39,6 @@ INSERT INTO permissions (role_id, resource, action) VALUES
     ((SELECT id FROM roles WHERE name = 'admin'), 'trucks', 'command'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'trucks', 'read'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'port', 'read'),
-    ((SELECT id FROM roles WHERE name = 'admin'), 'airport', 'read'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'reports', 'read'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'reports', 'write'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'alerts', 'manage'),
@@ -50,14 +49,12 @@ INSERT INTO permissions (role_id, resource, action) VALUES
     ((SELECT id FROM roles WHERE name = 'operator'), 'trucks', 'command'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'trucks', 'read'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'port', 'read'),
-    ((SELECT id FROM roles WHERE name = 'operator'), 'airport', 'read'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'reports', 'read'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'alerts', 'read'),
     -- viewer: somente leitura
     ((SELECT id FROM roles WHERE name = 'viewer'), 'ferrovia', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'trucks', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'port', 'read'),
-    ((SELECT id FROM roles WHERE name = 'viewer'), 'airport', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'reports', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'alerts', 'read'),
     -- maintenance: leitura + manutencao
@@ -109,7 +106,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id),
     action VARCHAR(50) NOT NULL,            -- login, logout, command, create, update, delete
-    resource VARCHAR(50) NOT NULL,          -- user, switch, truck, ship, airplane, report
+    resource VARCHAR(50) NOT NULL,          -- user, switch, truck, ship, report
     resource_id VARCHAR(100),
     details JSONB DEFAULT '{}',
     ip_address VARCHAR(45),
@@ -122,7 +119,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS maintenance (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    device_type VARCHAR(30) NOT NULL,       -- switch, truck, ship, airplane, gateway
+    device_type VARCHAR(30) NOT NULL,       -- switch, truck, ship, gateway
     device_id VARCHAR(50) NOT NULL,
     title VARCHAR(100) NOT NULL,
     description TEXT,
@@ -243,7 +240,6 @@ ALTER TABLE truck_telemetry DISABLE ROW LEVEL SECURITY;
 ALTER TABLE truck_commands DISABLE ROW LEVEL SECURITY;
 ALTER TABLE locomotive_position DISABLE ROW LEVEL SECURITY;
 ALTER TABLE ships DISABLE ROW LEVEL SECURITY;
-ALTER TABLE airplanes DISABLE ROW LEVEL SECURITY;
 ALTER TABLE alerts DISABLE ROW LEVEL SECURITY;
 ALTER TABLE reports DISABLE ROW LEVEL SECURITY;
 

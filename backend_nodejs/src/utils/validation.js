@@ -66,7 +66,7 @@ const locomotivePositionSchema = Joi.object({
 });
 
 const reportExportSchema = Joi.object({
-  reportType: Joi.string().valid("switches", "trucks", "locomotive", "port", "airport", "alerts", "all").required(),
+  reportType: Joi.string().valid("switches", "trucks", "locomotive", "port", "alerts", "all").required(),
   format: Joi.string().valid("csv", "xlsx", "pdf").required(),
   filters: Joi.object({
     startDate: Joi.date().iso().optional(),
@@ -74,19 +74,19 @@ const reportExportSchema = Joi.object({
     switchId: Joi.number().integer().min(1).max(4).optional(),
     truckId: Joi.string().max(10).optional(),
     severity: Joi.string().valid("info", "warning", "critical").optional(),
-    module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto").optional(),
+    module: Joi.string().valid("ferrovia", "mina", "porto").optional(),
   }).optional().default({}),
 });
 
 const alertSchema = Joi.object({
   severity: Joi.string().valid("info", "warning", "critical").required(),
-  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto", "quimica", "sistema").required(),
+  module: Joi.string().valid("ferrovia", "mina", "porto", "quimica", "sistema").required(),
   message: Joi.string().min(1).max(1000).required(),
   details: Joi.object().optional(),
 });
 
 const alertQuerySchema = Joi.object({
-  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto", "quimica", "sistema").optional(),
+  module: Joi.string().valid("ferrovia", "mina", "porto", "quimica", "sistema").optional(),
   severity: Joi.string().valid("info", "warning", "critical").optional(),
   acknowledged: Joi.boolean().optional(),
   limit: Joi.number().integer().min(1).max(100).optional().default(50),
@@ -104,17 +104,6 @@ const shipSchema = Joi.object({
   dock_number: Joi.number().integer().min(1).optional(),
 });
 
-const airplaneSchema = Joi.object({
-  id: Joi.string().max(20).required(),
-  flight_number: Joi.string().max(20).required(),
-  status: Joi.string().valid("landed", "boarding", "departing", "in_air", "arriving").optional(),
-  cargo_type: Joi.string().max(50).optional(),
-  cargo_weight: Joi.number().min(0).optional(),
-  eta: Joi.date().iso().optional(),
-  etd: Joi.date().iso().optional(),
-  gate: Joi.string().max(10).optional(),
-});
-
 module.exports = {
   loginSchema,
   registerSchema,
@@ -127,7 +116,6 @@ module.exports = {
   alertSchema,
   alertQuerySchema,
   shipSchema,
-  airplaneSchema,
   TRUCK_COMMANDS,
   SWITCH_ACTIONS,
 };

@@ -14,7 +14,6 @@ const moduleLabels = {
   ferrovia: 'Ferrovia',
   mina: 'Mina',
   porto: 'Porto',
-  aeroporto: 'Aeroporto',
   quimica: 'Quimica',
   sistema: 'Sistema',
 };

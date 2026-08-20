@@ -80,8 +80,8 @@ const int SENSOR_PINS[NUM_SENSORS] = {12, 13, A0, A1, A2, A3, A4};
 // Logica: LOW = locomotiva detectada, HIGH = sem deteccao
 
 // === ANGULOS DOS SERVOS ===
-const int ANGLE_LEFT = 0;
-const int ANGLE_RIGHT = 180;
+const int ANGLE_LEFT = 72;
+const int ANGLE_RIGHT = 108;
 const int ANGLE_CENTER = 90;
 
 // === ESTADOS DO SEMAFORO ===
@@ -278,7 +278,7 @@ void processCommand(String& cmd) {
       
     } else if (action == "ANGLE") {
       int angle = value.toInt();
-      if (angle < 0 || angle > 180) return;
+      if (angle < ANGLE_LEFT || angle > ANGLE_RIGHT) return;
       servoStates[idx].targetAngle = angle;
       servoStates[idx].moving = true;
       sendAck(switchId, "ANGLE_" + String(angle));
@@ -345,11 +345,11 @@ void updateLEDs() {
   // SW1 e SW2 compartilhados (mesma direcao)
   int angle12 = servoStates[0].currentAngle; // Usa SW1 como referencia
   
-  if (angle12 <= 10) {
+  if (angle12 < ANGLE_CENTER) {
     // LEFT
     digitalWrite(LED_SW12_LEFT, HIGH);
     digitalWrite(LED_SW12_RIGHT, LOW);
-  } else if (angle12 >= 170) {
+  } else if (angle12 > ANGLE_CENTER) {
     // RIGHT
     digitalWrite(LED_SW12_LEFT, LOW);
     digitalWrite(LED_SW12_RIGHT, HIGH);
@@ -362,11 +362,11 @@ void updateLEDs() {
   // SW3 independente
   int angle3 = servoStates[2].currentAngle;
   
-  if (angle3 <= 10) {
+  if (angle3 < ANGLE_CENTER) {
     // LEFT
     digitalWrite(LED_SW3_LEFT, HIGH);
     digitalWrite(LED_SW3_RIGHT, LOW);
-  } else if (angle3 >= 170) {
+  } else if (angle3 > ANGLE_CENTER) {
     // RIGHT
     digitalWrite(LED_SW3_LEFT, LOW);
     digitalWrite(LED_SW3_RIGHT, HIGH);
@@ -415,8 +415,8 @@ void updateGateFromSensor(int sensorId, bool detected) {
   
   // Mapeamento Sensor -> Semaforo
   // S1-S3: Verde (locomotiva longe)
-  // S4: Amarelo (aproximando)
-  // S5-S6: Vermelho (na cancela)
+  // S4-S5: Amarelo (aproximando)
+  // S6: Vermelho (na cancela)
   // S7: Verde pisca (liberando)
   
   switch (sensorId) {
@@ -426,9 +426,9 @@ void updateGateFromSensor(int sensorId, bool detected) {
       setGateState(GATE_GREEN);
       break;
     case 4:
+    case 5:
       setGateState(GATE_YELLOW);
       break;
-    case 5:
     case 6:
       setGateState(GATE_RED);
       break;
@@ -540,10 +540,9 @@ void sendStatus(int switchId) {
   String state;
   int angle = servoStates[idx].currentAngle;
   
-  if (angle <= 10) state = "LEFT";
-  else if (angle >= 170) state = "RIGHT";
-  else if (angle >= 85 && angle <= 95) state = "CENTER";
-  else state = "TRANSITION";
+  if (angle < ANGLE_CENTER) state = "LEFT";
+  else if (angle > ANGLE_CENTER) state = "RIGHT";
+  else state = "CENTER";
   
   Serial.print(F("STATUS|SWITCH|"));
   Serial.print(switchId);

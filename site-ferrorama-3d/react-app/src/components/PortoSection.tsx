@@ -22,33 +22,15 @@ const modules = [
     ],
   },
   {
-    id: 'aeroporto',
-    num: '02',
-    title: 'Aeroporto',
-    lead: 'Rota alternativa para cargas urgentes ou de alto valor.',
-    image: '/images/aeroporto.jpg',
-    alt: 'Aeroporto de carga na maquete',
-    body: [
-      'O aeroporto completa o porto como opção rápida. Aviões em miniatura (escala 1:500) simbolizam o envio aéreo de amostras e peças prioritárias.',
-      'Na maquete, a carga deixa o trem e segue ao terminal aéreo; a pista ativa é sugerida por LED e temporização no Arduino.',
-    ],
-    points: [
-      'Pista e terminal de carga',
-      'Acesso via desvio ferroviário',
-      'Indicador de pista / decolagem programada',
-      'Uso típico: urgência, não volume em massa',
-    ],
-  },
-  {
     id: 'ferrovia',
-    num: '03',
+    num: '02',
     title: 'Ferrovia',
-    lead: 'Espinha dorsal da logística — liga mina, porto e aeroporto.',
+    lead: 'Espinha dorsal da logística — liga a mina ao porto.',
     image: '/images/trem.jpg',
     alt: 'Ferrovia e trem da maquete',
     body: [
-      'Os trilhos em escala HO formam o circuito que leva o material da mina até os pontos de exportação. Desvios com servomotores escolhem porto ou ramal do aeroporto.',
-      'A ferrovia é o elo entre extração e exportação: sem ela, terminal e aeroporto ficam isolados na narrativa da maquete.',
+      'Os trilhos em escala HO formam o circuito que leva o material da mina até o porto. Desvios com servomotores controlam o trajeto da composição.',
+      'A ferrovia é o elo entre extração e exportação: sem ela, o terminal fica isolado na narrativa da maquete.',
     ],
     points: [
       'Trilhos HO com circuito e desvios',
@@ -68,17 +50,17 @@ const chain = [
   {
     step: '02',
     title: 'Desvio',
-    text: 'Servo escolhe cais (padrão) ou ramal do aeroporto.',
+    text: 'Servo escolhe o trajeto da composição até o cais.',
   },
   {
     step: '03',
     title: 'Transferência',
-    text: 'Guindaste / LED no cais, ou pista ativa no terminal aéreo.',
+    text: 'Guindaste e LED no cais sinalizam o embarque da carga.',
   },
   {
     step: '04',
     title: 'Saída',
-    text: 'Navio = volume. Avião = urgência. A história fecha no destino.',
+    text: 'Navio = volume. A história fecha na exportação marítima.',
   },
 ];
 
@@ -95,20 +77,6 @@ const routes = [
       ['Carga típica', 'Minério de ferro, carvão'],
       ['Na maquete', 'Rota padrão do trem'],
       ['Referência', 'Terminal de Tubarão (ES)'],
-    ],
-  },
-  {
-    id: 'air',
-    badge: 'AR',
-    name: 'Aeroporto',
-    tone: 'air',
-    rows: [
-      ['Volume', 'Baixo — cargas especiais'],
-      ['Custo', 'Muito maior'],
-      ['Tempo', 'Horas (aéreo)'],
-      ['Carga típica', 'Amostras, peças urgentes'],
-      ['Na maquete', 'Via desvio ferroviário'],
-      ['Escala', 'Aeronaves ~1:500'],
     ],
   },
 ];
@@ -150,7 +118,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.1 }}
           >
-            Porto & Aeroporto
+            Porto
           </motion.h2>
           <motion.p
             className="section-subtitle"
@@ -158,7 +126,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Rotas de saída — mar, ar e o trilho que decide o destino
+            Rota de saída — mar, e o trilho que decide o destino
           </motion.p>
         </div>
 
@@ -216,14 +184,14 @@ export default function PortoSection() {
           </ol>
         </motion.div>
 
-        {/* Fichas mar × ar — paralelo às fichas de minério da Mina */}
+        {/* Ficha marítima — paralelo às fichas de minério da Mina */}
         <motion.div
           className="porto-routes"
           initial={{ opacity: 0, y: 28 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.75, delay: 0.45, ease: EASE_OUT_EXPO }}
         >
-          <h3 className="porto-routes__heading">Duas saídas, um desvio</h3>
+          <h3 className="porto-routes__heading">Saída marítima</h3>
           <div className="porto-routes__grid">
             {routes.map((r) => (
               <article key={r.id} className={`porto-route porto-route--${r.tone}`}>

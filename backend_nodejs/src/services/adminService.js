@@ -112,10 +112,6 @@ async function getSystemStats() {
   const shipsResult = await pool.query("SELECT COUNT(*) as total FROM ships");
   stats.totalShips = parseInt(shipsResult.rows[0].total);
 
-  // Total de aviões
-  const airplanesResult = await pool.query("SELECT COUNT(*) as total FROM airplanes");
-  stats.totalAirplanes = parseInt(airplanesResult.rows[0].total);
-
   // Total de relatórios gerados
   const reportsResult = await pool.query("SELECT COUNT(*) as total FROM reports");
   stats.totalReports = parseInt(reportsResult.rows[0].total);

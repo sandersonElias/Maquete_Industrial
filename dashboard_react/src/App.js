@@ -8,7 +8,6 @@ import Overview from './pages/Overview';
 import Ferrovia from './pages/Ferrovia';
 import Mina from './pages/Mina';
 import Porto from './pages/Porto';
-import Aeroporto from './pages/Aeroporto';
 import Relatorios from './pages/Relatorios';
 import Quimica from './pages/Quimica';
 import Locomotiva from './pages/Locomotiva';
@@ -55,7 +54,6 @@ function AppContent() {
                 <Route path="/ferrovia" element={<Ferrovia />} />
                 <Route path="/mina" element={<Mina />} />
                 <Route path="/porto" element={<Porto />} />
-                <Route path="/aeroporto" element={<Aeroporto />} />
                 <Route path="/quimica" element={<Quimica />} />
                 <Route path="/locomotiva" element={<Locomotiva />} />
                 <Route path="/alertas" element={<Alertas />} />

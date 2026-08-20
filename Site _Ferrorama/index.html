@@ -77,9 +77,9 @@
         <span class="nav-num">02</span>
         <span class="nav-text">Código e automação</span>
       </a>
-      <a href="#porto-aeroporto" class="nav-link" data-section="porto-aeroporto">
+      <a href="#porto" class="nav-link" data-section="porto">
         <span class="nav-num">03</span>
-        <span class="nav-text">Porto e aeroporto</span>
+        <span class="nav-text">Porto</span>
       </a>
       <a href="#mina" class="nav-link" data-section="mina">
         <span class="nav-num">04</span>
@@ -154,12 +154,12 @@
           <h3>Código & Automação</h3>
           <p>Como os caminhões se movem e como o trem funciona.</p>
         </a>
-        <a href="#porto-aeroporto" class="home-card" data-section="porto-aeroporto">
+        <a href="#porto" class="home-card" data-section="porto">
           <div class="home-card-image">
             <img src="images/icon-porto.svg" alt="" loading="lazy" decoding="async" width="240" height="160">
           </div>
           <span class="home-card-num">03</span>
-          <h3>Porto & Aeroporto</h3>
+          <h3>Porto</h3>
           <p>Transporte e exportação dos materiais.</p>
         </a>
         <a href="#mina" class="home-card" data-section="mina">
@@ -182,7 +182,7 @@
 
       <div class="content-block">
         <h3 class="block-title">Sobre o Projeto</h3>
-        <p class="block-intro">O Ferrorama simula toda a cadeia produtiva do minério de ferro e carvão — da extração na mina até a exportação pelo porto ou aeroporto — integrando modelismo ferroviário, impressão 3D e programação em Arduino.</p>
+        <p class="block-intro">O Ferrorama simula toda a cadeia produtiva do minério de ferro e carvão — da extração na mina até a exportação pelo porto — integrando modelismo ferroviário, impressão 3D e programação em Arduino.</p>
         <div class="objectives-grid">
           <div class="objective-item">
             <strong>Objetivo principal</strong>
@@ -208,16 +208,8 @@
           <div class="map-zone map-caminhoes">Caminhões</div>
           <div class="map-arrow" aria-hidden="true"></div>
           <div class="map-zone map-trem">Trem</div>
-          <div class="map-split">
-            <div class="map-branch">
-              <div class="map-arrow map-arrow-down" aria-hidden="true"></div>
-              <div class="map-zone map-porto">Porto</div>
-            </div>
-            <div class="map-branch">
-              <div class="map-arrow map-arrow-down" aria-hidden="true"></div>
-              <div class="map-zone map-aeroporto">Aeroporto</div>
-            </div>
-          </div>
+          <div class="map-arrow map-arrow-down" aria-hidden="true"></div>
+          <div class="map-zone map-porto">Porto</div>
           <div class="map-control">Central de controle</div>
         </div>
       </div>
@@ -227,7 +219,7 @@
         <div class="accordion">
           <details class="accordion-item">
             <summary>Qual escala foi usada na maquete?</summary>
-            <p>Utilizamos escala HO (1:87) para trilhos, locomotiva e vagões. Os caminhões foram impressos em escala compatível (~1:87) e o aeroporto usa aviões em escala 1:500.</p>
+            <p>Utilizamos escala HO (1:87) para trilhos, locomotiva e vagões. Os caminhões foram impressos em escala compatível (~1:87).</p>
           </details>
           <details class="accordion-item">
             <summary>Quanto tempo levou para montar tudo?</summary>
@@ -235,7 +227,7 @@
           </details>
           <details class="accordion-item">
             <summary>É possível controlar cada parte separadamente?</summary>
-            <p>Sim. A central possui modo manual (cada subsistema independente) e modo automático (sequência completa mina → caminhões → trem → porto/aeroporto).</p>
+            <p>Sim. A central possui modo manual (cada subsistema independente) e modo automático (sequência completa mina → caminhões → trem → porto).</p>
           </details>
           <details class="accordion-item">
             <summary>Precisa de computador para funcionar?</summary>
@@ -265,7 +257,7 @@
           </div>
           <div class="card-body">
             <h3>Visão Geral</h3>
-            <p>A maquete foi montada sobre uma base de MDF de 1,20 × 0,80 m, com trilhos em escala HO. Cada elemento — mina, porto, aeroporto e vias — foi posicionado para simular uma cadeia logística real de extração até exportação.</p>
+            <p>A maquete foi montada sobre uma base de MDF de 1,20 × 0,80 m, com trilhos em escala HO. Cada elemento — mina, porto e vias — foi posicionado para simular uma cadeia logística real de extração até exportação.</p>
           </div>
         </article>
 
@@ -316,7 +308,7 @@
           <div class="timeline-item">
             <span class="timeline-week">Semana 1–2</span>
             <strong>Base e estrutura</strong>
-            <p>Corte do MDF, pintura do terreno, fixação dos trilhos e planejamento das áreas (mina, porto, aeroporto).</p>
+            <p>Corte do MDF, pintura do terreno, fixação dos trilhos e planejamento das áreas (mina, porto).</p>
           </div>
           <div class="timeline-item">
             <span class="timeline-week">Semana 3</span>
@@ -613,7 +605,7 @@ void loop() {
         <div class="two-col">
           <div class="col-text">
             <h3>Desvios Ferroviários</h3>
-            <p>Dois desvios SG90 definem se o trem segue para o porto ou para o ramal do aeroporto. O ângulo padrão é 0° (porto); ao receber sinal da central, move para 90° (aeroporto).</p>
+            <p>Os servos SG90 giram as agulhas e definem o trajeto do trem dentro do circuito. O ângulo padrão é 0° (porto); ao receber sinal da central, move para 90° (ramal alternativo).</p>
             <div class="code-block">
               <div class="code-header">
                 <span>Arduino — Servomotor desvio</span>
@@ -627,7 +619,7 @@ void setup() {
   desvioPorto.write(0);
 }
 
-void irParaAeroporto() {
+void mudarRota() {
   desvioPorto.write(90);
   delay(800);
 }</code></pre>
@@ -695,15 +687,15 @@ void irParaAeroporto() {
 
       <nav class="section-nav" aria-label="Navegação entre seções">
         <a href="#maquete" class="section-nav-btn" data-section="maquete">← Maquete</a>
-        <a href="#porto-aeroporto" class="section-nav-btn section-nav-next" data-section="porto-aeroporto">Porto & Aeroporto →</a>
+        <a href="#porto" class="section-nav-btn section-nav-next" data-section="porto">Porto →</a>
       </nav>
     </section>
 
-    <!-- Seção 3: Porto e Aeroporto -->
-    <section id="porto-aeroporto" class="section">
+    <!-- Seção 3: Porto -->
+    <section id="porto" class="section">
       <div class="section-header">
         <span class="section-number">03</span>
-        <h2>Porto & Aeroporto</h2>
+        <h2>Porto</h2>
         <p class="section-desc">Transporte e exportação dos materiais extraídos</p>
       </div>
 
@@ -716,17 +708,6 @@ void irParaAeroporto() {
             <h3>Porto</h3>
             <p>Após o trem descarregar minério e carvão nos silos do porto, guindastes articulados (feitos com palitos e fio) simulam a carga em navios-carga. O porto representa a etapa de exportação marítima — principal via para ferro e carvão no comércio internacional.</p>
             <p>Na maquete, LEDs vermelhos indicam "navio atracado" e um motor linear move a esteira do cais, sugerindo o fluxo contínuo de mercadoria embarcada.</p>
-          </div>
-        </article>
-
-        <article class="card card-large">
-          <div class="card-image card-image-tall">
-            <img src="images/aeroporto.jpg" alt="Aeroporto de carga na maquete" loading="lazy" decoding="async" width="800" height="500">
-          </div>
-          <div class="card-body">
-            <h3>Aeroporto de carga</h3>
-            <p>O aeroporto complementa o porto como rota alternativa de transporte. Aviões cargueiros em miniatura (escala 1:500) representam o envio rápido de materiais de alto valor ou peças urgentes.</p>
-            <p>Na maquete, caminhões levam carga do trem até o terminal aéreo; um LED piscante simula pista ativa e decolagem programada via temporizador no Arduino.</p>
           </div>
         </article>
       </div>
@@ -749,52 +730,6 @@ void irParaAeroporto() {
           <div class="logistics-item">
             <span class="logistics-label">Porto</span>
           </div>
-          <div class="logistics-line"></div>
-          <div class="logistics-item">
-            <span class="logistics-label">Aeroporto</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="content-block">
-        <h3 class="block-title">Porto vs. Aeroporto — Quando usar cada um?</h3>
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Critério</th>
-                <th>Porto</th>
-                <th>Aeroporto</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Volume transportado</td>
-                <td>Alto (milhões de toneladas)</td>
-                <td>Baixo (cargas especiais)</td>
-              </tr>
-              <tr>
-                <td>Custo</td>
-                <td>Menor por tonelada</td>
-                <td>Muito maior</td>
-              </tr>
-              <tr>
-                <td>Velocidade</td>
-                <td>Semanas (marítimo)</td>
-                <td>Horas (aéreo)</td>
-              </tr>
-              <tr>
-                <td>Na maquete</td>
-                <td>Rota padrão do trem</td>
-                <td>Rota alternativa via desvio</td>
-              </tr>
-              <tr>
-                <td>Material típico</td>
-                <td>Minério de ferro, carvão</td>
-                <td>Amostras, peças urgentes</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -955,7 +890,7 @@ void irParaAeroporto() {
       </div>
 
       <nav class="section-nav" aria-label="Navegação entre seções">
-        <a href="#porto-aeroporto" class="section-nav-btn" data-section="porto-aeroporto">← Porto & Aeroporto</a>
+        <a href="#porto" class="section-nav-btn" data-section="porto">← Porto</a>
         <a href="#controle" class="section-nav-btn section-nav-next" data-section="controle">Área de Controle →</a>
       </nav>
     </section>
@@ -965,7 +900,7 @@ void irParaAeroporto() {
       <div class="section-header">
         <span class="section-number">05</span>
         <h2>Área de Controle Geral</h2>
-        <p class="section-desc">Central que coordena trem, caminhões, porto e aeroporto</p>
+        <p class="section-desc">Central que coordena trem, caminhões e porto</p>
       </div>
 
       <div class="control-layout">
@@ -994,10 +929,6 @@ void irParaAeroporto() {
               <div class="panel-item">
                 <span class="panel-led green"></span>
                 <span>Porto — Embarque</span>
-              </div>
-              <div class="panel-item">
-                <span class="panel-led red"></span>
-                <span>Aeroporto — Standby</span>
               </div>
               <div class="panel-item">
                 <span class="panel-led green"></span>
@@ -1049,7 +980,6 @@ void irParaAeroporto() {
   liberarCaminhoes();
   aguardarTrem();
   acionarPorto();
-  if (cargaUrgente) acionarAeroporto();
   exibirStatus("Ciclo completo");
 }</code></pre>
           </div>

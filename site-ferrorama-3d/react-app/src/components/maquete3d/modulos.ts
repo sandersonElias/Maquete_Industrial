@@ -2,11 +2,11 @@
  * Zonas da maquete, seguindo a planta feita no Figma:
  *
  *   ┌─────────────┐  ┌───────────────┐  ┌─────────────┐
- *   │ Central de  │  │               │  │  Aeroporto  │
+ *   │ Central de  │  │               │  │    Porto    │
  *   │  Química    │  │   FERRORAMA   │  │  Logístico  │
- *   ├─────────────┤  │  SW1 SW2 SW3  │  ├─────────────┤
- *   │    Mina     │  │   REVERSOR    │  │    Porto    │
- *   └─────────────┘  └───────────────┘  └─────────────┘
+ *   ├─────────────┤  │  SW1 SW2 SW3  │  └─────────────┤
+ *   │    Mina     │  │   REVERSOR    │
+ *   └─────────────┘  └───────────────┘
  */
 
 export interface Modulo {
@@ -59,7 +59,6 @@ export const POSICOES: Record<string, [number, number, number]> = {
   quimica: [-12.5, 0, -5.2],
   mina: [-12.5, 0, 4.4],
   ferrorama: [0, 0, 0],
-  aeroporto: [12.5, 0, -5.2],
   porto: [12.5, 0, 4.4],
 };
 
@@ -98,26 +97,12 @@ export const MODULOS: Modulo[] = [
     cor: PALETA.accent,
     papel: 'Transporte',
     resumo:
-      'A ferrovia é a espinha dorsal da operação. Um trem carrega numa viagem o que levaria dezenas de caminhões, com um custo por tonelada muito menor e sem depender de rodovia. Os três desvios são o que dá flexibilidade ao negócio: são eles que decidem, em tempo real, se aquela composição segue para o porto ou para o aeroporto. Mudar uma chave aqui muda para onde vai a carga — e, na prática, para qual cliente ela foi vendida.',
+      'A ferrovia é a espinha dorsal da operação. Um trem carrega numa viagem o que levaria dezenas de caminhões, com um custo por tonelada muito menor e sem depender de rodovia. Os três desvios são o que dá flexibilidade ao negócio: são eles que decidem, em tempo real, o trajeto de cada composição até o porto. Mudar uma chave aqui muda o fluxo da carga — e, na prática, para qual cliente ela foi vendida.',
     detalhes: [
       'SW1, SW2 e SW3: servos SG90 nos pinos D3, D5 e D6',
       'Protocolo: CMD|SWITCH|<id>|SET|LEFT / RIGHT / CENTER',
       'Reversor inverte o sentido de marcha da composição',
       'Heartbeat STATUS|SWITCH|<id>|<ângulo>|<estado>',
-    ],
-  },
-  {
-    id: 'aeroporto',
-    nome: 'Aeroporto Logístico',
-    cor: PALETA.purple,
-    papel: 'Rota rápida',
-    resumo:
-      'É a saída alternativa, para quando o navio é lento demais. O frete aéreo custa muito mais caro por tonelada, então só compensa em dois casos: carga de alto valor agregado, como minério já beneficiado, e urgência — um cliente que precisa do material agora e aceita pagar pela pressa. O trem chega até aqui pelo ramal da diagonal, acionado pelo desvio SW3.',
-    detalhes: [
-      'Recebe a carga quando SW3 manda o trem pela diagonal',
-      'Aeronaves listadas em GET /api/airport/airplanes',
-      'Balizamento de pista em LED',
-      'Terminal de carga com esteira própria',
     ],
   },
   {

@@ -157,8 +157,8 @@ Logica: LOW = locomotiva detectada
 | Sensor Detectado | Semaforo | Acao |
 |------------------|----------|------|
 | S1, S2, S3 | Verde | Locomotiva longe - cancela aberta |
-| S4 | Amarelo (pisca) | Locomotiva aproximando - cancela fechando |
-| S5, S6 | Vermelho | Locomotiva na cancela - cancela fechada |
+| S4, S5 | Amarelo (pisca) | Locomotiva aproximando - cancela fechando |
+| S6 | Vermelho | Locomotiva na cancela - cancela fechada |
 | S7 | Verde (pisca 3x) | Locomotiva saiu - cancela abrindo |
 
 ### Localizacao da Locomotiva

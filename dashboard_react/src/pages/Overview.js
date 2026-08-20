@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Train, Truck, Ship, Plane, FlaskConical, AlertTriangle, Activity,
+  Train, Truck, Ship, FlaskConical, AlertTriangle, Activity,
   Wifi, WifiOff, Battery, MapPin, Zap, TrendingUp, Clock, Thermometer
 } from 'lucide-react';
 import axios from 'axios';
@@ -76,7 +76,6 @@ export default function Overview() {
   const [switches, setSwitches] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [ships, setShips] = useState([]);
-  const [airplanes, setAirplanes] = useState([]);
   const [chemistry, setChemistry] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -88,17 +87,15 @@ export default function Overview() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const [swRes, trRes, shRes, plRes, chRes] = await Promise.all([
+      const [swRes, trRes, shRes, chRes] = await Promise.all([
         axios.get('/api/ferrovia/status').catch(() => ({ data: [] })),
         axios.get('/api/trucks').catch(() => ({ data: [] })),
         axios.get('/api/port/ships').catch(() => ({ data: [] })),
-        axios.get('/api/airport/airplanes').catch(() => ({ data: [] })),
         axios.get('/api/chemistry/equipment').catch(() => ({ data: [] })),
       ]);
       setSwitches(swRes.data);
       setTrucks(trRes.data);
       setShips(shRes.data);
-      setAirplanes(plRes.data);
       setChemistry(chRes.data);
     } catch (e) {
       console.error('Erro ao buscar status:', e);
@@ -167,7 +164,7 @@ export default function Overview() {
     color: eq.status === 'online' ? 'bg-[#06B6D4]' : eq.status === 'warning' ? 'bg-warning' : 'bg-danger',
   }));
 
-  const totalOnline = switches.length + trucks.filter(t => t.status === 'active').length + ships.length + airplanes.length + chemistry.filter(e => e.status === 'online').length;
+  const totalOnline = switches.length + trucks.filter(t => t.status === 'active').length + ships.length + chemistry.filter(e => e.status === 'online').length;
   const totalWarnings = chemistry.filter(e => e.status === 'warning').length;
 
   return (
@@ -213,9 +210,9 @@ export default function Overview() {
       </div>
 
       {/* Module Cards - Grid responsivo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {loading ? (
-          Array.from({ length: 5 }).map((_, i) => (
+          Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="bg-surface border border-border rounded-xl p-5 animate-pulse">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-card rounded-xl" />
@@ -255,15 +252,6 @@ export default function Overview() {
               status="ok"
               onClick={() => navigate('/porto')}
               color="bg-[#A855F7]"
-            />
-            <ModuleCard
-              title="Aeroporto"
-              icon={Plane}
-              count={airplanes.length}
-              subtitle="aeronaves"
-              status="ok"
-              onClick={() => navigate('/aeroporto')}
-              color="bg-success"
             />
             <ModuleCard
               title="Quimica"

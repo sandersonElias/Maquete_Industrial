@@ -225,10 +225,6 @@ export default function Admin() {
                       <span className="text-sm font-medium text-text">{stats.totalShips}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-text">Aeronaves</span>
-                      <span className="text-sm font-medium text-text">{stats.totalAirplanes}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
                       <span className="text-sm text-text">Equip. Quimica</span>
                       <span className="text-sm font-medium text-text">{stats.chemistryEquipment}</span>
                     </div>
@@ -309,7 +305,6 @@ export default function Admin() {
           <div className="space-y-3 text-sm text-muted">
             <p>• Simulacao de quimica: ativa (10s)</p>
             <p>• Simulacao de porto: ativa (30s)</p>
-            <p>• Simulacao de aeroporto: ativa (30s)</p>
             <p>• Simulacao de locomotiva: ativa (5s)</p>
             <p>• Timeout de comandos: 5s</p>
             <p>• Redis: {process.env.REDIS_URL ? 'configurado' : 'nao configurado (sem cache)'}</p>

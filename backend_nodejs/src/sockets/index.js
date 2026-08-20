@@ -132,7 +132,7 @@ async function handleGatewayData(data, io, socket) {
     // ── Dados do Caminhão ──
     if (rawData.startsWith("ACK|TRUCK")) {
       const action = parts[2];
-      const truckId = deviceName;
+      const truckId = deviceName.replace(/^TRUCK_/, "");
 
       if (truckId && action) {
         await trucksService.updateTruckCommandStatus(truckId, action);
@@ -148,7 +148,7 @@ async function handleGatewayData(data, io, socket) {
     }
 
     if (rawData.startsWith("STATUS|TRUCK") && parts[2] === "POS") {
-      const truckId = deviceName;
+      const truckId = deviceName.replace(/^TRUCK_/, "");
       const x = parseInt(parts[3]);
       const y = parseInt(parts[4]);
       const load = parseInt(parts[6]);

@@ -177,17 +177,17 @@ Três zonas lado a lado. Mantenha esta disposição:
 
 ```
 ┌──────────────────┐   ┌────────────────────────┐   ┌──────────────────┐
-│ Central de       │   │                        │   │ Aeroporto        │
+│ Central de       │   │                        │   │ Porto            │
 │ Química          │   │      FERRORAMA         │   │ Logístico        │
-├──────────────────┤   │  SW1   REVERSOR        │   ├──────────────────┤
-│                  │   │      SW2  SW3          │   │ Porto            │
-│ Mina             │   │                        │   │ Logístico        │
-└──────────────────┘   └────────────────────────┘   └──────────────────┘
+├──────────────────┤   │  SW1   REVERSOR        │   └──────────────────┤
+│                  │   │      SW2  SW3          │
+│ Mina             │   │                        │
+└──────────────────┘   └────────────────────────┘
 ```
 
 Posições atuais em `modulos.ts` (`POSICOES`), pode ajustar as escalas:
 `quimica [-12.5,0,-5.2]`, `mina [-12.5,0,4.4]`, `ferrorama [0,0,0]`,
-`aeroporto [12.5,0,-5.2]`, `porto [12.5,0,4.4]`.
+`porto [12.5,0,4.4]`.
 
 ---
 
@@ -196,7 +196,7 @@ Posições atuais em `modulos.ts` (`POSICOES`), pode ajustar as escalas:
 Aplique o acabamento da foto ao meu conteúdo:
 
 **Base geral** — grama, malha de ruas asfaltadas com faixas brancas ligando as
-5 zonas, árvores instanciadas, veículos em miniatura circulando pelas ruas,
+4 zonas, árvores instanciadas, veículos em miniatura circulando pelas ruas,
 manchas de LED verde no chão, placas informativas iluminadas.
 
 **Ferrorama (centro)** — os trilhos viram o elemento neon: trilhos com brilho
@@ -214,10 +214,7 @@ elemento mais marcante da foto).
 transportadora descendo, caminhão basculante que vai e volta bascula a caçamba.
 Terreno de terra em vez de grama nesta zona.
 
-**Aeroporto Logístico (dir. superior)** — pista com faixas e balizamento em
-LED, terminal de carga, aeronave que taxia e decola.
-
-**Porto Logístico (dir. inferior)** — água com reflexo, cais, guindaste de
+**Porto Logístico (dir.)** — água com reflexo, cais, guindaste de
 lança móvel, navio balançando com contêineres coloridos e LED vermelho de
 atracado.
 
@@ -316,7 +313,7 @@ D8/D9; HC-05 na serial padrão a 9600 baud.
 `BR`, parada total `SC`; caçamba `U` `D` `X`; luzes `HH` `TI` `TO` `TX`.
 
 **Escala**: HO (1:87) para trilhos e locomotiva; caminhões impressos em 3D em
-PLA; aeronaves 1:500. Base de 120 cm. Arduino Mega 2560.
+PLA. Base de 120 cm. Arduino Mega 2560.
 
 ---
 

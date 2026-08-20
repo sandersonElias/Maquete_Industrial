@@ -1,7 +1,5 @@
 services:
-  # PostgreSQL local (backup/seguranca para o dia da feira)
-  # Se DATABASE_URL estiver no .env da raiz, o backend usa o Render;
-  # caso contrario, usa este banco local automaticamente.
+  # Banco de Dados - Postgres
   postgres:
     image: postgis/postgis:16-3.4
     container_name: maquete-postgres

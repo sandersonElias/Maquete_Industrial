@@ -44,7 +44,7 @@ STATUS|SWITCH|<id>|<angle>|<state>|<ts>  ← status push
 
 ## Architecture Notes
 
-- All API routes are under `/api/` prefix (auth, ferrovia, trucks, locomotive, port, airport, reports, gateway)
+- All API routes are under `/api/` prefix (auth, ferrovia, trucks, locomotive, port, reports, gateway)
 - Real-time: Socket.IO events (`device:data`, `command`, `gateway:register`, `gateway:status`)
 - Auth: JWT for dashboard/app, API key (`x-api-key` header) for gateway
 - Gateway runs in `SIMULATION_MODE=true` by default — no physical Bluetooth needed for dev

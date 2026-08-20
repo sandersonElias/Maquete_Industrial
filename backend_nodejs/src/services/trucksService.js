@@ -73,11 +73,14 @@ async function updateTruckCommandStatus(truckId, action) {
     `UPDATE truck_commands
      SET status = 'executed',
          executed_at = NOW()
-     WHERE truck_id = $1
-       AND command = $2
-       AND status = 'pending'
-     ORDER BY issued_at DESC
-     LIMIT 1`,
+     WHERE id = (
+       SELECT id FROM truck_commands
+       WHERE truck_id = $1
+         AND command = $2
+         AND status = 'pending'
+       ORDER BY issued_at DESC
+       LIMIT 1
+     )`,
     [truckId, action],
   );
 }
