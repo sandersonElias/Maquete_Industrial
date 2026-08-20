@@ -1,0 +1,74 @@
+---
+description: Gaveta de ideias da maquete 3D — estacionadas, não implementar até o Marco puxar
+alwaysApply: true
+---
+
+# Gaveta de ideias — maquete 3D
+
+Ideias **puxadas** (18 ago 2026). A cena 3D passou a ter vitrine viva, sala SCADA com monitores/POV, veículos estilizados e página `/maquete`. Não reimplementar do zero; evoluir o que já está em `maquete3d/` e `MaquetePage.tsx`.
+
+Não misturar com bugs pontuais sem o Marco pedir. Página da experiência: `/maquete`.
+
+## Tour imersivo
+
+A **sala de controle (SCADA)** é o hub. O passeio linear de trem continua como opção; o principal é **escolher no monitor** em qual visão entrar.
+
+Monitores na mesa (feeds ao vivo da exibição):
+
+1. Escavadeira Volvo
+2. Caminhão CAT (caçamba)
+3. Trem MRS
+4. Barco / guindaste
+5. Avião C-5
+
+Clicar no monitor = **entrar no POV** (“como é a sensação”). Voltar = de novo na sala. Os feeds são a mesma animação da vitrine, vista de câmera no veículo.
+
+**Mesa da sala:** os **5 monitores na mesma bancada**. Decoração de posto de trabalho: **pilha pequena de pastas** com a **logo da escola**, **caneca de café** na mesa — cara de sala usada, não laboratório vazio. (Logo: o Marco fornece o arquivo quando for implementar.)
+
+Capítulos POV (quando entra):
+
+- **Trem:** com a **MRS ES44ACi** (azul/amarelo, 7507-1). Atrás/lado primeiro; cabine depois. Traçado hoje: superelipse em `geometria.ts`, não a planta `circuit-traces`.
+- **Porto:** convés do porta-contêineres (casco azul, ponte branca, containers — ref. “GL CONTAINER SHIP”). Guindaste visível.
+- **Aeroporto:** porão do **C-5** (cinza, asa alta, 4 motores, T-tail, rampa). Pista + carga.
+- **Mina:** cabine da Volvo e/ou do CAT 793B (n° 137) — cava e enche a caçamba; caminhão vai à área logística.
+- **SCADA:** dentro da sala; escolhe monitores; não substitui os POVs, **despacha** para eles.
+
+Preferência: estilizado em primitivas (leve, feira/celular) antes de GLTF fiel.
+
+## Exibição (vista da maquete, sem entrar no tour)
+
+Com a câmera de fora (visão geral / feira), a maquete fica **viva** o tempo todo — os mesmos veículos do tour, em miniatura, fazendo o ciclo logístico em loop:
+
+- **Mina:** escavadeira cava e enche a caçamba; caminhão vai à área logística (carregamento do trem).
+- **Tremzinho MRS** nos trilhos, **mudando de percurso** (desvio ora porto, ora aeroporto) — leva o que o caminhão entregou.
+- **Barco** flutuando no cais; **guindaste** coloca e tira a carga.
+- **Avião** (C-5) **vai e vem** com a carga (aproximação, pouso/carga, decolagem).
+
+Fluxo único: mina → caminhão → trem → barco **ou** avião.
+
+Isso é a “vitrine”: quem não inicia o tour ainda vê a operação acontecendo. O tour entra na **sala de controle**; dali os monitores mostram esses ciclos e dão o botão de **entrar na visão**.
+
+Camadas, nessa ordem: (1) exibição viva, (2) ciclo mina→caminhão→trem→barco/avião, (3) sala de controle + monitores, (4) entrar no POV escolhido.
+
+## Espaço no site
+
+A cena de hoje vive numa faixa da landing (`#maquete` / `MaqueteSection`). Para sala + monitores + POV, precisa **mais tela**:
+
+- **Opção A:** palco maior na home (quase tela cheia, menos texto em volta).
+- **Opção B (preferida pra imersão):** **página/seção só da maquete** (ex. `/maquete`), tela cheia, nav mínima, “voltar ao site”. QR da feira pode apontar direto pra cá.
+
+A home continua com um preview menor que leva à experiência completa.
+
+## Celular / responsivo
+
+Quem abre o QR na feira está no **telefone**. A gaveta inclui deixar o **site inteiro** mais confortável no celular (seções, nav, textos, toque) — não só o canvas 3D.
+
+Na maquete, no celular:
+
+- palco em **tela cheia** (página `/maquete` ajuda); botões grandes, toque, sem hover.
+- **cinco monitores** viram lista/cards empilhados (não cinco telas minúsculas na mesa).
+- 3D **mais leve** (menos geometria, sombras off) pra não esquentar o aparelho.
+- POV com movimento suave; opção de só assistir no “monitor” se enjoar.
+- **Paisagem automática** na seção/página da maquete 3D: o celular **vira de lado** (landscape) pra ver melhor o palco. Preferir `Screen Orientation` + tela cheia após um toque (“Abrir maquete”). Se o navegador não deixar travar (iPhone/Safari costuma bloquear), mostrar **“Vire o celular”** até estar deitado — a home em pé continua normal.
+
+Não reabrir esta gaveta como “não implementar”.

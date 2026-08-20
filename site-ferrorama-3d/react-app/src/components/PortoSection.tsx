@@ -29,8 +29,8 @@ const modules = [
     image: '/images/trem.jpg',
     alt: 'Ferrovia e trem da maquete',
     body: [
-      'Os trilhos em escala HO formam o circuito que leva o material da mina até o porto. Desvios com servomotores controlam o trajeto da composição.',
-      'A ferrovia é o elo entre extração e exportação: sem ela, o terminal fica isolado na narrativa da maquete.',
+      'Os trilhos em escala HO formam o circuito que leva o material da mina até o terminal de exportação.',
+      'A ferrovia é o elo entre extração e embarque: sem ela, o cais fica isolado na narrativa da maquete.',
     ],
     points: [
       'Trilhos HO com circuito e desvios',
@@ -50,17 +50,17 @@ const chain = [
   {
     step: '02',
     title: 'Desvio',
-    text: 'Servo escolhe o trajeto da composição até o cais.',
+    text: 'Servo posiciona o ramal para o cais.',
   },
   {
     step: '03',
     title: 'Transferência',
-    text: 'Guindaste e LED no cais sinalizam o embarque da carga.',
+    text: 'Guindaste e LED no cais transferem a carga.',
   },
   {
     step: '04',
     title: 'Saída',
-    text: 'Navio = volume. A história fecha na exportação marítima.',
+    text: 'O navio fecha a história de exportação.',
   },
 ];
 
@@ -75,7 +75,7 @@ const routes = [
       ['Custo', 'Menor por tonelada'],
       ['Tempo', 'Semanas (marítimo)'],
       ['Carga típica', 'Minério de ferro, carvão'],
-      ['Na maquete', 'Rota padrão do trem'],
+      ['Na maquete', 'Rota do trem até o cais'],
       ['Referência', 'Terminal de Tubarão (ES)'],
     ],
   },
@@ -126,7 +126,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Rota de saída — mar, e o trilho que decide o destino
+            Da mina ao mar — o trilho decide o destino no cais
           </motion.p>
         </div>
 
@@ -191,7 +191,7 @@ export default function PortoSection() {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.75, delay: 0.45, ease: EASE_OUT_EXPO }}
         >
-          <h3 className="porto-routes__heading">Saída marítima</h3>
+          <h3 className="porto-routes__heading">A saída marítima</h3>
           <div className="porto-routes__grid">
             {routes.map((r) => (
               <article key={r.id} className={`porto-route porto-route--${r.tone}`}>

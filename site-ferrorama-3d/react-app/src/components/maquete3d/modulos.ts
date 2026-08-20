@@ -54,20 +54,54 @@ export const PALETA = {
   purple: '#A855F7',
 } as const;
 
-/** Posição de cada zona sobre a placa (x, y, z). */
-export const POSICOES: Record<string, [number, number, number]> = {
-  quimica: [-12.5, 0, -5.2],
-  mina: [-12.5, 0, 4.4],
-  ferrorama: [0, 0, 0],
-  porto: [12.5, 0, 4.4],
+/** Passos do tour cinematográfico automático. */
+export const PASSOS_TOUR = [
+  {
+    moduloId: 'mineradora' as const,
+    legenda: 'Volvo enche o CAT 793 — o caminhão leva o minério à logística',
+    duracao: 5,
+  },
+  {
+    moduloId: 'ferrovia' as const,
+    legenda: 'MRS ES44ACi nos trilhos — ramal automático para o porto',
+    duracao: 5,
+  },
+  {
+    moduloId: 'porto' as const,
+    legenda: 'Guindaste embarca o contêiner no porta-contêineres',
+    duracao: 5,
+  },
+  {
+    moduloId: 'controle' as const,
+    legenda: 'Sala SCADA — clique nos monitores para entrar na visão',
+    duracao: 5,
+  },
+  {
+    moduloId: null,
+    legenda: 'Visão geral da operação integrada',
+    duracao: 4,
+  },
+];
+
+export const CAMERAS_POV = [
+  { id: 'volvo' as const, label: 'Escavadeira Volvo', modulo: 'mineradora' },
+  { id: 'cat' as const, label: 'Caminhão CAT', modulo: 'mineradora' },
+  { id: 'mrs' as const, label: 'Trem MRS', modulo: 'ferrovia' },
+  { id: 'navio' as const, label: 'Porta-contêineres', modulo: 'porto' },
+];
+export const TELEMETRIA: Record<string, string> = {
+  mineradora: 'Volvo + CAT 793 · ciclo da mina',
+  ferrovia: 'MRS ES44ACi · ramal automático',
+  porto: 'Porta-contêineres · guindaste no cais',
+  controle: '4 monitores · sala SCADA',
 };
 
 export const MODULOS: Modulo[] = [
   {
-    id: 'quimica',
-    nome: 'Central de Química',
-    cor: PALETA.glow,
-    papel: 'Controle de qualidade',
+    id: 'mineradora',
+    nome: 'Mineradora',
+    cor: PALETA.warning,
+    alvo: [-15.2, 0.5, -7.4],
     resumo:
       'É o laboratório que decide se a carga pode ou não ser embarcada. Aqui se mede o teor de ferro, a umidade e os contaminantes de cada lote — e o minério é tratado até chegar na especificação que o cliente comprou. Sem esse controle a carga chega ao porto de destino e é rejeitada: a empresa perde o embarque inteiro, paga o frete de volta e ainda arranha a reputação com o comprador. Por isso nenhum vagão sai da mina sem passar por aqui.',
     detalhes: [
@@ -108,15 +142,29 @@ export const MODULOS: Modulo[] = [
   {
     id: 'porto',
     nome: 'Porto Logístico',
-    cor: PALETA.danger,
-    papel: 'Exportação',
+    cor: PALETA.glow,
+    alvo: [16.2, 0.5, 8.2],
     resumo:
-      'É aqui que o minério deixa de ser estoque e vira receita. O guindaste transfere a carga dos vagões para o navio e, no momento em que o embarque é concluído, aquela produção passa a ser venda faturada no exterior. O porto é o gargalo mais caro da cadeia: navio parado no cais cobra por dia de espera, então toda a operação a montante — mina, química e ferrovia — é planejada para que a carga chegue no momento certo.',
+      'Cais com correia até o navio: o minério que chega pelo trem é embarcado para exportação.',
     detalhes: [
       'Guindaste com lança móvel sobre o cais',
       'Navios monitorados via GET /api/port/ships',
       'LED vermelho sinaliza navio atracado',
       'Esteira do cais movida por motor linear',
+    ],
+  },
+  {
+    id: 'controle',
+    nome: 'Central de Controle',
+    cor: PALETA.danger,
+    alvo: [-5.8, 0.5, 13.2],
+    resumo:
+      'Arduino Mega, gateway e dashboard: o cérebro que coordena os módulos.',
+    detalhes: [
+      'Arduino ↔ Gateway Node.js por Serial/Bluetooth',
+      'Gateway ↔ Backend Express por WebSocket',
+      'Dashboard React recebe switch:update e truck:telemetry',
+      'PostgreSQL para histórico e Redis para estado em tempo real',
     ],
   },
 ];

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, Component, type ReactNode } from 'react';
 
 /**
  * A maquete 3D carrega em um chunk separado: three.js + drei só descem
@@ -7,10 +7,38 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
  */
 const Maquete3D = lazy(() => import('./maquete3d/Maquete3D'));
 
+class MaqueteErro extends Component<{ children: ReactNode }, { erro: Error | null }> {
+  state = { erro: null as Error | null };
+
+  static getDerivedStateFromError(erro: Error) {
+    return { erro };
+  }
+
+  render() {
+    if (this.state.erro) {
+      return (
+        <div className="maquete3d-carregando" role="alert">
+          <p>Não foi possível carregar a maquete 3D.</p>
+          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{this.state.erro.message}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /** Só monta a cena 3D quando o usuário chega perto dela. */
 function useProximoDaTela<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  const [proximo, setProximo] = useState(false);
+  const [proximo, setProximo] = useState(
+    () => typeof window !== 'undefined' && window.location.hash.includes('maquete')
+  );
+
+  useEffect(() => {
+    if (proximo) {
+      import('./maquete3d/Maquete3D');
+    }
+  }, [proximo]);
 
   useEffect(() => {
     const el = ref.current;
@@ -94,13 +122,21 @@ export default function MaqueteSection() {
 
         <div ref={ref}>
           {proximo ? (
-            <Suspense fallback={<Placeholder />}>
-              <Maquete3D />
-            </Suspense>
+            <MaqueteErro>
+              <Suspense fallback={<Placeholder />}>
+                <Maquete3D />
+              </Suspense>
+            </MaqueteErro>
           ) : (
             <Placeholder />
           )}
         </div>
+
+        <p className="maquete-abrir">
+          <a className="hero-cta" href="/maquete">
+            Abrir maquete em tela cheia
+          </a>
+        </p>
 
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>
@@ -132,7 +168,7 @@ export default function MaqueteSection() {
             ))}
           </ol>
           <p className="shell-pipeline__note">
-            Rota padrão: mina → trem → porto, sem desvios.
+            Rota de exportação: o trem segue ao porto.
           </p>
         </div>
 

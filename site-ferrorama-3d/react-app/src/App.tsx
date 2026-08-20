@@ -11,9 +11,21 @@ import ControleSection from './components/ControleSection';
 import BackToTop from './components/BackToTop';
 import Footer from './components/Footer';
 import PageRails from './components/PageRails';
+import MaquetePage from './components/MaquetePage';
 import useScrollAnimations from './hooks/useScrollAnimations';
 
 export default function App() {
+  const soMaquete =
+    typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') === '/maquete';
+
+  if (soMaquete) {
+    return <MaquetePage />;
+  }
+
+  return <Site />;
+}
+
+function Site() {
   useScrollAnimations();
 
   return (
