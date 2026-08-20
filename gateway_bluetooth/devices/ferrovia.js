@@ -8,7 +8,7 @@ class FerroviaDevice extends BluetoothDeviceBase {
   constructor(name, macAddress) {
     super(name, macAddress, "ferrovia");
     this.switches = {};
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 3; i++) {
       this.switches[i] = { angle: 90, state: "CENTER" };
     }
     this.simTimer = null;
@@ -55,7 +55,7 @@ class FerroviaDevice extends BluetoothDeviceBase {
 
   onStartSimulation() {
     this.simTimer = setInterval(() => {
-      const id = Math.floor(Math.random() * 4) + 1;
+      const id = Math.floor(Math.random() * 3) + 1;
       const currentAngle = this.switches[id]?.angle || 90;
       const targetAngle = Math.random() > 0.5 ? 0 : 180;
       const newAngle = currentAngle + (targetAngle > currentAngle ? 10 : -10);

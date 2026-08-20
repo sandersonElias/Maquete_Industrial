@@ -243,7 +243,7 @@ Hoje os textos em `modulos.ts` são quase só especificação técnica (pinos,
 protocolo). **Eu quero que expliquem o papel de cada área dentro da empresa** —
 é isso que o público da feira quer entender.
 
-Para cada uma das 5 zonas, escreva:
+Para cada uma das 4 zonas, escreva:
 
 - **1 parágrafo curto** sobre a função daquela área na cadeia produtiva e por
   que ela importa para o negócio
@@ -255,10 +255,9 @@ Orientação de conteúdo por zona:
 | Zona | Sobre o que o parágrafo deve falar |
 |---|---|
 | **Central de Química** | O laboratório é quem garante que o minério atende à especificação do cliente. Analisa teor de ferro, umidade e contaminantes; sem esse controle a carga é rejeitada no porto de destino e a empresa perde o embarque. Também trata e beneficia o minério antes da exportação. |
-| **Mina** | Início de tudo: extração do minério bruto. Define o ritmo de toda a cadeia — se a mina para, para o trem, o porto e o aeroporto. |
+| **Mina** | Início de tudo: extração do minério bruto. Define o ritmo de toda a cadeia — se a mina para, para o trem e o porto. |
 | **Ferrorama** | A ferrovia é a espinha dorsal logística: transporta grandes volumes com custo por tonelada muito menor que o rodoviário. Os desvios decidem o destino da carga. |
 | **Porto Logístico** | Porta de saída para o mercado internacional. É onde o minério vira exportação e receita. |
-| **Aeroporto Logístico** | Rota alternativa para carga de maior valor agregado ou urgência, quando o custo do frete aéreo se justifica. |
 
 Escreva em português claro, sem jargão desnecessário — o público é de feira
 escolar. Não invente números nem dados que não existam.

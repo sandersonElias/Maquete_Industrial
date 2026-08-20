@@ -7,7 +7,7 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": false,
     "android": {
-      "package": "com.seuusuario.maquetetruck",
+      "package": "com.maquete.industrial.truck",
       "permissions": [
         "BLUETOOTH",
         "BLUETOOTH_ADMIN",
@@ -19,7 +19,7 @@
       ]
     },
     "ios": {
-      "bundleIdentifier": "com.seuusuario.maquetetruck"
+      "bundleIdentifier": "com.maquete.industrial.truck"
     },
     "plugins": [
       "expo-dev-client"

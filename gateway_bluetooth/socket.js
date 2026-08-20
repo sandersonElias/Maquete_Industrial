@@ -28,7 +28,7 @@ function connectToBackend(deviceManager) {
 
 function handleCommand(rawPayload, deviceManager) {
   const payload = rawPayload.payload || rawPayload;
-  const { target, cmd, switchId, angle, action } = payload;
+  const { target, cmd, switchId, angle, action, command } = payload;
 
   if (!target) {
     logger.error(`Comando sem target: ${JSON.stringify(rawPayload)}`);
@@ -47,7 +47,7 @@ function handleCommand(rawPayload, deviceManager) {
       return;
     }
     const id = parseInt(switchId, 10);
-    if (isNaN(id) || id < 1 || id > 4) {
+    if (isNaN(id) || id < 1 || id > 3) {
       logger.warn(`switchId invalido: ${switchId}`);
       return;
     }
@@ -57,7 +57,13 @@ function handleCommand(rawPayload, deviceManager) {
       logger.warn(`Comando TRUCK enviado para device nao-truck: ${device.name}`);
       return;
     }
-    device.sendTruckCommand(action);
+    // Backend envia `command`; alguns clientes legados enviam `action`.
+    const truckAction = command || action;
+    if (!truckAction) {
+      logger.warn(`Comando TRUCK sem action/command: ${JSON.stringify(payload)}`);
+      return;
+    }
+    device.sendTruckCommand(truckAction);
   } else {
     logger.warn(`Comando desconhecido: ${cmd}`);
   }

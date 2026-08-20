@@ -1,0 +1,161 @@
+from __future__ import annotations
+
+import math
+
+import bpy
+
+from .coords import RX, RZ
+from .primitives import apply_mods, assign, boolean_cut, cube, cyl, ico, join, lathe_solid, smooth, unwrap
+from .railway import poste_luz, semaforo
+
+
+def cut_tunnel(hills, x, radius=0.58, length=3.4):
+    for hill in hills:
+        bpy.ops.mesh.primitive_cylinder_add(
+            radius=radius,
+            depth=length,
+            location=(x, 0.0, 0.52),
+            rotation=(math.pi / 2, 0, 0),
+            vertices=24,
+        )
+        cutter = bpy.context.object
+        cutter.name = f"Cut_{hill.name}"
+        try:
+            boolean_cut(hill, cutter)
+        except Exception as exc:
+            print("CUT_FAIL", hill.name, exc)
+            try:
+                bpy.data.objects.remove(cutter, do_unlink=True)
+            except Exception:
+                pass
+
+
+def tunel_forro(prefix, x, m_conc):
+    from .coords import tloc
+    from .primitives import assign as _assign
+
+    for suf, z in (("BocaN", 1.28), ("BocaS", -1.28)):
+        bpy.ops.mesh.primitive_torus_add(
+            major_radius=0.52,
+            minor_radius=0.08,
+            location=tloc(x, 0.5, z),
+            rotation=(math.pi / 2, 0, 0),
+            major_segments=28,
+            minor_segments=10,
+        )
+        ob = bpy.context.object
+        ob.name = f"{prefix}{suf}"
+        _assign(ob, m_conc)
+        smooth(ob, 40)
+
+
+def build_board(m):
+    cube("Placa", (47.2, 0.42, 35.0), (0, -0.28, 0), m["wood"], 0.04)
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=110, y_subdivisions=82, size=1, location=(0, 0, 0.05))
+    grass = bpy.context.object
+    grass.name = "Grama"
+    grass.scale = (45.4, 33.4, 1)
+    bpy.ops.object.transform_apply(scale=True)
+    tex = bpy.data.textures.new("GrassDisp", "CLOUDS")
+    tex.noise_scale = 1.35
+    tex.noise_depth = 2
+    disp = grass.modifiers.new("Disp", "DISPLACE")
+    disp.texture = tex
+    disp.strength = 0.045
+    disp.mid_level = 0.5
+    apply_mods(grass)
+    assign(grass, m["grass"])
+    unwrap(grass)
+    smooth(grass, 70)
+
+
+def build_hills(m):
+    hill_prof = [(0.06, 0.0), (2.45, 0.03), (2.15, 0.48), (1.5, 1.02), (0.78, 1.52), (0.12, 1.78)]
+    grass_prof = [(0.04, 1.05), (1.12, 1.12), (0.68, 1.48), (0.1, 1.68)]
+    morro_ln = lathe_solid("MorroLesteN", hill_prof, 32, (RX + 0.55, 0.0, 2.05), m["rock"], 0.16, 1.5)
+    morro_ls = lathe_solid("MorroLesteS", hill_prof, 32, (RX + 0.55, 0.0, -2.05), m["rock"], 0.16, 1.55)
+    morro_on = lathe_solid("MorroOesteN", hill_prof, 32, (-RX - 0.55, 0.0, 2.05), m["rock"], 0.16, 1.5)
+    morro_os = lathe_solid("MorroOesteS", hill_prof, 32, (-RX - 0.55, 0.0, -2.05), m["rock"], 0.16, 1.6)
+    cut_tunnel([morro_ln, morro_ls], RX)
+    cut_tunnel([morro_on, morro_os], -RX)
+    tunel_forro("TunelL", RX, m["conc"])
+    tunel_forro("TunelO", -RX, m["conc"])
+    lathe_solid("CapimLN", grass_prof, 22, (RX + 0.5, 0.0, 1.85), m["grass"], 0.06, 1.2)
+    lathe_solid("CapimLS", grass_prof, 22, (RX + 0.5, 0.0, -1.85), m["grass"], 0.06, 1.2)
+    lathe_solid("CapimON", grass_prof, 22, (-RX - 0.5, 0.0, 1.85), m["grass"], 0.06, 1.2)
+    lathe_solid("CapimOS", grass_prof, 22, (-RX - 0.5, 0.0, -1.85), m["grass"], 0.06, 1.2)
+
+
+def build_scada(m):
+    from .materials import pbr
+
+    cube("SalaPiso", (3.2, 0.08, 2.2), (-5.8, 0.08, 13.2), m["conc"], 0.01)
+    cube("Mesa", (2.55, 0.08, 1.15), (-5.8, 0.72, 13.05), m["desk"], 0.03)
+    cube("MesaPe", (2.4, 0.62, 1.0), (-5.8, 0.38, 13.05), m["desk"], 0.04)
+    for i, x in enumerate((-0.75, -0.25, 0.25, 0.75)):
+        cube(f"MonFrame{i}", (0.48, 0.34, 0.06), (-5.8 + x, 1.02, 13.42), m["black"], 0.008, rot=(-0.55, 0, 0))
+        cube(
+            f"Monitor{i}",
+            (0.42, 0.28, 0.02),
+            (-5.8 + x, 1.04, 13.52),
+            pbr(f"Mon{i}", color=(0.15, 0.75, 0.4), rough=0.2, emit=1.4),
+            0.002,
+            rot=(-0.55, 0, 0),
+        )
+    cube("Caneca", (0.12, 0.14, 0.12), (-4.75, 0.86, 13.25), m["white"], 0.02)
+    cube("Pasta0", (0.28, 0.04, 0.36), (-6.7, 0.8, 13.25), m["mrs_b"], 0.006)
+    cube("Pasta1", (0.28, 0.04, 0.36), (-6.68, 0.85, 13.22), m["white"], 0.006)
+    cube("Cadeira", (0.45, 0.55, 0.45), (-5.8, 0.35, 13.85), m["black"], 0.04)
+
+
+def build_trees(m):
+    spots = [
+        (-20.2, -12.2), (-18.4, 4.2), (-14.5, 11.4), (-8.2, -13.4), (6.1, -12.6),
+        (8.4, 13.2), (12.6, -3.2), (11.2, -5.4), (10.2, -14.2),
+        (-10.4, 9.2), (3.2, 12.4), (-21.2, 8.1), (1.2, -14.4),
+        (22.0, 2.2), (-19.2, -6.2), (-12.4, -12.8), (-3.4, 11.8),
+        (8.4, -8.6), (-16.2, 6.4), (5.6, 10.8), (-6.8, -12.0),
+        (16.8, -9.4), (18.6, -11.2), (15.2, -12.0),
+        (-21.6, 2.4), (20.4, -4.8), (-4.2, -14.6), (9.6, 11.6),
+        (21.2, 12.4), (-22.0, -3.2), (2.4, -13.2),
+    ]
+
+    def arvore_ok(x, z):
+        if x > 12.0 and z > 3.0:
+            return False
+        if (x + 17.2) ** 2 + (z + 9.4) ** 2 < 28:
+            return False
+        if (x + 19.4) ** 2 + (z + 6.15) ** 2 < 12:
+            return False
+        return True
+
+    trunks, copas = [], []
+    for i, (x, z) in enumerate(spots):
+        if not arvore_ok(x, z):
+            continue
+        h = 0.55 + (i % 5) * 0.08
+        trunks.append(cyl(f"Tronco{i}", 0.07, h, (x, h / 2, z), m["trunk"], 8, r2=0.045))
+        leaf = m["leaf"] if i % 2 == 0 else m["leaf2"]
+        copas.append(ico(f"Copa{i}a", 0.42 + (i % 3) * 0.04, (x, h + 0.28, z), leaf, 2, (1.05, 0.85, 1.0)))
+        copas.append(ico(f"Copa{i}b", 0.28, (x + 0.22, h + 0.18, z + 0.1), leaf, 1, (1, 0.8, 1)))
+    join("Troncos", trunks)
+    join("Copas", copas)
+
+
+def build_fair_lights(m):
+    """Postes e luzes extras no limite do celular (fase 3)."""
+    for i, (x, z) in enumerate(
+        (
+            (RX, 4.4),
+            (RX, -4.4),
+            (-RX, 4.4),
+            (-RX, -4.4),
+            (0.0, RZ),
+            (0.0, -RZ),
+            (4.2, RZ),
+            (-4.2, -RZ),
+        )
+    ):
+        poste_luz(f"LuzOval{i}", x, z, m["black"], m["glow"], 1.22)
+    semaforo("SemLeste", RX, 0.0, math.pi / 2, m)
+    semaforo("SemOeste", -RX, 0.0, -math.pi / 2, m)

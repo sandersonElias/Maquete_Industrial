@@ -2,50 +2,37 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { EASE_OUT_EXPO } from '../lib/motion';
 
-const itemVariants = {
-  hidden: { y: 24, opacity: 0 },
-  visible: (i: number) => ({
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.55,
-      delay: 0.35 + i * 0.08,
-      ease: EASE_OUT_EXPO,
-    },
-  }),
-};
-
-const features = [
+const signals = [
   {
-    num: '01',
+    tag: 'TX',
     title: 'Bluetooth HC-05',
-    text: 'Comunicação sem fio entre o app e os dispositivos Arduino.',
+    text: 'App e Arduino no mesmo canal serial — comandos curtos, resposta rápida.',
   },
   {
-    num: '02',
-    title: '4 Servos SG90',
-    text: 'Direção, caçamba, motor e guincho — cada um com ângulo preciso.',
+    tag: 'PWM',
+    title: 'Servos SG90',
+    text: 'Ângulo fino para direção, caçamba e movimentos do basculante.',
   },
   {
-    num: '03',
-    title: 'Sensores IR',
-    text: 'TCRT5000 e reed switch para proximidade e presença nos trilhos.',
+    tag: 'IR',
+    title: 'Sensores',
+    text: 'TCRT5000 e reed switch marcam presença nos trilhos.',
   },
   {
-    num: '04',
-    title: 'LEDs indicadores',
-    text: 'Faróis, setas, pisca-alerta e status no painel de controle.',
+    tag: 'LED',
+    title: 'Indicadores',
+    text: 'Faróis, setas e status — leitura imediata na feira.',
   },
 ];
 
 export default function CodigoSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="codigo" className="section" data-bg="dark" ref={ref}>
+    <section id="codigo" className="section section--lab" data-bg="dark" ref={ref}>
       <div className="section-container">
-        <div className="section-header">
+        <div className="section-header section-header--lab">
           <motion.span
             className="section-number"
             initial={{ opacity: 0, y: 20 }}
@@ -68,42 +55,31 @@ export default function CodigoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Como os caminhões se movem e como o trem funciona
+            Bancada do firmware — o sketch que faz o metal se mexer
           </motion.p>
         </div>
 
-        <div className="code-showcase">
-          <motion.div
-            className="code-image-stack"
-            initial={{ x: -80, opacity: 0 }}
-            animate={isInView ? { x: 0, opacity: 1 } : {}}
-            transition={{ duration: 1, ease: EASE_OUT_EXPO }}
-          >
-            <div className="code-image-card code-image-main">
-              <img
-                src="/images/arduino.jpg"
-                alt="Arduino Mega utilizado na automação"
-                loading="lazy"
-              />
-              <span className="code-image-caption">Arduino Mega 2560</span>
+        {/* Mesa de lab: foto Arduino + terminal dominante */}
+        <motion.div
+          className="lab-bench"
+          initial={{ opacity: 0, y: 36 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.85, ease: EASE_OUT_EXPO }}
+        >
+          <div className="lab-bench__photo">
+            <img
+              src="/images/arduino.jpg"
+              alt="Arduino Mega na bancada de automação"
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="lab-bench__photo-meta">
+              <span className="lab-bench__chip">MEGA 2560</span>
+              <span className="lab-bench__chip lab-bench__chip--live">SERIAL · BT</span>
             </div>
-            <div className="code-image-card code-image-secondary code-image-circuit">
-              <img
-                src="/images/circuit-traces.svg"
-                alt="Diagrama do circuito e trilhos da maquete"
-                loading="lazy"
-                decoding="async"
-              />
-              <span className="code-image-caption">Circuito / trilhos</span>
-            </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="code-block"
-            initial={{ x: 100, opacity: 0 }}
-            animate={isInView ? { x: 0, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.2, ease: EASE_OUT_EXPO }}
-          >
+          <div className="lab-bench__terminal code-block">
             <div className="code-header">
               <div className="code-dots">
                 <span className="code-dot red"></span>
@@ -129,27 +105,51 @@ export default function CodigoSection() {
               <span className="code-comment">{'// Parado'}</span>{'\n'}
               {'  }\n}'}
             </code></pre>
-          </motion.div>
-        </div>
+            <p className="lab-bench__hint">
+              Uma letra no ar → um ângulo no servo. Protocolo mínimo, efeito máximo na escala HO.
+            </p>
+          </div>
+        </motion.div>
 
-        <ul className="code-kit">
-          {features.map((f, i) => (
-            <motion.li
-              key={f.num}
-              className="code-kit__item"
-              custom={i}
-              variants={itemVariants}
-              initial="hidden"
-              animate={isInView ? 'visible' : 'hidden'}
-            >
-              <span className="code-kit__num">{f.num}</span>
-              <div className="code-kit__body">
-                <h4 className="code-kit__title">{f.title}</h4>
-                <p className="code-kit__text">{f.text}</p>
-              </div>
-            </motion.li>
-          ))}
-        </ul>
+        {/* Barramento de sinais — não é card de Porto */}
+        <motion.div
+          className="lab-bus"
+          initial={{ opacity: 0, y: 28 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.75, delay: 0.2, ease: EASE_OUT_EXPO }}
+        >
+          <div className="lab-bus__rail" aria-hidden="true" />
+          <ul className="lab-bus__list">
+            {signals.map((s, i) => (
+              <motion.li
+                key={s.tag}
+                className="lab-bus__node"
+                initial={{ opacity: 0, y: 16 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.3 + i * 0.08, duration: 0.5, ease: EASE_OUT_EXPO }}
+              >
+                <span className="lab-bus__tag">{s.tag}</span>
+                <h3 className="lab-bus__title">{s.title}</h3>
+                <p className="lab-bus__text">{s.text}</p>
+              </motion.li>
+            ))}
+          </ul>
+        </motion.div>
+
+        <motion.figure
+          className="lab-schematic"
+          initial={{ opacity: 0, y: 24 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.35, ease: EASE_OUT_EXPO }}
+        >
+          <img
+            src="/images/circuit-traces.svg"
+            alt="Esquema de circuito e trilhos da maquete"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>Esquema — trilhos e traços como uma placa viva</figcaption>
+        </motion.figure>
       </div>
     </section>
   );

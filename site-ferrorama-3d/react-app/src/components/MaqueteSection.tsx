@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, Component, type ReactNode } from 'react';
 
 /**
  * A maquete 3D carrega em um chunk separado: three.js + drei só descem
@@ -7,10 +7,38 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
  */
 const Maquete3D = lazy(() => import('./maquete3d/Maquete3D'));
 
+class MaqueteErro extends Component<{ children: ReactNode }, { erro: Error | null }> {
+  state = { erro: null as Error | null };
+
+  static getDerivedStateFromError(erro: Error) {
+    return { erro };
+  }
+
+  render() {
+    if (this.state.erro) {
+      return (
+        <div className="maquete3d-carregando" role="alert">
+          <p>Não foi possível carregar a maquete 3D.</p>
+          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{this.state.erro.message}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /** Só monta a cena 3D quando o usuário chega perto dela. */
 function useProximoDaTela<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  const [proximo, setProximo] = useState(false);
+  const [proximo, setProximo] = useState(
+    () => typeof window !== 'undefined' && window.location.hash.includes('maquete')
+  );
+
+  useEffect(() => {
+    if (proximo) {
+      import('./maquete3d/Maquete3D');
+    }
+  }, [proximo]);
 
   useEffect(() => {
     const el = ref.current;
@@ -71,12 +99,11 @@ const objectives = [
   },
 ];
 
-const pipeline = [
-  'Arduino',
-  'Gateway',
-  'Backend',
-  'Dashboard',
-  'App mobile',
+const chain = [
+  'Mina',
+  'Caminhões',
+  'Trem',
+  'Porto',
 ];
 
 export default function MaqueteSection() {
@@ -93,25 +120,29 @@ export default function MaqueteSection() {
           </p>
         </div>
 
-        {/* `maquete3d-palco-wrap` fura o container de 1240px — a maquete é o
-            destaque do site. Fica no wrapper, e não no componente, para que o
-            placeholder de carregamento já ocupe a mesma largura e a página não
-            salte quando a cena 3D entra. */}
-        <div className="maquete3d-palco-wrap" ref={ref}>
+        <div ref={ref}>
           {proximo ? (
-            <Suspense fallback={<Placeholder />}>
-              <Maquete3D />
-            </Suspense>
+            <MaqueteErro>
+              <Suspense fallback={<Placeholder />}>
+                <Maquete3D />
+              </Suspense>
+            </MaqueteErro>
           ) : (
             <Placeholder />
           )}
         </div>
 
+        <p className="maquete-abrir">
+          <a className="hero-cta" href="/maquete">
+            Abrir maquete em tela cheia
+          </a>
+        </p>
+
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>
           <p className="shell-block__lead">
-            O Ferrorama simula a cadeia do minério de ferro e carvão — da mina ao porto ou
-            aeroporto — com modelismo ferroviário, impressão 3D e Arduino.
+            O Ferrorama simula a cadeia do minério de ferro e carvão — da mina ao porto —
+            com modelismo ferroviário, impressão 3D e Arduino.
           </p>
           <ul className="shell-facts">
             {objectives.map((item) => (
@@ -124,19 +155,21 @@ export default function MaqueteSection() {
         </div>
 
         <div className="shell-block">
-          <h3 className="shell-block__title">Como os módulos conversam</h3>
+          <h3 className="shell-block__title">A cadeia na maquete</h3>
           <p className="shell-block__lead">
-            Do Arduino ao painel: o mesmo caminho para cada comando.
+            Extração, transporte e exportação — o mesmo caminho do minério no Brasil, em escala HO.
           </p>
-          <ol className="shell-pipeline" aria-label="Fluxo do sistema">
-            {pipeline.map((step, i) => (
+          <ol className="shell-pipeline" aria-label="Cadeia logística">
+            {chain.map((step, i) => (
               <li key={step} className="shell-pipeline__step">
                 {i > 0 && <span className="shell-pipeline__rail" aria-hidden="true" />}
                 <span className="shell-pipeline__node">{step}</span>
               </li>
             ))}
           </ol>
-          <p className="shell-pipeline__note">Persistência: PostgreSQL + Redis</p>
+          <p className="shell-pipeline__note">
+            Rota de exportação: o trem segue ao porto.
+          </p>
         </div>
 
         <div className="shell-block shell-block--faq">
@@ -146,7 +179,7 @@ export default function MaqueteSection() {
               <summary>Qual escala foi usada na maquete?</summary>
               <p>
                 Utilizamos escala HO (1:87) para trilhos, locomotiva e vagões. Os caminhões foram
-                impressos em escala compatível (~1:87) e o aeroporto usa aviões em escala 1:500.
+                impressos em escala compatível (~1:87).
               </p>
             </details>
             <details className="maquete-accordion-item">
@@ -160,7 +193,7 @@ export default function MaqueteSection() {
               <summary>É possível controlar cada parte separadamente?</summary>
               <p>
                 Sim. A central possui modo manual (cada subsistema independente) e modo automático
-                (sequência completa mina → caminhões → trem → porto/aeroporto).
+                (sequência completa mina → caminhões → trem → porto).
               </p>
             </details>
             <details className="maquete-accordion-item">

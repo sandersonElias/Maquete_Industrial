@@ -26,7 +26,7 @@ ON CONFLICT (name) DO NOTHING;
 CREATE TABLE IF NOT EXISTS permissions (
     id SERIAL PRIMARY KEY,
     role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
-    resource VARCHAR(50) NOT NULL,          -- ferrovia, trucks, port, airport, reports, alerts, admin
+    resource VARCHAR(50) NOT NULL,          -- ferrovia, trucks, port, reports, alerts, admin
     action VARCHAR(30) NOT NULL,            -- read, write, command, delete, manage
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(role_id, resource, action)
@@ -39,7 +39,6 @@ INSERT INTO permissions (role_id, resource, action) VALUES
     ((SELECT id FROM roles WHERE name = 'admin'), 'trucks', 'command'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'trucks', 'read'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'port', 'read'),
-    ((SELECT id FROM roles WHERE name = 'admin'), 'airport', 'read'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'reports', 'read'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'reports', 'write'),
     ((SELECT id FROM roles WHERE name = 'admin'), 'alerts', 'manage'),
@@ -50,14 +49,12 @@ INSERT INTO permissions (role_id, resource, action) VALUES
     ((SELECT id FROM roles WHERE name = 'operator'), 'trucks', 'command'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'trucks', 'read'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'port', 'read'),
-    ((SELECT id FROM roles WHERE name = 'operator'), 'airport', 'read'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'reports', 'read'),
     ((SELECT id FROM roles WHERE name = 'operator'), 'alerts', 'read'),
     -- viewer: somente leitura
     ((SELECT id FROM roles WHERE name = 'viewer'), 'ferrovia', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'trucks', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'port', 'read'),
-    ((SELECT id FROM roles WHERE name = 'viewer'), 'airport', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'reports', 'read'),
     ((SELECT id FROM roles WHERE name = 'viewer'), 'alerts', 'read'),
     -- maintenance: leitura + manutencao
@@ -109,7 +106,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id),
     action VARCHAR(50) NOT NULL,            -- login, logout, command, create, update, delete
-    resource VARCHAR(50) NOT NULL,          -- user, switch, truck, ship, airplane, report
+    resource VARCHAR(50) NOT NULL,          -- user, switch, truck, ship, report
     resource_id VARCHAR(100),
     details JSONB DEFAULT '{}',
     ip_address VARCHAR(45),
@@ -122,7 +119,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS maintenance (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    device_type VARCHAR(30) NOT NULL,       -- switch, truck, ship, airplane, gateway
+    device_type VARCHAR(30) NOT NULL,       -- switch, truck, ship, gateway
     device_id VARCHAR(50) NOT NULL,
     title VARCHAR(100) NOT NULL,
     description TEXT,
@@ -229,138 +226,24 @@ CREATE INDEX IF NOT EXISTS idx_reports_user ON reports(generated_by, created_at)
 CREATE INDEX IF NOT EXISTS idx_trucks_status ON trucks(status);
 
 -- ============================================================
--- 12. RLS (Row Level Security) - Supabase
+-- 12. RLS (Row Level Security) - Supabase (OPCIONAL)
 -- ============================================================
+-- NOTA: RLS e especifico do Supabase. Para PostgreSQL padrao (Render),
+-- desabilitamos o RLS pois a autenticacao ja e feita via JWT no backend.
 
--- Habilitar RLS nas tabelas
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE switches ENABLE ROW LEVEL SECURITY;
-ALTER TABLE trucks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE commands ENABLE ROW LEVEL SECURITY;
-ALTER TABLE truck_telemetry ENABLE ROW LEVEL SECURITY;
-ALTER TABLE truck_commands ENABLE ROW LEVEL SECURITY;
-ALTER TABLE locomotive_position ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE airplanes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
-ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE permissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE devices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE gateways ENABLE ROW LEVEL SECURITY;
-ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE maintenance ENABLE ROW LEVEL SECURITY;
-ALTER TABLE maintenance_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE command_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sensor_data ENABLE ROW LEVEL SECURITY;
+-- Desabilitar RLS (para PostgreSQL padrao)
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE switches DISABLE ROW LEVEL SECURITY;
+ALTER TABLE trucks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE commands DISABLE ROW LEVEL SECURITY;
+ALTER TABLE truck_telemetry DISABLE ROW LEVEL SECURITY;
+ALTER TABLE truck_commands DISABLE ROW LEVEL SECURITY;
+ALTER TABLE locomotive_position DISABLE ROW LEVEL SECURITY;
+ALTER TABLE ships DISABLE ROW LEVEL SECURITY;
+ALTER TABLE alerts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reports DISABLE ROW LEVEL SECURITY;
 
--- Politicas de leitura: todos os usuarios autenticados podem ler
-CREATE POLICY "Authenticated users can read switches"
-    ON switches FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read trucks"
-    ON trucks FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read ships"
-    ON ships FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read airplanes"
-    ON airplanes FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read alerts"
-    ON alerts FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read locomotive"
-    ON locomotive_position FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read roles"
-    ON roles FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read devices"
-    ON devices FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read gateways"
-    ON gateways FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read sensor_data"
-    ON sensor_data FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read maintenance"
-    ON maintenance FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read telemetry"
-    ON truck_telemetry FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read command_history"
-    ON command_history FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can read reports"
-    ON reports FOR SELECT TO authenticated USING (true);
-
--- Politicas de escrita: admin e operator podem escrever comandos
-CREATE POLICY "Operators can insert switch commands"
-    ON commands FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Operators can insert truck commands"
-    ON truck_commands FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Operators can insert truck telemetry"
-    ON truck_telemetry FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Operators can insert command_history"
-    ON command_history FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Operators can insert sensor_data"
-    ON sensor_data FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Operators can update switches"
-    ON switches FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-
-CREATE POLICY "Operators can update trucks"
-    ON trucks FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-
-CREATE POLICY "Operators can insert alerts"
-    ON alerts FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Operators can update alerts"
-    ON alerts FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-
-CREATE POLICY "Operators can insert maintenance"
-    ON maintenance FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Operators can update maintenance"
-    ON maintenance FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-
-CREATE POLICY "Operators can insert maintenance_history"
-    ON maintenance_history FOR INSERT TO authenticated WITH CHECK (true);
-
--- Admin: pode gerenciar usuarios
-CREATE POLICY "Admins can manage users"
-    ON users FOR ALL TO authenticated
-    USING (true) WITH CHECK (true);
-
-CREATE POLICY "Admins can manage permissions"
-    ON permissions FOR ALL TO authenticated
-    USING (true) WITH CHECK (true);
-
-CREATE POLICY "Admins can manage devices"
-    ON devices FOR ALL TO authenticated
-    USING (true) WITH CHECK (true);
-
-CREATE POLICY "Admins can manage gateways"
-    ON gateways FOR ALL TO authenticated
-    USING (true) WITH CHECK (true);
-
-CREATE POLICY "Admins can manage audit_logs"
-    ON audit_logs FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "Admins can read audit_logs"
-    ON audit_logs FOR SELECT TO authenticated USING (true);
-
--- Relatorios: admin pode tudo, outros podem ler
-CREATE POLICY "Admins can manage reports"
-    ON reports FOR ALL TO authenticated
-    USING (true) WITH CHECK (true);
+-- Politicas removidas - autenticacao via JWT no backend
 
 -- ============================================================
 -- 13. VIEWS UTEIS

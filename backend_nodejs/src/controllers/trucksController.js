@@ -60,8 +60,9 @@ module.exports = (io) => ({
         type: "command",
         payload: {
           target: `TRUCK_${id}`,
-          cmd: "TRUCK_COMMAND",
+          cmd: "TRUCK",
           truckId: id,
+          action: command,
           command,
           commandId: truckCommand.id,
         },

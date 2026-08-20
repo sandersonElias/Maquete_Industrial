@@ -4,7 +4,7 @@ const TRUCK_COMMANDS = [
   "F", "B", "S", "L", "R", "C", "U", "D", "X",
   "SC",
   "FL", "FR", "BL", "BR",
-  "HH", "TI", "TO", "TX",
+  "HH", "TI", "TO", "TX", "HA",
 ];
 
 const SWITCH_ACTIONS = ["LEFT", "RIGHT", "CENTER"];
@@ -27,8 +27,14 @@ const registerSchema = Joi.object({
   role: Joi.string().valid("admin", "operator", "viewer").optional().default("operator"),
 });
 
+const updateUserSchema = Joi.object({
+  username: Joi.string().min(3).max(50).optional(),
+  email: Joi.string().email().max(100).optional(),
+  role: Joi.string().valid("admin", "operator", "viewer").optional(),
+}).min(1);
+
 const switchCommandSchema = Joi.object({
-  switchId: Joi.number().integer().min(1).max(4).required(),
+  switchId: Joi.number().integer().min(1).max(3).required(),
   action: Joi.string().valid(...SWITCH_ACTIONS).optional(),
   angle: Joi.number().min(0).max(180).optional(),
 }).custom((value, helpers) => {
@@ -60,7 +66,7 @@ const locomotivePositionSchema = Joi.object({
 });
 
 const reportExportSchema = Joi.object({
-  reportType: Joi.string().valid("switches", "trucks", "locomotive", "port", "airport", "alerts", "all").required(),
+  reportType: Joi.string().valid("switches", "trucks", "locomotive", "port", "alerts", "all").required(),
   format: Joi.string().valid("csv", "xlsx", "pdf").required(),
   filters: Joi.object({
     startDate: Joi.date().iso().optional(),
@@ -68,29 +74,40 @@ const reportExportSchema = Joi.object({
     switchId: Joi.number().integer().min(1).max(4).optional(),
     truckId: Joi.string().max(10).optional(),
     severity: Joi.string().valid("info", "warning", "critical").optional(),
-    module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto").optional(),
+    module: Joi.string().valid("ferrovia", "mina", "porto").optional(),
   }).optional().default({}),
 });
 
 const alertSchema = Joi.object({
   severity: Joi.string().valid("info", "warning", "critical").required(),
-  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto").required(),
-  title: Joi.string().min(1).max(200).required(),
+  module: Joi.string().valid("ferrovia", "mina", "porto", "quimica", "sistema").required(),
   message: Joi.string().min(1).max(1000).required(),
   details: Joi.object().optional(),
 });
 
 const alertQuerySchema = Joi.object({
-  module: Joi.string().valid("ferrovia", "mina", "porto", "aeroporto").optional(),
+  module: Joi.string().valid("ferrovia", "mina", "porto", "quimica", "sistema").optional(),
   severity: Joi.string().valid("info", "warning", "critical").optional(),
   acknowledged: Joi.boolean().optional(),
   limit: Joi.number().integer().min(1).max(100).optional().default(50),
   offset: Joi.number().integer().min(0).optional().default(0),
 });
 
+const shipSchema = Joi.object({
+  id: Joi.string().max(20).required(),
+  name: Joi.string().max(100).required(),
+  status: Joi.string().valid("docked", "loading", "unloading", "departed", "arriving").optional(),
+  cargo_type: Joi.string().max(50).optional(),
+  cargo_weight: Joi.number().min(0).optional(),
+  eta: Joi.date().iso().optional(),
+  etd: Joi.date().iso().optional(),
+  dock_number: Joi.number().integer().min(1).optional(),
+});
+
 module.exports = {
   loginSchema,
   registerSchema,
+  updateUserSchema,
   switchCommandSchema,
   telemetrySchema,
   truckCommandSchema,
@@ -98,6 +115,7 @@ module.exports = {
   reportExportSchema,
   alertSchema,
   alertQuerySchema,
+  shipSchema,
   TRUCK_COMMANDS,
   SWITCH_ACTIONS,
 };

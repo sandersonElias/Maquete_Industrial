@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon - foreground.
+  Caminhão basculante estilizado em verde (#3FB950), sem qualidade de arte fina.
+  O desenho é simples — tem como target apenas ser reconhecível.
+
+  A figura fica dentro da "safe zone" do adaptive icon (campo 72dp no centro de
+  108dp) — por isso a viewBox centra em 108 e a arte ocupa ~54x40 ao redor do
+  centro (54,54).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Caçamba (caixa) do caminhão — retângulo levantado -->
+    <path
+        android:fillColor="#3FB950"
+        android:pathData="M40,38 L66,38 L66,52 L40,52 Z" />
+
+    <!-- Linha de pivô da caçamba (debaixo) -->
+    <path
+        android:fillColor="#2EA043"
+        android:pathData="M38,52 L68,52 L68,54 L38,54 Z" />
+
+    <!-- Cabine à direita (motores) -->
+    <path
+        android:fillColor="#58A6FF"
+        android:pathData="M68,46 L76,46 L78,52 L68,52 Z" />
+
+    <!-- Chassi -->
+    <path
+        android:fillColor="#E8EEF8"
+        android:pathData="M38,54 L80,54 L80,58 L38,58 Z" />
+
+    <!-- Rodas -->
+    <path
+        android:fillColor="#161B22"
+        android:pathData="M44,58 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path
+        android:fillColor="#161B22"
+        android:pathData="M72,58 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+
+    <!-- Centro das rodas (verde) -->
+    <path
+        android:fillColor="#3FB950"
+        android:pathData="M44,58 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0" />
+    <path
+        android:fillColor="#3FB950"
+        android:pathData="M72,58 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0" />
+</vector>

@@ -8,8 +8,11 @@ import Overview from './pages/Overview';
 import Ferrovia from './pages/Ferrovia';
 import Mina from './pages/Mina';
 import Porto from './pages/Porto';
-import Aeroporto from './pages/Aeroporto';
 import Relatorios from './pages/Relatorios';
+import Quimica from './pages/Quimica';
+import Locomotiva from './pages/Locomotiva';
+import Alertas from './pages/Alertas';
+import Admin from './pages/Admin';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
@@ -39,7 +42,7 @@ function AppContent() {
 
   return (
     <SocketProvider>
-      <div className="flex h-screen bg-maquete-dark relative">
+      <div className="flex h-screen bg-bg">
         {/* Main Layout */}
         <div className="relative z-10 flex w-full h-full">
           <Sidebar isOpen={sidebarOpen} />
@@ -51,7 +54,10 @@ function AppContent() {
                 <Route path="/ferrovia" element={<Ferrovia />} />
                 <Route path="/mina" element={<Mina />} />
                 <Route path="/porto" element={<Porto />} />
-                <Route path="/aeroporto" element={<Aeroporto />} />
+                <Route path="/quimica" element={<Quimica />} />
+                <Route path="/locomotiva" element={<Locomotiva />} />
+                <Route path="/alertas" element={<Alertas />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="/relatorios" element={<Relatorios />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
@@ -64,11 +70,10 @@ function AppContent() {
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#1C2333',
-            color: '#e8eef8',
-            border: '1px solid #252D40',
-            borderRadius: '12px',
-            backdropFilter: 'blur(10px)',
+            background: '#1A1D27',
+            color: '#E4E7EC',
+            border: '1px solid #2A2D3A',
+            borderRadius: '8px',
           },
         }}
       />

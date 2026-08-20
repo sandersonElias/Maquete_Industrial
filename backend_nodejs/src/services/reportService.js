@@ -81,10 +81,6 @@ async function fetchData(reportType, filters = {}) {
       query = `SELECT * FROM ships ORDER BY eta`;
       break;
 
-    case "airport":
-      query = `SELECT * FROM airplanes ORDER BY eta`;
-      break;
-
     case "alerts":
       query = `SELECT * FROM alerts WHERE 1=1`;
       if (severity) {
@@ -107,8 +103,31 @@ async function fetchData(reportType, filters = {}) {
       break;
 
     case "all":
-    default:
-      return null;
+      const allQuery = `
+        SELECT 'switch' as module, c.id, c.switch_id as identifier, c.action, c.status, c.issued_at as created_at
+        FROM commands c
+        UNION ALL
+        SELECT 'truck' as module, tt.id, tt.truck_id as identifier, tt.speed::text as action, 'telemetry' as status, tt.timestamp as created_at
+        FROM truck_telemetry tt
+        UNION ALL
+        SELECT 'locomotive' as module, lp.id, lp.track_segment as identifier, lp.speed::text as action, 'position' as status, lp.timestamp as created_at
+        FROM locomotive_position lp
+        UNION ALL
+        SELECT 'alert' as module, a.id, a.module as identifier, a.severity as action, a.message as status, a.created_at
+        FROM alerts a`;
+      const dateConditions = [];
+      if (startDate) {
+        dateConditions.push(`created_at >= $${paramIndex++}`);
+        params.push(startDate);
+      }
+      if (endDate) {
+        dateConditions.push(`created_at <= $${paramIndex++}`);
+        params.push(endDate);
+      }
+      query = dateConditions.length > 0
+        ? `WITH all_data AS (${allQuery}) SELECT * FROM all_data WHERE ${dateConditions.join(" AND ")} ORDER BY created_at DESC`
+        : `WITH all_data AS (${allQuery}) SELECT * FROM all_data ORDER BY created_at DESC`;
+      break;
   }
 
   const result = await pool.query(query, params);
@@ -241,6 +260,17 @@ async function getReportById(id) {
   return result.rows[0] || null;
 }
 
+async function listReports(limit = 50) {
+  const result = await pool.query(
+    `SELECT id, report_type, format, status, created_at, completed_at
+     FROM reports
+     ORDER BY created_at DESC
+     LIMIT $1`,
+    [limit]
+  );
+  return result.rows;
+}
+
 async function updateReportStatus(reportId, status) {
   await pool.query(
     "UPDATE reports SET status = $1, completed_at = NOW() WHERE id = $2",
@@ -252,5 +282,6 @@ module.exports = {
   createReport,
   generateReportFile,
   getReportById,
+  listReports,
   updateReportStatus,
 };

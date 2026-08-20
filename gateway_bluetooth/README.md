@@ -184,7 +184,7 @@ STATUS|TRUCK|POS|x|y|LOAD|load|BAT|bat|TS|ts  # Status
 
 | Name | MAC (default) | Type | Use |
 |------|---------------|------|-----|
-| FERROVIA_SW | `98:D3:31:FD:15:F5` | ferrovia | 4 switches (servos) |
+| FERROVIA_SW | `98:D3:31:FD:15:F5` | ferrovia | 3 switches (servos) |
 | TRUCK_T01 | `98:D3:31:FD:15:A1` | truck | Dump truck |
 
 ## Reconnection

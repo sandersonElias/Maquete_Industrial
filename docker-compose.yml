@@ -1,4 +1,25 @@
 services:
+  # Banco de Dados - Postgres
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: maquete-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=maquete_industrial
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend_nodejs/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d maquete_industrial"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - maquete-network
+
   # Backend (API + WebSocket)
   backend:
     build:
@@ -11,8 +32,10 @@ services:
       - 8.8.8.8
       - 8.8.4.4
     environment:
-      # PostgreSQL na nuvem (Supabase)
-      - DATABASE_URL=${DATABASE_URL}
+      # PostgreSQL local (padrao) ou Render (se DATABASE_URL estiver no .env)
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/maquete_industrial}
+      # Redis
+      - REDIS_URL=redis://redis:6379
       # Configuracoes gerais
       - JWT_SECRET=${JWT_SECRET:-chave_secreta}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
@@ -22,10 +45,17 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - ./backend_nodejs/reports:/app/reports
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     networks:
       - maquete-network
 
-  # Gateway Bluetooth
+  # Gateway Bluetooth - MODO SIMULACAO (plano B de backup no dia da feira)
+  # Para Bluetooth real, rode o gateway nativo no host:
+  #   cd gateway_bluetooth && npm start
   gateway:
     build:
       context: ./gateway_bluetooth
@@ -36,7 +66,7 @@ services:
       - BACKEND_API_URL=http://backend:4000/api
       - GATEWAY_API_KEY=${GATEWAY_API_KEY:-chave_api}
       - GATEWAY_ID=${GATEWAY_ID:-gateway-01}
-      - SIMULATION_MODE=${SIMULATION_MODE:-true}
+      - SIMULATION_MODE=true
       - BT_DEVICE_FERROVIA=${BT_DEVICE_FERROVIA:-98:D3:31:FD:15:F5}
       - BT_DEVICE_TRUCK01=${BT_DEVICE_TRUCK01:-98:D3:31:FD:15:A1}
       - SERIAL_BAUD=${SERIAL_BAUD:-9600}
@@ -54,10 +84,20 @@ services:
     container_name: maquete-dashboard
     ports:
       - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://backend:4000}
     networks:
       - maquete-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: maquete-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - maquete-network
+
+volumes:
+  postgres_data:
 
 networks:
   maquete-network:

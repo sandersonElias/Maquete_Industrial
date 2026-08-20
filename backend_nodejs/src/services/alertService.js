@@ -36,8 +36,8 @@ async function getAlerts({ module, severity, acknowledged, limit = 50, offset = 
 
   const result = await pool.query(query, params);
 
-  const countQuery = query.replace("SELECT *", "SELECT COUNT(*)");
-  const countResult = await pool.query(countQuery.replace(/ LIMIT .+$/, ""), params.slice(0, -2));
+  const countQuery = query.replace(/ ORDER BY .+$/, "").replace("SELECT *", "SELECT COUNT(*)");
+  const countResult = await pool.query(countQuery, params.slice(0, -2));
 
   return {
     alerts: result.rows,

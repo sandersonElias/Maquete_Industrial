@@ -1,110 +1,63 @@
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows } from '@react-three/drei';
-import { motion, AnimatePresence } from 'framer-motion';
+import { OrbitControls, Html, ContactShadows, Stars, Sky } from '@react-three/drei';
 import * as THREE from 'three';
-import { MODULOS, PALETA, POSICOES, VITRINE } from './modulos';
+import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA, CAMERAS_POV } from './modulos';
 import {
-  Zona,
-  CentralQuimica,
-  Mina,
+  Base,
+  Ferrovia,
+  Mineradora,
   Porto,
-  Aeroporto,
-  Predio,
-  PlantaIndustrial,
+  Controle,
+  GrupoInterativo,
 } from './Modulos3D';
-import {
-  Pedestal,
-  Vitrine,
-  Terreno,
-  Arvores,
-  Veiculos,
-  TurbinasEolicas,
-  PainelSolar,
-  EsferasArmazenamento,
-  FeixeLuz,
-  TubulacaoNeon,
-} from './Cenario';
-import Hologramas from './Hologramas';
-import Ferrovia from './Ferrovia';
-import {
-  TRECHOS,
-  NOS,
-  ORDEM_DESVIOS,
-  DESCRICAO_DESVIOS,
-  EstadoDesvio,
-  proximoTrecho,
-} from './tracado';
-import { usePrefersReducedMotion, EASE_OUT_EXPO } from '../../lib/motion';
+import { Cenario3D } from './Cenario3D';
+import { CameraPov, type PovId } from './CameraPov';
+import { MaqueteBlender } from './MaqueteBlender';
+import { usePrefersReducedMotion } from '../../lib/motion';
 
-const CAMERA_INICIAL = new THREE.Vector3(21, 17, 26);
+import { LAYOUT, ramoAtivo } from './geometria';
 
-/** Tamanho da plataforma de cada zona, seguindo a planta. */
-const TAMANHOS: Record<string, [number, number]> = {
-  quimica: [7, 6.6],
-  mina: [7, 8.4],
-  ferrorama: [15.5, 12.5],
-  aeroporto: [7, 6.6],
-  porto: [7, 8.4],
-};
+/** Posições de cada módulo sobre a placa. */
+const POSICOES: Record<string, [number, number, number]> = LAYOUT;
 
-const NOMES_TRECHO: Record<string, string> = {
-  topo: 'Reta principal (reversor)',
-  fundo: 'Reta de baixo',
-  esq: 'Curva da esquerda',
-  diagA: 'Diagonal SW1-SW2',
-  diagB: 'Diagonal SW3-SW1',
-  manobra: 'Desvio de manobra',
-};
-
-/**
- * Percorre a rede com os desvios atuais e devolve os trechos que o trem
- * realmente vai usar. Alimenta o destaque dos trilhos na cena e a lista
- * de rota no painel.
- */
-function calcularRota(desvios: Record<string, EstadoDesvio>, sentido: number): string[] {
-  const visitados: string[] = [];
-  let atual = 'topo';
-
-  for (let i = 0; i < 12; i++) {
-    if (visitados.includes(atual)) break;
-    visitados.push(atual);
-    const no = sentido > 0 ? TRECHOS[atual].para : TRECHOS[atual].de;
-    atual = proximoTrecho(no, sentido, desvios);
-  }
-
-  return visitados;
-}
+const CAMERA_INICIAL = new THREE.Vector3(24, 18, 28);
+const COR_NOITE = '#040508';
+/** Céu de oficina — cinza-azulado, sem estourar o PBR. */
+const COR_DIA = '#5a7a96';
 
 /* ============================================================
-   Câmera
+   Câmera: aproxima suavemente do módulo selecionado
    ============================================================ */
 
 function CameraFoco({
   selecionado,
   controlsRef,
+  tourAtivo,
 }: {
   selecionado: string | null;
   controlsRef: React.RefObject<any>;
+  tourAtivo: boolean;
 }) {
   const { camera } = useThree();
-  const alvoPos = useRef(new THREE.Vector3().copy(CAMERA_INICIAL));
+  const alvoPos = useRef(new THREE.Vector3());
   const alvoOlhar = useRef(new THREE.Vector3(0, 0, 0));
 
   useEffect(() => {
-    const pos = selecionado ? POSICOES[selecionado] : null;
-    if (pos) {
-      const [x, , z] = pos;
+    if (tourAtivo) return;
+    const mod = MODULOS.find((m) => m.id === selecionado);
+    if (mod) {
+      const [x, , z] = POSICOES[mod.id];
       alvoOlhar.current.set(x, 0.6, z);
-      // Aproxima pelo lado de fora da placa, para não atravessar outra zona
-      alvoPos.current.set(x + Math.sign(x || 1) * 6, 6, z + 8.5);
+      alvoPos.current.set(x + 9, 7.2, z + 10);
     } else {
       alvoOlhar.current.set(0, 0, 0);
       alvoPos.current.copy(CAMERA_INICIAL);
     }
-  }, [selecionado]);
+  }, [selecionado, tourAtivo]);
 
   useFrame((_, delta) => {
+    if (tourAtivo) return;
     const k = Math.min(delta * 2.4, 1);
     camera.position.lerp(alvoPos.current, k);
     if (controlsRef.current) {
@@ -116,33 +69,155 @@ function CameraFoco({
   return null;
 }
 
-function PausarForaDaTela({ ativo }: { ativo: boolean }) {
-  const { setFrameloop, invalidate } = useThree();
+/* ============================================================
+   Tour cinematográfico — orbita cada módulo automaticamente
+   ============================================================ */
+
+function CameraTour({
+  passo,
+  ativo,
+}: {
+  passo: number;
+  ativo: boolean;
+}) {
+  const { camera } = useThree();
+  const tempo = useRef(0);
+  const alvoPos = useRef(new THREE.Vector3());
+  const alvoOlhar = useRef(new THREE.Vector3());
+
+  const calcularPosicao = (passoAtual: number, t: number) => {
+    const config = PASSOS_TOUR[passoAtual];
+    const modId = config.moduloId;
+    const ang = t * 0.28;
+
+    if (modId) {
+      const [x, , z] = POSICOES[modId];
+      const raio = modId === 'ferrovia' ? 15 : 11;
+      alvoOlhar.current.set(x, 0.55, z);
+      alvoPos.current.set(
+        x + Math.cos(ang) * raio,
+        4.8 + Math.sin(t * 0.6) * 0.6,
+        z + Math.sin(ang) * raio + 5
+      );
+    } else {
+      alvoOlhar.current.set(0, 0.55, 0);
+      alvoPos.current.set(
+        15 + Math.cos(ang * 0.5) * 2,
+        12 + Math.sin(t * 0.4) * 0.5,
+        17 + Math.sin(ang * 0.5) * 2
+      );
+    }
+  };
+
   useEffect(() => {
-    setFrameloop(ativo ? 'always' : 'never');
-    if (ativo) invalidate();
-  }, [ativo, setFrameloop, invalidate]);
+    if (!ativo) return;
+    tempo.current = 0;
+    calcularPosicao(passo, 0);
+    camera.position.copy(alvoPos.current);
+    camera.lookAt(alvoOlhar.current);
+  }, [passo, ativo, camera]);
+
+  useFrame((_, delta) => {
+    if (!ativo) return;
+    tempo.current += delta;
+    calcularPosicao(passo, tempo.current);
+    const k = Math.min(delta * 2.2, 1);
+    camera.position.lerp(alvoPos.current, k);
+    camera.lookAt(alvoOlhar.current);
+  });
+
   return null;
 }
 
 /* ============================================================
-   Etiquetas
+   Pausa o render quando a maquete sai da tela (só invalida — nunca para o loop)
+   ============================================================ */
+
+function PausarForaDaTela({ ativo }: { ativo: boolean }) {
+  const invalidate = useThree((s) => s.invalidate);
+
+  useEffect(() => {
+    if (ativo) invalidate();
+  }, [ativo, invalidate]);
+
+  return null;
+}
+
+/** Luzes — remonta ao trocar dia/noite para evitar acúmulo. */
+function Iluminacao({ noite }: { noite: boolean }) {
+  return (
+    <group key={noite ? 'noite' : 'dia'}>
+      {noite ? (
+        <>
+          <ambientLight intensity={0.12} color="#1a2030" />
+          <directionalLight position={[8, 14, 6]} intensity={0.35} color="#8899bb" />
+          <hemisphereLight args={['#0a1020', '#020204', 0.25]} />
+          <Stars radius={80} depth={40} count={1200} factor={3} saturation={0.2} fade speed={0.4} />
+          {MODULOS.map((mod) => (
+            <pointLight
+              key={`luz-${mod.id}`}
+              position={[POSICOES[mod.id][0], 2.2, POSICOES[mod.id][2]]}
+              color={mod.cor}
+              intensity={0.35}
+              distance={14}
+              decay={2}
+            />
+          ))}
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.22} color="#d8c8a8" />
+          <directionalLight
+            position={[16, 22, 10]}
+            intensity={1.55}
+            color="#ffe4b8"
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+            shadow-camera-left={-34}
+            shadow-camera-right={34}
+            shadow-camera-top={34}
+            shadow-camera-bottom={-34}
+            shadow-bias={-0.0002}
+            shadow-normalBias={0.04}
+          />
+          <directionalLight position={[-12, 8, -10]} intensity={0.38} color="#7a9bb8" />
+          <hemisphereLight args={['#6ea0cc', '#4a3d28', 0.48]} />
+          <pointLight position={[-17.2, 3.2, -9.4]} color="#ffcc88" intensity={0.55} distance={12} decay={2} />
+          <pointLight position={[17.6, 3.4, 8.6]} color="#c8e8ff" intensity={0.5} distance={14} decay={2} />
+          <pointLight position={[8.55, 1.4, 0]} color="#ffe0b0" intensity={0.28} distance={6} decay={2} />
+          <pointLight position={[-8.55, 1.4, 0]} color="#ffe0b0" intensity={0.28} distance={6} decay={2} />
+        </>
+      )}
+    </group>
+  );
+}
+
+/* ============================================================
+   Etiqueta flutuante de cada módulo
    ============================================================ */
 
 function Etiqueta({
   texto,
+  subtitulo,
   cor,
   position,
+  visivel,
 }: {
   texto: string;
+  subtitulo?: string;
   cor: string;
   position: [number, number, number];
+  visivel: boolean;
 }) {
+  if (!visivel) return null;
   return (
-    <Html position={position} center distanceFactor={30} zIndexRange={[10, 0]}>
-      <span className="maquete3d-tag" style={{ '--tag-cor': cor } as React.CSSProperties}>
-        {texto}
-      </span>
+    <Html position={position} center distanceFactor={36} zIndexRange={[10, 0]}>
+      <div className="maquete3d-tag-wrap">
+        <span className="maquete3d-tag" style={{ '--tag-cor': cor } as React.CSSProperties}>
+          {texto}
+        </span>
+        {subtitulo && <span className="maquete3d-tag-sub">{subtitulo}</span>}
+      </div>
     </Html>
   );
 }
@@ -158,208 +233,176 @@ interface CenaProps {
   setDestacado: (id: string | null) => void;
   rodando: boolean;
   velocidade: number;
-  desvios: Record<string, EstadoDesvio>;
-  sentido: number;
-  rotaAtiva: string[];
+  desvios: number[];
   etiquetas: boolean;
+  noite: boolean;
+  cenario: boolean;
+  tourAtivo: boolean;
+  passoTour: number;
+  pov: PovId;
+  onPov: (id: string) => void;
+  fonte: 'codigo' | 'blender';
+  onDesvio: (indice: number) => void;
   controlsRef: React.RefObject<any>;
-  zoomAtivo: boolean;
 }
 
-function Cena(props: CenaProps) {
-  const {
-    selecionado,
-    destacado,
-    setSelecionado,
-    setDestacado,
-    rodando,
-    velocidade,
-    desvios,
-    sentido,
-    rotaAtiva,
-    etiquetas,
-    controlsRef,
-    zoomAtivo,
-  } = props;
-
-  const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
-
-  const conteudo: Record<string, React.ReactNode> = {
-    quimica: (
-      <group>
-        <CentralQuimica rodando={rodando} />
-        <PlantaIndustrial position={[-1.9, 0, 1.4]} />
-        <EsferasArmazenamento position={[1.6, 0, 1.6]} />
-        <Predio position={[2.4, 0, -2.2]} tamanho={[1.5, 1.7, 1.2]} andares={4} />
-      </group>
-    ),
-    mina: (
-      <group>
-        <Mina rodando={rodando} />
-        <Predio position={[-2.3, 0, 3]} tamanho={[1.3, 1.1, 1.1]} cor="#B9BEC6" andares={2} />
-      </group>
-    ),
-    ferrorama: (
-      <group>
-        <Ferrovia
-          rodando={rodando}
-          velocidade={velocidade}
-          desvios={desvios}
-          sentido={sentido}
-          rotaAtiva={rotaAtiva}
-        />
-        {/* Torre de controle luminosa no miolo do circuito — ocupa o lugar do
-            reator da referência e é a âncora visual da cena */}
-        <group position={[3.4, 0, 0]}>
-          <mesh castShadow position={[0, 0.9, 0]}>
-            <cylinderGeometry args={[0.42, 0.55, 1.8, 14]} />
-            <meshStandardMaterial
-              color="#1a3a6e"
-              emissive={VITRINE.azul}
-              emissiveIntensity={1.1}
-              roughness={0.25}
-              metalness={0.5}
-            />
-          </mesh>
-          <mesh castShadow position={[0, 2, 0]}>
-            <cylinderGeometry args={[0.72, 0.5, 0.5, 14]} />
-            <meshStandardMaterial color="#dfe5ec" roughness={0.3} metalness={0.4} />
-          </mesh>
-          <mesh position={[0, 2.05, 0]}>
-            <cylinderGeometry args={[0.74, 0.52, 0.24, 14]} />
-            <meshStandardMaterial
-              color={VITRINE.ciano}
-              emissive={VITRINE.ciano}
-              emissiveIntensity={1.6}
-              toneMapped={false}
-            />
-          </mesh>
-          <pointLight position={[0, 1.6, 0]} color={VITRINE.azul} intensity={4} distance={7} />
+function Modulo3D({
+  id,
+  rodando,
+  velocidade,
+  desvios,
+  noite,
+  onPov,
+}: {
+  id: string;
+  rodando: boolean;
+  velocidade: number;
+  desvios: number[];
+  noite: boolean;
+  onPov?: (id: string) => void;
+}) {
+  switch (id) {
+    case 'mineradora':
+      return (
+        <group scale={1.22}>
+          <Mineradora rodando={rodando} noite={noite} />
         </group>
-        <FeixeLuz position={[3.4, 2.2, 0]} altura={4.4} raio={0.5} />
-      </group>
-    ),
-    aeroporto: (
-      <group>
-        <Aeroporto rodando={rodando} />
-        <Predio position={[-2, 0, -2.2]} tamanho={[1.2, 1.4, 1]} andares={3} />
-      </group>
-    ),
-    porto: (
-      <group>
-        <Porto rodando={rodando} />
-        <Predio position={[-2.5, 0, -2.4]} tamanho={[1.1, 1.2, 1]} cor="#B9BEC6" andares={3} />
-      </group>
-    ),
-  };
+      );
+    case 'ferrovia':
+      return <Ferrovia rodando={rodando} velocidade={velocidade} desvios={desvios} />;
+    case 'porto':
+      return (
+        <group scale={1.48}>
+          <Porto rodando={rodando} noite={noite} />
+        </group>
+      );
+    case 'controle':
+      return <Controle rodando={rodando} noite={noite} onPov={onPov} />;
+    default:
+      return null;
+  }
+}
+
+/** Aplica cor de fundo e névoa — mais confiável que `<color attach>` com R3F 9 + Three r185. */
+function Ambiente({ noite }: { noite: boolean }) {
+  const { scene } = useThree();
+  const cor = noite ? COR_NOITE : COR_DIA;
+
+  useEffect(() => {
+    scene.background = new THREE.Color(cor);
+    scene.fog = new THREE.Fog(cor, noite ? 36 : 70, noite ? 68 : 140);
+    return () => {
+      scene.fog = null;
+    };
+  }, [scene, cor, noite]);
+
+  return null;
+}
+
+function Cena({
+  selecionado,
+  destacado,
+  setSelecionado,
+  setDestacado,
+  rodando,
+  velocidade,
+  desvios,
+  etiquetas,
+  noite,
+  cenario,
+  tourAtivo,
+  passoTour,
+  pov,
+  onPov,
+  fonte,
+  onDesvio,
+  controlsRef,
+}: CenaProps) {
+  const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
+  const blender = fonte === 'blender';
+  const livre = pov === 'overview' && !tourAtivo;
 
   return (
     <>
-      {/* Luz de vitrine: spot branco de cima (como as luminárias do estande)
-          e preenchimento azul frio vindo de baixo, que é o que dá o clima de
-          peça iluminada dentro do vidro. */}
-      <ambientLight intensity={0.5} color="#9fb3c8" />
-      <directionalLight
-        position={[14, 24, 12]}
-        intensity={2}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-24}
-        shadow-camera-right={24}
-        shadow-camera-top={24}
-        shadow-camera-bottom={-24}
-      />
-      <directionalLight position={[-14, 10, -12]} intensity={0.55} color={VITRINE.azul} />
-      <hemisphereLight args={['#7d93ad', '#0c1017', 0.7]} />
+      <Ambiente noite={noite} />
+      <Iluminacao noite={noite} />
+      {!noite && !blender && (
+        <Sky sunPosition={[100, 42, 24]} turbidity={2.2} rayleigh={1.15} mieCoefficient={0.004} mieDirectionalG={0.82} />
+      )}
 
-      <Pedestal />
-      <Terreno />
-      <Arvores />
-      <Veiculos rodando={rodando} />
-      <TurbinasEolicas rodando={rodando} />
-      <PainelSolar position={[-8.35, 0.02, -3.2]} />
+      {blender ? (
+        <Suspense fallback={null}>
+          <MaqueteBlender rodando={rodando} velocidade={velocidade} desvios={desvios} onDesvio={onDesvio} />
+        </Suspense>
+      ) : (
+        <>
+          <Base />
+          {cenario && <Cenario3D rodando={rodando} noite={noite} />}
+          {MODULOS.map((mod) => (
+            <group key={mod.id}>
+              <GrupoInterativo
+                id={mod.id}
+                cor={mod.cor}
+                selecionado={selecionado === mod.id}
+                destacado={destacado === mod.id}
+                onSelecionar={alternar}
+                onDestacar={setDestacado}
+                position={POSICOES[mod.id]}
+                elevar={livre}
+              >
+                <Modulo3D
+                  id={mod.id}
+                  rodando={rodando}
+                  velocidade={velocidade}
+                  desvios={desvios}
+                  noite={noite}
+                  onPov={onPov}
+                />
+              </GrupoInterativo>
 
-      {/* Tubulação neon ligando os módulos, como na referência */}
-      <TubulacaoNeon pontos={[[-9, -5.2], [-7, -3.6], [-7.6, 0], [-9, 4.4]]} />
-      <TubulacaoNeon pontos={[[9, -5.2], [7.4, -3.4], [7.8, 0.4], [9, 4.4]]} />
-      <TubulacaoNeon pontos={[[-8.6, 0], [-4, 0.3], [4, 0.3], [8.4, 0]]} />
+              <Etiqueta
+                texto={mod.nome}
+                subtitulo={TELEMETRIA[mod.id]}
+                cor={mod.cor}
+                position={[
+                  POSICOES[mod.id][0],
+                  mod.id === 'mineradora' ? 4.8 : 3.2,
+                  POSICOES[mod.id][2],
+                ]}
+                visivel={etiquetas && livre}
+              />
+            </group>
+          ))}
+        </>
+      )}
 
-      {MODULOS.map((mod) => (
-        <group key={mod.id}>
-          <Zona
-            id={mod.id}
-            cor={mod.cor}
-            selecionado={selecionado === mod.id}
-            destacado={destacado === mod.id}
-            onSelecionar={alternar}
-            onDestacar={setDestacado}
-            position={POSICOES[mod.id]}
-            tamanho={TAMANHOS[mod.id]}
-          >
-            {conteudo[mod.id]}
-          </Zona>
-
-          {etiquetas && (
-            <Etiqueta
-              texto={mod.nome}
-              cor={mod.cor}
-              position={[
-                POSICOES[mod.id][0],
-                mod.id === 'ferrorama' ? 4.2 : 3,
-                POSICOES[mod.id][2] - TAMANHOS[mod.id][1] / 2 + 0.6,
-              ]}
-            />
-          )}
-        </group>
-      ))}
-
-      {/* Etiquetas dos desvios e do reversor, ancoradas nos pontos reais */}
-      {etiquetas &&
-        ORDEM_DESVIOS.map((id) => (
-          <Etiqueta
-            key={id}
-            texto={id}
-            cor={desvios[id] === 0 ? PALETA.glow : PALETA.warning}
-            position={[
-              POSICOES.ferrorama[0] + NOS[id].posicao.x,
-              1.15,
-              POSICOES.ferrorama[2] + NOS[id].posicao.z,
-            ]}
-          />
-        ))}
-
-      {/* Painéis de telemetria flutuando sobre a maquete */}
-      <Hologramas
-        dados={{
-          velocidade,
-          sentido,
-          rodando,
-          desvios,
-          rota: rotaAtiva.map((id) => NOMES_TRECHO[id] ?? id),
-        }}
-      />
-
-      <ContactShadows position={[0, 0.14, 0]} opacity={0.42} scale={42} blur={2.6} far={7} />
-
-      {/* A vitrine entra por último: é transparente e não pode receber cliques */}
-      <Vitrine />
+      {!blender && (
+        <ContactShadows
+          position={[0, 0.02, 0]}
+          opacity={noite ? 0.65 : 0.28}
+          scale={52}
+          blur={2.6}
+          far={8}
+        />
+      )}
 
       <OrbitControls
         ref={controlsRef}
-        enablePan
-        /* O zoom por roda do mouse fica DESLIGADO por padrão: era ele que
-           engolia o evento `wheel` e impedia a página de rolar quando o cursor
-           passava sobre a maquete. Só liga com Ctrl/⌘ ou em tela cheia. */
-        enableZoom={zoomAtivo}
-        minDistance={8}
-        maxDistance={46}
+        enabled={livre}
+        enablePan={livre}
+        minDistance={5}
+        maxDistance={58}
         maxPolarAngle={Math.PI / 2.15}
         enableDamping
         dampingFactor={0.07}
         makeDefault
       />
 
-      <CameraFoco selecionado={selecionado} controlsRef={controlsRef} />
+      <CameraTour passo={passoTour} ativo={!blender && tourAtivo && pov === 'overview'} />
+      {livre && (
+        <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} />
+      )}
+      {!blender && <CameraPov modo={pov} />}
     </>
   );
 }
@@ -368,265 +411,337 @@ function Cena(props: CenaProps) {
    Componente exportado
    ============================================================ */
 
-
-export default function Maquete3D() {
+export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }) {
   const [selecionado, setSelecionado] = useState<string | null>(null);
   const [destacado, setDestacado] = useState<string | null>(null);
   const [rodando, setRodando] = useState(true);
   const [velocidade, setVelocidade] = useState(1);
-  const [etiquetas, setEtiquetas] = useState(true);
-  const [sentido, setSentido] = useState(1);
-  const [desvios, setDesvios] = useState<Record<string, EstadoDesvio>>({
-    SW1: 0,
-    SW2: 0,
-    SW3: 0,
-  });
+  const [etiquetas, setEtiquetas] = useState(!telaCheia);
+  const [noite, setNoite] = useState(false);
+  const [cenario, setCenario] = useState(true);
+  const [desvios, setDesvios] = useState([0, 0, 0, 0]);
+  const [tourAtivo, setTourAtivo] = useState(false);
+  const [passoTour, setPassoTour] = useState(0);
   const [visivel, setVisivel] = useState(true);
-  const [modificadorAtivo, setModificadorAtivo] = useState(false);
-  const [emTelaCheia, setEmTelaCheia] = useState(false);
-  const [temFullscreen, setTemFullscreen] = useState(false);
+  const [pov, setPov] = useState<PovId>('overview');
+  const [fonte, setFonte] = useState<'codigo' | 'blender'>('blender');
 
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const palcoRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
   const reduzido = usePrefersReducedMotion();
+  const leve = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
-    const obs = new IntersectionObserver(([e]) => setVisivel(e.isIntersecting), {
-      rootMargin: '150px',
-    });
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisivel(entry.isIntersecting),
+      { rootMargin: '150px' }
+    );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  /* ---------- Rolagem da página x zoom da cena ----------
-     A roda do mouse tem que rolar o site normalmente. O zoom da maquete só
-     entra com Ctrl/⌘ segurado, ou em tela cheia (onde não há página atrás
-     para rolar). Sem isso o OrbitControls consome o `wheel` e o usuário fica
-     preso na maquete, que era exatamente a reclamação. */
   useEffect(() => {
-    const atualizar = (e: KeyboardEvent) => setModificadorAtivo(e.ctrlKey || e.metaKey);
-    // `blur` cobre o caso de soltar a tecla fora da janela (ex.: Alt+Tab)
-    const limpar = () => setModificadorAtivo(false);
+    if (!rodando) return;
+    const id = window.setInterval(() => {
+      setDesvios((prev) => {
+        const porto = prev[2] === 1 || prev[3] === 1;
+        const alvo = porto ? 2 : 1;
+        return [prev[0], prev[1], alvo, alvo];
+      });
+    }, 20000);
+    return () => window.clearInterval(id);
+  }, [rodando]);
 
-    window.addEventListener('keydown', atualizar);
-    window.addEventListener('keyup', atualizar);
-    window.addEventListener('blur', limpar);
-    return () => {
-      window.removeEventListener('keydown', atualizar);
-      window.removeEventListener('keyup', atualizar);
-      window.removeEventListener('blur', limpar);
-    };
+  // Avança o tour automaticamente
+  useEffect(() => {
+    if (!tourAtivo || reduzido) return;
+    const config = PASSOS_TOUR[passoTour];
+    const timer = window.setTimeout(() => {
+      const proximo = (passoTour + 1) % PASSOS_TOUR.length;
+      setPassoTour(proximo);
+      const modId = PASSOS_TOUR[proximo].moduloId;
+      setSelecionado(modId);
+    }, config.duracao * 1000);
+    return () => window.clearTimeout(timer);
+  }, [tourAtivo, passoTour, reduzido]);
+
+  const iniciarTour = useCallback(() => {
+    setPov('overview');
+    setPassoTour(0);
+    setSelecionado(PASSOS_TOUR[0].moduloId);
+    setTourAtivo(true);
   }, []);
 
-  const zoomAtivo = modificadorAtivo || emTelaCheia;
-
-  /* Com Ctrl/⌘ o navegador daria zoom na PÁGINA inteira. Como nesse caso o
-     gesto é para a cena, cancelamos o padrão — mas só aí. Sem modificador o
-     evento segue livre e a página rola. Precisa de passive:false para poder
-     chamar preventDefault. */
-  useEffect(() => {
-    const el = palcoRef.current;
-    if (!el) return;
-    const aoRodar = (e: WheelEvent) => {
-      if (e.ctrlKey || e.metaKey || emTelaCheia) e.preventDefault();
-    };
-    el.addEventListener('wheel', aoRodar, { passive: false });
-    return () => el.removeEventListener('wheel', aoRodar);
-  }, [emTelaCheia]);
-
-  /* ---------- Tela cheia ---------- */
-  useEffect(() => {
-    setTemFullscreen(
-      typeof document !== 'undefined' &&
-        (document.fullscreenEnabled ?? false) &&
-        typeof wrapperRef.current?.requestFullscreen === 'function'
-    );
+  const pararTour = useCallback(() => {
+    setTourAtivo(false);
+    setSelecionado(null);
+    requestAnimationFrame(() => {
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    });
   }, []);
 
-  // O Esc do navegador sai da tela cheia sem passar pelo nosso botão, então o
-  // estado do React precisa acompanhar o evento em vez de ser só um toggle.
-  useEffect(() => {
-    const aoTrocar = () => setEmTelaCheia(document.fullscreenElement === wrapperRef.current);
-    document.addEventListener('fullscreenchange', aoTrocar);
-    return () => document.removeEventListener('fullscreenchange', aoTrocar);
+  const entrarPov = useCallback((id: string) => {
+    const cam = CAMERAS_POV.find((c) => c.id === id);
+    pararTour();
+    setPov(id as PovId);
+    if (cam) setSelecionado(cam.modulo);
+  }, [pararTour]);
+
+  const voltarSala = useCallback(() => {
+    setTourAtivo(false);
+    setPov('sala');
+    setSelecionado('controle');
   }, []);
 
-  const alternarTelaCheia = async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await wrapperRef.current?.requestFullscreen();
-    } catch {
-      // Navegador pode negar (política de permissão). Falha em silêncio:
-      // a maquete continua utilizável no tamanho normal.
-      setTemFullscreen(false);
-    }
-  };
+  const vistaGeral = useCallback(() => {
+    setPov('overview');
+    pararTour();
+  }, [pararTour]);
 
-  const rotaAtiva = useMemo(() => calcularRota(desvios, sentido), [desvios, sentido]);
   const modulo = MODULOS.find((m) => m.id === selecionado);
-  const animando = rodando && !reduzido;
+  const passoAtual = PASSOS_TOUR[passoTour];
 
-  const virarDesvio = (id: string) =>
-    setDesvios((prev) => ({ ...prev, [id]: prev[id] === 0 ? 1 : 0 }));
+  const girarDesvio = (i: number) =>
+    setDesvios((prev) => prev.map((d, j) => (j === i ? (d + 1) % 3 : d)));
+
+  const ESTADOS = ['CENTER', 'LEFT', 'RIGHT'];
+  const ramo = ramoAtivo(desvios);
+  const destinoTrem =
+    ramo === 'porto' ? 'Porto' : ramo === 'mina' ? 'Mina' : ramo === 'diagonal' ? 'Atalho' : 'Loop principal';
 
   return (
-    <div className={`maquete3d ${emTelaCheia ? 'tela-cheia' : ''}`} ref={wrapperRef}>
-      <div className="maquete3d-palco" ref={palcoRef}>
+    <div className={`maquete3d${telaCheia ? ' maquete3d--cheia' : ''}`} ref={wrapperRef}>
+      <div className="maquete3d-palco">
         <Canvas
-          shadows
-          /* Em tela cheia a área desenhada é bem maior; segurar o dpr evita
-             derrubar o FPS em notebook com vídeo integrado. */
-          dpr={emTelaCheia ? [1, 1.4] : [1, 1.75]}
-          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42 }}
-          gl={{ antialias: true, powerPreference: 'high-performance' }}
-          onPointerMissed={() => setSelecionado(null)}
+          shadows={!leve}
+          frameloop="always"
+          dpr={leve ? [1, 1.25] : [1, 1.75]}
+          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 280 }}
+          gl={{
+            alpha: false,
+            antialias: !leve,
+            powerPreference: 'high-performance',
+          }}
+          onCreated={({ gl, scene }) => {
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 0.88;
+            gl.outputColorSpace = THREE.SRGBColorSpace;
+            gl.setClearColor(new THREE.Color(COR_DIA), 1);
+            scene.background = new THREE.Color(COR_DIA);
+          }}
+          onPointerMissed={() => !tourAtivo && pov === 'overview' && setSelecionado(null)}
         >
-          <color attach="background" args={[VITRINE.fundo]} />
-          <fog attach="fog" args={[VITRINE.fundo, 46, 92]} />
           <PausarForaDaTela ativo={visivel} />
           <Cena
             selecionado={selecionado}
             destacado={destacado}
             setSelecionado={setSelecionado}
             setDestacado={setDestacado}
-            rodando={animando}
+            rodando={rodando}
             velocidade={velocidade}
             desvios={desvios}
-            sentido={sentido}
-            rotaAtiva={rotaAtiva}
             etiquetas={etiquetas}
+            noite={noite}
+            cenario={cenario}
+            tourAtivo={tourAtivo}
+            passoTour={passoTour}
+            pov={pov}
+            onPov={entrarPov}
+            fonte={fonte}
+            onDesvio={girarDesvio}
             controlsRef={controlsRef}
-            zoomAtivo={zoomAtivo}
           />
         </Canvas>
 
-        {/* Ficha sobreposta à cena, perto de onde a pessoa clicou */}
-        <AnimatePresence>
-          {modulo && (
-            <motion.aside
-              key={modulo.id}
-              className="maquete3d-ficha-flutuante"
-              style={{ '--ficha-cor': modulo.cor } as React.CSSProperties}
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ duration: reduzido ? 0 : 0.28, ease: EASE_OUT_EXPO }}
-            >
-              <header>
-                <span className="maquete3d-ficha-papel">{modulo.papel}</span>
-                <h4>{modulo.nome}</h4>
-                <button
-                  type="button"
-                  className="maquete3d-ficha-fechar"
-                  onClick={() => setSelecionado(null)}
-                  aria-label={`Fechar descrição de ${modulo.nome}`}
-                >
-                  <span aria-hidden="true">✕</span>
-                </button>
-              </header>
-              <p>{modulo.resumo}</p>
-              <ul>
-                {modulo.detalhes.map((d) => (
-                  <li key={d}>{d}</li>
-                ))}
-              </ul>
-            </motion.aside>
-          )}
-        </AnimatePresence>
+        {tourAtivo && (
+          <div className="maquete3d-tour" role="status" aria-live="polite">
+            <span className="maquete3d-tour-badge">Tour · {passoTour + 1}/{PASSOS_TOUR.length}</span>
+            <p className="maquete3d-tour-texto">{passoAtual.legenda}</p>
+          </div>
+        )}
 
-        {temFullscreen && (
-          <button
-            type="button"
-            className="maquete3d-btn-telacheia"
-            onClick={alternarTelaCheia}
-            aria-pressed={emTelaCheia}
-          >
-            <span aria-hidden="true">{emTelaCheia ? '⤡' : '⤢'}</span>
-            {emTelaCheia ? 'Sair da tela cheia' : 'Tela cheia'}
-          </button>
+        {pov !== 'overview' && (
+          <div className="maquete3d-tour" role="status">
+            <span className="maquete3d-tour-badge">
+              {pov === 'sala' ? 'Sala de controle' : CAMERAS_POV.find((c) => c.id === pov)?.label}
+            </span>
+            <p className="maquete3d-tour-texto">
+              {pov === 'sala'
+                ? 'Clique num monitor (ou nos botões abaixo) para entrar na cabine'
+                : 'Visão da cabine — volte à sala ou à vista geral'}
+            </p>
+          </div>
         )}
 
         <p className="maquete3d-dica" aria-hidden="true">
-          {emTelaCheia
-            ? 'Arraste para girar · Role para aproximar · Clique em uma área · Esc para sair'
-            : 'Arraste para girar · Ctrl + rolagem para aproximar · Clique em uma área'}
+          {pov !== 'overview'
+            ? 'Você está na cabine'
+            : tourAtivo
+              ? 'Tour em andamento — clique Parar tour para interagir'
+              : 'Arraste para girar · Role para aproximar · Clique em um módulo'}
         </p>
       </div>
 
-      {/* ---------- Painel de operação ---------- */}
       <div className="maquete3d-painel">
-        {/* Reversor em destaque: é o controle mais chamativo da apresentação */}
         <div className="maquete3d-grupo">
-          <span className="maquete3d-rotulo" id="rot-marcha">
-            Reversor
+          <span className="maquete3d-rotulo" id="rot-fonte">
+            Fonte 3D
           </span>
-          <div className="maquete3d-reversor" role="group" aria-labelledby="rot-marcha">
+          <div className="maquete3d-botoes" role="group" aria-labelledby="rot-fonte">
             <button
               type="button"
-              className={`maquete3d-btn maquete3d-btn-reversor ${sentido < 0 ? 'invertido' : ''}`}
-              onClick={() => setSentido((s) => -s)}
-              aria-pressed={sentido < 0}
+              className={`maquete3d-btn ${fonte === 'blender' ? 'ativo' : ''}`}
+              aria-pressed={fonte === 'blender'}
+              onClick={() => {
+                setFonte('blender');
+                setPov('overview');
+                pararTour();
+              }}
             >
-              <span className="maquete3d-seta" aria-hidden="true">
-                {sentido > 0 ? '▶' : '◀'}
-              </span>
-              {sentido > 0 ? 'Marcha à frente' : 'Marcha à ré'}
+              Blender
             </button>
-            <span className="maquete3d-status" role="status">
-              Sentido {sentido > 0 ? 'normal' : 'invertido'}
-            </span>
+            <button
+              type="button"
+              className={`maquete3d-btn ${fonte === 'codigo' ? 'ativo' : ''}`}
+              aria-pressed={fonte === 'codigo'}
+              onClick={() => setFonte('codigo')}
+            >
+              Código (atual)
+            </button>
           </div>
         </div>
 
-        {/* Desvios: mudam de verdade o caminho do trem */}
+        <div className="maquete3d-grupo">
+          <span className="maquete3d-rotulo" id="rot-cameras">
+            Monitores da sala
+          </span>
+          <div className="maquete3d-botoes maquete3d-cameras" role="group" aria-labelledby="rot-cameras">
+            <button
+              type="button"
+              className={`maquete3d-btn ${pov === 'sala' ? 'ativo' : ''}`}
+              aria-pressed={pov === 'sala'}
+              disabled={fonte === 'blender'}
+              onClick={voltarSala}
+            >
+              Sala SCADA
+            </button>
+            {CAMERAS_POV.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`maquete3d-btn ${pov === c.id ? 'ativo' : ''}`}
+                aria-pressed={pov === c.id}
+                disabled={fonte === 'blender'}
+                onClick={() => entrarPov(c.id)}
+              >
+                {c.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`maquete3d-btn ${pov === 'overview' ? 'ativo' : ''}`}
+              aria-pressed={pov === 'overview'}
+              onClick={vistaGeral}
+            >
+              Vista geral
+            </button>
+          </div>
+        </div>
+
+        <div className="maquete3d-grupo">
+          <span className="maquete3d-rotulo" id="rot-modulos">
+            Módulos
+          </span>
+          <div className="maquete3d-botoes" role="group" aria-labelledby="rot-modulos">
+            {MODULOS.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className={`maquete3d-btn ${selecionado === m.id ? 'ativo' : ''}`}
+                style={{ '--btn-cor': m.cor } as React.CSSProperties}
+                aria-pressed={selecionado === m.id}
+                onClick={() => {
+                  setPov('overview');
+                  pararTour();
+                  setSelecionado(selecionado === m.id ? null : m.id);
+                }}
+                onMouseEnter={() => setDestacado(m.id)}
+                onMouseLeave={() => setDestacado(null)}
+                onFocus={() => setDestacado(m.id)}
+                onBlur={() => setDestacado(null)}
+              >
+                <span className="maquete3d-ponto" aria-hidden="true" />
+                {m.nome}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-desvios">
-            Mudança de linha
+            Desvios · SW1/2 atalho · SW3 porto · SW4 mina · destino: {destinoTrem}
           </span>
-          <div className="maquete3d-desvios" role="group" aria-labelledby="rot-desvios">
-            {ORDEM_DESVIOS.map((id) => {
-              const estado = desvios[id];
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  className={`maquete3d-chave ${estado === 1 ? 'desviado' : ''}`}
-                  onClick={() => virarDesvio(id)}
-                  aria-pressed={estado === 1}
-                  aria-label={`${id}: ${DESCRICAO_DESVIOS[id][estado]}. Ativar para trocar.`}
-                >
-                  <span className="maquete3d-chave-id">{id}</span>
-                  <span className="maquete3d-chave-estado">
-                    {estado === 0 ? 'RETO' : 'DESVIO'}
-                  </span>
-                  <span className="maquete3d-chave-desc">{DESCRICAO_DESVIOS[id][estado]}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Rota resultante — mostra ao público o efeito das chaves */}
-        <div className="maquete3d-grupo">
-          <span className="maquete3d-rotulo">Rota com esta configuração</span>
-          <ol className="maquete3d-rota" aria-live="polite">
-            {rotaAtiva.map((id) => (
-              <li key={id}>{NOMES_TRECHO[id]}</li>
+          <div className="maquete3d-botoes" role="group" aria-labelledby="rot-desvios">
+            {desvios.map((estado, i) => (
+              <button
+                key={i}
+                type="button"
+                className="maquete3d-btn maquete3d-btn-desvio"
+                onClick={() => girarDesvio(i)}
+                aria-label={`Desvio ${i + 1}, estado ${ESTADOS[estado]}. Ativar para alternar.`}
+              >
+                <span className="maquete3d-desvio-id">SW{i + 1}</span>
+                <span className="maquete3d-desvio-estado">{ESTADOS[estado]}</span>
+              </button>
             ))}
-          </ol>
+          </div>
         </div>
 
         <div className="maquete3d-grupo maquete3d-grupo-linha">
+          {tourAtivo ? (
+            <button type="button" className="maquete3d-btn maquete3d-btn-tour ativo" onClick={pararTour}>
+              Parar tour
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="maquete3d-btn maquete3d-btn-tour"
+              onClick={iniciarTour}
+              disabled={reduzido || fonte === 'blender'}
+              title={
+                fonte === 'blender'
+                  ? 'Tour dos módulos está no modo Código'
+                  : reduzido
+                    ? 'Tour indisponível com movimento reduzido'
+                    : undefined
+              }
+            >
+              Iniciar tour
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={`maquete3d-btn maquete3d-btn-acao ${noite ? 'ativo' : ''}`}
+            onClick={() => setNoite((n) => !n)}
+            aria-pressed={noite}
+            style={{ '--btn-cor': PALETA.purple } as React.CSSProperties}
+          >
+            {noite ? 'Modo dia' : 'Modo noite'}
+          </button>
+
           <button
             type="button"
             className="maquete3d-btn maquete3d-btn-acao"
             onClick={() => setRodando((r) => !r)}
             aria-pressed={rodando}
           >
-            {rodando ? 'Parar trem' : 'Iniciar trem'}
+            {rodando ? 'Pausar operação' : 'Iniciar operação'}
           </button>
 
           <label className="maquete3d-slider">
@@ -646,67 +761,54 @@ export default function Maquete3D() {
           <label className="maquete3d-check">
             <input
               type="checkbox"
+              checked={cenario}
+              onChange={(e) => setCenario(e.target.checked)}
+            />
+            <span>Cenário (árvores, fluxo)</span>
+          </label>
+
+          <label className="maquete3d-check">
+            <input
+              type="checkbox"
               checked={etiquetas}
               onChange={(e) => setEtiquetas(e.target.checked)}
             />
             <span>Etiquetas</span>
           </label>
-        </div>
 
-        {/* Zonas */}
-        <div className="maquete3d-grupo">
-          <span className="maquete3d-rotulo" id="rot-zonas">
-            Zonas da maquete
-          </span>
-          <div className="maquete3d-botoes" role="group" aria-labelledby="rot-zonas">
-            {MODULOS.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                className={`maquete3d-btn ${selecionado === m.id ? 'ativo' : ''}`}
-                style={{ '--btn-cor': m.cor } as React.CSSProperties}
-                aria-pressed={selecionado === m.id}
-                onClick={() => setSelecionado(selecionado === m.id ? null : m.id)}
-                onMouseEnter={() => setDestacado(m.id)}
-                onMouseLeave={() => setDestacado(null)}
-                onFocus={() => setDestacado(m.id)}
-                onBlur={() => setDestacado(null)}
-              >
-                <span className="maquete3d-ponto" aria-hidden="true" />
-                {m.nome}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="maquete3d-btn maquete3d-btn-acao"
-              onClick={() => setSelecionado(null)}
-            >
-              Ver tudo
-            </button>
+          <button
+            type="button"
+            className="maquete3d-btn maquete3d-btn-acao"
+            onClick={vistaGeral}
+          >
+            Ver tudo
+          </button>
+        </div>
+      </div>
+
+      <div className="maquete3d-info" aria-live="polite">
+        {modulo ? (
+          <div className="maquete3d-ficha" style={{ '--ficha-cor': modulo.cor } as React.CSSProperties}>
+            <h4>{modulo.nome}</h4>
+            <p className="maquete3d-telemetria">{TELEMETRIA[modulo.id]}</p>
+            <p>{modulo.resumo}</p>
+            <ul>
+              {modulo.detalhes.map((d) => (
+                <li key={d}>{d}</li>
+              ))}
+            </ul>
           </div>
-        </div>
+        ) : (
+          <p className="maquete3d-vazio">
+            Selecione um módulo ou inicie o tour para percorrer a operação completa.
+          </p>
+        )}
       </div>
-
-      {/* A descrição visível agora é a ficha flutuante sobre a cena. Esta região
-          existe só para o leitor de tela anunciar a troca de área — repetir o
-          texto na tela seria conteúdo duplicado. */}
-      <div className="maquete3d-anuncio" aria-live="polite">
-        {modulo
-          ? `${modulo.nome}. ${modulo.papel}. ${modulo.resumo}`
-          : 'Nenhuma área selecionada.'}
-      </div>
-
-      {!modulo && (
-        <p className="maquete3d-vazio">
-          Clique em qualquer construção da maquete para ver o que aquela área faz. Vire uma chave
-          e veja o trem mudar de linha.
-        </p>
-      )}
 
       {reduzido && (
         <p className="maquete3d-aviso">
-          As animações estão pausadas porque seu sistema pede movimento reduzido. A maquete
-          continua girando e clicável.
+          O sistema pediu movimento reduzido: o tour automático fica desligado.
+          Trem, caminhões e navio continuam na operação.
         </p>
       )}
     </div>

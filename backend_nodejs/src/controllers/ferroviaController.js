@@ -16,10 +16,6 @@ module.exports = (io) => ({
     try {
       const { switchId, action, angle } = req.body;
 
-      if (!Number.isInteger(switchId) || switchId < 1 || switchId > 4) {
-        return res.status(400).json({ error: "switchId inválido (deve ser 1-4)" });
-      }
-
       const command = await ferroviaService.handleSwitchCommand(
         switchId,
         action,

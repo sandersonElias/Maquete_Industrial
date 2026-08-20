@@ -11,7 +11,7 @@ Multi-module industrial model monitoring system. No monorepo tooling — each mo
 | `gateway_bluetooth/` | Node.js, SerialPort, Socket.IO client | `index.js` |
 | `app_react_native/` | Expo (React Native), Bluetooth fallback | `App.js` |
 | `firmware_arduino_ferrovia/` | Arduino sketch (4 servos + HC-05) | `ferrovia_firmware.ino` |
-| `firmware_arduino_caminho_basculante/` | Arduino sketch (dump truck) | `caminhao_basculante_firmware.ino` |
+| `firmware_arduino_caminhao_basculante/` | Arduino sketch (dump truck, DC motor + L298M) | `caminhao_basculante_firmware.ino` |
 
 ## Startup Order
 
@@ -24,9 +24,9 @@ Multi-module industrial model monitoring system. No monorepo tooling — each mo
 ## Environment Files
 
 Each module has `.env.exemplo` — copy to `.env` and fill values. Key vars:
-- Backend: `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD`, `REDIS_URL`, `JWT_SECRET`, `GATEWAY_API_KEY`
+- Backend: `DATABASE_URL` (Render PostgreSQL), `REDIS_URL`, `JWT_SECRET`, `GATEWAY_API_KEY`
 - Gateway: `BACKEND_WS_URL`, `BACKEND_API_URL`, `GATEWAY_API_KEY`, `BT_DEVICE_FERROVIA` (MAC), `SIMULATION_MODE`
-- Dashboard: `REACT_APP_API_URL=http://localhost:3000`
+- Dashboard: `REACT_APP_API_URL=http://localhost:4000`
 
 ## No Tests / No Lint
 
@@ -44,7 +44,7 @@ STATUS|SWITCH|<id>|<angle>|<state>|<ts>  ← status push
 
 ## Architecture Notes
 
-- All API routes are under `/api/` prefix (auth, ferrovia, trucks, locomotive, port, airport, reports, gateway)
+- All API routes are under `/api/` prefix (auth, ferrovia, trucks, locomotive, port, reports, gateway)
 - Real-time: Socket.IO events (`device:data`, `command`, `gateway:register`, `gateway:status`)
 - Auth: JWT for dashboard/app, API key (`x-api-key` header) for gateway
 - Gateway runs in `SIMULATION_MODE=true` by default — no physical Bluetooth needed for dev

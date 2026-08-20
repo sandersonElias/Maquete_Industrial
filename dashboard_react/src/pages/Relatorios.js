@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Calendar, Filter, Clock, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { FileText, Download, Clock, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -13,11 +13,10 @@ export default function Relatorios() {
   const [loadingHistory, setLoadingHistory] = useState(true);
 
   const reportTypes = [
-    { value: 'switches', label: 'Ferrovia - Switches', icon: '🚂', color: '#3D9EFF' },
-    { value: 'trucks', label: 'Mina - Caminhões', icon: '🚛', color: '#FFB800' },
-    { value: 'port', label: 'Porto - Navios', icon: '🚢', color: '#A855F7' },
-    { value: 'airport', label: 'Aeroporto - Aeronaves', icon: '✈️', color: '#22C55E' },
-    { value: 'full', label: 'Relatório Completo', icon: '📊', color: '#00FFB2' },
+    { value: 'switches', label: 'Ferrovia - Switches' },
+    { value: 'trucks', label: 'Mina - Caminhoes' },
+    { value: 'port', label: 'Porto - Navios' },
+    { value: 'full', label: 'Relatorio Completo' },
   ];
 
   const formats = [
@@ -44,95 +43,85 @@ export default function Relatorios() {
   const generateReport = async () => {
     setGenerating(true);
     try {
-      const res = await axios.post('/api/reports/export', {
+      await axios.post('/api/reports/export', {
         reportType,
         format,
         dateFrom,
         dateTo
       });
-      toast.success('Relatório gerado com sucesso!');
+      toast.success('Relatorio gerado!');
       fetchReports();
     } catch (e) {
-      toast.error('Erro ao gerar relatório');
+      toast.error('Erro ao gerar relatorio');
     } finally {
       setGenerating(false);
     }
   };
 
-  const downloadReport = async (reportId) => {
+  const downloadReport = async (report) => {
     try {
-      const res = await axios.get(`/api/reports/${reportId}/download`, { responseType: 'blob' });
+      const res = await axios.get(`/api/reports/${report.id}/download`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `relatorio-${reportId}.${format}`);
+      link.setAttribute('download', `relatorio-${report.report_type || report.type || report.id}.${report.format}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (e) {
-      toast.error('Erro ao baixar relatório');
+      toast.error('Erro ao baixar relatorio');
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-maquete-danger to-red-300 bg-clip-text text-transparent">
-          Relatórios
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">Exportação de dados e análises</p>
+        <h2 className="text-xl font-bold text-text">Relatorios</h2>
+        <p className="text-sm text-muted mt-0.5">Exportacao de dados e analises</p>
       </div>
 
       {/* Generator */}
-      <div className="bg-maquete-card/60 backdrop-blur-sm border border-maquete-border rounded-xl p-6"
-        style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }}
-      >
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-5 flex items-center gap-2">
-          <FileText size={14} className="text-maquete-danger" />
-          Gerar Novo Relatório
+      <div className="bg-surface border border-border rounded-lg p-5">
+        <h3 className="text-xs font-medium text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
+          <FileText size={12} className="text-accent" />
+          Gerar Novo Relatorio
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <div>
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-3">Tipo de Relatório</label>
-            <div className="space-y-2">
+            <label className="block text-xs text-muted uppercase tracking-wider mb-2">Tipo</label>
+            <div className="space-y-1.5">
               {reportTypes.map(type => (
                 <button
                   key={type.value}
                   onClick={() => setReportType(type.value)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 text-sm ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${
                     reportType === type.value
-                      ? 'border-opacity-30 text-white'
-                      : 'bg-maquete-card/80 border-maquete-border hover:border-gray-500 text-gray-300'
+                      ? 'border-accent/30 bg-accent/5 text-text'
+                      : 'bg-card border-border text-muted hover:text-text hover:border-border'
                   }`}
-                  style={reportType === type.value ? {
-                    background: `linear-gradient(135deg, ${type.color}15, ${type.color}08)`,
-                    borderColor: `${type.color}40`,
-                    boxShadow: `0 0 20px ${type.color}10`,
-                  } : undefined}
                 >
-                  <span className="text-lg">{type.icon}</span>
-                  <span className="font-medium">{type.label}</span>
+                  <span>{type.label}</span>
                   {reportType === type.value && (
-                    <div className="ml-auto w-2 h-2 rounded-full" style={{ backgroundColor: type.color }} />
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                   )}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs text-gray-500 uppercase tracking-wider mb-3">Formato</label>
+              <label className="block text-xs text-muted uppercase tracking-wider mb-2">Formato</label>
               <div className="flex gap-2">
                 {formats.map(f => (
                   <button
                     key={f.value}
                     onClick={() => setFormat(f.value)}
-                    className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                    className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
                       format === f.value
-                        ? 'bg-maquete-accent/15 border-maquete-accent/30 text-maquete-accent shadow-[0_0_15px_rgba(61,158,255,0.1)]'
-                        : 'bg-maquete-card/80 border-maquete-border text-gray-400 hover:text-white hover:border-gray-500'
+                        ? 'bg-accent/10 border-accent/30 text-accent'
+                        : 'bg-card border-border text-muted hover:text-text'
                     }`}
                   >
                     {f.label}
@@ -142,20 +131,20 @@ export default function Relatorios() {
             </div>
 
             <div>
-              <label className="block text-xs text-gray-500 uppercase tracking-wider mb-3">Período</label>
+              <label className="block text-xs text-muted uppercase tracking-wider mb-2">Periodo</label>
               <div className="flex items-center gap-2">
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-maquete-card/80 border border-maquete-border rounded-xl text-sm focus:border-maquete-accent focus:outline-none transition-colors"
+                  className="flex-1 px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-text focus:border-accent focus:outline-none"
                 />
-                <span className="text-gray-600 text-sm">até</span>
+                <span className="text-muted text-sm">ate</span>
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-maquete-card/80 border border-maquete-border rounded-xl text-sm focus:border-maquete-accent focus:outline-none transition-colors"
+                  className="flex-1 px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-text focus:border-accent focus:outline-none"
                 />
               </div>
             </div>
@@ -165,59 +154,53 @@ export default function Relatorios() {
         <button
           onClick={generateReport}
           disabled={generating}
-          className="flex items-center justify-center gap-2 w-full py-3.5 bg-gradient-to-r from-maquete-accent to-blue-600 hover:from-blue-600 hover:to-maquete-accent rounded-xl font-semibold text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-maquete-accent/20 active:scale-[0.98]"
+          className="flex items-center justify-center gap-2 w-full py-2.5 bg-accent hover:bg-accent/80 rounded-lg font-medium text-sm text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {generating ? (
             <>
-              <Loader size={16} className="animate-spin" />
+              <Loader size={14} className="animate-spin" />
               Gerando...
             </>
           ) : (
             <>
-              <Download size={16} />
-              Gerar Relatório
+              <Download size={14} />
+              Gerar Relatorio
             </>
           )}
         </button>
       </div>
 
       {/* History */}
-      <div className="bg-maquete-card/60 backdrop-blur-sm border border-maquete-border rounded-xl p-6"
-        style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }}
-      >
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Clock size={14} className="text-gray-500" />
-          Relatórios Gerados
+      <div className="bg-surface border border-border rounded-lg p-5">
+        <h3 className="text-xs font-medium text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Clock size={12} className="text-muted" />
+          Relatorios Gerados
         </h3>
         {loadingHistory ? (
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-16 bg-maquete-card/80 rounded-xl animate-pulse" />
+              <div key={i} className="h-14 bg-card rounded-lg animate-pulse" />
             ))}
           </div>
         ) : reports.length === 0 ? (
-          <div className="text-center py-10">
-            <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-maquete-surface/80 flex items-center justify-center">
-              <FileText size={24} className="text-gray-600" />
-            </div>
-            <p className="text-sm text-gray-500">Nenhum relatório gerado recentemente</p>
-            <p className="text-xs text-gray-600 mt-1">Gere seu primeiro relatório acima</p>
+          <div className="text-center py-8">
+            <p className="text-sm text-muted">Nenhum relatorio gerado</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {reports.map((report) => (
-              <div key={report.id} className="flex items-center gap-4 p-4 bg-maquete-card/80 rounded-xl border border-maquete-border hover:border-maquete-border/60 transition-all duration-200 hover:shadow-md group">
-                <div className={`p-2.5 rounded-xl ${
-                  report.status === 'completed' ? 'bg-green-500/15' :
-                  report.status === 'failed' ? 'bg-red-500/15' : 'bg-maquete-warning/15'
+              <div key={report.id} className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border hover:border-border transition-colors">
+                <div className={`p-1.5 rounded-lg ${
+                  report.status === 'completed' ? 'bg-success/10' :
+                  report.status === 'failed' ? 'bg-danger/10' : 'bg-warning/10'
                 }`}>
-                  {report.status === 'completed' ? <CheckCircle size={18} className="text-green-400" /> :
-                   report.status === 'failed' ? <AlertCircle size={18} className="text-red-400" /> :
-                   <Loader size={18} className="text-maquete-warning animate-spin" />}
+                  {report.status === 'completed' ? <CheckCircle size={14} className="text-success" /> :
+                   report.status === 'failed' ? <AlertCircle size={14} className="text-danger" /> :
+                   <Loader size={14} className="text-warning animate-spin" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{report.type || report.reportType}</p>
-                  <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
+                  <p className="text-sm font-medium text-text truncate">{report.type || report.reportType}</p>
+                  <div className="flex items-center gap-2 text-[10px] text-muted">
                     <Clock size={10} />
                     <span>{report.created_at ? new Date(report.created_at).toLocaleString('pt-BR') : 'N/A'}</span>
                     <span className="uppercase font-medium">{report.format}</span>
@@ -225,10 +208,10 @@ export default function Relatorios() {
                 </div>
                 {report.status === 'completed' && (
                   <button
-                    onClick={() => downloadReport(report.id)}
-                    className="p-2.5 text-gray-400 hover:text-maquete-accent hover:bg-maquete-accent/10 rounded-xl transition-all duration-200 border border-transparent hover:border-maquete-accent/20 active:scale-95"
+                    onClick={() => downloadReport(report)}
+                    className="p-1.5 text-muted hover:text-accent hover:bg-accent/5 rounded-lg transition-colors"
                   >
-                    <Download size={16} />
+                    <Download size={14} />
                   </button>
                 )}
               </div>
