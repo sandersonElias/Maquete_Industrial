@@ -16,7 +16,7 @@ import { CameraPov, type PovId } from './CameraPov';
 import { MaqueteBlender } from './MaqueteBlender';
 import { usePrefersReducedMotion } from '../../lib/motion';
 
-import { LAYOUT } from './geometria';
+import { LAYOUT, ramoAtivo } from './geometria';
 
 /** Posições de cada módulo sobre a placa. */
 const POSICOES: Record<string, [number, number, number]> = LAYOUT;
@@ -166,11 +166,11 @@ function Iluminacao({ noite }: { noite: boolean }) {
         </>
       ) : (
         <>
-          <ambientLight intensity={0.16} color="#d8c8a8" />
+          <ambientLight intensity={0.22} color="#d8c8a8" />
           <directionalLight
-            position={[18, 24, 8]}
-            intensity={1.35}
-            color="#ffe8c4"
+            position={[16, 22, 10]}
+            intensity={1.55}
+            color="#ffe4b8"
             castShadow
             shadow-mapSize={[2048, 2048]}
             shadow-camera-left={-34}
@@ -180,8 +180,12 @@ function Iluminacao({ noite }: { noite: boolean }) {
             shadow-bias={-0.0002}
             shadow-normalBias={0.04}
           />
-          <directionalLight position={[-10, 6, -9]} intensity={0.28} color="#7a9bb8" />
-          <hemisphereLight args={['#6ea0cc', '#4a3d28', 0.38]} />
+          <directionalLight position={[-12, 8, -10]} intensity={0.38} color="#7a9bb8" />
+          <hemisphereLight args={['#6ea0cc', '#4a3d28', 0.48]} />
+          <pointLight position={[-17.2, 3.2, -9.4]} color="#ffcc88" intensity={0.55} distance={12} decay={2} />
+          <pointLight position={[17.6, 3.4, 8.6]} color="#c8e8ff" intensity={0.5} distance={14} decay={2} />
+          <pointLight position={[8.55, 1.4, 0]} color="#ffe0b0" intensity={0.28} distance={6} decay={2} />
+          <pointLight position={[-8.55, 1.4, 0]} color="#ffe0b0" intensity={0.28} distance={6} decay={2} />
         </>
       )}
     </group>
@@ -238,6 +242,7 @@ interface CenaProps {
   pov: PovId;
   onPov: (id: string) => void;
   fonte: 'codigo' | 'blender';
+  onDesvio: (indice: number) => void;
   controlsRef: React.RefObject<any>;
 }
 
@@ -310,6 +315,7 @@ function Cena({
   pov,
   onPov,
   fonte,
+  onDesvio,
   controlsRef,
 }: CenaProps) {
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
@@ -326,7 +332,7 @@ function Cena({
 
       {blender ? (
         <Suspense fallback={null}>
-          <MaqueteBlender rodando={rodando} velocidade={velocidade} />
+          <MaqueteBlender rodando={rodando} velocidade={velocidade} desvios={desvios} onDesvio={onDesvio} />
         </Suspense>
       ) : (
         <>
@@ -370,13 +376,15 @@ function Cena({
         </>
       )}
 
-      <ContactShadows
-        position={[0, 0.02, 0]}
-        opacity={noite ? 0.65 : 0.28}
-        scale={52}
-        blur={2.6}
-        far={8}
-      />
+      {!blender && (
+        <ContactShadows
+          position={[0, 0.02, 0]}
+          opacity={noite ? 0.65 : 0.28}
+          scale={52}
+          blur={2.6}
+          far={8}
+        />
+      )}
 
       <OrbitControls
         ref={controlsRef}
@@ -411,7 +419,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   const [etiquetas, setEtiquetas] = useState(!telaCheia);
   const [noite, setNoite] = useState(false);
   const [cenario, setCenario] = useState(true);
-  const [desvios, setDesvios] = useState([0, 1, 1, 1]);
+  const [desvios, setDesvios] = useState([0, 0, 0, 0]);
   const [tourAtivo, setTourAtivo] = useState(false);
   const [passoTour, setPassoTour] = useState(0);
   const [visivel, setVisivel] = useState(true);
@@ -502,10 +510,9 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
     setDesvios((prev) => prev.map((d, j) => (j === i ? (d + 1) % 3 : d)));
 
   const ESTADOS = ['CENTER', 'LEFT', 'RIGHT'];
+  const ramo = ramoAtivo(desvios);
   const destinoTrem =
-    desvios[2] === 1 || desvios[3] === 1
-      ? 'Porto'
-      : 'Loop principal';
+    ramo === 'porto' ? 'Porto' : ramo === 'mina' ? 'Mina' : ramo === 'diagonal' ? 'Atalho' : 'Loop principal';
 
   return (
     <div className={`maquete3d${telaCheia ? ' maquete3d--cheia' : ''}`} ref={wrapperRef}>
@@ -546,6 +553,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             pov={pov}
             onPov={entrarPov}
             fonte={fonte}
+            onDesvio={girarDesvio}
             controlsRef={controlsRef}
           />
         </Canvas>
@@ -676,7 +684,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
 
         <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-desvios">
-            Desvios (servos SG90) · destino: {destinoTrem}
+            Desvios · SW1/2 atalho · SW3 porto · SW4 mina · destino: {destinoTrem}
           </span>
           <div className="maquete3d-botoes" role="group" aria-labelledby="rot-desvios">
             {desvios.map((estado, i) => (

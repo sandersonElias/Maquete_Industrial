@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+const _alvoLook = new THREE.Vector3();
+
 /** Bitola visual das fotos: dois ferros prateados sobre dormente preto. */
 export const BITOLA = 0.2;
 
@@ -7,16 +9,14 @@ export const RX = 8.55;
 export const RZ = 5.2;
 const R_CANTO = 2.25;
 
-/** Subida do morro leste — trilho assentado no terreno, não flutuando. */
-export function yMorroLeste(z: number) {
-  const u = 1 - Math.min(1, Math.abs(z) / 2.7);
-  return u > 0 ? Math.pow(u, 1.35) * 0.98 : 0;
+/** Trilho atravessa o morro no túnel, no nível da placa. */
+export function yMorroLeste(_z: number) {
+  return 0;
 }
 
-/** Piso do túnel no morro oeste. */
-export function yTunelOeste(z: number) {
-  const u = 1 - Math.min(1, Math.abs(z) / 2.2);
-  return u > 0 ? 0.1 + Math.pow(u, 1.5) * 0.28 : 0;
+/** Piso do túnel no morro oeste — quase nivelado com o lastro. */
+export function yTunelOeste(_z: number) {
+  return 0.02;
 }
 
 export const LAYOUT = {
@@ -83,33 +83,45 @@ export function criarTracado(): THREE.CatmullRomCurve3 {
     pts.push(new THREE.Vector3(RX, yMorroLeste(z), z));
   }
   pts.push(lesteNorte);
-  pts.push(...arco(cxE, czN, R_CANTO, 0, Math.PI / 2, 14).slice(1));
-  pts.push(...reta(new THREE.Vector3(cxE, 0, RZ), new THREE.Vector3(cxW, 0, RZ), 16));
-  pts.push(...arco(cxW, czN, R_CANTO, Math.PI / 2, Math.PI, 14).slice(1));
-  for (let i = 1; i <= 20; i++) {
-    const z = czN + ((czS - czN) * i) / 20;
+  pts.push(...arco(cxE, czN, R_CANTO, 0, Math.PI / 2, 22).slice(1));
+  pts.push(...reta(new THREE.Vector3(cxE, 0, RZ), new THREE.Vector3(cxW, 0, RZ), 20));
+  pts.push(...arco(cxW, czN, R_CANTO, Math.PI / 2, Math.PI, 22).slice(1));
+  for (let i = 1; i <= 24; i++) {
+    const z = czN + ((czS - czN) * i) / 24;
     pts.push(new THREE.Vector3(-RX, yTunelOeste(z), z));
   }
-  pts.push(...arco(cxW, czS, R_CANTO, Math.PI, (3 * Math.PI) / 2, 14).slice(1));
-  pts.push(...reta(new THREE.Vector3(cxW, 0, -RZ), new THREE.Vector3(cxE, 0, -RZ), 16));
-  pts.push(...arco(cxE, czS, R_CANTO, (3 * Math.PI) / 2, Math.PI * 2, 14).slice(1, -1));
+  pts.push(...arco(cxW, czS, R_CANTO, Math.PI, (3 * Math.PI) / 2, 22).slice(1));
+  pts.push(...reta(new THREE.Vector3(cxW, 0, -RZ), new THREE.Vector3(cxE, 0, -RZ), 20));
+    pts.push(...arco(cxE, czS, R_CANTO, (3 * Math.PI) / 2, Math.PI * 2, 22).slice(1, -1));
 
-  return new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.2);
+  return new THREE.CatmullRomCurve3(densificar(pts, 0.28, true), true, 'catmullrom', 0.02);
+}
+
+function densificar(pts: THREE.Vector3[], step: number, closed: boolean) {
+  const out: THREE.Vector3[] = [];
+  const n = pts.length;
+  const last = closed ? n : n - 1;
+  for (let i = 0; i < last; i++) {
+    const a = pts[i];
+    const b = pts[(i + 1) % n];
+    const d = a.distanceTo(b);
+    const segs = Math.max(1, Math.ceil(d / Math.max(step, 1e-4)));
+    if (i === 0) out.push(a.clone());
+    for (let k = 1; k <= segs; k++) {
+      if (closed && i === last - 1 && k === segs) continue;
+      out.push(new THREE.Vector3().lerpVectors(a, b, k / segs));
+    }
+  }
+  return out;
 }
 
 /** Atalho em S — só visual, cabe dentro do estádio. */
 export function criarDiagonal(): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(
-    [
-      new THREE.Vector3(-5.1, 0, 3.05),
-      new THREE.Vector3(-2.1, 0, 1.4),
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(2.1, 0, -1.4),
-      new THREE.Vector3(5.1, 0, -3.05),
-    ],
+    densificar(PONTOS_DIAGONAL.map((p) => new THREE.Vector3(...p)), 0.28, false),
     false,
-    'centripetal',
-    0.25
+    'catmullrom',
+    0.02
   );
 }
 
@@ -119,9 +131,10 @@ export function criarEstradasLogistica(): THREE.CatmullRomCurve3[] {
   return [
     new THREE.CatmullRomCurve3(
       [
-        new THREE.Vector3(m[0] + 4.2, 0.03, m[2] + 2.2),
-        new THREE.Vector3(-12.4, 0.03, -5.2),
-        new THREE.Vector3(-8.8, 0.03, -1.4),
+        new THREE.Vector3(-12.55, 0.03, -6.75),
+        new THREE.Vector3(-11.2, 0.03, -5.85),
+        new THREE.Vector3(-9.7, 0.03, -4.95),
+        new THREE.Vector3(-8.15, 0.03, -4.1),
       ],
       false,
       'centripetal',
@@ -328,7 +341,9 @@ export function posicionarNaCurva(
   objeto: THREE.Object3D,
   curva: THREE.CatmullRomCurve3,
   t: number,
-  alturaY = 0
+  alturaY = 0,
+  /** Código: nariz em +Z. GLB do Blender: nariz em −Z (eixo glTF). */
+  frente: 'plusZ' | 'minusZ' = 'plusZ'
 ) {
   const frac = ((t % 1) + 1) % 1;
   const p = curva.getPointAt(frac);
@@ -336,6 +351,12 @@ export function posicionarNaCurva(
   const horiz = Math.hypot(tangente.x, tangente.z) || 1;
 
   objeto.position.set(p.x, p.y + alturaY, p.z);
+  if (frente === 'minusZ') {
+    objeto.up.set(0, 1, 0);
+    _alvoLook.set(p.x + tangente.x, p.y + alturaY + tangente.y, p.z + tangente.z);
+    objeto.lookAt(_alvoLook);
+    return;
+  }
   objeto.rotation.set(
     -Math.atan2(tangente.y, horiz),
     Math.atan2(tangente.x, tangente.z),
@@ -343,47 +364,93 @@ export function posicionarNaCurva(
   );
 }
 
-export type RamoFerroviario = 'nenhum' | 'porto' | 'diagonal';
+export type RamoFerroviario = 'nenhum' | 'porto' | 'diagonal' | 'mina';
 
-/** Plataformas por dentro do oval — o trem não atravessa o prédio. */
-export const ESTACAO_MINA = new THREE.Vector3(-7.15, 0, -1.45);
-export const DESTINO_PORTO = new THREE.Vector3(6.35, 0, 3.55);
+/** Plataformas por dentro do oval — longe o bastante pra não invadir a bitola. */
+export const ESTACAO_MINA = new THREE.Vector3(-5.35, 0, -2.35);
+export const DESTINO_PORTO = new THREE.Vector3(5.15, 0, 2.45);
 /** Pontos no trilho onde o trem reduz (ao lado da estação). */
-export const PARADA_MINA = new THREE.Vector3(-RX, 0, -1.45);
-export const PARADA_PORTO = new THREE.Vector3(RX, yMorroLeste(2.55), 2.55);
+export const PARADA_MINA = new THREE.Vector3(-RX, 0.02, -1.45);
+export const PARADA_PORTO = new THREE.Vector3(RX, 0, 2.55);
 
-const RAMO = {
-  porto: { tEntrada: 0.08, tSaida: 0.22 },
-} as const;
+/** Atalho interno em S. */
+export const PONTOS_DIAGONAL: [number, number, number][] = [
+  [-5.1, 0, 3.05],
+  [-2.1, 0, 1.4],
+  [0, 0, 0],
+  [2.1, 0, -1.4],
+  [5.1, 0, -3.05],
+];
 
-function pontosDoRamo(
+/** Balão até o cais (sai no canto NE, volta na reta norte). */
+export const PONTOS_RAMO_PORTO: [number, number, number][] = [
+  [8.55, 0, 4.55],
+  [10.6, 0, 5.85],
+  [13.8, 0, 7.75],
+  [16.9, 0, 9.55],
+  [19.8, 0, 9.2],
+  [20.2, 0, 7.05],
+  [17.2, 0, 6.05],
+  [12.4, 0, 5.45],
+  [6.15, 0, 5.2],
+];
+
+/** Balão até a mina (sai no canto SW, volta na reta sul). */
+export const PONTOS_RAMO_MINA: [number, number, number][] = [
+  [-8.55, 0, -4.55],
+  [-10.8, 0, -6.15],
+  [-13.4, 0, -8.05],
+  [-16.4, 0, -10.15],
+  [-19.0, 0, -9.45],
+  [-18.6, 0, -7.05],
+  [-14.8, 0, -5.75],
+  [-11.0, 0, -5.35],
+  [-6.15, 0, -5.2],
+];
+
+export function criarRamoPorto(): THREE.CatmullRomCurve3 {
+  return new THREE.CatmullRomCurve3(
+    densificar(PONTOS_RAMO_PORTO.map((p) => new THREE.Vector3(...p)), 0.28, false),
+    false,
+    'catmullrom',
+    0.02
+  );
+}
+
+export function criarRamoMina(): THREE.CatmullRomCurve3 {
+  return new THREE.CatmullRomCurve3(
+    densificar(PONTOS_RAMO_MINA.map((p) => new THREE.Vector3(...p)), 0.28, false),
+    false,
+    'catmullrom',
+    0.02
+  );
+}
+
+function interpolarTrecho(curva: THREE.CatmullRomCurve3, t0: number, t1: number, n: number) {
+  const pts: THREE.Vector3[] = [];
+  for (let i = 0; i <= n; i++) pts.push(curva.getPointAt(t0 + ((t1 - t0) * i) / n));
+  return pts;
+}
+
+function enxertarRamo(
   principal: THREE.CatmullRomCurve3,
-  tipo: 'porto'
-): THREE.Vector3[] {
-  const destino = DESTINO_PORTO;
-  const { tEntrada, tSaida } = RAMO[tipo];
-  const entrada = principal.getPointAt(tEntrada);
-  const saida = principal.getPointAt(tSaida);
-  const tanE = principal.getTangentAt(tEntrada);
-  const tanS = principal.getTangentAt(tSaida);
-  const lado = 1;
-
-  return [
-    entrada.clone(),
-    entrada.clone().addScaledVector(tanE, 1.1),
-    new THREE.Vector3(destino.x - 0.9, 0, destino.z - lado * 0.7),
-    destino.clone(),
-    new THREE.Vector3(destino.x - 0.9, 0, destino.z + lado * 0.7),
-    saida.clone().addScaledVector(tanS, -1.1),
-    saida.clone(),
+  ramo: THREE.CatmullRomCurve3,
+  tEntrada: number,
+  tSaida: number
+): THREE.CatmullRomCurve3 {
+  const pontos: THREE.Vector3[] = [
+    ...interpolarTrecho(principal, 0, tEntrada, 36),
+    ...ramo.getSpacedPoints(28).slice(1, -1),
+    ...interpolarTrecho(principal, tSaida, 1, 36),
   ];
+  return new THREE.CatmullRomCurve3(pontos, true, 'centripetal', 0.28);
 }
 
 export function criarRamoVisual(
   principal: THREE.CatmullRomCurve3,
-  tipo: 'porto'
+  tipo: 'porto' | 'mina'
 ): THREE.CatmullRomCurve3 {
-  return new THREE.CatmullRomCurve3(pontosDoRamo(principal, tipo), false, 'catmullrom', 0.32);
+  return tipo === 'porto' ? criarRamoPorto() : criarRamoMina();
 }
 
 export function tracadoComDesvio(
@@ -395,49 +462,60 @@ export function tracadoComDesvio(
 
   if (tipo === 'diagonal') {
     const diag = criarDiagonal();
-    const tEnt = 0.18;
-    const tSai = 0.68;
-    const pontos: THREE.Vector3[] = [];
-    const n = 40;
-    for (let i = 0; i <= n; i++) pontos.push(principal.getPointAt((i / n) * tEnt));
-    for (let i = 1; i < 24; i++) pontos.push(diag.getPointAt(i / 24));
-    for (let i = 0; i <= n; i++) pontos.push(principal.getPointAt(tSai + (i / n) * (1 - tSai)));
-    return new THREE.CatmullRomCurve3(pontos, true, 'catmullrom', 0.25);
+    const tEnt = tMaisProximo(principal, diag.getPointAt(0));
+    const tSai = tMaisProximo(principal, diag.getPointAt(1));
+    const t0 = Math.min(tEnt, tSai);
+    const t1 = Math.max(tEnt, tSai);
+    return enxertarRamo(principal, diag, t0, t1);
   }
 
-  const { tEntrada, tSaida } = RAMO[tipo];
-  const pontos: THREE.Vector3[] = [];
-  const amostras = 48;
-  for (let i = 0; i <= amostras; i++) {
-    pontos.push(principal.getPointAt((i / amostras) * tEntrada));
+  if (tipo === 'mina') {
+    const ramo = criarRamoMina();
+    return enxertarRamo(
+      principal,
+      ramo,
+      tMaisProximo(principal, ramo.getPointAt(0)),
+      tMaisProximo(principal, ramo.getPointAt(1))
+    );
   }
-  pontos.push(...pontosDoRamo(principal, tipo).slice(1, -1));
-  for (let i = 0; i <= amostras; i++) {
-    pontos.push(principal.getPointAt(tSaida + (i / amostras) * (1 - tSaida)));
-  }
-  return new THREE.CatmullRomCurve3(pontos, true, 'catmullrom', 0.28);
+
+  const ramo = criarRamoPorto();
+  return enxertarRamo(
+    principal,
+    ramo,
+    tMaisProximo(principal, ramo.getPointAt(0)),
+    tMaisProximo(principal, ramo.getPointAt(1))
+  );
 }
 
-export function ramoAtivo(desvios: number[]): RamoFerroviario {
-  if (desvios[2] === 1 || desvios[3] === 1) return 'porto';
-  if (desvios[0] === 1 || desvios[1] === 1) return 'diagonal';
+export function ramoAtivo(desvios: number[] | undefined): RamoFerroviario {
+  const d = desvios ?? [0, 0, 0, 0];
+  if (d[2] === 1 || d[2] === 2) return 'porto';
+  if (d[3] === 1 || d[3] === 2) return 'mina';
+  if (d[0] === 1 || d[0] === 2 || d[1] === 1 || d[1] === 2) return 'diagonal';
   return 'nenhum';
 }
 
 export function criarPercursoCaminhao(): THREE.CatmullRomCurve3 {
-  const pts: THREE.Vector3[] = [];
-  const n = 24;
-  const a0 = Math.atan2(1.7, 4.05);
-  for (let i = 0; i < n; i++) {
-    const a = a0 + (i / n) * Math.PI * 2;
-    pts.push(new THREE.Vector3(Math.cos(a) * 5.15, 0, Math.sin(a) * 4.85));
-  }
-  return new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.2);
+  return new THREE.CatmullRomCurve3(
+    [
+      new THREE.Vector3(4.65, 0, 2.65),
+      new THREE.Vector3(6.0, 0, 3.55),
+      new THREE.Vector3(7.5, 0, 4.45),
+      new THREE.Vector3(9.05, 0, 5.3),
+      new THREE.Vector3(7.5, 0, 4.45),
+      new THREE.Vector3(6.0, 0, 3.55),
+    ],
+    true,
+    'centripetal',
+    0.35
+  );
 }
 
 /** Centro do túnel no oeste e do morro leste. */
-export const TUNEL_OESTE = { x: -RX, y: 0.48, z: 0, comprimento: 3.55, raio: 0.46 };
-export const MORRO_LESTE = { x: RX, z: 0, raio: 2.65, altura: 1.22 };
+export const TUNEL_OESTE = { x: -RX, y: 0.48, z: 0, comprimento: 3.55, raio: 0.48 };
+export const TUNEL_LESTE = { x: RX, y: 0.48, z: 0, comprimento: 3.55, raio: 0.48 };
+export const MORRO_LESTE = { x: RX + 0.9, z: 0, raio: 2.05, altura: 1.62 };
 
 /** @deprecated — o morro substituiu os pilares. */
 export const PILARES_PONTE: [number, number, number][] = [];

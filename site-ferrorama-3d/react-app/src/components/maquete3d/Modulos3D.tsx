@@ -2,7 +2,7 @@ import { useRef, useMemo, useLayoutEffect, ReactNode, type RefObject } from 'rea
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
-import { criarTracado, criarDiagonal, matrizesDormentes, posicionarNaCurva, ramoAtivo, geometriaFita, geometriaTrilho, DESTINO_PORTO, ESTACAO_MINA, PARADA_MINA, PARADA_PORTO, criarPercursoCaminhao, BITOLA, tMaisProximo, geometriaMorro, TUNEL_OESTE, MORRO_LESTE } from './geometria';
+import { criarTracado, criarDiagonal, criarRamoPorto, criarRamoMina, matrizesDormentes, posicionarNaCurva, ramoAtivo, geometriaFita, geometriaTrilho, DESTINO_PORTO, ESTACAO_MINA, PARADA_MINA, PARADA_PORTO, criarPercursoCaminhao, BITOLA, tMaisProximo, geometriaMorro, TUNEL_OESTE, TUNEL_LESTE, tracadoComDesvio } from './geometria';
 import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, PortaConteineres, MesaControle } from './veiculos';
 import { texGrama, texAsfalto, texConcreto, texAgua, texMetal, texMadeira, texLastro, texTerra, texRocha } from './texturas';
 
@@ -124,8 +124,11 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
 
   const principal = useMemo(() => criarTracado(), []);
   const diagonal = useMemo(() => criarDiagonal(), []);
+  const ramoPorto = useMemo(() => criarRamoPorto(), []);
+  const ramoMina = useMemo(() => criarRamoMina(), []);
   const lastroGeo = useMemo(() => geometriaFita(principal, 0.72, 0.012, 180, true), [principal]);
   const ramo = ramoAtivo(desvios);
+  const rota = useMemo(() => tracadoComDesvio(principal, desvios), [principal, desvios]);
   const tParadas = useMemo(
     () => [
       tMaisProximo(principal, PARADA_MINA),
@@ -135,8 +138,11 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
   );
 
   useLayoutEffect(() => {
-    if (trem.current) posicionarNaCurva(trem.current, principal, 0, 0.08);
-  }, [principal]);
+    if (trem.current) {
+      progresso.current = tMaisProximo(rota, trem.current.position);
+      posicionarNaCurva(trem.current, rota, progresso.current, 0.08);
+    }
+  }, [rota]);
 
   useFrame((_, delta) => {
     const frac = ((progresso.current % 1) + 1) % 1;
@@ -152,9 +158,9 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
     fatorVel.current += (alvo - fatorVel.current) * Math.min(delta * 3.2, 1);
     if (rodando) progresso.current += delta * 0.05 * velocidade * fatorVel.current;
 
-    if (trem.current) posicionarNaCurva(trem.current, principal, progresso.current, 0.08);
+    if (trem.current) posicionarNaCurva(trem.current, rota, progresso.current, 0.08);
     vagoes.current.forEach((v, i) => {
-      if (v) posicionarNaCurva(v, principal, progresso.current - 0.018 * (i + 1), 0.07);
+      if (v) posicionarNaCurva(v, rota, progresso.current - 0.018 * (i + 1), 0.07);
     });
   });
 
@@ -164,10 +170,12 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
         <meshStandardMaterial map={texLastro()} color="#b8aea0" roughness={1} side={THREE.DoubleSide} />
       </mesh>
       <TrilhoHO curva={principal} fechada />
-      <TrilhoHO curva={diagonal} fechada={false} opacidade={ramo === 'diagonal' ? 1 : 0.55} />
+      <TrilhoHO curva={diagonal} fechada={false} opacidade={ramo === 'diagonal' ? 1 : 0.5} />
+      <TrilhoHO curva={ramoPorto} fechada={false} opacidade={ramo === 'porto' ? 1 : 0.5} />
+      <TrilhoHO curva={ramoMina} fechada={false} opacidade={ramo === 'mina' ? 1 : 0.5} />
 
-      <MorroComTunel />
-      <MorroLeste />
+      <MorroComTunel tunel={TUNEL_OESTE} />
+      <MorroComTunel tunel={TUNEL_LESTE} />
 
       {desvios.map((estado, i) => {
         const t = 0.08 + i * 0.25;
@@ -225,48 +233,28 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
   );
 }
 
-function MorroLeste() {
-  const geo = useMemo(() => geometriaMorro(MORRO_LESTE.raio, MORRO_LESTE.altura, 40), []);
-  const rocha = useMemo(() => texRocha(), []);
-  const grama = useMemo(() => texGrama(), []);
-  return (
-    <group position={[MORRO_LESTE.x, 0, MORRO_LESTE.z]}>
-      <mesh geometry={geo} castShadow receiveShadow>
-        <meshStandardMaterial map={rocha} color="#c4b08a" roughness={0.92} />
-      </mesh>
-      <mesh position={[0, MORRO_LESTE.altura * 0.42, 0]} scale={[0.82, 0.35, 0.82]}>
-        <sphereGeometry args={[MORRO_LESTE.raio * 0.55, 24, 16]} />
-        <meshStandardMaterial map={grama} roughness={0.95} />
-      </mesh>
-    </group>
-  );
-}
-
-function MorroComTunel() {
-  const t = TUNEL_OESTE;
+function MorroComTunel({ tunel }: { tunel: typeof TUNEL_OESTE }) {
+  const t = tunel;
   const geoN = useMemo(() => geometriaMorro(1.55, 1.55, 32), []);
   const geoS = useMemo(() => geometriaMorro(1.55, 1.55, 32), []);
   const rocha = useMemo(() => texRocha(), []);
   const grama = useMemo(() => texGrama(), []);
+  const lado = t.x < 0 ? -1 : 1;
   return (
     <group>
-      <mesh geometry={geoN} position={[t.x - 0.2, 0, 2.45]} castShadow receiveShadow>
+      <mesh geometry={geoN} position={[t.x + lado * 0.35, 0, 2.45]} castShadow receiveShadow>
         <meshStandardMaterial map={rocha} color="#bca888" roughness={0.92} />
       </mesh>
-      <mesh position={[t.x - 0.2, 0.95, 2.45]} scale={[0.82, 0.4, 0.82]}>
+      <mesh position={[t.x + lado * 0.35, 0.95, 2.45]} scale={[0.82, 0.4, 0.82]}>
         <sphereGeometry args={[0.95, 20, 14]} />
         <meshStandardMaterial map={grama} roughness={0.95} />
       </mesh>
-      <mesh geometry={geoS} position={[t.x - 0.2, 0, -2.45]} castShadow receiveShadow>
+      <mesh geometry={geoS} position={[t.x + lado * 0.35, 0, -2.45]} castShadow receiveShadow>
         <meshStandardMaterial map={rocha} color="#bca888" roughness={0.92} />
       </mesh>
-      <mesh position={[t.x - 0.2, 0.95, -2.45]} scale={[0.82, 0.4, 0.82]}>
+      <mesh position={[t.x + lado * 0.35, 0.95, -2.45]} scale={[0.82, 0.4, 0.82]}>
         <sphereGeometry args={[0.95, 20, 14]} />
         <meshStandardMaterial map={grama} roughness={0.95} />
-      </mesh>
-      <mesh position={[t.x, t.y, t.z]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[t.raio, t.raio, t.comprimento, 24, 1, true]} />
-        <meshStandardMaterial color="#2a2420" roughness={0.95} side={THREE.DoubleSide} />
       </mesh>
       {[-1, 1].map((s) => (
         <group key={s} position={[t.x, t.y, s * (t.comprimento / 2 - 0.06)]}>
@@ -276,10 +264,6 @@ function MorroComTunel() {
           </mesh>
         </group>
       ))}
-      <mesh position={[t.x - 0.35, 1.55, 0]} scale={[1.05, 0.42, 1.55]} castShadow>
-        <sphereGeometry args={[1.15, 20, 14]} />
-        <meshStandardMaterial map={grama} color="#9aaa7a" roughness={0.95} />
-      </mesh>
     </group>
   );
 }

@@ -76,7 +76,7 @@ export const MODULOS: Modulo[] = [
     id: 'mineradora',
     nome: 'Mineradora',
     cor: PALETA.warning,
-    alvo: [-8, 0.5, -4],
+    alvo: [-15.2, 0.5, -7.4],
     resumo:
       'Dois poços de extração alimentam a esteira que carrega os caminhões basculantes.',
     detalhes: [
@@ -104,9 +104,9 @@ export const MODULOS: Modulo[] = [
     id: 'porto',
     nome: 'Porto Logístico',
     cor: PALETA.glow,
-    alvo: [9, 0.5, 3],
+    alvo: [16.2, 0.5, 8.2],
     resumo:
-      'Cais com guindaste e navio: o minério que chega pelo trem é embarcado para exportação.',
+      'Cais com correia até o navio: o minério que chega pelo trem é embarcado para exportação.',
     detalhes: [
       'Guindaste com movimento de lança sobre o cais',
       'Navios monitorados via GET /api/port/ships',
@@ -118,7 +118,7 @@ export const MODULOS: Modulo[] = [
     id: 'controle',
     nome: 'Central de Controle',
     cor: PALETA.danger,
-    alvo: [0, 0.5, 7],
+    alvo: [-5.8, 0.5, 13.2],
     resumo:
       'Arduino Mega, gateway e dashboard: o cérebro que coordena os módulos.',
     detalhes: [
