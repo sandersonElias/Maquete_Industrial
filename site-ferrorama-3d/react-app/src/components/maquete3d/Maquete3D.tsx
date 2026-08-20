@@ -4,9 +4,9 @@ import { OrbitControls, Html, ContactShadows, Stars, Sky } from '@react-three/dr
 import * as THREE from 'three';
 import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA, CAMERAS_POV } from './modulos';
 import {
-  Zona,
-  CentralQuimica,
-  Mina,
+  Base,
+  Ferrovia,
+  Mineradora,
   Porto,
   Controle,
   GrupoInterativo,
@@ -27,7 +27,7 @@ const COR_NOITE = '#040508';
 const COR_DIA = '#5a7a96';
 
 /* ============================================================
-   Câmera
+   Câmera: aproxima suavemente do módulo selecionado
    ============================================================ */
 
 function CameraFoco({
@@ -40,7 +40,7 @@ function CameraFoco({
   tourAtivo: boolean;
 }) {
   const { camera } = useThree();
-  const alvoPos = useRef(new THREE.Vector3().copy(CAMERA_INICIAL));
+  const alvoPos = useRef(new THREE.Vector3());
   const alvoOlhar = useRef(new THREE.Vector3(0, 0, 0));
 
   useEffect(() => {
@@ -193,7 +193,7 @@ function Iluminacao({ noite }: { noite: boolean }) {
 }
 
 /* ============================================================
-   Etiquetas
+   Etiqueta flutuante de cada módulo
    ============================================================ */
 
 function Etiqueta({
@@ -201,12 +201,15 @@ function Etiqueta({
   subtitulo,
   cor,
   position,
+  visivel,
 }: {
   texto: string;
   subtitulo?: string;
   cor: string;
   position: [number, number, number];
+  visivel: boolean;
 }) {
+  if (!visivel) return null;
   return (
     <Html position={position} center distanceFactor={36} zIndexRange={[10, 0]}>
       <div className="maquete3d-tag-wrap">
@@ -230,9 +233,7 @@ interface CenaProps {
   setDestacado: (id: string | null) => void;
   rodando: boolean;
   velocidade: number;
-  desvios: Record<string, EstadoDesvio>;
-  sentido: number;
-  rotaAtiva: string[];
+  desvios: number[];
   etiquetas: boolean;
   noite: boolean;
   cenario: boolean;
@@ -243,7 +244,6 @@ interface CenaProps {
   fonte: 'codigo' | 'blender';
   onDesvio: (indice: number) => void;
   controlsRef: React.RefObject<any>;
-  zoomAtivo: boolean;
 }
 
 function Modulo3D({
@@ -427,7 +427,6 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   const [fonte, setFonte] = useState<'codigo' | 'blender'>('blender');
 
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const palcoRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
   const reduzido = usePrefersReducedMotion();
   const leve = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
@@ -435,9 +434,10 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
-    const obs = new IntersectionObserver(([e]) => setVisivel(e.isIntersecting), {
-      rootMargin: '150px',
-    });
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisivel(entry.isIntersecting),
+      { rootMargin: '150px' }
+    );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
@@ -545,8 +545,6 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             rodando={rodando}
             velocidade={velocidade}
             desvios={desvios}
-            sentido={sentido}
-            rotaAtiva={rotaAtiva}
             etiquetas={etiquetas}
             noite={noite}
             cenario={cenario}
@@ -557,7 +555,6 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             fonte={fonte}
             onDesvio={girarDesvio}
             controlsRef={controlsRef}
-            zoomAtivo={zoomAtivo}
           />
         </Canvas>
 
@@ -591,7 +588,6 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
       </div>
 
       <div className="maquete3d-painel">
-        {/* Reversor em destaque: é o controle mais chamativo da apresentação */}
         <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-fonte">
             Fonte 3D
@@ -686,42 +682,24 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
           </div>
         </div>
 
-        {/* Desvios: mudam de verdade o caminho do trem */}
         <div className="maquete3d-grupo">
           <span className="maquete3d-rotulo" id="rot-desvios">
             Desvios · SW1/2 atalho · SW3 porto · SW4 mina · destino: {destinoTrem}
           </span>
-          <div className="maquete3d-desvios" role="group" aria-labelledby="rot-desvios">
-            {ORDEM_DESVIOS.map((id) => {
-              const estado = desvios[id];
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  className={`maquete3d-chave ${estado === 1 ? 'desviado' : ''}`}
-                  onClick={() => virarDesvio(id)}
-                  aria-pressed={estado === 1}
-                  aria-label={`${id}: ${DESCRICAO_DESVIOS[id][estado]}. Ativar para trocar.`}
-                >
-                  <span className="maquete3d-chave-id">{id}</span>
-                  <span className="maquete3d-chave-estado">
-                    {estado === 0 ? 'RETO' : 'DESVIO'}
-                  </span>
-                  <span className="maquete3d-chave-desc">{DESCRICAO_DESVIOS[id][estado]}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Rota resultante — mostra ao público o efeito das chaves */}
-        <div className="maquete3d-grupo">
-          <span className="maquete3d-rotulo">Rota com esta configuração</span>
-          <ol className="maquete3d-rota" aria-live="polite">
-            {rotaAtiva.map((id) => (
-              <li key={id}>{NOMES_TRECHO[id]}</li>
+          <div className="maquete3d-botoes" role="group" aria-labelledby="rot-desvios">
+            {desvios.map((estado, i) => (
+              <button
+                key={i}
+                type="button"
+                className="maquete3d-btn maquete3d-btn-desvio"
+                onClick={() => girarDesvio(i)}
+                aria-label={`Desvio ${i + 1}, estado ${ESTADOS[estado]}. Ativar para alternar.`}
+              >
+                <span className="maquete3d-desvio-id">SW{i + 1}</span>
+                <span className="maquete3d-desvio-estado">{ESTADOS[estado]}</span>
+              </button>
             ))}
-          </ol>
+          </div>
         </div>
 
         <div className="maquete3d-grupo maquete3d-grupo-linha">
@@ -763,7 +741,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             onClick={() => setRodando((r) => !r)}
             aria-pressed={rodando}
           >
-            {rodando ? 'Parar trem' : 'Iniciar trem'}
+            {rodando ? 'Pausar operação' : 'Iniciar operação'}
           </button>
 
           <label className="maquete3d-slider">
@@ -797,7 +775,6 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             />
             <span>Etiquetas</span>
           </label>
-        </div>
 
           <button
             type="button"
@@ -827,13 +804,6 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
           </p>
         )}
       </div>
-
-      {!modulo && (
-        <p className="maquete3d-vazio">
-          Clique em qualquer construção da maquete para ver o que aquela área faz. Vire uma chave
-          e veja o trem mudar de linha.
-        </p>
-      )}
 
       {reduzido && (
         <p className="maquete3d-aviso">

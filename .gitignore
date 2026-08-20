@@ -3,6 +3,7 @@
 
 # MiMoCode internal
 .mimocode/
+.cursor/
 
 # Environment files (sensitive data)
 .env

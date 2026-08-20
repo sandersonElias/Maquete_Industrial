@@ -184,7 +184,7 @@ export default function PortoSection() {
           </ol>
         </motion.div>
 
-        {/* Ficha marítima — paralelo às fichas de minério da Mina */}
+        {/* Fichas mar × ar — paralelo às fichas de minério da Mina */}
         <motion.div
           className="porto-routes"
           initial={{ opacity: 0, y: 28 }}

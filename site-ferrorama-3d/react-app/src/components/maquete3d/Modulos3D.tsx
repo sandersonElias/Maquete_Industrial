@@ -7,10 +7,10 @@ import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, PortaConteineres,
 import { texGrama, texAsfalto, texConcreto, texAgua, texMetal, texMadeira, texLastro, texTerra, texRocha } from './texturas';
 
 /* ============================================================
-   Wrapper interativo: destaca a zona no hover e na seleção
+   Wrapper interativo: destaca o módulo no hover e na seleção
    ============================================================ */
 
-interface ZonaProps {
+interface GrupoInterativoProps {
   id: string;
   cor: string;
   selecionado: boolean;
@@ -22,7 +22,7 @@ interface ZonaProps {
   children: ReactNode;
 }
 
-export function Zona({
+export function GrupoInterativo({
   id,
   cor,
   selecionado,
@@ -32,11 +32,10 @@ export function Zona({
   position = [0, 0, 0],
   elevar = true,
   children,
-}: ZonaProps) {
+}: GrupoInterativoProps) {
   const grupo = useRef<THREE.Group>(null);
-  const borda = useRef<THREE.Mesh>(null);
+  const anel = useRef<THREE.Mesh>(null);
   const ativo = selecionado || destacado;
-  const [larg, prof] = tamanho;
 
   useFrame((_, delta) => {
     if (!grupo.current) return;
@@ -103,14 +102,12 @@ export function Base() {
         <edgesGeometry args={[new THREE.BoxGeometry(45.2, 0.02, 33.2)]} />
         <lineBasicMaterial color={PALETA.border} />
       </lineSegments>
-
-      <group ref={grupo}>{children}</group>
     </group>
   );
 }
 
 /* ============================================================
-   Prédios — blocos brancos com grade de janelas acesas
+   Ferrovia — trilhos, dormentes, trem e desvios
    ============================================================ */
 
 interface FerroviaProps {
@@ -231,55 +228,6 @@ export function Ferrovia({ rodando, velocidade, desvios }: FerroviaProps) {
         <group key={i} ref={(el) => { vagoes.current[i] = el; }}>
           <VagaoMinerio />
         </group>
-      ))}
-
-      {/* Líquido dentro dos tanques */}
-      <group ref={liquidos}>
-        {tanques.map(([x, z], i) => (
-          <mesh key={i} position={[x, 0.23, z]}>
-            <cylinderGeometry args={[0.44, 0.44, 0.84, 16]} />
-            <meshStandardMaterial
-              color={[PALETA.glow, PALETA.accent, PALETA.warning][i]}
-              emissive={[PALETA.glow, PALETA.accent, PALETA.warning][i]}
-              emissiveIntensity={0.5}
-              roughness={0.2}
-              transparent
-              opacity={0.85}
-            />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Tubulação ligando os tanques */}
-      <mesh position={[0, 0.94, -1.1]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.06, 0.06, 3.1, 8]} />
-        <meshStandardMaterial color="#6c757d" metalness={0.7} roughness={0.35} />
-      </mesh>
-
-      {/* Painel de controle do processo */}
-      <mesh castShadow position={[0, 0.35, 1.3]}>
-        <boxGeometry args={[2.6, 0.7, 0.5]} />
-        <meshStandardMaterial color={PALETA.card} roughness={0.75} />
-      </mesh>
-      <mesh position={[0, 0.55, 1.56]} rotation={[-0.25, 0, 0]}>
-        <boxGeometry args={[1.1, 0.42, 0.04]} />
-        <meshStandardMaterial
-          color="#0a3d2e"
-          emissive={PALETA.glow}
-          emissiveIntensity={0.6}
-          roughness={0.3}
-        />
-      </mesh>
-      {[-0.9, 0.9].map((x) => (
-        <mesh key={x} position={[x, 0.62, 1.4]}>
-          <sphereGeometry args={[0.07, 8, 8]} />
-          <meshStandardMaterial
-            color={PALETA.glow}
-            emissive={PALETA.glow}
-            emissiveIntensity={2.2}
-            toneMapped={false}
-          />
-        </mesh>
       ))}
     </group>
   );
@@ -404,7 +352,7 @@ function EstacaoTrem({
 }
 
 /* ============================================================
-   Mina — poços, esteira e caminhão basculante
+   Mineradora — poços, esteira e caminhão basculante
    ============================================================ */
 
 export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
@@ -510,7 +458,7 @@ export function Mineradora({ rodando, noite = false }: { rodando: boolean; noite
 }
 
 /* ============================================================
-   Porto Logístico
+   Porto — água, cais, guindaste e navio
    ============================================================ */
 
 export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: boolean }) {
@@ -638,12 +586,12 @@ export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: bo
       {/* Guindaste no bordo do cais, lança sobre o convés */}
       <group position={[-1.35, 0.36, 0.2]}>
         <mesh castShadow>
-          <boxGeometry args={[0.6, 0.16, 0.6]} />
+          <boxGeometry args={[0.7, 0.18, 0.7]} />
           <meshStandardMaterial color={PALETA.surface} roughness={0.6} />
         </mesh>
-        <mesh castShadow position={[0, 0.95, 0]}>
-          <cylinderGeometry args={[0.1, 0.12, 1.8, 8]} />
-          <meshStandardMaterial color={PALETA.danger} roughness={0.45} metalness={0.5} />
+        <mesh castShadow position={[0, 1.1, 0]}>
+          <cylinderGeometry args={[0.11, 0.13, 2.1, 8]} />
+          <meshStandardMaterial color={PALETA.glow} roughness={0.45} metalness={0.5} />
         </mesh>
         {noite && (
           <pointLight position={[0, 2.2, 0.5]} color={PALETA.glow} intensity={2.2} distance={6} decay={2} />

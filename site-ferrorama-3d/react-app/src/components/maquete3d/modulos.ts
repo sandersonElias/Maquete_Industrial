@@ -1,45 +1,20 @@
 /**
- * Zonas da maquete, seguindo a planta feita no Figma:
+ * Os 4 módulos da maquete + a central de controle.
  *
- *   ┌─────────────┐  ┌───────────────┐  ┌─────────────┐
- *   │ Central de  │  │               │  │    Porto    │
- *   │  Química    │  │   FERRORAMA   │  │  Logístico  │
- *   ├─────────────┤  │  SW1 SW2 SW3  │  └─────────────┤
- *   │    Mina     │  │   REVERSOR    │
- *   └─────────────┘  └───────────────┘
+ * As cores seguem a paleta do sistema (README): cada módulo usa a mesma cor
+ * que representa ele no dashboard, para quem vê a feira reconhecer a ligação
+ * entre a maquete física, o site e o painel de controle.
  */
 
 export interface Modulo {
   id: string;
   nome: string;
   cor: string;
-  /** Etiqueta curta da função na cadeia produtiva (ex.: "Extração"). */
-  papel: string;
-  /** Por que esta área importa para a empresa — é o texto que o público lê. */
+  /** Posição do foco da câmera ao selecionar o módulo */
+  alvo: [number, number, number];
   resumo: string;
-  /** Detalhe técnico, mostrado abaixo do resumo. */
   detalhes: string[];
 }
-
-/**
- * Paleta de dentro da vitrine.
- *
- * O site é laranja/ferrugem, mas o diorama segue o visual de estande de feira
- * da referência: azul, ciano e verde. Os dois convivem porque o laranja fica
- * no cromo HTML em volta (botões, títulos) e o azul fica dentro do vidro —
- * como uma peça de exposição iluminada sobre um móvel escuro.
- */
-export const VITRINE = {
-  ciano: '#4DD8FF',
-  azul: '#2B5CFF',
-  violeta: '#7B4DFF',
-  verde: '#39FF6A',
-  ambar: '#FFB800',
-  vermelho: '#FF4560',
-  predio: '#E8EAED',
-  predioEscuro: '#B9BEC6',
-  fundo: '#05070B',
-} as const;
 
 /** Paleta compartilhada com o dashboard e o app (ver README). */
 export const PALETA = {
@@ -103,40 +78,26 @@ export const MODULOS: Modulo[] = [
     cor: PALETA.warning,
     alvo: [-15.2, 0.5, -7.4],
     resumo:
-      'É o laboratório que decide se a carga pode ou não ser embarcada. Aqui se mede o teor de ferro, a umidade e os contaminantes de cada lote — e o minério é tratado até chegar na especificação que o cliente comprou. Sem esse controle a carga chega ao porto de destino e é rejeitada: a empresa perde o embarque inteiro, paga o frete de volta e ainda arranha a reputação com o comprador. Por isso nenhum vagão sai da mina sem passar por aqui.',
-    detalhes: [
-      'Tanques de tratamento e decantação do minério',
-      'Sensores de nível monitorados pelo Arduino',
-      'Dados de processo enviados ao backend por WebSocket',
-      'Histórico registrado em PostgreSQL para os relatórios',
-    ],
-  },
-  {
-    id: 'mina',
-    nome: 'Mina',
-    cor: PALETA.warning,
-    papel: 'Extração',
-    resumo:
-      'É onde tudo começa e é ela quem dita o ritmo da empresa inteira. Os dois poços tiram o minério bruto do solo, a esteira desce a carga até os caminhões basculantes e eles alimentam o trem. Se a mina para, para todo o resto: o trem fica ocioso, o navio espera no cais e o contrato de exportação atrasa. Por isso a produção da mina é medida hora a hora — cada tonelada que sai daqui já está vendida lá na frente.',
+      'Dois poços de extração alimentam a esteira que carrega os caminhões basculantes.',
     detalhes: [
       'Caminhão com 3 servos: direção (D5), caçamba (D6) e motor (D7)',
       'Faróis e setas em LED nos pinos D2, D3, D8 e D9',
-      'Comandos por Bluetooth HC-05 a 9600 baud',
-      'Compostos: FL, FR, BL, BR e SC para parada total',
+      'Controle por Bluetooth HC-05 a 9600 baud',
+      'Comandos compostos: FL, FR, BL, BR e SC para parada total',
     ],
   },
   {
-    id: 'ferrorama',
-    nome: 'Ferrorama',
+    id: 'ferrovia',
+    nome: 'Ferrovia',
     cor: PALETA.accent,
-    papel: 'Transporte',
+    alvo: [0, 0.5, 0],
     resumo:
-      'A ferrovia é a espinha dorsal da operação. Um trem carrega numa viagem o que levaria dezenas de caminhões, com um custo por tonelada muito menor e sem depender de rodovia. Os três desvios são o que dá flexibilidade ao negócio: são eles que decidem, em tempo real, o trajeto de cada composição até o porto. Mudar uma chave aqui muda o fluxo da carga — e, na prática, para qual cliente ela foi vendida.',
+      'Circuito em escala HO com 4 desvios motorizados que definem o destino da carga.',
     detalhes: [
-      'SW1, SW2 e SW3: servos SG90 nos pinos D3, D5 e D6',
-      'Protocolo: CMD|SWITCH|<id>|SET|LEFT / RIGHT / CENTER',
-      'Reversor inverte o sentido de marcha da composição',
-      'Heartbeat STATUS|SWITCH|<id>|<ângulo>|<estado>',
+      '4 servos SG90 nos pinos D3, D5, D6 e D9',
+      'Estados por desvio: LEFT, RIGHT e CENTER',
+      'Protocolo serial: CMD|SWITCH|<id>|SET|<estado>',
+      'Heartbeat de status com ângulo e timestamp',
     ],
   },
   {
@@ -147,7 +108,7 @@ export const MODULOS: Modulo[] = [
     resumo:
       'Cais com correia até o navio: o minério que chega pelo trem é embarcado para exportação.',
     detalhes: [
-      'Guindaste com lança móvel sobre o cais',
+      'Guindaste com movimento de lança sobre o cais',
       'Navios monitorados via GET /api/port/ships',
       'LED vermelho sinaliza navio atracado',
       'Esteira do cais movida por motor linear',

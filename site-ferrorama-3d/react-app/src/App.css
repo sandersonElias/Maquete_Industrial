@@ -5265,7 +5265,7 @@ body::after {
   to { transform: rotate(360deg); }
 }
 
-/* Trem cruzando por cima do brand */
+/* Avião (mesmo ícone do cursor) cruzando por cima do brand */
 .loader-flyby {
   position: absolute;
   top: -0.2em;
@@ -5274,7 +5274,7 @@ body::after {
   width: 2.4rem;
   height: 2.4rem;
   pointer-events: none;
-  animation: loaderTrainFlyby 2s cubic-bezier(0.4, 0.05, 0.2, 1) forwards;
+  animation: loaderPlaneFlyby 2s cubic-bezier(0.4, 0.05, 0.2, 1) forwards;
   filter:
     drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55))
     drop-shadow(0 0 10px rgba(255, 136, 68, 0.35));
@@ -5284,9 +5284,10 @@ body::after {
   display: block;
   width: 100%;
   height: 100%;
+  transform: rotate(90deg);
 }
 
-@keyframes loaderTrainFlyby {
+@keyframes loaderPlaneFlyby {
   0% {
     opacity: 0;
     left: -14%;
@@ -5295,13 +5296,16 @@ body::after {
   12% {
     opacity: 1;
   }
+  50% {
+    top: -0.35em;
+  }
   88% {
     opacity: 1;
   }
   100% {
     opacity: 0;
     left: 108%;
-    top: 0.05em;
+    top: -0.15em;
   }
 }
 
