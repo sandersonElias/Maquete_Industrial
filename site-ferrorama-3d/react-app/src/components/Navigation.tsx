@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EASE_OUT_EXPO } from '../lib/motion';
-import { scrollToSection } from '../lib/scroll';
+import { lockPageScroll, unlockPageScroll, scrollToSection } from '../lib/scroll';
 
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-1.png' },
@@ -12,11 +12,6 @@ const NAV_ITEMS = [
   { id: 'porto', label: 'Porto', thumb: '/images/porto.jpg' },
   { id: 'controle', label: 'Controle', thumb: '/images/scada-dashboard.jpg' },
 ];
-
-function unlockPageScroll() {
-  document.body.style.overflow = '';
-  document.documentElement.style.overflow = '';
-}
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
@@ -58,46 +53,36 @@ export default function Navigation() {
   }, []);
 
   useEffect(() => {
-    if (!mobileOpen) {
-      unlockPageScroll();
-      return;
-    }
+    if (!mobileOpen) return;
 
+    lockPageScroll();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        unlockPageScroll();
         setMobileOpen(false);
         menuBtnRef.current?.focus();
       }
     };
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
     document.addEventListener('keydown', onKeyDown);
-
     return () => {
-      unlockPageScroll();
       document.removeEventListener('keydown', onKeyDown);
+      unlockPageScroll();
     };
   }, [mobileOpen]);
 
   useEffect(() => {
     return () => {
       if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
-      unlockPageScroll();
     };
   }, []);
 
-  const closeMenu = () => {
-    unlockPageScroll();
-    setMobileOpen(false);
-  };
+  const closeMenu = () => setMobileOpen(false);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     closeMenu();
-    // Espera o unlock do overflow (iOS) antes de rolar — senão o scroll “buga”, sobretudo no Início.
     if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
-    scrollTimer.current = window.setTimeout(() => scrollToSection(id), 80);
+    // Após o unlock do position:fixed, o scrollY é restaurado — aí sim navega.
+    scrollTimer.current = window.setTimeout(() => scrollToSection(id), 120);
   };
 
   return (
@@ -157,7 +142,7 @@ export default function Navigation() {
           ref={menuBtnRef}
           type="button"
           className={`nav-menu-btn ${mobileOpen ? 'is-open' : ''}`}
-          onClick={() => (mobileOpen ? closeMenu() : setMobileOpen(true))}
+          onClick={() => setMobileOpen((o) => !o)}
           aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={mobileOpen}
           aria-controls="menu-mobile"
@@ -203,11 +188,7 @@ export default function Navigation() {
                   <span>{label}</span>
                 </a>
               ))}
-              <a
-                href="/maquete"
-                className="mobile-link mobile-link--cta"
-                onClick={closeMenu}
-              >
+              <a href="/maquete" className="mobile-link mobile-link--cta" onClick={closeMenu}>
                 <img
                   src="/images/maquete-montagem-1.png"
                   alt=""

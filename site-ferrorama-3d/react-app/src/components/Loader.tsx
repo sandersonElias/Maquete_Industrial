@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
+import { lockPageScroll, unlockPageScroll } from '../lib/scroll';
 
 /** Splash: Ferr[engrenagem]rama + trem cruzando o brand em 2s. */
 export default function Loader() {
@@ -14,11 +15,8 @@ export default function Loader() {
 
   useEffect(() => {
     if (hidden) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    lockPageScroll();
+    return () => unlockPageScroll();
   }, [hidden]);
 
   return (

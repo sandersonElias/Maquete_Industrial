@@ -5410,19 +5410,27 @@ body::after {
 
 @media (max-width: 640px) {
   .shell-pipeline {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
     align-items: center;
     gap: 0;
+    width: 100%;
   }
 
   .shell-pipeline__step {
+    display: flex;
     flex-direction: column;
-    width: min(100%, 14rem);
+    align-items: center;
+    width: min(100%, 12.5rem);
   }
 
   .shell-pipeline__node {
     width: 100%;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .shell-pipeline__rail {
@@ -6606,47 +6614,62 @@ body::after {
   }
 
   .section-header {
-    padding-inline: 0.5rem;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding-inline: 0.75rem !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
   }
 
   .section-number {
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   .section-title {
-    font-size: clamp(1.45rem, 7vw, 1.9rem) !important;
-    line-height: 1.15 !important;
-    text-align: center;
-    width: 100%;
-    max-width: 22rem;
+    font-size: clamp(1.4rem, 6.5vw, 1.85rem) !important;
+    line-height: 1.18 !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 20.5rem !important;
     margin-left: auto !important;
     margin-right: auto !important;
   }
 
   .section-subtitle {
-    font-size: 0.95rem !important;
+    font-size: 0.92rem !important;
     line-height: 1.5 !important;
-    text-align: center;
-    width: 100%;
-    max-width: 22rem !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 20.5rem !important;
     margin-left: auto !important;
     margin-right: auto !important;
+  }
+
+  .shell-block {
+    text-align: center;
   }
 
   .shell-block__title,
   .shell-block__lead,
   .shell-pipeline__note {
-    text-align: center;
+    text-align: center !important;
   }
 
   .shell-block__lead {
     margin-left: auto;
     margin-right: auto;
+    max-width: 22rem;
+  }
+
+  .shell-facts {
+    text-align: left;
+  }
+
+  .shell-pipeline {
+    justify-content: center;
   }
 
   .shell-block,
