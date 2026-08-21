@@ -1,7 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { VITRINE } from './modulos';
+import { PALETA } from './modulos';
 
 /**
  * Painéis de telemetria flutuando acima do diorama.
@@ -40,7 +40,7 @@ function moldura(ctx: CanvasRenderingContext2D, titulo: string) {
   ctx.fillRect(0, 0, L, A);
 
   // Borda e cantos, no estilo HUD
-  ctx.strokeStyle = VITRINE.ciano;
+  ctx.strokeStyle = PALETA.accent;
   ctx.lineWidth = 3;
   ctx.globalAlpha = 0.85;
   ctx.strokeRect(6, 6, L - 12, A - 12);
@@ -60,7 +60,7 @@ function moldura(ctx: CanvasRenderingContext2D, titulo: string) {
 
   // Título
   ctx.font = 'bold 30px Inter, sans-serif';
-  ctx.fillStyle = VITRINE.ciano;
+  ctx.fillStyle = PALETA.accent;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.letterSpacing = '3px';
@@ -88,7 +88,7 @@ function desenharMarcha(ctx: CanvasRenderingContext2D, d: DadosPainel) {
   ctx.fillText('x velocidade nominal', 30, 182);
 
   // Estado da marcha
-  const cor = !d.rodando ? VITRINE.ambar : d.sentido > 0 ? VITRINE.verde : VITRINE.vermelho;
+  const cor = !d.rodando ? PALETA.warning : d.sentido > 0 ? PALETA.glow : PALETA.danger;
   const txt = !d.rodando ? 'PARADO' : d.sentido > 0 ? 'FRENTE' : 'RÉ';
   ctx.fillStyle = cor;
   ctx.font = 'bold 34px Inter, sans-serif';
@@ -98,7 +98,7 @@ function desenharMarcha(ctx: CanvasRenderingContext2D, d: DadosPainel) {
   // Barras de nível
   for (let i = 0; i < 12; i++) {
     const cheio = i / 12 < d.velocidade / 3;
-    ctx.fillStyle = cheio ? VITRINE.ciano : 'rgba(77, 216, 255, 0.16)';
+    ctx.fillStyle = cheio ? PALETA.accent : 'rgba(77, 216, 255, 0.16)';
     ctx.fillRect(30 + i * 38, 274, 28, 18);
   }
 }
@@ -116,12 +116,12 @@ function desenharDesvios(ctx: CanvasRenderingContext2D, d: DadosPainel) {
     ctx.letterSpacing = '2px';
     ctx.fillText(id, 30, y);
 
-    ctx.fillStyle = desviado ? VITRINE.ambar : VITRINE.verde;
+    ctx.fillStyle = desviado ? PALETA.warning : PALETA.glow;
     ctx.font = 'bold 30px Inter, sans-serif';
     ctx.fillText(desviado ? 'DESVIO' : 'RETO', 130, y);
 
     // Diagrama do desvio: reta ou bifurcação
-    ctx.strokeStyle = desviado ? VITRINE.ambar : VITRINE.verde;
+    ctx.strokeStyle = desviado ? PALETA.warning : PALETA.glow;
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(300, y + 18);
@@ -143,7 +143,7 @@ function desenharRota(ctx: CanvasRenderingContext2D, d: DadosPainel) {
   ctx.letterSpacing = '0px';
   d.rota.slice(0, 5).forEach((nome, i) => {
     const y = 98 + i * 42;
-    ctx.fillStyle = VITRINE.ciano;
+    ctx.fillStyle = PALETA.accent;
     ctx.beginPath();
     ctx.arc(42, y + 9, 9, 0, Math.PI * 2);
     ctx.fill();
@@ -228,7 +228,7 @@ function PainelHolografico({
       <mesh position={[0, 0, -0.02]} raycast={() => null}>
         <planeGeometry args={[3.5, 2.3]} />
         <meshBasicMaterial
-          color={VITRINE.ciano}
+          color={PALETA.accent}
           transparent
           opacity={0.07}
           blending={THREE.AdditiveBlending}
@@ -240,7 +240,7 @@ function PainelHolografico({
       <mesh position={[0, -1.6, 0]} raycast={() => null}>
         <planeGeometry args={[0.06, 1.2]} />
         <meshBasicMaterial
-          color={VITRINE.ciano}
+          color={PALETA.accent}
           transparent
           opacity={0.28}
           blending={THREE.AdditiveBlending}
