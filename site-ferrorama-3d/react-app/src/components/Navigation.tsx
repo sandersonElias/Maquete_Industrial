@@ -177,6 +177,23 @@ export default function Navigation() {
                   <span>{label}</span>
                 </motion.a>
               ))}
+              <motion.a
+                href="/maquete"
+                className="mobile-link mobile-link--cta"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: NAV_ITEMS.length * 0.05 }}
+                onClick={() => setMobileOpen(false)}
+              >
+                <img
+                  src="/images/maquete-montagem-1.png"
+                  alt=""
+                  aria-hidden="true"
+                  className="mobile-link-thumb"
+                  loading="lazy"
+                />
+                <span>Abrir maquete em tela cheia</span>
+              </motion.a>
             </motion.div>
           </>
         )}

@@ -4,6 +4,11 @@ import { EASE_OUT_EXPO } from '../lib/motion';
 
 const signals = [
   {
+    tag: 'SW',
+    title: '4 desvios',
+    text: 'SW1/2 atalho, SW3 porto, SW4 mina — CMD|SWITCH|id|SET|LEFT/RIGHT/CENTER.',
+  },
+  {
     tag: 'TX',
     title: 'Bluetooth HC-05',
     text: 'App e Arduino no mesmo canal serial — comandos curtos, resposta rápida.',
@@ -11,17 +16,12 @@ const signals = [
   {
     tag: 'PWM',
     title: 'Servos SG90',
-    text: 'Ângulo fino para direção, caçamba e movimentos do basculante.',
-  },
-  {
-    tag: 'IR',
-    title: 'Sensores',
-    text: 'TCRT5000 e reed switch marcam presença nos trilhos.',
+    text: 'Ângulo fino para desvios, direção e caçamba do basculante.',
   },
   {
     tag: 'LED',
     title: 'Indicadores',
-    text: 'Faróis, setas e status — leitura imediata na feira.',
+    text: 'Faróis, setas e status no cais — leitura imediata na feira.',
   },
 ];
 

@@ -5265,7 +5265,7 @@ body::after {
   to { transform: rotate(360deg); }
 }
 
-/* Avião (mesmo ícone do cursor) cruzando por cima do brand */
+/* Trem cruzando por cima do brand */
 .loader-flyby {
   position: absolute;
   top: -0.2em;
@@ -5274,7 +5274,7 @@ body::after {
   width: 2.4rem;
   height: 2.4rem;
   pointer-events: none;
-  animation: loaderPlaneFlyby 2s cubic-bezier(0.4, 0.05, 0.2, 1) forwards;
+  animation: loaderTrainFlyby 2s cubic-bezier(0.4, 0.05, 0.2, 1) forwards;
   filter:
     drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55))
     drop-shadow(0 0 10px rgba(255, 136, 68, 0.35));
@@ -5284,10 +5284,9 @@ body::after {
   display: block;
   width: 100%;
   height: 100%;
-  transform: rotate(90deg);
 }
 
-@keyframes loaderPlaneFlyby {
+@keyframes loaderTrainFlyby {
   0% {
     opacity: 0;
     left: -14%;
@@ -6561,10 +6560,45 @@ body::after {
     font-size: 1rem;
   }
 
+  .mobile-link--cta {
+    margin-top: 0.35rem;
+    border: 1px solid rgba(255, 136, 68, 0.45);
+    border-radius: 12px;
+    background: rgba(255, 136, 68, 0.12);
+    font-weight: 600;
+  }
+
   .mobile-link-thumb {
     width: 48px;
     height: 48px;
     flex-shrink: 0;
+  }
+
+  .section-header {
+    padding-inline: 0.15rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.45rem, 7vw, 1.9rem);
+    line-height: 1.15;
+  }
+
+  .section-subtitle {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .shell-block,
+  .pit-split,
+  .lab-bench,
+  .scada-wall {
+    touch-action: manipulation;
+  }
+
+  .maquete-accordion-item summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
   }
 
   .maquete3d-palco,
@@ -6677,6 +6711,30 @@ body::after {
   display: inline-flex;
 }
 
+.maquete-abrir--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.maquete-abrir--stack .hero-cta,
+.maquete-abrir--stack .hero-cta-secondary {
+  width: min(100%, 22rem);
+  justify-content: center;
+  min-height: 48px;
+}
+
+.scada-pov-note {
+  max-width: 40rem;
+  margin: -0.5rem auto 1.75rem;
+  text-align: center;
+  color: var(--text-muted, rgba(240, 235, 228, 0.72));
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
 .maquete3d--cheia .maquete3d-palco {
   aspect-ratio: auto;
   min-height: min(78svh, 880px);
@@ -6737,20 +6795,49 @@ body::after {
 
 .maquete-vire {
   position: fixed;
-  inset: 0;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   z-index: 80;
   display: grid;
-  place-content: center;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
   text-align: center;
-  background: rgba(8, 8, 13, 0.92);
+  background: rgba(12, 12, 18, 0.94);
   color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
 }
 
 .maquete-vire p {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.maquete-vire__acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.maquete-vire__acoes .maquete3d-btn {
+  min-height: 48px;
+  width: 100%;
+}
+
+.maquete-vire-faixa {
+  margin: 0;
+  padding: 0.45rem 0.85rem;
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: rgba(240, 235, 228, 0.7);
+  background: rgba(255, 136, 68, 0.12);
+  border-bottom: 1px solid rgba(255, 136, 68, 0.22);
 }
 
 .maquete3d-monitor-label {

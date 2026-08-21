@@ -2,8 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState, Component, type ReactNode 
 
 /**
  * A maquete 3D carrega em um chunk separado: three.js + drei só descem
- * quando esta seção se aproxima da tela, em vez de entrar no bundle inicial.
- * Isso tirou ~240 KB gzip do carregamento inicial do site.
+ * quando esta seção se aproxima da tela (ou o usuário pede no celular).
  */
 const Maquete3D = lazy(() => import('./maquete3d/Maquete3D'));
 
@@ -27,12 +26,22 @@ class MaqueteErro extends Component<{ children: ReactNode }, { erro: Error | nul
   }
 }
 
-/** Só monta a cena 3D quando o usuário chega perto dela. */
+function isMobileViewport() {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+}
+
+/** Só monta a cena 3D quando o usuário chega perto — no celular, só sob pedido. */
 function useProximoDaTela<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const [proximo, setProximo] = useState(
-    () => typeof window !== 'undefined' && window.location.hash.includes('maquete')
+    () => typeof window !== 'undefined' && window.location.hash.includes('maquete') && !isMobileViewport()
   );
+  const [pedido, setPedido] = useState(false);
+
+  const carregar = () => {
+    setPedido(true);
+    setProximo(true);
+  };
 
   useEffect(() => {
     if (proximo) {
@@ -42,8 +51,11 @@ function useProximoDaTela<T extends HTMLElement>() {
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    // Sem IntersectionObserver, carrega direto em vez de nunca carregar
+    if (!el || pedido) return;
+
+    // No celular a home não puxa Three sozinha — evita travar o scroll da feira.
+    if (isMobileViewport()) return;
+
     if (typeof IntersectionObserver === 'undefined') {
       setProximo(true);
       return;
@@ -55,31 +67,42 @@ function useProximoDaTela<T extends HTMLElement>() {
           obs.disconnect();
         }
       },
-      { rootMargin: '600px' }
+      { rootMargin: '200px' }
     );
     obs.observe(el);
+    return () => obs.disconnect();
+  }, [pedido]);
 
-    // Rede de segurança: em aba de segundo plano o observer pode não disparar.
-    // Sem isso o usuário ficaria preso no placeholder para sempre.
-    const prazo = window.setTimeout(() => {
-      setProximo(true);
-      obs.disconnect();
-    }, 3000);
-
-    return () => {
-      obs.disconnect();
-      clearTimeout(prazo);
-    };
-  }, []);
-
-  return { ref, proximo };
+  return { ref, proximo, carregar, precisaToque: isMobileViewport() && !proximo };
 }
 
-function Placeholder() {
+function Placeholder({
+  precisaToque,
+  onCarregar,
+}: {
+  precisaToque?: boolean;
+  onCarregar?: () => void;
+}) {
   return (
     <div className="maquete3d-carregando" role="status">
-      <span className="maquete3d-spinner" aria-hidden="true" />
-      <p>Montando a maquete 3D…</p>
+      {precisaToque ? (
+        <>
+          <p>Na feira, a maquete leve fica em tela cheia.</p>
+          <div className="maquete-abrir maquete-abrir--stack">
+            <a className="hero-cta" href="/maquete">
+              Abrir maquete em tela cheia
+            </a>
+            <button type="button" className="hero-cta-secondary" onClick={onCarregar}>
+              Carregar preview aqui
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <span className="maquete3d-spinner" aria-hidden="true" />
+          <p>Montando a maquete 3D…</p>
+        </>
+      )}
     </div>
   );
 }
@@ -87,27 +110,22 @@ function Placeholder() {
 const objectives = [
   {
     label: 'Objetivo',
-    text: 'Demonstrar como materiais brutos percorrem diferentes modos de transporte até o mercado internacional.',
+    text: 'Mostrar a cadeia mina → caminhão → trem → porto, do poço ao navio.',
   },
   {
     label: 'Aprendizado',
-    text: 'Combinar física (motores, sensores), modelismo e lógica de programação num único projeto.',
+    text: 'Juntar modelismo HO, impressão 3D, Arduino e protocolo serial num só projeto.',
   },
   {
     label: 'Contexto',
-    text: 'Relacionar a maquete com a economia brasileira — o minério de ferro como exportação-chave.',
+    text: 'Minério de ferro e carvão como narrativa da exportação brasileira — sem aeroporto na placa.',
   },
 ];
 
-const chain = [
-  'Mina',
-  'Caminhões',
-  'Trem',
-  'Porto',
-];
+const chain = ['Mina', 'Caminhões', 'Trem', 'Porto'];
 
 export default function MaqueteSection() {
-  const { ref, proximo } = useProximoDaTela<HTMLDivElement>();
+  const { ref, proximo, carregar, precisaToque } = useProximoDaTela<HTMLDivElement>();
 
   return (
     <section id="maquete" className="section">
@@ -116,7 +134,7 @@ export default function MaqueteSection() {
           <span className="section-number">01</span>
           <h2 className="section-title">Maquete 3D Interativa</h2>
           <p className="section-subtitle">
-            Gire, aproxime e clique nos módulos para explorar a maquete por dentro
+            Gire, aproxime e abra em tela cheia — o QR da feira aponta direto para a experiência
           </p>
         </div>
 
@@ -128,7 +146,7 @@ export default function MaqueteSection() {
               </Suspense>
             </MaqueteErro>
           ) : (
-            <Placeholder />
+            <Placeholder precisaToque={precisaToque} onCarregar={carregar} />
           )}
         </div>
 
@@ -168,7 +186,7 @@ export default function MaqueteSection() {
             ))}
           </ol>
           <p className="shell-pipeline__note">
-            Rota de exportação: o trem segue ao porto.
+            Desvios SW3 (porto) e SW4 (mina) escolhem o ramal; o destino padrão é o loop principal.
           </p>
         </div>
 
