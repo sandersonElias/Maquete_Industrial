@@ -6784,3 +6784,171 @@ body::after {
     height: min(58svh, 520px);
   }
 }
+
+/* ============================================
+   PREPARAÇÃO DO PROJETO — registro das 3 etapas
+   ============================================ */
+.prep-etapas {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 5vw, 4rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.prep-etapa {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+  align-items: center;
+}
+
+/* Etapa do meio espelhada: texto à esquerda, foto à direita.
+   Feito com `order` para o JSX manter foto→texto na ordem de leitura. */
+.prep-etapa:nth-child(even) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+}
+.prep-etapa:nth-child(even) .prep-etapa__foto {
+  order: 2;
+}
+.prep-etapa:nth-child(even) .prep-etapa__texto {
+  order: 1;
+}
+
+.prep-etapa__foto {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 16 / 11;
+  border: 1px solid rgba(255, 136, 68, 0.25);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--dark-lighter);
+  box-shadow: var(--shadow-card);
+}
+
+.prep-etapa__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.prep-etapa__selos {
+  position: absolute;
+  left: 0.85rem;
+  bottom: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.prep-selo {
+  padding: 0.25rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  background: rgba(8, 8, 13, 0.78);
+  border: 1px solid rgba(255, 136, 68, 0.4);
+  border-radius: 2px;
+  backdrop-filter: blur(6px);
+}
+
+.prep-selo--teal {
+  color: var(--teal-soft);
+  border-color: rgba(45, 139, 139, 0.55);
+}
+
+.prep-etapa__num {
+  display: inline-block;
+  margin-bottom: 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--primary);
+}
+
+.prep-etapa__titulo {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.prep-etapa__chamada {
+  margin: 0 0 0.85rem;
+  font-size: clamp(0.98rem, 1.5vw, 1.08rem);
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.prep-etapa__corpo {
+  margin: 0 0 1.15rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.prep-etapa__itens {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prep-etapa__itens li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.87rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.prep-etapa__itens li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.prep-fecho {
+  margin: clamp(2rem, 4vw, 3rem) 0 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--card-border);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+.prep-fecho a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prep-fecho a:hover {
+  color: var(--primary-soft);
+}
+
+/* Coluna única: a foto sempre vem antes do texto, inclusive na etapa
+   espelhada — o `order` do desktop precisa ser desfeito aqui. */
+@media (max-width: 860px) {
+  .prep-etapa,
+  .prep-etapa:nth-child(even) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prep-etapa:nth-child(even) .prep-etapa__foto,
+  .prep-etapa:nth-child(even) .prep-etapa__texto {
+    order: initial;
+  }
+}

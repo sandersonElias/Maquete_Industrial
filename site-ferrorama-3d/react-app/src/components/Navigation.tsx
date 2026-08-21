@@ -6,6 +6,7 @@ import { scrollToSection } from '../lib/scroll';
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-1.png' },
   { id: 'maquete', label: 'Maquete', thumb: '/images/maquete-montagem-1.png' },
+  { id: 'preparacao', label: 'Preparação', thumb: '/images/maquete-montagem-3.png' },
   { id: 'montagem', label: 'Montagem', thumb: '/images/caminhao-3d.png' },
   { id: 'codigo', label: 'Automação', thumb: '/images/arduino.jpg' },
   { id: 'mina', label: 'Mina', thumb: '/images/mina-real.jpg' },

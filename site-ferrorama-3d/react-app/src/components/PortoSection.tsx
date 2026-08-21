@@ -110,7 +110,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            05
+            06
           </motion.span>
           <motion.h2
             className="section-title"

@@ -39,7 +39,7 @@ export default function CodigoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            03
+            04
           </motion.span>
           <motion.h2
             className="section-title"

@@ -76,7 +76,7 @@ export default function ControleSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            06
+            07
           </motion.span>
           <motion.h2
             className="section-title"
