@@ -84,6 +84,8 @@ html {
   scrollbar-color: var(--accent) var(--dark);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Permite o gesto de puxar para atualizar no celular */
+  overscroll-behavior-y: auto;
 }
 html::-webkit-scrollbar {
   width: 6px;
@@ -108,6 +110,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: rgba(255, 136, 68, 0.22);
+  overscroll-behavior-y: auto;
   /* Grão sutil de papel industrial no fundo para dar textura autêntica */
   background-image:
     radial-gradient(ellipse 80% 50% at 50% 0%, rgba(204, 102, 0, 0.04), transparent),
@@ -5037,6 +5040,61 @@ body::after {
   .nav {
     padding-left: max(3.5rem, var(--safe-left)) !important;
     padding-right: max(3.5rem, var(--safe-right)) !important;
+  }
+}
+
+/* —— Puxar para atualizar (celular) —— */
+.ptr {
+  position: fixed;
+  top: max(0.35rem, env(safe-area-inset-top, 0px));
+  left: 50%;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(12, 12, 18, 0.92);
+  border: 1px solid rgba(255, 136, 68, 0.35);
+  color: #f0ebe4;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, calc(-120% + var(--ptr, 0) * 28px));
+  transition: opacity 0.15s ease;
+}
+
+.ptr.is-on {
+  opacity: 1;
+}
+
+.ptr.is-loading .ptr__spin {
+  animation: ptrSpin 0.7s linear infinite;
+}
+
+.ptr__spin {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid rgba(255, 136, 68, 0.25);
+  border-top-color: #ff8844;
+  border-radius: 50%;
+  transform: rotate(calc(var(--ptr, 0) * 280deg));
+}
+
+.ptr__label {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  white-space: nowrap;
+}
+
+@keyframes ptrSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (min-width: 901px) and (pointer: fine) {
+  .ptr {
+    display: none;
   }
 }
 

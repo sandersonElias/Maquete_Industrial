@@ -12,6 +12,7 @@ import BackToTop from './components/BackToTop';
 import Footer from './components/Footer';
 import PageRails from './components/PageRails';
 import MaquetePage from './components/MaquetePage';
+import PullToRefresh from './components/PullToRefresh';
 import useScrollAnimations from './hooks/useScrollAnimations';
 
 export default function App() {
@@ -19,7 +20,12 @@ export default function App() {
     typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') === '/maquete';
 
   if (soMaquete) {
-    return <MaquetePage />;
+    return (
+      <>
+        <PullToRefresh />
+        <MaquetePage />
+      </>
+    );
   }
 
   return <Site />;
@@ -30,45 +36,38 @@ function Site() {
 
   return (
     <>
-      {/* Primeiro item focável: permite pular a navegação com o teclado */}
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
 
+      <PullToRefresh />
       <Loader />
       <PageRails />
       <Navigation />
 
       <main id="conteudo">
-        {/* Section 00: Hero / Início */}
         <HeroSection />
 
         <SectionDivider />
 
-        {/* Section 01: Maquete 3D interativa */}
         <MaqueteSection />
 
         <SectionDivider />
 
-        {/* Section 02: Montagem */}
         <MontagemSection />
 
         <SectionDivider />
 
-        {/* Section 03: Código & Automação */}
         <CodigoSection />
 
         <SectionDivider />
 
-        {/* Section 04: Mina de Ferro */}
         <MinaSection />
 
         <SectionDivider />
 
-        {/* Section 05: Porto */}
         <PortoSection />
 
         <SectionDivider />
 
-        {/* Section 06: Central de Controle */}
         <ControleSection />
       </main>
 
