@@ -16,8 +16,12 @@
   <meta name="twitter:description" content="Experiência interativa 3D do Ferrorama: maquete ferroviária com automação, mineração e logística.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- preconnect: abre DNS+TLS com os CDNs antes de encontrar as tags <script>,
+       economizando ~100-300ms por domínio no carregamento do Three.js/GSAP -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <!-- Pesos 300 e 900 do Inter removidos: não são usados em nenhum CSS
+       (apenas 400-800), e cada peso extra baixa um arquivo de fonte à toa -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -55,6 +59,7 @@
       <a href="#mina" class="nav-link" data-section="mina">Mina</a>
       <a href="#controle" class="nav-link" data-section="controle">Controle</a>
     </div>
+    <!-- aria-controls/aria-expanded: leitores de tela anunciam o estado do menu -->
     <button class="nav-menu-btn" id="menuBtn" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="mobileMenu">
       <span></span><span></span><span></span>
     </button>
@@ -143,6 +148,8 @@
       </div>
       
       <div class="cards-grid">
+        <!-- decoding="async" nas imagens abaixo: decodifica fora da thread
+             principal e evita travar o scroll no mobile -->
         <div class="card card-3d scroll-reveal" data-delay="0">
           <div class="card-icon">
             <img src="images/trem.svg" alt="Trem" loading="lazy" decoding="async">
@@ -533,6 +540,8 @@
   </footer>
 
   <!-- Scripts -->
+  <!-- defer: baixa todos em paralelo sem bloquear a renderização; a ordem de
+       execução é preservada (THREE/GSAP carregam antes dos nossos scripts) -->
   <script src="https://unpkg.com/three@0.128.0/build/three.min.js" defer></script>
   <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>

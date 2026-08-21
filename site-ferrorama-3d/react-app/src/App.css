@@ -227,6 +227,8 @@ html { scroll-behavior: auto; }
   padding: var(--safe-top) max(clamp(1rem, 4vw, 2.5rem), var(--safe-right)) 0 max(clamp(1rem, 4vw, 2.5rem), var(--safe-left));
   background: rgba(8, 8, 13, 0.55);
   backdrop-filter: blur(24px) saturate(1.3);
+  /* -webkit-backdrop-filter: o efeito de vidro não funciona no Safari <= 16
+     sem o prefixo — adicionado em todos os backdrop-filter deste arquivo */
   -webkit-backdrop-filter: blur(24px) saturate(1.3);
   border-bottom: 1px solid transparent;
   z-index: 1000;

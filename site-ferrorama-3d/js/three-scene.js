@@ -19,6 +19,8 @@ class MaquetteScene {
     this.trainIdCounter = 0;
     this.trackCurves = [];
 
+    // Materiais compartilhados dos lotes estáticos: 1 material para todos os
+    // trilhos e 1 para os dormentes (requisito do InstancedMesh)
     this._batchRailMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.35 });
     this._batchSleeperMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85 });
 
@@ -67,8 +69,12 @@ class MaquetteScene {
       this.camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 1000);
       this.camera.position.set(0, 18, 22);
 
+      // stencil:false: a cena não usa stencil buffer — economiza memória GPU.
+      // high-performance: pede à GPU dedicada em notebooks com placa híbrida.
       this.renderer = new THREE.WebGLRenderer({ antialias: true, stencil: false, powerPreference: 'high-performance' });
       this.renderer.setSize(w, h);
+      // Mobile detectado por largura OU touch com tela pequena: define teto de
+      // pixelRatio e resolução de sombras (celular não precisa de retina 3x)
       this.isMobile = window.matchMedia('(max-width: 768px)').matches
         || (navigator.maxTouchPoints > 1 && Math.min(window.screen.width, window.screen.height) < 900);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
@@ -101,6 +107,8 @@ class MaquetteScene {
       window.addEventListener('resize', this._onResizeBound);
       this._visible = true;
       var self = this;
+      // Pausa o render loop quando a cena sai da tela (rootMargin 120px dá
+      // tempo de retomar antes de o usuário ver). Economiza GPU/bateria.
       if ('IntersectionObserver' in window) {
         this._observer = new IntersectionObserver(function(entries) {
           self._visible = entries[0].isIntersecting;
@@ -929,6 +937,8 @@ class MaquetteScene {
   _renderRail(curve, railMat, sleeperMat, seg, baseY) {
     if (seg < 10) seg = 10;
 
+    // Coleta as transformações em vez de criar Mesh por segmento: cada trilho
+    // antigo era 1 draw call (~2000+ no total); agora só acumulamos dados aqui
     if (!this._railXforms) { this._railXforms = []; this._sleeperXforms = []; }
 
     var pts = curve.getPoints(seg);
@@ -994,6 +1004,8 @@ class MaquetteScene {
   }
 
   // Merge all collected static transforms into two InstancedMesh draw calls
+  // (1 para todos os trilhos + 1 para todos os dormentes — GPU desenha
+  // milhares de instâncias em pouquíssimas chamadas)
   _buildStaticBatches() {
     if (!this._railXforms || this._railXforms.length === 0) return;
 
@@ -1607,6 +1619,9 @@ class MaquetteScene {
     var self = this;
     var canvas = this.renderer.domElement;
 
+    // Um único handler de mousemove para toda a cena: o trabalho pesado
+    // (raycasting) roda no máximo 1x por frame via rAF, não a cada evento
+    // (mousemove dispara até 1000x/s em alguns mice)
     canvas.addEventListener('mousemove', function(e) {
       self._lastMoveEvent = e;
       if (self._moveRafPending) return;
@@ -1996,6 +2011,7 @@ class MaquetteScene {
   // ANIMATION LOOP
   // ==========================================
   animate() {
+    // Cena fora da viewport: para o loop (o observer retoma ao voltar)
     if (this._visible === false) { this.animationId = null; return; }
     var self = this;
     this.animationId = requestAnimationFrame(function() { self.animate(); });
@@ -2047,6 +2063,8 @@ class MaquetteScene {
     this.renderer.setSize(w, h);
   }
 
+  // Libera tudo ao destruir a cena: sem isso, observers/listeners/renderers
+  // vazavam memória a cada recriação
   destroy() {
     this._visible = false;
     if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }

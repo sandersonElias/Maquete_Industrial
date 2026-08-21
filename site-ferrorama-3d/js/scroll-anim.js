@@ -3,7 +3,11 @@
    Com guards de CDN e acessibilidade de movimento
    ============================================ */
 
+// prefers-reduced-motion: usuário pediu menos movimento no SO —
+// nenhuma animação roda e todo o conteúdo fica visível
 var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// GSAP vem de CDN: se falhar (offline/adblock), o site precisa continuar
+// utilizável — sem esse guard, um ReferenceError matava TODO o JS da página
 var GSAP_READY = (typeof gsap !== 'undefined') && (typeof ScrollTrigger !== 'undefined');
 
 function onDomReady(fn) {
@@ -16,6 +20,8 @@ function onDomReady(fn) {
 
 class ScrollAnimations {
   constructor() {
+    // Sem GSAP ou com movimento reduzido: pula tudo (conteúdo já visível,
+    // pois as animações usam gsap.from — nada fica escondido)
     if (!GSAP_READY) {
       console.warn('GSAP/ScrollTrigger indisponível — animações de scroll desativadas.');
       return;
@@ -359,6 +365,8 @@ class CardEffects {
 
   init() {
     if (REDUCED_MOTION) return;
+    // Tilt 3D só existe em dispositivos com cursor real: no touch, o
+    // "hover" fica preso após o toque (sticky hover) e a card não volta
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     onDomReady(() => this.setupEffects());
   }
@@ -367,6 +375,7 @@ class CardEffects {
     const cards = document.querySelectorAll('.card');
 
     cards.forEach(card => {
+      // passive: handlers só leem coordenadas, nunca bloqueiam o scroll
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;

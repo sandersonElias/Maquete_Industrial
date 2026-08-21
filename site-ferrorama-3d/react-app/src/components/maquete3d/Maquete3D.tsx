@@ -517,6 +517,9 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   return (
     <div className={`maquete3d${telaCheia ? ' maquete3d--cheia' : ''}`} ref={wrapperRef}>
       <div className="maquete3d-palco">
+        {/* frameloop segue a visibilidade (IntersectionObserver acima): fora da
+            tela o render para de verdade — antes, PausarForaDaTela chamava
+            invalidate(), que é no-op com frameloop="always" */}
         <Canvas
           shadows={!leve}
           frameloop={visivel ? 'always' : 'never'}

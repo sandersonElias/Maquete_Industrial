@@ -23,6 +23,8 @@ class FerroramaApp {
       window.addEventListener('load', () => {
         setTimeout(() => this.hideLoader(), 1500);
       });
+      // Rede de segurança: se o 'load' nunca disparar (CDN lento/bloqueado),
+      // o loader some em 8s e o site continua utilizável
       setTimeout(() => this.hideLoader(), 8000);
     }
 
@@ -41,6 +43,8 @@ class FerroramaApp {
   }
 
   setupNavigation() {
+    // passive: o handler não chama preventDefault, então o navegador
+    // pode rolar sem esperar o JS terminar
     window.addEventListener('scroll', () => {
       this.nav.classList.toggle('scrolled', window.scrollY > 50);
     }, { passive: true });
@@ -52,6 +56,7 @@ class FerroramaApp {
     const setMenu = (open) => {
       this.mobileMenu.classList.toggle('active', open);
       this.menuBtn.classList.toggle('active', open);
+      // Mantém leitores de tela informados sobre o estado do menu
       this.menuBtn.setAttribute('aria-expanded', String(open));
     };
 
@@ -59,10 +64,12 @@ class FerroramaApp {
       setMenu(!this.mobileMenu.classList.contains('active'));
     });
 
+    // Fecha ao clicar fora (padrão de UX de menus mobile)
     document.addEventListener('click', (e) => {
       if (!this.mobileMenu.contains(e.target) && !this.menuBtn.contains(e.target)) setMenu(false);
     });
 
+    // Fecha com tecla Escape (acessibilidade/navegação por teclado)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') setMenu(false);
     });
@@ -102,6 +109,7 @@ class FerroramaApp {
 
   initParticles() {
     if (!this.particlesCanvas) return;
+    // Respeita usuários que pedem menos movimento (acessibilidade)
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const ctx = this.particlesCanvas.getContext('2d');
@@ -109,6 +117,8 @@ class FerroramaApp {
     let animationId = null;
     let resizeTimer = null;
 
+    // Viewport em cache: evita ler window.innerWidth/Height a cada partícula
+    // a cada frame (~160+ leituras de layout por frame)
     let vw = window.innerWidth;
     let vh = window.innerHeight;
     const resize = () => {
@@ -119,6 +129,7 @@ class FerroramaApp {
     };
 
     resize();
+    // Debounce: o resize dispara dezenas de vezes ao arrastar; só redesenha 150ms depois
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(resize, 150);
@@ -152,9 +163,13 @@ class FerroramaApp {
       }
     }
 
+    // Menos partículas em telas pequenas: o loop de conexões é O(n²),
+    // então 40 vs 80 partículas corta ~75% dos pares testados
     const particleCount = window.innerWidth < 700 ? 40 : 80;
     for (let i = 0; i < particleCount; i++) particles.push(new Particle());
 
+    // Distância ao quadrado no teste de vizinhança: elimina o Math.sqrt
+    // dos pares que não se conectam (a maioria). Mesma matemática, mesmo visual.
     const maxDist = 150;
     const maxDistSq = maxDist * maxDist;
 
@@ -187,6 +202,8 @@ class FerroramaApp {
 
     animate();
 
+    // Pausa o loop quando a aba está em segundo plano (economia de bateria);
+    // o rAF já pausa sozinho, mas isso evita frames enfileirados ao voltar
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         if (animationId !== null) cancelAnimationFrame(animationId);
@@ -198,6 +215,8 @@ class FerroramaApp {
   }
 
   init3DScenes() {
+    // Guarda de CDN: sem Three.js (bloqueado/offline) mostra mensagem amigável
+    // em vez de deixar a área da cena vazia ou lançar exceção
     if (typeof THREE === 'undefined') {
       console.error('Three.js não carregou (CDN bloqueado ou offline).');
       this._showSceneError('maquete3d');
@@ -206,6 +225,8 @@ class FerroramaApp {
 
     this._initMaquetteScene();
 
+    // A cena da mina só inicializa quando a seção se aproxima da viewport
+    // (economiza WebGL/memória no carregamento inicial)
     const minaSection = document.getElementById('mina');
     if (minaSection) {
       const minaObserver = new IntersectionObserver((entries) => {
@@ -240,6 +261,8 @@ class FerroramaApp {
       this.maquetteScene._spawnDefaultTrains();
     } catch (e) {
       console.error('Error initializing maquette:', e);
+      // Retry com limite: o contexto WebGL pode demorar a liberar, mas
+      // tentar para sempre travaria CPU/memória (antes era loop infinito)
       if (attempt < 4) {
         setTimeout(() => this._initMaquetteScene(attempt + 1), 500);
       } else {
@@ -248,6 +271,7 @@ class FerroramaApp {
     }
   }
 
+  // Mensagem inline no container da cena + esconde o loader global
   _showSceneError(id) {
     const el = document.getElementById(id);
     if (el && !el.dataset.errorShown) {
