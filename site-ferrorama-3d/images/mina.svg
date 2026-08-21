@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Mina de ferro">
-  <rect width="800" height="500" fill="#0a0e14"/>
-  <ellipse cx="400" cy="320" rx="280" ry="100" fill="#1a222d"/>
-  <path d="M200 320 L400 120 L600 320 Z" fill="#2a1810" stroke="#e87722" stroke-width="3"/>
-  <rect x="340" y="200" width="120" height="80" fill="#141b24" stroke="#64748b"/>
-  <rect x="120" y="350" width="80" height="40" rx="4" fill="#004a8f" opacity="0.6"/>
-  <text x="400" y="440" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="16">Mina  adicione images/mina.jpg</text>
-</svg>

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Placa Arduino">
-  <rect width="800" height="500" fill="#0a0e14"/>
-  <rect x="250" y="130" width="300" height="200" rx="8" fill="#1a5f2a"/>
-  <rect x="280" y="160" width="60" height="60" fill="#141b24"/>
-  <rect x="360" y="160" width="60" height="60" fill="#141b24"/>
-  <rect x="440" y="160" width="60" height="60" fill="#141b24"/>
-  <circle cx="400" cy="280" r="12" fill="#e87722"/>
-  <text x="400" y="430" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="16">Arduino  adicione images/arduino.jpg</text>
-</svg>
