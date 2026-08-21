@@ -41,6 +41,7 @@ docker-compose ps
 | Serviço | URL |
 |---------|-----|
 | Dashboard | http://localhost:3000 |
+| Site 3D da maquete | http://localhost:5173 |
 | Backend API | http://localhost:4000 |
 | PostgreSQL | localhost:5433 |
 | Redis | localhost:6379 |
@@ -214,6 +215,11 @@ docker system prune -a
 │ gres  │ │       │
 │ :5433 │ │ :6379 │
 └───────┘ └───────┘
+
+┌─────────────────┐
+│  Site 3D        │ :5173
+│ (React + Three) │
+└─────────────────┘
 ```
 
 ## Runbook - Dia da Feira
@@ -235,7 +241,7 @@ MÁQUINA PRINCIPAL (Windows)
 1. **Pré-requisitos (antes da feira)**
    - Docker Desktop rodando
    - HC-05 pareado no Windows (Bluetooth)
-   - Celular pareado no app Expo
+   - Celular pareado no app Android (Kotlin)
 
 2. **Subir a stack**
 
