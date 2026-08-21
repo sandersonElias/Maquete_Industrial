@@ -3265,7 +3265,6 @@ to { opacity: 1; transform: translateY(0); }
 .map-caminhoes { border-left: 3px solid var(--card-border); }
 .map-trem { border-left: 3px solid var(--primary); }
 .map-porto { border-left: 3px solid #0066b3; }
-.map-aeroporto { border-left: 3px solid #5b8def; }
 .map-arrow {
   width: 20px;
   height: 1px;
@@ -4700,7 +4699,7 @@ body::after {
 }
 
 /* ============================================
-   PORTO MODULES — explicação Terminal / Aeroporto / Ferrovia
+   PORTO MODULES — explicação Terminal / Ferrovia
    ============================================ */
 .porto-modules {
   display: flex;

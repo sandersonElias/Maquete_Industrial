@@ -30,7 +30,7 @@ const authRoutes = require("./routes/authRoutes");
 const ferroviaRoutes = require("./routes/ferroviaRoutes")(io);
 const trucksRoutes = require("./routes/trucksRoutes")(io);
 const locomotiveRoutes = require("./routes/locomotiveRoutes")(io);
-const { portRouter, airportRouter } = require("./routes/portAirportRoutes");
+const { portRouter } = require("./routes/portRoutes");
 const chemistryRoutes = require("./routes/chemistryRoutes")(io);
 const reportRoutes = require("./routes/reportRoutes")(io);
 const gatewayRoutes = require("./routes/gatewayRoutes")(io);
@@ -107,8 +107,6 @@ app.use("/api/trucks", trucksRoutes);
 app.use("/api/locomotive", locomotiveRoutes);
 
 app.use("/api/port", portRouter);
-
-app.use("/api/airport", airportRouter);
 
 app.use("/api/chemistry", chemistryRoutes);
 

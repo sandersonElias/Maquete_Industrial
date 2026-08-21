@@ -38,4 +38,4 @@ val TurnSignalOrange = Color(0xFFFF8C00)
 
 // Text
 val TextPrimary = Color(0xFFE8EEF8)
-val TextDim = Color(0xFF4A5568)
+val TextDim = Color(0xFF8B949E)  // cinza médio — bom contraste em dark theme

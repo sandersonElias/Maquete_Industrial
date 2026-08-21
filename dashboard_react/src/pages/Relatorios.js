@@ -16,7 +16,6 @@ export default function Relatorios() {
     { value: 'switches', label: 'Ferrovia - Switches' },
     { value: 'trucks', label: 'Mina - Caminhoes' },
     { value: 'port', label: 'Porto - Navios' },
-    { value: 'airport', label: 'Aeroporto - Aeronaves' },
     { value: 'full', label: 'Relatorio Completo' },
   ];
 

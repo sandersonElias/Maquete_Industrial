@@ -31,21 +31,13 @@ async function getUser(req, res) {
 async function createUser(req, res) {
   try {
     const { username, email, password, role } = req.body;
-
-    // Verificar se email já existe
-    const pool = require("../config/db");
-    const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-    if (existing.rows.length > 0) {
-      return res.status(409).json({ error: "Email ja cadastrado" });
-    }
-
     const password_hash = await bcrypt.hash(password, 10);
     const user = await adminService.createUser({ username, email, password_hash, role });
     res.status(201).json(user);
   } catch (e) {
     logger.error(`Erro criando usuario: ${e.message}`);
     if (e.code === "23505") {
-      return res.status(409).json({ error: "Usuario ou email ja existe" });
+      return res.status(409).json({ error: "Email ja cadastrado" });
     }
     res.status(500).json({ error: "Erro ao criar usuario" });
   }

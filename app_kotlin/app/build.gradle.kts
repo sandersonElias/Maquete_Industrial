@@ -18,7 +18,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
@@ -49,9 +48,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     
-    // Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     
@@ -60,10 +56,4 @@ dependencies {
     
     // Core KTX
     implementation("androidx.core:core-ktx:1.12.0")
-
-    // DataStore Preferences — persistência de MAC pareado / throttle / auto-reconnect
-    // (Na prática estamos usando SharedPreferences puro em TruckPrefs por simplicidade
-    //  síncrona; mantemos a lib no classpath caso queiramos migrar no futuro e para não
-    //  quebrar imports acidentais.)
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }

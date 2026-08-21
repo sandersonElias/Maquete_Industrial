@@ -10,7 +10,8 @@ API REST + WebSocket para o sistema de monitoramento da maquete industrial.
 - Redis (via `redis`)
 - JWT (`jsonwebtoken`) + bcryptjs
 - Winston (logging)
-- Joi (validação - disponível mas não utilizado nas rotas atuais)
+- Joi (validação)
+- Jest (testes)
 
 ## Estrutura
 
@@ -28,7 +29,7 @@ src/
 │   ├── ferroviaRoutes.js     # GET /status, POST /switch
 │   ├── trucksRoutes.js       # GET /, POST /:id/telemetry, POST /:id/command
 │   ├── locomotiveRoutes.js   # POST /position
-│   ├── portAirportRoutes.js  # GET /ships, GET /airplanes
+│   ├── portRoutes.js         # GET /ships, POST /ships
 │   ├── chemistryRoutes.js    # GET /equipment
 │   ├── reportRoutes.js       # GET /, POST /export, GET /:id/download
 │   ├── alertRoutes.js        # Rotas de alertas
@@ -39,7 +40,7 @@ src/
 │   ├── ferroviaController.js # Controle de switches
 │   ├── trucksController.js   # Telemetria e comandos
 │   ├── locomotiveController.js # Posição da locomotiva
-│   ├── portAirportController.js # Navios e aeronaves
+│   ├── portController.js     # Navios do porto
 │   ├── reportController.js   # Geração de relatórios
 │   ├── alertController.js    # Alertas do sistema
 │   └── gatewayController.js  # Notificações do gateway
@@ -48,7 +49,7 @@ src/
 │   ├── ferroviaService.js    # CRUD switches + comandos
 │   ├── trucksService.js      # Telemetria + comandos
 │   ├── locomotiveService.js  # Posição locomotiva
-│   ├── portAirportService.js # Navios e aeronaves
+│   ├── portService.js        # Navios do porto
 │   ├── reportService.js      # Criação de relatórios
 │   ├── alertService.js       # Serviço de alertas
 │   └── redisService.js       # Operações Redis (set/del)
@@ -75,6 +76,7 @@ scripts/
 npm install          # Instalar dependências
 npm run dev          # Desenvolvimento (nodemon, porta 4000)
 npm start            # Produção (node)
+npm test             # Executar testes (Jest)
 npm run migrate      # Executar migrations do banco
 npm run seed         # Popular dados iniciais (usuarios, equipamentos)
 ```
@@ -84,12 +86,8 @@ npm run seed         # Popular dados iniciais (usuarios, equipamentos)
 ```env
 PORT=4000
 NODE_ENV=development
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=maquete_industrial
-DB_USER=postgres
-DB_PASSWORD=sua_senha
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql://user:pass@host:5432/db  # Render PostgreSQL
+REDIS_URL=redis://localhost:6379                   # Opcional (sem cache se não configurado)
 JWT_SECRET=seu_secret_aqui
 JWT_EXPIRES_IN=24h
 GATEWAY_API_KEY=sua_api_key
@@ -112,7 +110,6 @@ CORS_ORIGIN=*
 | `truck_commands` | Comandos enviados aos caminhões |
 | `locomotive_position` | Posições da locomotiva |
 | `ships` | Navios do porto |
-| `airplanes` | Aeronaves do aeroporto |
 | `alerts` | Alertas do sistema |
 | `reports` | Relatórios gerados |
 | `chemistry_equipment` | Equipamentos da área química |
@@ -228,11 +225,11 @@ Migrations: `migrations/002_schema_evolution.sql` (tabelas extras, indexes, view
 { "success": true, "command": { "id": "uuid", "truck_id": "T01", "command": "F", "status": "pending" } }
 ```
 
-### Porto e Aeroporto
+### Porto
 
-**GET `/api/port/ships`** e **GET `/api/airport/airplanes`** (JWT obrigatório)
+**GET `/api/port/ships`** (JWT obrigatório)
 
-Retornam arrays de navios/aeronaves ordenados por ETA.
+Retorna array de navios ordenados por ETA.
 
 ### Química
 

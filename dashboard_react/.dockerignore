@@ -3,4 +3,4 @@ node_modules
 .env.exemplo
 *.log
 .git
-reports
+build

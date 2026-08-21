@@ -14,7 +14,6 @@ const moduleLabels = {
   ferrovia: 'Ferrovia',
   mina: 'Mina',
   porto: 'Porto',
-  aeroporto: 'Aeroporto',
   quimica: 'Quimica',
   sistema: 'Sistema',
 };
@@ -41,7 +40,7 @@ export default function Alertas() {
       if (alert.severity === 'critical') {
         toast.error(`CRITICO: ${alert.message}`);
       } else {
-        toast.warning(alert.message);
+        toast(alert.message, { icon: '⚠️' });
       }
     };
 

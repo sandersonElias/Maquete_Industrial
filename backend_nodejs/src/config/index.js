@@ -19,6 +19,6 @@ module.exports = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || (isProduction ? "" : "*"),
   COMMAND_TIMEOUT_MS: parseInt(process.env.COMMAND_TIMEOUT_MS || "30000", 10),
   NODE_ENV: process.env.NODE_ENV || "development",
-  // Database - PostgreSQL na nuvem (Supabase)
+  // Database - PostgreSQL (Render)
   DATABASE_URL: process.env.DATABASE_URL,
 };

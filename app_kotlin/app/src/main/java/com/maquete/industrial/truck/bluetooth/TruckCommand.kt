@@ -28,6 +28,8 @@ enum class TruckCommand(val cmd: String, val label: String) {
     FORWARD_RIGHT("FR", "Frente Dir."),
     BACK_LEFT("BL", "Ré Esq."),
     BACK_RIGHT("BR", "Ré Dir."),
+    FORWARD_CENTER("FC", "Frente Centro"),
+    BACK_CENTER("BC", "Ré Centro"),
 
     // ── Emergência (motor + direção ao centro) ──────────────────────────────
     EMERGENCY("SC", "Emergência"),

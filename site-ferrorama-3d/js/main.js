@@ -158,24 +158,9 @@ class FerroramaApp {
   }
 
   init3DScenes() {
-    // Use IntersectionObserver so scene initializes when section is visible
-    const maqueteSection = document.getElementById('maquete');
-    if (maqueteSection) {
-      const maqObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !this.maquetteScene) {
-            this._initMaquetteScene();
-            maqObserver.disconnect();
-          }
-        });
-      }, { rootMargin: '200px' });
-      maqObserver.observe(maqueteSection);
-
-      // Also try immediate init if already visible
-      if (maqueteSection.getBoundingClientRect().top < window.innerHeight + 200) {
-        setTimeout(() => this._initMaquetteScene(), 100);
-      }
-    }
+    // Initialize immediately — the scene works even if the section is off-screen
+    // because MaquetteScene handles fallback dimensions
+    this._initMaquetteScene();
 
     const minaSection = document.getElementById('mina');
     if (minaSection) {
@@ -196,27 +181,22 @@ class FerroramaApp {
     const container = document.getElementById('maquete3d');
     if (!container) return;
 
-    // Force layout calculation so container has dimensions
-    container.style.display = 'block';
-    const rect = container.getBoundingClientRect();
+    try {
+      this.maquetteScene = new MaquetteScene('maquete3d');
+      this.maquetteScene.onTrainAdded = (train) => this.addTrainCard(train);
+      this.maquetteScene.onTrainRemoved = (id) => this.removeTrainCard(id);
+      this.maquetteScene.onTrainToggled = (train) => this.updateTrainCardState(train);
+      this.maquetteScene.onTrainPlaced = () => this.onTrainPlaced();
+      this.maquetteScene.onAllTrainsToggled = (running) => this.onAllTrainsToggled(running);
+      this.maquetteScene.onReversorToggled = (state) => this.onReversorToggled(state);
+      this.maquetteScene.onSwitchToggled = (label, state) => this.onSwitchToggled(label, state);
+      console.log('Maquette 3D initialized successfully');
 
-    if (rect.width > 0 && rect.height > 0) {
-      try {
-        this.maquetteScene = new MaquetteScene('maquete3d');
-        this.maquetteScene.onTrainAdded = (train) => this.addTrainCard(train);
-        this.maquetteScene.onTrainRemoved = (id) => this.removeTrainCard(id);
-        this.maquetteScene.onTrainToggled = (train) => this.updateTrainCardState(train);
-        this.maquetteScene.onTrainPlaced = () => this.onTrainPlaced();
-        this.maquetteScene.onAllTrainsToggled = (running) => this.onAllTrainsToggled(running);
-        console.log('Maquette 3D initialized successfully');
-      } catch (e) {
-        console.error('Error initializing maquette:', e);
-        // Retry once after a short delay
-        setTimeout(() => this._initMaquetteScene(), 500);
-      }
-    } else {
-      // Container not ready, retry
-      setTimeout(() => this._initMaquetteScene(), 200);
+      // Spawn default trains AFTER callbacks are connected
+      this.maquetteScene._spawnDefaultTrains();
+    } catch (e) {
+      console.error('Error initializing maquette:', e);
+      setTimeout(() => this._initMaquetteScene(), 500);
     }
   }
 
@@ -225,19 +205,14 @@ class FerroramaApp {
     const container = document.getElementById('mina3d');
     if (!container) return;
 
-    const rect = container.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      try {
-        this.minaScene = new MaquetteScene('mina3d');
-        if (this.minaScene.camera) {
-          this.minaScene.camera.position.set(-8, 5, 2);
-          this.minaScene.controls.target.set(-5, 1, -2);
-        }
-      } catch (e) {
-        console.error('Error initializing mina scene:', e);
+    try {
+      this.minaScene = new MaquetteScene('mina3d');
+      if (this.minaScene.camera) {
+        this.minaScene.camera.position.set(-8, 5, 2);
+        this.minaScene.controls.target.set(-5, 1, -2);
       }
-    } else {
-      setTimeout(() => this._initMinaScene(), 200);
+    } catch (e) {
+      console.error('Error initializing mina scene:', e);
     }
   }
 
@@ -248,7 +223,7 @@ class FerroramaApp {
     const infoContent = {
       overview: {
         title: 'Visão Geral',
-        text: 'Layout oval com ramais e seções elevadas. Base de MDF com trilhos escala HO e eletrônicos Arduino.'
+        text: 'Layout rectangular com circuitos interno e externo, viaduto elevado e eletrônicos Arduino. Base de MDF com trilhos escala HO.'
       },
       mina: {
         title: 'Área de Eletrônicos',
@@ -256,11 +231,11 @@ class FerroramaApp {
       },
       porto: {
         title: 'Seção Elevada',
-        text: 'Trilhos sobre suportes de cardboard, criando pontes e desníveis no percurso.'
+        text: 'Viaduto com pilares de concreto, cruzando sobre o circuito interno com trilhos elevados.'
       },
       trem: {
         title: 'Trem & Chaveamentos',
-        text: 'Locomotiva azul com amarelo, chaveamentos para troca de trilhos.'
+        text: 'Locomotivas com diferentes cores, chaveamentos amarelos para troca de trilhos nos cruzamentos.'
       }
     };
 
@@ -307,8 +282,10 @@ class FerroramaApp {
     const btnAddTrain = document.getElementById('btnAddTrain');
     if (btnAddTrain) {
       btnAddTrain.addEventListener('click', () => {
+        if (!this.maquetteScene) return;
         const activeType = document.querySelector('.train-type-btn.active');
         const typeIndex = activeType ? parseInt(activeType.dataset.type) : 0;
+        const hint = document.getElementById('placementHint');
 
         if (this.maquetteScene.placementMode) {
           // Cancel placement mode
@@ -318,7 +295,7 @@ class FerroramaApp {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
             Adicionar ao trilho
           `;
-          document.getElementById('placementHint').style.display = 'none';
+          if (hint) hint.style.display = 'none';
         } else {
           // Enter placement mode
           this.maquetteScene.setPlacementMode(true, typeIndex);
@@ -327,7 +304,7 @@ class FerroramaApp {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
             Cancelar
           `;
-          document.getElementById('placementHint').style.display = 'flex';
+          if (hint) hint.style.display = 'flex';
         }
       });
     }
@@ -475,7 +452,8 @@ class FerroramaApp {
         Adicionar ao trilho
       `;
     }
-    document.getElementById('placementHint').style.display = 'none';
+    const hint = document.getElementById('placementHint');
+    if (hint) hint.style.display = 'none';
     this.updateTrainCountBadge();
   }
 
@@ -493,6 +471,30 @@ class FerroramaApp {
     if (panelTitle) {
       const icon = `<span class="train-panel-icon">🚂</span>`;
       panelTitle.innerHTML = `${icon} Controle de Trens <span style="font-weight:400;font-size:0.8rem;color:var(--text-muted)">(${count})</span>`;
+    }
+  }
+
+  // ==========================================
+  // REVERSOR & SWITCH UI
+  // ==========================================
+  onReversorToggled(state) {
+    const info = document.getElementById('maqueteInfo');
+    if (info) {
+      const color = state === 'red' ? '#ff4444' : '#44ff44';
+      const label = state === 'red' ? 'REVERSO' : 'FRENTE';
+      info.querySelector('h3').innerHTML = `Reversor <span style="color:${color};font-size:0.8em">${label}</span>`;
+      info.querySelector('p').textContent = state === 'red'
+        ? 'Reversor ativo — trens em movimento inverteram o sentido.'
+        : 'Reversor normal — trens circulando no sentido padrão.';
+    }
+  }
+
+  onSwitchToggled(label, state) {
+    const info = document.getElementById('maqueteInfo');
+    if (info) {
+      const dir = state === 'left' ? 'Esquerda' : 'Direita';
+      info.querySelector('h3').textContent = `Chaveamento ${label}`;
+      info.querySelector('p').textContent = `Alterado para ${dir}. Alavanca movida.`;
     }
   }
 }

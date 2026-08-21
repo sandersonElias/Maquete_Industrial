@@ -2,7 +2,7 @@ const express = require("express");
 const adminController = require("../controllers/adminController");
 const authenticateToken = require("../middlewares/authenticateToken");
 const validate = require("../middlewares/validate");
-const { registerSchema } = require("../utils/validation");
+const { registerSchema, updateUserSchema } = require("../utils/validation");
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router.get("/stats", authenticateToken, requireAdmin, adminController.getSystemS
 router.get("/users", authenticateToken, requireAdmin, adminController.listUsers);
 router.get("/users/:id", authenticateToken, requireAdmin, adminController.getUser);
 router.post("/users", authenticateToken, requireAdmin, validate(registerSchema), adminController.createUser);
-router.put("/users/:id", authenticateToken, requireAdmin, adminController.updateUser);
+router.put("/users/:id", authenticateToken, requireAdmin, validate(updateUserSchema), adminController.updateUser);
 router.delete("/users/:id", authenticateToken, requireAdmin, adminController.deleteUser);
 
 module.exports = router;

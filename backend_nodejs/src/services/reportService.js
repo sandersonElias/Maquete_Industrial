@@ -81,10 +81,6 @@ async function fetchData(reportType, filters = {}) {
       query = `SELECT * FROM ships ORDER BY eta`;
       break;
 
-    case "airport":
-      query = `SELECT * FROM airplanes ORDER BY eta`;
-      break;
-
     case "alerts":
       query = `SELECT * FROM alerts WHERE 1=1`;
       if (severity) {

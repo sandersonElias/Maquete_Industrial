@@ -112,24 +112,11 @@ CREATE TABLE IF NOT EXISTS ships (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela de Aviões (Aeroporto)
-CREATE TABLE IF NOT EXISTS airplanes (
-    id VARCHAR(20) PRIMARY KEY,
-    flight_number VARCHAR(20) NOT NULL,
-    status VARCHAR(30) DEFAULT 'landed', -- landed, boarding, departing, in_air, arriving
-    cargo_type VARCHAR(50),
-    cargo_weight FLOAT DEFAULT 0,
-    eta TIMESTAMP,
-    etd TIMESTAMP,
-    gate VARCHAR(10),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Tabela de Alertas
 CREATE TABLE IF NOT EXISTS alerts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     severity VARCHAR(20) NOT NULL, -- info, warning, critical
-    module VARCHAR(30) NOT NULL, -- ferrovia, mina, porto, aeroporto
+    module VARCHAR(30) NOT NULL, -- ferrovia, mina, porto
     message TEXT NOT NULL,
     details JSONB,
     acknowledged_by UUID REFERENCES users(id),
@@ -140,7 +127,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 -- Tabela de Relatórios
 CREATE TABLE IF NOT EXISTS reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    report_type VARCHAR(50) NOT NULL, -- switches, trucks, port, airport, full
+    report_type VARCHAR(50) NOT NULL, -- switches, trucks, port, full
     format VARCHAR(10) NOT NULL, -- csv, xlsx, pdf
     filters JSONB,
     generated_by UUID REFERENCES users(id),
@@ -171,10 +158,6 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO ships (id, name, cargo_type, cargo_weight, eta, dock_number) VALUES
 ('SHIP-001', 'Navio Cargueiro Alpha', 'Minério de Ferro', 15000, NOW() + INTERVAL '2 hours', 1)
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO airplanes (id, flight_number, cargo_type, cargo_weight, eta, gate) VALUES
-('FL-001', 'CARGO-2024', 'Equipamentos', 5000, NOW() + INTERVAL '4 hours', 'G3')
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================

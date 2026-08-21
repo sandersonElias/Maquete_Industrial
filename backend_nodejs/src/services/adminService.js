@@ -22,6 +22,14 @@ async function getUserById(id) {
 
 // Criar usuário
 async function createUser({ username, email, password_hash, role }) {
+  // Verificar se email já existe
+  const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+  if (existing.rows.length > 0) {
+    const err = new Error("Email ja cadastrado");
+    err.code = "23505";
+    throw err;
+  }
+
   const result = await pool.query(
     `INSERT INTO users (username, email, password_hash, role) 
      VALUES ($1, $2, $3, $4) RETURNING id, username, email, role, created_at`,
@@ -103,10 +111,6 @@ async function getSystemStats() {
   // Total de navios
   const shipsResult = await pool.query("SELECT COUNT(*) as total FROM ships");
   stats.totalShips = parseInt(shipsResult.rows[0].total);
-
-  // Total de aviões
-  const airplanesResult = await pool.query("SELECT COUNT(*) as total FROM airplanes");
-  stats.totalAirplanes = parseInt(airplanesResult.rows[0].total);
 
   // Total de relatórios gerados
   const reportsResult = await pool.query("SELECT COUNT(*) as total FROM reports");

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
-import AirplaneModeIcon from './AirplaneModeIcon';
 
-/** Splash: Ferr[engrenagem]rama + avião modo avião cruzando o brand em 2s. */
+/** Splash: Ferr[engrenagem]rama + trem cruzando o brand em 2s. */
 export default function Loader() {
   const [hidden, setHidden] = useState(false);
   const reduced = usePrefersReducedMotion();
@@ -37,7 +36,7 @@ export default function Loader() {
             <div className="loader-brand-stage">
               {!reduced && (
                 <span className="loader-flyby" aria-hidden="true">
-                  <AirplaneModeIcon size={40} className="loader-flyby__icon" />
+                  <TrainIcon size={40} className="loader-flyby__icon" />
                 </span>
               )}
 
@@ -74,5 +73,29 @@ export default function Loader() {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function TrainIcon({ size = 40, className }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M12,2C8,2 4,2.5 4,6V15.5C4,17.43 5.57,19 7.5,19L6,20.5V21H18V20.5L16.5,19C18.43,19 20,17.43 20,15.5V6C20,2.5 16,2 12,2M12,4C15.51,4 16.5,4.05 17.5,5H6.5C7.5,4.05 8.49,4 12,4M6,7H18V11H6V7M7,16A1.5,1.5 0 0,1 5.5,14.5A1.5,1.5 0 0,1 7,13A1.5,1.5 0 0,1 8.5,14.5A1.5,1.5 0 0,1 7,16M17,16A1.5,1.5 0 0,1 15.5,14.5A1.5,1.5 0 0,1 17,13A1.5,1.5 0 0,1 18.5,14.5A1.5,1.5 0 0,1 17,16M6,12H18V14.5H6V12Z"
+        fill="#06060a"
+        opacity="0.55"
+        transform="translate(0.6 0.8)"
+      />
+      <path
+        d="M12,2C8,2 4,2.5 4,6V15.5C4,17.43 5.57,19 7.5,19L6,20.5V21H18V20.5L16.5,19C18.43,19 20,17.43 20,15.5V6C20,2.5 16,2 12,2M12,4C15.51,4 16.5,4.05 17.5,5H6.5C7.5,4.05 8.49,4 12,4M6,7H18V11H6V7M7,16A1.5,1.5 0 0,1 5.5,14.5A1.5,1.5 0 0,1 7,13A1.5,1.5 0 0,1 8.5,14.5A1.5,1.5 0 0,1 7,16M17,16A1.5,1.5 0 0,1 15.5,14.5A1.5,1.5 0 0,1 17,13A1.5,1.5 0 0,1 18.5,14.5A1.5,1.5 0 0,1 17,16M6,12H18V14.5H6V12Z"
+        fill="#ff8844"
+      />
+    </svg>
   );
 }
