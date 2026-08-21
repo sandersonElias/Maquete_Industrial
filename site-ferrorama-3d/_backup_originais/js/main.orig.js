@@ -19,12 +19,9 @@ class FerroramaApp {
   }
 
   init() {
-    if (this.loader) {
-      window.addEventListener('load', () => {
-        setTimeout(() => this.hideLoader(), 1500);
-      });
-      setTimeout(() => this.hideLoader(), 8000);
-    }
+    window.addEventListener('load', () => {
+      setTimeout(() => this.loader.classList.add('hidden'), 1500);
+    });
 
     this.setupNavigation();
     this.setupMobileMenu();
@@ -36,39 +33,23 @@ class FerroramaApp {
     this.setupSmoothScroll();
   }
 
-  hideLoader() {
-    if (this.loader) this.loader.classList.add('hidden');
-  }
-
   setupNavigation() {
     window.addEventListener('scroll', () => {
       this.nav.classList.toggle('scrolled', window.scrollY > 50);
-    }, { passive: true });
+    });
   }
 
   setupMobileMenu() {
-    if (!this.menuBtn || !this.mobileMenu) return;
-
-    const setMenu = (open) => {
-      this.mobileMenu.classList.toggle('active', open);
-      this.menuBtn.classList.toggle('active', open);
-      this.menuBtn.setAttribute('aria-expanded', String(open));
-    };
-
     this.menuBtn.addEventListener('click', () => {
-      setMenu(!this.mobileMenu.classList.contains('active'));
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!this.mobileMenu.contains(e.target) && !this.menuBtn.contains(e.target)) setMenu(false);
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') setMenu(false);
+      this.mobileMenu.classList.toggle('active');
+      this.menuBtn.classList.toggle('active');
     });
 
     this.navLinks.forEach(link => {
-      link.addEventListener('click', () => setMenu(false));
+      link.addEventListener('click', () => {
+        this.mobileMenu.classList.remove('active');
+        this.menuBtn.classList.remove('active');
+      });
     });
   }
 
@@ -93,8 +74,7 @@ class FerroramaApp {
         e.preventDefault();
         const target = document.querySelector(anchor.getAttribute('href'));
         if (target) {
-          const offset = this.nav ? this.nav.offsetHeight : 70;
-          window.scrollTo({ top: target.offsetTop - offset, behavior: 'smooth' });
+          window.scrollTo({ top: target.offsetTop - 70, behavior: 'smooth' });
         }
       });
     });
@@ -102,12 +82,10 @@ class FerroramaApp {
 
   initParticles() {
     if (!this.particlesCanvas) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const ctx = this.particlesCanvas.getContext('2d');
     let particles = [];
-    let animationId = null;
-    let resizeTimer = null;
+    let animationId;
 
     const resize = () => {
       this.particlesCanvas.width = window.innerWidth;
@@ -115,10 +93,7 @@ class FerroramaApp {
     };
 
     resize();
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(resize, 150);
-    }, { passive: true });
+    window.addEventListener('resize', resize);
 
     class Particle {
       constructor() { this.reset(); }
@@ -148,8 +123,7 @@ class FerroramaApp {
       }
     }
 
-    const particleCount = window.innerWidth < 700 ? 40 : 80;
-    for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
 
     const animate = () => {
       ctx.clearRect(0, 0, this.particlesCanvas.width, this.particlesCanvas.height);
@@ -178,22 +152,14 @@ class FerroramaApp {
     animate();
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        if (animationId !== null) cancelAnimationFrame(animationId);
-        animationId = null;
-      } else if (animationId === null) {
-        animationId = requestAnimationFrame(animate);
-      }
+      if (document.hidden) cancelAnimationFrame(animationId);
+      else animate();
     });
   }
 
   init3DScenes() {
-    if (typeof THREE === 'undefined') {
-      console.error('Three.js não carregou (CDN bloqueado ou offline).');
-      this._showSceneError('maquete3d');
-      return;
-    }
-
+    // Initialize immediately — the scene works even if the section is off-screen
+    // because MaquetteScene handles fallback dimensions
     this._initMaquetteScene();
 
     const minaSection = document.getElementById('mina');
@@ -210,15 +176,13 @@ class FerroramaApp {
     }
   }
 
-  _initMaquetteScene(attempt) {
-    attempt = attempt || 0;
+  _initMaquetteScene() {
     if (this.maquetteScene) return;
     const container = document.getElementById('maquete3d');
     if (!container) return;
 
     try {
       this.maquetteScene = new MaquetteScene('maquete3d');
-      if (!this.maquetteScene.renderer) throw new Error('WebGL indisponível');
       this.maquetteScene.onTrainAdded = (train) => this.addTrainCard(train);
       this.maquetteScene.onTrainRemoved = (id) => this.removeTrainCard(id);
       this.maquetteScene.onTrainToggled = (train) => this.updateTrainCardState(train);
@@ -226,28 +190,14 @@ class FerroramaApp {
       this.maquetteScene.onAllTrainsToggled = (running) => this.onAllTrainsToggled(running);
       this.maquetteScene.onReversorToggled = (state) => this.onReversorToggled(state);
       this.maquetteScene.onSwitchToggled = (label, state) => this.onSwitchToggled(label, state);
+      console.log('Maquette 3D initialized successfully');
 
+      // Spawn default trains AFTER callbacks are connected
       this.maquetteScene._spawnDefaultTrains();
     } catch (e) {
       console.error('Error initializing maquette:', e);
-      if (attempt < 4) {
-        setTimeout(() => this._initMaquetteScene(attempt + 1), 500);
-      } else {
-        this._showSceneError('maquete3d');
-      }
+      setTimeout(() => this._initMaquetteScene(), 500);
     }
-  }
-
-  _showSceneError(id) {
-    const el = document.getElementById(id);
-    if (el && !el.dataset.errorShown) {
-      el.dataset.errorShown = '1';
-      el.classList.add('loaded');
-      el.insertAdjacentHTML('beforeend',
-        '<p style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#7d7268;font-size:0.9rem;text-align:center;padding:1rem;z-index:2;">Não foi possível carregar a cena 3D neste navegador ou dispositivo.</p>'
-      );
-    }
-    this.hideLoader();
   }
 
   _initMinaScene() {
@@ -257,14 +207,12 @@ class FerroramaApp {
 
     try {
       this.minaScene = new MaquetteScene('mina3d');
-      if (!this.minaScene.renderer) throw new Error('WebGL indisponível');
       if (this.minaScene.camera) {
         this.minaScene.camera.position.set(-8, 5, 2);
         this.minaScene.controls.target.set(-5, 1, -2);
       }
     } catch (e) {
       console.error('Error initializing mina scene:', e);
-      this._showSceneError('mina3d');
     }
   }
 

@@ -1,40 +1,24 @@
 /* ============================================
    SCROLL ANIMATIONS - GSAP ScrollTrigger
-   Com guards de CDN e acessibilidade de movimento
    ============================================ */
-
-var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var GSAP_READY = (typeof gsap !== 'undefined') && (typeof ScrollTrigger !== 'undefined');
-
-function onDomReady(fn) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', fn);
-  } else {
-    fn();
-  }
-}
 
 class ScrollAnimations {
   constructor() {
-    if (!GSAP_READY) {
-      console.warn('GSAP/ScrollTrigger indisponível — animações de scroll desativadas.');
-      return;
-    }
-    if (REDUCED_MOTION) return;
-
     this.init();
   }
-
+  
   init() {
+    // Register GSAP plugins
     gsap.registerPlugin(ScrollTrigger);
-
+    
+    // Wait for DOM
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.setupAnimations());
     } else {
       this.setupAnimations();
     }
   }
-
+  
   setupAnimations() {
     this.animateHero();
     this.animateSections();
@@ -44,7 +28,7 @@ class ScrollAnimations {
     this.animateMina();
     this.animateDashboard();
   }
-
+  
   animateHero() {
     // Title lines
     gsap.from('.title-line', {
@@ -55,7 +39,7 @@ class ScrollAnimations {
       ease: 'power3.out',
       delay: 0.5
     });
-
+    
     // Label
     gsap.from('.hero-label', {
       y: 30,
@@ -64,7 +48,7 @@ class ScrollAnimations {
       ease: 'power2.out',
       delay: 0.3
     });
-
+    
     // Description
     gsap.from('.hero-description', {
       y: 30,
@@ -73,7 +57,7 @@ class ScrollAnimations {
       ease: 'power2.out',
       delay: 0.8
     });
-
+    
     // Stats
     gsap.from('.stat-item', {
       y: 50,
@@ -83,7 +67,7 @@ class ScrollAnimations {
       ease: 'power2.out',
       delay: 1
     });
-
+    
     // CTA
     gsap.from('.hero-cta', {
       y: 30,
@@ -92,18 +76,18 @@ class ScrollAnimations {
       ease: 'power2.out',
       delay: 1.3
     });
-
+    
     // Animate stat numbers
     this.animateCounters();
   }
-
+  
   animateCounters() {
     const statValues = document.querySelectorAll('.stat-value');
-
+    
     statValues.forEach(stat => {
       const target = parseInt(stat.dataset.count);
       const obj = { value: 0 };
-
+      
       gsap.to(obj, {
         value: target,
         duration: 2,
@@ -115,7 +99,7 @@ class ScrollAnimations {
       });
     });
   }
-
+  
   animateSections() {
     // Section headers
     gsap.utils.toArray('.section-header').forEach(header => {
@@ -132,11 +116,11 @@ class ScrollAnimations {
       });
     });
   }
-
+  
   animateCards() {
     // Cards grid
     const cards = gsap.utils.toArray('.card');
-
+    
     cards.forEach((card, i) => {
       gsap.from(card, {
         scrollTrigger: {
@@ -152,7 +136,7 @@ class ScrollAnimations {
       });
     });
   }
-
+  
   animateCode() {
     // Code block
     gsap.from('.code-block', {
@@ -166,7 +150,7 @@ class ScrollAnimations {
       duration: 1,
       ease: 'power3.out'
     });
-
+    
     // Code features
     gsap.from('.feature-item', {
       scrollTrigger: {
@@ -180,25 +164,25 @@ class ScrollAnimations {
       stagger: 0.15,
       ease: 'power3.out'
     });
-
+    
     // Code typing effect
     this.typeCode();
   }
-
+  
   typeCode() {
     const codeContent = document.querySelector('.code-content code');
     if (!codeContent) return;
-
+    
     const originalHTML = codeContent.innerHTML;
     const text = codeContent.textContent;
-
+    
     ScrollTrigger.create({
       trigger: '.code-block',
       start: 'top 70%',
       onEnter: () => {
         codeContent.innerHTML = '';
         let i = 0;
-
+        
         const type = () => {
           if (i < text.length) {
             codeContent.textContent += text.charAt(i);
@@ -209,13 +193,13 @@ class ScrollAnimations {
             codeContent.innerHTML = originalHTML;
           }
         };
-
+        
         type();
       },
       once: true
     });
   }
-
+  
   animatePorto() {
     // Porto image
     gsap.from('.porto-image', {
@@ -229,7 +213,7 @@ class ScrollAnimations {
       duration: 1,
       ease: 'power3.out'
     });
-
+    
     // Porto items
     gsap.from('.porto-item', {
       scrollTrigger: {
@@ -244,7 +228,7 @@ class ScrollAnimations {
       ease: 'power3.out'
     });
   }
-
+  
   animateMina() {
     // Mina 3D
     gsap.from('.mina-3d', {
@@ -258,7 +242,7 @@ class ScrollAnimations {
       duration: 1,
       ease: 'power3.out'
     });
-
+    
     // Mina content
     gsap.from('.mina-content > *', {
       scrollTrigger: {
@@ -273,7 +257,7 @@ class ScrollAnimations {
       ease: 'power3.out'
     });
   }
-
+  
   animateDashboard() {
     // Dashboard cards
     gsap.from('.dashboard-card', {
@@ -294,14 +278,17 @@ class ScrollAnimations {
 // Parallax effects
 class ParallaxEffects {
   constructor() {
-    if (!GSAP_READY || REDUCED_MOTION) return;
     this.init();
   }
-
+  
   init() {
-    onDomReady(() => this.setupParallax());
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.setupParallax());
+    } else {
+      this.setupParallax();
+    }
   }
-
+  
   setupParallax() {
     // Gradient orbs parallax
     gsap.to('.orb-1', {
@@ -314,7 +301,7 @@ class ParallaxEffects {
       y: -100,
       ease: 'none'
     });
-
+    
     gsap.to('.orb-2', {
       scrollTrigger: {
         trigger: '.hero-section',
@@ -325,7 +312,7 @@ class ParallaxEffects {
       y: -150,
       ease: 'none'
     });
-
+    
     gsap.to('.orb-3', {
       scrollTrigger: {
         trigger: '.hero-section',
@@ -336,7 +323,7 @@ class ParallaxEffects {
       y: -80,
       ease: 'none'
     });
-
+    
     // Porto image parallax
     gsap.to('.porto-image img', {
       scrollTrigger: {
@@ -356,26 +343,28 @@ class CardEffects {
   constructor() {
     this.init();
   }
-
+  
   init() {
-    if (REDUCED_MOTION) return;
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-    onDomReady(() => this.setupEffects());
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.setupEffects());
+    } else {
+      this.setupEffects();
+    }
   }
-
+  
   setupEffects() {
     const cards = document.querySelectorAll('.card');
-
+    
     cards.forEach(card => {
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
-
+        
         card.style.setProperty('--mouse-x', `${x}%`);
         card.style.setProperty('--mouse-y', `${y}%`);
-      }, { passive: true });
-
+      });
+      
       // 3D tilt effect
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
@@ -383,16 +372,16 @@ class CardEffects {
         const y = e.clientY - rect.top;
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-
+        
         const rotateX = (y - centerY) / 10;
         const rotateY = (centerX - x) / 10;
-
+        
         card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
-      }, { passive: true });
-
+      });
+      
       card.addEventListener('mouseleave', () => {
         card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
-      }, { passive: true });
+      });
     });
   }
 }

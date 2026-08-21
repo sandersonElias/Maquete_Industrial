@@ -19,9 +19,6 @@ class MaquetteScene {
     this.trainIdCounter = 0;
     this.trackCurves = [];
 
-    this._batchRailMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.35 });
-    this._batchSleeperMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85 });
-
     this.trainColors = [
       { name: 'Rumo Azul',     body: 0x0d47a1, accent: 0x1565c0, strip: 0xffd700, under: 0x222222 },
       { name: 'Rumo Vermelho', body: 0xb71c1c, accent: 0xc62828, strip: 0xffffff, under: 0x222222 },
@@ -69,9 +66,7 @@ class MaquetteScene {
 
       this.renderer = new THREE.WebGLRenderer({ antialias: true });
       this.renderer.setSize(w, h);
-      this.isMobile = window.matchMedia('(max-width: 768px)').matches
-        || (navigator.maxTouchPoints > 1 && Math.min(window.screen.width, window.screen.height) < 900);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -94,20 +89,9 @@ class MaquetteScene {
       this.setupReversorClick();
       this.setupSwitchClick();
       this.setupCursorHandler();
-      this._buildStaticBatches();
 
       this.container.classList.add('loaded');
-      this._onResizeBound = this.onResize.bind(this);
-      window.addEventListener('resize', this._onResizeBound);
-      this._visible = true;
-      var self = this;
-      if ('IntersectionObserver' in window) {
-        this._observer = new IntersectionObserver(function(entries) {
-          self._visible = entries[0].isIntersecting;
-          if (self._visible && !self.animationId) self.animate();
-        }, { rootMargin: '120px' });
-        this._observer.observe(this.container);
-      }
+      window.addEventListener('resize', this.onResize.bind(this));
       this.animate();
     } catch (e) {
       console.error('MaquetteScene init error:', e);
@@ -119,11 +103,10 @@ class MaquetteScene {
     this.scene.add(new THREE.AmbientLight(0x1a1410, 0.6));
 
     // Key light - main directional
-    var shadowRes = this.isMobile ? 1024 : 2048;
     var key = new THREE.DirectionalLight(0xfff5e6, 1.4);
     key.position.set(8, 18, 10);
     key.castShadow = true;
-    key.shadow.mapSize.set(shadowRes, shadowRes);
+    key.shadow.mapSize.set(2048, 2048);
     key.shadow.camera.near = 0.5;
     key.shadow.camera.far = 60;
     key.shadow.camera.left = -18;
@@ -929,8 +912,6 @@ class MaquetteScene {
   _renderRail(curve, railMat, sleeperMat, seg, baseY) {
     if (seg < 10) seg = 10;
 
-    if (!this._railXforms) { this._railXforms = []; this._sleeperXforms = []; }
-
     var pts = curve.getPoints(seg);
     var pts2 = [];
     var gauge = 0.18; // HO gauge distance between rails
@@ -955,22 +936,51 @@ class MaquetteScene {
       ));
     }
 
-    // Collect rail segment transforms (batched later into InstancedMesh)
-    function pushSeg(arr, p1, p2) {
+    // Render rail 1 — flat strip (like real HO rails)
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p1 = pts[i];
+      var p2 = pts[i + 1];
       var dx = p2.x - p1.x;
       var dz = p2.z - p1.z;
       var len = Math.sqrt(dx * dx + dz * dz);
-      if (len < 0.001) return;
-      arr.push({
-        x: (p1.x + p2.x) / 2,
-        y: (p1.y + p2.y) / 2,
-        z: (p1.z + p2.z) / 2,
-        sx: len,
-        ry: -Math.atan2(dz, dx)
-      });
+      if (len < 0.001) continue;
+
+      var railSeg = new THREE.Mesh(
+        new THREE.BoxGeometry(len, 0.02, 0.025),
+        railMat
+      );
+      railSeg.position.set(
+        (p1.x + p2.x) / 2,
+        (p1.y + p2.y) / 2,
+        (p1.z + p2.z) / 2
+      );
+      railSeg.rotation.y = -Math.atan2(dz, dx);
+      railSeg.castShadow = true;
+      this.scene.add(railSeg);
     }
-    for (var i = 0; i < pts.length - 1; i++) pushSeg(this._railXforms, pts[i], pts[i + 1]);
-    for (var i = 0; i < pts2.length - 1; i++) pushSeg(this._railXforms, pts2[i], pts2[i + 1]);
+
+    // Render rail 2 — flat strip
+    for (var i = 0; i < pts2.length - 1; i++) {
+      var p1 = pts2[i];
+      var p2 = pts2[i + 1];
+      var dx = p2.x - p1.x;
+      var dz = p2.z - p1.z;
+      var len = Math.sqrt(dx * dx + dz * dz);
+      if (len < 0.001) continue;
+
+      var railSeg = new THREE.Mesh(
+        new THREE.BoxGeometry(len, 0.02, 0.025),
+        railMat
+      );
+      railSeg.position.set(
+        (p1.x + p2.x) / 2,
+        (p1.y + p2.y) / 2,
+        (p1.z + p2.z) / 2
+      );
+      railSeg.rotation.y = -Math.atan2(dz, dx);
+      railSeg.castShadow = true;
+      this.scene.add(railSeg);
+    }
 
     // Sleepers — perpendicular to track direction
     var step = Math.max(5, Math.floor(pts.length / 50));
@@ -979,60 +989,19 @@ class MaquetteScene {
       var q = pts2[i];
       if (!p || !q) continue;
 
-      var ry = 0;
+      var sleeper = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.015, gauge + 0.1),
+        sleeperMat
+      );
+      sleeper.position.set((p.x + q.x) / 2, (p.y + q.y) / 2 - 0.01, (p.z + q.z) / 2);
+
       if (i < pts.length - 1) {
         var n = pts[Math.min(i + 1, pts.length - 1)];
-        ry = -Math.atan2(n.z - p.z, n.x - p.x);
+        sleeper.rotation.y = -Math.atan2(n.z - p.z, n.x - p.x);
       }
-      this._sleeperXforms.push({
-        x: (p.x + q.x) / 2,
-        y: (p.y + q.y) / 2 - 0.01,
-        z: (p.z + q.z) / 2,
-        ry: ry
-      });
+      sleeper.castShadow = true;
+      this.scene.add(sleeper);
     }
-  }
-
-  // Merge all collected static transforms into two InstancedMesh draw calls
-  _buildStaticBatches() {
-    if (!this._railXforms || this._railXforms.length === 0) return;
-
-    var m4 = new THREE.Matrix4();
-    var q = new THREE.Quaternion();
-    var e = new THREE.Euler();
-    var pv = new THREE.Vector3();
-    var sv = new THREE.Vector3();
-
-    var railGeo = new THREE.BoxGeometry(1, 0.02, 0.025);
-    var railMesh = new THREE.InstancedMesh(railGeo, this._batchRailMat, this._railXforms.length);
-    for (var i = 0; i < this._railXforms.length; i++) {
-      var r = this._railXforms[i];
-      e.set(0, r.ry, 0); q.setFromEuler(e);
-      pv.set(r.x, r.y, r.z); sv.set(r.sx, 1, 1);
-      m4.compose(pv, q, sv);
-      railMesh.setMatrixAt(i, m4);
-    }
-    railMesh.instanceMatrix.needsUpdate = true;
-    railMesh.castShadow = true;
-    this.scene.add(railMesh);
-
-    if (this._sleeperXforms.length > 0) {
-      var sleeperGeo = new THREE.BoxGeometry(0.04, 0.015, 0.28);
-      var sleeperMesh = new THREE.InstancedMesh(sleeperGeo, this._batchSleeperMat, this._sleeperXforms.length);
-      for (var j = 0; j < this._sleeperXforms.length; j++) {
-        var s = this._sleeperXforms[j];
-        e.set(0, s.ry, 0); q.setFromEuler(e);
-        pv.set(s.x, s.y, s.z); sv.set(1, 1, 1);
-        m4.compose(pv, q, sv);
-        sleeperMesh.setMatrixAt(j, m4);
-      }
-      sleeperMesh.instanceMatrix.needsUpdate = true;
-      sleeperMesh.castShadow = true;
-      this.scene.add(sleeperMesh);
-    }
-
-    this._railXforms = null;
-    this._sleeperXforms = null;
   }
 
   // ==========================================
@@ -1471,12 +1440,16 @@ class MaquetteScene {
 
     canvas.addEventListener('click', function(e) {
       if (!self.placementMode) return;
+      console.log('Click detected in placement mode');
       var rect = canvas.getBoundingClientRect();
       self.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       self.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       self.raycaster.setFromCamera(self.mouse, self.camera);
 
-      if (self.trackCurves.length === 0) return;
+      if (self.trackCurves.length === 0) {
+        console.log('No track curves found');
+        return;
+      }
       var pts = self.trackCurves[0].curve.getPoints(300);
       var best = null, bestD = Infinity;
       for (var i = 0; i < pts.length; i++) {
@@ -1486,12 +1459,36 @@ class MaquetteScene {
         var d = pt.distanceTo(pr);
         if (d < bestD && d < 4.0) { bestD = d; best = i / pts.length; }
       }
+      console.log('Best track point found:', best, 'distance:', bestD);
       if (best !== null) {
         var ci = self.trainIdCounter % self.trainColors.length;
         self.addTrain(best, ci, self.selectedTrainType || 0);
         self.placementMode = false;
         self.hoverIndicator.material.opacity = 0;
         if (typeof self.onTrainPlaced === 'function') self.onTrainPlaced();
+      }
+    });
+
+    canvas.addEventListener('mousemove', function(e) {
+      if (!self.placementMode) { self.hoverIndicator.material.opacity = 0; return; }
+      var rect = canvas.getBoundingClientRect();
+      self.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      self.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      self.raycaster.setFromCamera(self.mouse, self.camera);
+      var pts = self.trackCurves[0].curve.getPoints(300);
+      var best = null, bestD = Infinity;
+      for (var i = 0; i < pts.length; i++) {
+        var pt = pts[i].clone(); pt.y = 0.5;
+        var pr = new THREE.Vector3();
+        self.raycaster.ray.closestPointToPoint(pt, pr);
+        var d = pt.distanceTo(pr);
+        if (d < bestD && d < 4.0) { bestD = d; best = pts[i]; }
+      }
+      if (best) {
+        self.hoverIndicator.position.set(best.x, 0.55, best.z);
+        self.hoverIndicator.material.opacity = bestD < 2.0 ? 0.8 : 0.3;
+      } else {
+        self.hoverIndicator.material.opacity = 0;
       }
     });
   }
@@ -1601,72 +1598,32 @@ class MaquetteScene {
   }
 
   // ==========================================
-  // POINTER MOVE — single throttled handler (rAF)
+  // CURSOR HANDLER — unified hover cursor
   // ==========================================
   setupCursorHandler() {
     var self = this;
     var canvas = this.renderer.domElement;
 
     canvas.addEventListener('mousemove', function(e) {
-      self._lastMoveEvent = e;
-      if (self._moveRafPending) return;
-      self._moveRafPending = true;
-      requestAnimationFrame(function() {
-        self._moveRafPending = false;
-        if (!self._lastMoveEvent || !self.renderer) return;
-        if (self.placementMode) {
-          canvas.style.cursor = 'crosshair';
-          self._updatePlacementHover(self._lastMoveEvent);
-        } else {
-          self._updateCursor(self._lastMoveEvent);
-        }
-      });
+      if (self.placementMode) { canvas.style.cursor = 'crosshair'; return; }
+
+      var rect = canvas.getBoundingClientRect();
+      self.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      self.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      self.raycaster.setFromCamera(self.mouse, self.camera);
+
+      if (self.reversor) {
+        var ri = self.raycaster.intersectObjects(self.reversor.children, true);
+        if (ri.length > 0) { canvas.style.cursor = 'pointer'; return; }
+      }
+
+      for (var i = 0; i < self.switches.length; i++) {
+        var si = self.raycaster.intersectObjects(self.switches[i].children, true);
+        if (si.length > 0) { canvas.style.cursor = 'pointer'; return; }
+      }
+
+      canvas.style.cursor = '';
     });
-  }
-
-  _setRayFromEvent(e) {
-    var canvas = this.renderer.domElement;
-    var rect = canvas.getBoundingClientRect();
-    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-  }
-
-  _updatePlacementHover(e) {
-    if (this.trackCurves.length === 0) { this.hoverIndicator.material.opacity = 0; return; }
-    this._setRayFromEvent(e);
-    var pts = this.trackCurves[0].curve.getPoints(300);
-    var best = null, bestD = Infinity;
-    for (var i = 0; i < pts.length; i++) {
-      var pt = pts[i].clone(); pt.y = 0.5;
-      var pr = new THREE.Vector3();
-      this.raycaster.ray.closestPointToPoint(pt, pr);
-      var d = pt.distanceTo(pr);
-      if (d < bestD && d < 4.0) { bestD = d; best = pts[i]; }
-    }
-    if (best) {
-      this.hoverIndicator.position.set(best.x, 0.55, best.z);
-      this.hoverIndicator.material.opacity = bestD < 2.0 ? 0.8 : 0.3;
-    } else {
-      this.hoverIndicator.material.opacity = 0;
-    }
-  }
-
-  _updateCursor(e) {
-    var canvas = this.renderer.domElement;
-    this._setRayFromEvent(e);
-
-    if (this.reversor) {
-      var ri = this.raycaster.intersectObjects(this.reversor.children, true);
-      if (ri.length > 0) { canvas.style.cursor = 'pointer'; return; }
-    }
-
-    for (var i = 0; i < this.switches.length; i++) {
-      var si = this.raycaster.intersectObjects(this.switches[i].children, true);
-      if (si.length > 0) { canvas.style.cursor = 'pointer'; return; }
-    }
-
-    canvas.style.cursor = '';
   }
 
   // ==========================================
@@ -1852,6 +1809,7 @@ class MaquetteScene {
 
     this.trains.push(train);
     this._placeTrainOnTrack(train);
+    console.log('Train added:', train.name, 'at progress:', progressOnTrack);
     if (typeof this.onTrainAdded === 'function') this.onTrainAdded(train);
     return train;
   }
@@ -1996,7 +1954,6 @@ class MaquetteScene {
   // ANIMATION LOOP
   // ==========================================
   animate() {
-    if (this._visible === false) { this.animationId = null; return; }
     var self = this;
     this.animationId = requestAnimationFrame(function() { self.animate(); });
 
@@ -2015,23 +1972,23 @@ class MaquetteScene {
       this._placeTrainOnTrack(train);
     }
 
-    // Switch + Reversor animation (cached refs — no per-frame traverse)
+    // Switch + Reversor animation
     var reversorGlow = 0.7 + Math.sin(time * 3) * 0.3;
-    for (var s = 0; s < this.switches.length; s++) {
-      var sw = this.switches[s];
-      sw.scale.setScalar(1 + Math.sin(time * 2.5 + sw.position.x) * 0.03);
-    }
-    if (this.reversor) {
-      var rChildren = this.reversor.children;
-      for (var rc = 0; rc < rChildren.length; rc++) {
-        var child = rChildren[rc];
-        if (child.material && child.material.emissive) {
-          if (child.material.emissiveIntensity > 0.5) {
-            child.material.emissiveIntensity = reversorGlow;
-          }
-        }
+    this.scene.traverse(function(c) {
+      if (c.userData && c.userData.type === 'switch') {
+        c.scale.setScalar(1 + Math.sin(time * 2.5 + c.position.x) * 0.03);
       }
-    }
+      if (c.userData && c.userData.type === 'reversor') {
+        c.children.forEach(function(child) {
+          if (child.material && child.material.emissive) {
+            // Pulse only indicators that are "on" (intensity > 0.5)
+            if (child.material.emissiveIntensity > 0.5) {
+              child.material.emissiveIntensity = reversorGlow;
+            }
+          }
+        });
+      }
+    });
 
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
@@ -2048,11 +2005,7 @@ class MaquetteScene {
   }
 
   destroy() {
-    this._visible = false;
-    if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
-    if (this._observer) { this._observer.disconnect(); this._observer = null; }
-    if (this._onResizeBound) { window.removeEventListener('resize', this._onResizeBound); this._onResizeBound = null; }
-    if (this.controls && typeof this.controls.dispose === 'function') this.controls.dispose();
+    if (this.animationId) cancelAnimationFrame(this.animationId);
     if (this.renderer) this.renderer.dispose();
   }
 
@@ -2067,6 +2020,8 @@ class MaquetteScene {
     ];
     for (var i = 0; i < configs.length; i++) {
       var cfg = configs[i];
+      // Set targetSpeed BEFORE addTrain so the card shows correct value
+      var origAddTrain = this.addTrain;
       var train = this.addTrain(cfg.progress, cfg.colorIndex, cfg.typeIndex);
       train.targetSpeed = cfg.speed;
       train.currentSpeed = cfg.speed;

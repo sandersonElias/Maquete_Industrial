@@ -519,7 +519,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
       <div className="maquete3d-palco">
         <Canvas
           shadows={!leve}
-          frameloop="always"
+          frameloop={visivel ? 'always' : 'never'}
           dpr={leve ? [1, 1.25] : [1, 1.75]}
           camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 280 }}
           gl={{
