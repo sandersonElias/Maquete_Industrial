@@ -20,6 +20,7 @@ Otimização para responsividade e compatibilidade total (iOS Safari, Android Ch
 - Favicon adicionado (`images/favicon.svg`) — eliminava 404.
 - Meta tags Open Graph + Twitter Card.
 - `aria-label`/`aria-expanded` no botão do menu mobile.
+- **Desempenho:** `preconnect` para unpkg.com e cdnjs.cloudflare.com; `defer` nos 7 scripts; pesos Inter 300/900 removidos da URL do Google Fonts (não usados no CSS); `decoding="async"` nas imagens.
 
 ### css/styles.css
 - `-webkit-text-size-adjust: 100%` (evita zoom de texto no Safari).
@@ -43,6 +44,7 @@ Otimização para responsividade e compatibilidade total (iOS Safari, Android Ch
 - Partículas: resize com debounce (150ms), contagem adaptativa (40 <700px / 80 caso contrário), guard de `visibilitychange`.
 - Guardas de CDN: Three.js ausente → mensagem inline amigável (`_showSceneError`), sem exceção silenciosa.
 - `_initMaquetteScene(attempt)` com limite de 5 tentativas (eliminado loop infinito de retry).
+- **Desempenho:** loop de conexão das partículas O(n²) usa distância ao quadrado (sem `Math.sqrt` por par) e viewport em cache (sem leitura de layout por partícula/frame).
 
 ### js/three-scene.js
 - Detecção `isMobile` (largura ≤768px ou touch+ tela pequena).
@@ -53,6 +55,7 @@ Otimização para responsividade e compatibilidade total (iOS Safari, Android Ch
 - Mousemove unificado com throttle rAF (um único handler de cursor).
 - `destroy()` completo: desconecta observer, remove listeners, dispose de controles.
 - Logs de console removidos; código morto (`origAddTrain`) removido.
+- **Desempenho:** `WebGLRenderer` criado com `stencil: false` (economia de memória GPU) e `powerPreference: 'high-performance'`.
 
 ### js/scroll-anim.js (reescrito)
 - Guarda global `GSAP_READY`: se o CDN do GSAP falhar, o site permanece utilizável (conteúdo visível, sem animações) em vez de quebrar tudo.
