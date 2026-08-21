@@ -1,16 +1,20 @@
 ---
-description: Maquete 3D do Caio — Marco autorizou editar; usar skills Three.js
+description: Maquete 3D é do Caio — Marco não edita maquete3d sem ele pedir
 alwaysApply: true
 ---
 
-# Maquete 3D — autorização do Marco
+# Maquete 3D — responsabilidade do Caio
 
-**Marco autorizou** editar `site-ferrorama-3d/react-app/src/components/maquete3d/**` (Caio está sem notebook). Pode mexer quando ele pedir.
+**A partir de agora a maquete 3D é do Caio.** Não editar `site-ferrorama-3d/react-app/src/components/maquete3d/**` no fluxo do Marco, salvo se o Caio (ou o Marco falando por ele) pedir explicitamente.
 
-Cuidados:
+Também evitar mudanças “de maquete” em:
 
-- Não reescrever a cena inteira sem ele pedir. Manter a arquitetura do Caio (R3F, loaders, hierarquia) e alterar o que foi pedido.
-- Ao trabalhar na maquete, ler as skills pessoais `threejs-*` em `~/.cursor/skills/` (fundamentals, geometry, materials, lighting, textures, animation, loaders, shaders, postprocessing, interaction).
-- Resto do site (`Hero`, seções, nav, CSS, motion, textos) continua livre.
+- `site-ferrorama-3d/react-app/scripts/maquete_bpy/**`
+- `site-ferrorama-3d/react-app/scripts/build_maquete_blender.py`
+- `site-ferrorama-3d/react-app/public/models/maquete-blender.glb`
+
+Branch típica do Caio: `feat/dev-Caio`.
+
+Resto do site (`Hero`, seções, nav, CSS, motion, textos) continua livre pro Marco.
 
 Publicar: se ele pedir “publica o site”, deploy Vercel em `site-ferrorama-3d/react-app` (`npx vercel --prod`). Link: https://react-app-nine-weld.vercel.app

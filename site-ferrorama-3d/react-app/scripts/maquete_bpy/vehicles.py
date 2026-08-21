@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 
 from .coords import RX
-from .curves import catmull_at, densify, ease_inout, keyframe_path, linear_keys, smooth_keys
+from .curves import ease_inout, linear_keys, smooth_keys
 from .primitives import cube, cyl, empty, ico, parent, parent_keep, wheels
 
 
@@ -42,28 +42,7 @@ def build_volvo_cat(m, road_mine):
     parent(cube("COre", (0.55, 0.2, 0.65), (0, 0, 0), m["ore"], 0.02), cacamba, (0, 0.38, 0))
     wheels(cat, m["black"], (-0.38, 0.38), (-0.5, 0.05, 0.48), r=0.16, y=0.16, depth=0.12)
     parent(cube("C137", (0.02, 0.1, 0.18), (0, 0, 0), m["black"], 0.002), cat, (0.36, 0.7, 0.28))
-    haul_ida = densify(road_mine, 0.18, False)
-    haul_volta = list(reversed(haul_ida))
-    p0, d0 = catmull_at(haul_ida, 0.0, closed=False)
-    yaw0 = math.atan2(d0.x, d0.y) if d0.length > 1e-6 else 0.0
-    for f in range(1, 37):
-        cat.location = (p0.x, p0.y, p0.z + 0.04)
-        cat.rotation_euler = (0, 0, yaw0)
-        cat.keyframe_insert("location", frame=f)
-        cat.keyframe_insert("rotation_euler", frame=f)
-    keyframe_path(cat, haul_ida, f0=36, f1=128, closed=False, ease=False, z_off=0.04, smooth=False)
-    p1, d1 = catmull_at(haul_ida, 1.0, closed=False)
-    yaw1 = math.atan2(d1.x, d1.y) if d1.length > 1e-6 else yaw0
-    while yaw1 - yaw0 > math.pi:
-        yaw1 -= math.tau
-    while yaw1 - yaw0 < -math.pi:
-        yaw1 += math.tau
-    for f in range(128, 173):
-        cat.location = (p1.x, p1.y, p1.z + 0.04)
-        cat.rotation_euler = (0, 0, yaw1)
-        cat.keyframe_insert("location", frame=f)
-        cat.keyframe_insert("rotation_euler", frame=f)
-    keyframe_path(cat, haul_volta, f0=172, f1=240, closed=False, ease=False, z_off=0.04, smooth=False)
+    # Posição/rotação do CAT: React (polilinha reta no asfalto). Só a caçamba anima aqui.
     for f in range(1, 241):
         if f < 132:
             dump = 0.0
@@ -77,7 +56,6 @@ def build_volvo_cat(m, road_mine):
             dump = 0.0
         cacamba.rotation_euler = (dump, 0, 0)
         cacamba.keyframe_insert("rotation_euler", frame=f)
-    linear_keys(cat)
     linear_keys(cacamba)
 
 

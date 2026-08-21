@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 
-const _alvoLook = new THREE.Vector3();
-
 /** Bitola visual das fotos: dois ferros prateados sobre dormente preto. */
 export const BITOLA = 0.2;
 
@@ -339,29 +337,45 @@ export function geometriaFita(
 
 export function posicionarNaCurva(
   objeto: THREE.Object3D,
-  curva: THREE.CatmullRomCurve3,
+  curva: THREE.Curve<THREE.Vector3>,
   t: number,
   alturaY = 0,
-  /** Código: nariz em +Z. GLB do Blender: nariz em −Z (eixo glTF). */
+  /** Código: nariz em +Z. GLB Blender/glTF: nariz do MRS/CAT fica em −Z. */
   frente: 'plusZ' | 'minusZ' = 'plusZ'
 ) {
   const frac = ((t % 1) + 1) % 1;
   const p = curva.getPointAt(frac);
-  const tangente = curva.getTangentAt(frac);
+  const tangente = curva.getTangentAt(frac).normalize();
   const horiz = Math.hypot(tangente.x, tangente.z) || 1;
+  // Yaw estável: +Z local segue a tangente; +PI se o nariz do GLB for −Z.
+  const yaw =
+    Math.atan2(tangente.x, tangente.z) + (frente === 'minusZ' ? Math.PI : 0);
 
   objeto.position.set(p.x, p.y + alturaY, p.z);
-  if (frente === 'minusZ') {
-    objeto.up.set(0, 1, 0);
-    _alvoLook.set(p.x + tangente.x, p.y + alturaY + tangente.y, p.z + tangente.z);
-    objeto.lookAt(_alvoLook);
-    return;
+  objeto.rotation.set(-Math.atan2(tangente.y, horiz), yaw, 0);
+}
+
+/**
+ * Blender → glTF inverte Y do Blender (nosso Z de planta) em −Z.
+ * O traçado React (código) usa Z de planta; no GLB os trilhos/estradas estão espelhados em Z.
+ */
+export function espelharZ<T extends THREE.Vector3>(p: T): T {
+  p.z *= -1;
+  return p;
+}
+
+export function curvaEspelhadaZ(curva: THREE.CatmullRomCurve3): THREE.CatmullRomCurve3 {
+  const pts = curva.points.map((p) => new THREE.Vector3(p.x, p.y, -p.z));
+  return new THREE.CatmullRomCurve3(pts, curva.closed, curva.curveType, curva.tension);
+}
+
+export function polilinhaEspelhadaZ(pontos: [number, number, number][]): THREE.CurvePath<THREE.Vector3> {
+  const pts = pontos.map(([x, y, z]) => new THREE.Vector3(x, y, -z));
+  const path = new THREE.CurvePath<THREE.Vector3>();
+  for (let i = 0; i < pts.length - 1; i++) {
+    path.add(new THREE.LineCurve3(pts[i], pts[i + 1]));
   }
-  objeto.rotation.set(
-    -Math.atan2(tangente.y, horiz),
-    Math.atan2(tangente.x, tangente.z),
-    0
-  );
+  return path;
 }
 
 export type RamoFerroviario = 'nenhum' | 'porto' | 'diagonal' | 'mina';
@@ -510,6 +524,51 @@ export function criarPercursoCaminhao(): THREE.CatmullRomCurve3 {
     'centripetal',
     0.35
   );
+}
+
+/** Estrada da mina no GLB (mesmos pontos do Blender) — só segmentos retos, sem Catmull. */
+export const PONTOS_HAUL_MINA: [number, number, number][] = [
+  [-12.55, 0.12, -6.75],
+  [-11.2, 0.12, -5.85],
+  [-9.7, 0.12, -4.95],
+  [-8.15, 0.12, -4.1],
+];
+
+/** Polilinha reta mina → pátio (o CAT não sai do asfalto). */
+export function criarHaulMina(): THREE.CurvePath<THREE.Vector3> {
+  const pts = PONTOS_HAUL_MINA.map((p) => new THREE.Vector3(...p));
+  const path = new THREE.CurvePath<THREE.Vector3>();
+  for (let i = 0; i < pts.length - 1; i++) {
+    path.add(new THREE.LineCurve3(pts[i], pts[i + 1]));
+  }
+  return path;
+}
+
+/**
+ * Ciclo do CAT: espera na mina → sobe o asfalto → despeja → volta.
+ * Retorna u em [0,1] na polilinha (0 = mina, 1 = pátio) e ângulo da caçamba.
+ */
+export function faseHaulCat(ciclo01: number): { u: number; dump: number } {
+  const t = ((ciclo01 % 1) + 1) % 1;
+  if (t < 0.14) return { u: 0, dump: 0 };
+  if (t < 0.42) {
+    const k = (t - 0.14) / 0.28;
+    return { u: k * k * (3 - 2 * k), dump: 0 };
+  }
+  if (t < 0.48) {
+    const k = (t - 0.42) / 0.06;
+    return { u: 1, dump: 0.62 * k * k * (3 - 2 * k) };
+  }
+  if (t < 0.58) return { u: 1, dump: 0.62 };
+  if (t < 0.64) {
+    const k = (t - 0.58) / 0.06;
+    return { u: 1, dump: 0.62 * (1 - k * k * (3 - 2 * k)) };
+  }
+  if (t < 0.92) {
+    const k = (t - 0.64) / 0.28;
+    return { u: 1 - k * k * (3 - 2 * k), dump: 0 };
+  }
+  return { u: 0, dump: 0 };
 }
 
 /** Centro do túnel no oeste e do morro leste. */

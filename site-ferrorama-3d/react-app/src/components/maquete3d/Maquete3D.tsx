@@ -21,6 +21,12 @@ import { LAYOUT, ramoAtivo } from './geometria';
 /** Posições de cada módulo sobre a placa. */
 const POSICOES: Record<string, [number, number, number]> = LAYOUT;
 
+/** No GLB o export Blender→glTF espelha Z; câmeras precisam do mesmo espelho. */
+function posModulo(id: string, espelharZ: boolean): [number, number, number] {
+  const p = POSICOES[id] ?? [0, 0, 0];
+  return espelharZ ? [p[0], p[1], -p[2]] : p;
+}
+
 const CAMERA_INICIAL = new THREE.Vector3(24, 18, 28);
 const COR_NOITE = '#040508';
 /** Céu de oficina — cinza-azulado, sem estourar o PBR. */
@@ -34,10 +40,12 @@ function CameraFoco({
   selecionado,
   controlsRef,
   tourAtivo,
+  espelharZ = false,
 }: {
   selecionado: string | null;
   controlsRef: React.RefObject<any>;
   tourAtivo: boolean;
+  espelharZ?: boolean;
 }) {
   const { camera } = useThree();
   const alvoPos = useRef(new THREE.Vector3());
@@ -47,14 +55,14 @@ function CameraFoco({
     if (tourAtivo) return;
     const mod = MODULOS.find((m) => m.id === selecionado);
     if (mod) {
-      const [x, , z] = POSICOES[mod.id];
+      const [x, , z] = posModulo(mod.id, espelharZ);
       alvoOlhar.current.set(x, 0.6, z);
       alvoPos.current.set(x + 9, 7.2, z + 10);
     } else {
       alvoOlhar.current.set(0, 0, 0);
       alvoPos.current.copy(CAMERA_INICIAL);
     }
-  }, [selecionado, tourAtivo]);
+  }, [selecionado, tourAtivo, espelharZ]);
 
   useFrame((_, delta) => {
     if (tourAtivo) return;
@@ -76,9 +84,11 @@ function CameraFoco({
 function CameraTour({
   passo,
   ativo,
+  espelharZ = false,
 }: {
   passo: number;
   ativo: boolean;
+  espelharZ?: boolean;
 }) {
   const { camera } = useThree();
   const tempo = useRef(0);
@@ -91,7 +101,7 @@ function CameraTour({
     const ang = t * 0.28;
 
     if (modId) {
-      const [x, , z] = POSICOES[modId];
+      const [x, , z] = posModulo(modId, espelharZ);
       const raio = modId === 'ferrovia' ? 15 : 11;
       alvoOlhar.current.set(x, 0.55, z);
       alvoPos.current.set(
@@ -398,9 +408,9 @@ function Cena({
         makeDefault
       />
 
-      <CameraTour passo={passoTour} ativo={!blender && tourAtivo && pov === 'overview'} />
+      <CameraTour passo={passoTour} ativo={!blender && tourAtivo && pov === 'overview'} espelharZ={false} />
       {livre && (
-        <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} />
+        <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} espelharZ={blender} />
       )}
       {!blender && <CameraPov modo={pov} />}
     </>

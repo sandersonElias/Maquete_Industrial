@@ -1,15 +1,48 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
-import { LoopRepeat, type Object3D } from 'three';
+import { LoopRepeat, Vector3, type Object3D } from 'three';
 import {
+  PONTOS_HAUL_MINA,
   criarTracado,
+  curvaEspelhadaZ,
+  faseHaulCat,
   posicionarNaCurva,
   tMaisProximo,
   tracadoComDesvio,
 } from './geometria';
 
-const URL = '/models/maquete-blender.glb?v=fix17';
+const URL = '/models/maquete-blender.glb?v=fix19';
+
+const _haulDir = new Vector3();
+const _haulPos = new Vector3();
+
+/** Anda na polilinha reta (espaço GLB, Z já espelhado) sem Catmull. */
+function posicionarNoHaul(
+  objeto: Object3D,
+  pts: Vector3[],
+  u: number,
+  frente: 'plusZ' | 'minusZ'
+) {
+  const t = Math.max(0, Math.min(1, u));
+  let total = 0;
+  const lens: number[] = [0];
+  for (let i = 0; i < pts.length - 1; i++) {
+    total += pts[i].distanceTo(pts[i + 1]);
+    lens.push(total);
+  }
+  const alvo = t * total;
+  let i = 0;
+  while (i < pts.length - 2 && lens[i + 1] < alvo) i++;
+  const span = Math.max(lens[i + 1] - lens[i], 1e-6);
+  const local = (alvo - lens[i]) / span;
+  _haulPos.lerpVectors(pts[i], pts[i + 1], local);
+  _haulDir.subVectors(pts[i + 1], pts[i]).normalize();
+  if (_haulDir.lengthSq() < 1e-8) _haulDir.set(0, 0, 1);
+  const yaw = Math.atan2(_haulDir.x, _haulDir.z) + (frente === 'minusZ' ? Math.PI : 0);
+  objeto.position.copy(_haulPos);
+  objeto.rotation.set(0, yaw, 0);
+}
 
 function prepararSombras(obj: Object3D) {
   obj.traverse((child) => {
@@ -62,15 +95,29 @@ export function MaqueteBlender({
   const { scene, animations } = useGLTF(URL);
   const { actions, mixer } = useAnimations(animations, scene);
   const tremRef = useRef<Object3D | null>(null);
+  const catRef = useRef<Object3D | null>(null);
+  const cacambaRef = useRef<Object3D | null>(null);
   const progresso = useRef(0);
-  const principal = useMemo(() => criarTracado(), []);
-  const rota = useMemo(() => tracadoComDesvio(principal, desvios ?? [0, 0, 0, 0]), [principal, desvios]);
+  const haulCiclo = useRef(0);
+  // Traçado no espaço do GLB (Z espelhado pelo export Blender→glTF).
+  const rota = useMemo(() => {
+    const r = tracadoComDesvio(criarTracado(), desvios ?? [0, 0, 0, 0]);
+    return curvaEspelhadaZ(r);
+  }, [desvios]);
+  const haulPts = useMemo(
+    () => PONTOS_HAUL_MINA.map(([x, y, z]) => new Vector3(x, y, -z)),
+    []
+  );
 
   useLayoutEffect(() => {
     prepararSombras(scene);
     tremRef.current = null;
+    catRef.current = null;
+    cacambaRef.current = null;
     scene.traverse((obj) => {
       if (obj.name === 'Trem') tremRef.current = obj;
+      if (obj.name === 'CAT') catRef.current = obj;
+      if (obj.name === 'CATCacamba') cacambaRef.current = obj;
     });
   }, [scene]);
 
@@ -82,7 +129,7 @@ export function MaqueteBlender({
   useEffect(() => {
     const list = Object.entries(actions).filter(([, a]) => a);
     list.forEach(([nome, a]) => {
-      if (/trem/i.test(nome)) {
+      if (/trem|^cat$|cat\./i.test(nome)) {
         a!.stop();
         return;
       }
@@ -96,8 +143,22 @@ export function MaqueteBlender({
 
   useFrame((_, delta) => {
     mixer.timeScale = rodando ? velocidade : 0;
-    if (rodando) progresso.current += delta * 0.046 * velocidade;
-    if (tremRef.current) posicionarNaCurva(tremRef.current, rota, progresso.current, 0.08, 'minusZ');
+    if (rodando) {
+      progresso.current += delta * 0.046 * velocidade;
+      haulCiclo.current += delta * 0.055 * velocidade;
+    }
+    if (tremRef.current) {
+      // LocoNariz no GLB está em local −Z.
+      posicionarNaCurva(tremRef.current, rota, progresso.current, 0.08, 'minusZ');
+    }
+    if (catRef.current) {
+      const { u, dump } = faseHaulCat(haulCiclo.current);
+      // CCab no GLB em −Z; segmentos retos = sem drift.
+      posicionarNoHaul(catRef.current, haulPts, u, 'minusZ');
+      if (cacambaRef.current) {
+        cacambaRef.current.rotation.set(dump, 0, 0);
+      }
+    }
   });
 
   return (
