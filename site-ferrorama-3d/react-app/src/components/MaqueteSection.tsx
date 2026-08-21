@@ -180,8 +180,10 @@ export default function MaqueteSection() {
           <ol className="shell-pipeline" aria-label="Cadeia logística">
             {chain.map((step, i) => (
               <li key={step} className="shell-pipeline__step">
-                {i > 0 && <span className="shell-pipeline__rail" aria-hidden="true" />}
                 <span className="shell-pipeline__node">{step}</span>
+                {i < chain.length - 1 && (
+                  <span className="shell-pipeline__rail" aria-hidden="true" />
+                )}
               </li>
             ))}
           </ol>

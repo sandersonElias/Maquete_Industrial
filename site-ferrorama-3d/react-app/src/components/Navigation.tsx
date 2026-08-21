@@ -13,12 +13,18 @@ const NAV_ITEMS = [
   { id: 'controle', label: 'Controle', thumb: '/images/scada-dashboard.jpg' },
 ];
 
+function unlockPageScroll() {
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+}
+
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('inicio');
   const [scrollProgress, setScrollProgress] = useState(0);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const scrollTimer = useRef<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,28 +58,46 @@ export default function Navigation() {
   }, []);
 
   useEffect(() => {
-    if (!mobileOpen) return;
+    if (!mobileOpen) {
+      unlockPageScroll();
+      return;
+    }
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        unlockPageScroll();
         setMobileOpen(false);
         menuBtnRef.current?.focus();
       }
     };
-    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     document.addEventListener('keydown', onKeyDown);
 
     return () => {
-      document.body.style.overflow = prevOverflow;
+      unlockPageScroll();
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
+      unlockPageScroll();
+    };
+  }, []);
+
+  const closeMenu = () => {
+    unlockPageScroll();
+    setMobileOpen(false);
+  };
+
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    setMobileOpen(false);
-    window.requestAnimationFrame(() => scrollToSection(id));
+    closeMenu();
+    // Espera o unlock do overflow (iOS) antes de rolar — senão o scroll “buga”, sobretudo no Início.
+    if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => scrollToSection(id), 80);
   };
 
   return (
@@ -129,18 +153,19 @@ export default function Navigation() {
           ))}
         </div>
 
-        <motion.button
+        <button
           ref={menuBtnRef}
           type="button"
-          className={`nav-menu-btn ${mobileOpen ? 'active' : ''}`}
-          onClick={() => setMobileOpen(!mobileOpen)}
-          whileTap={{ scale: 0.9 }}
+          className={`nav-menu-btn ${mobileOpen ? 'is-open' : ''}`}
+          onClick={() => (mobileOpen ? closeMenu() : setMobileOpen(true))}
           aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={mobileOpen}
           aria-controls="menu-mobile"
         >
-          <span></span><span></span><span></span>
-        </motion.button>
+          <span className="nav-menu-btn__bar" aria-hidden="true" />
+          <span className="nav-menu-btn__bar" aria-hidden="true" />
+          <span className="nav-menu-btn__bar" aria-hidden="true" />
+        </button>
       </motion.nav>
 
       <AnimatePresence>
@@ -148,42 +173,40 @@ export default function Navigation() {
           <>
             <motion.div
               className="mobile-menu-backdrop"
-              onClick={() => setMobileOpen(false)}
+              onClick={closeMenu}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               aria-hidden="true"
             />
             <motion.div
               id="menu-mobile"
               className="mobile-menu active"
-              initial={{ opacity: 0, y: -20 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu de seções"
+              initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: EASE_OUT_EXPO }}
             >
-              {NAV_ITEMS.map(({ id, label, thumb }, i) => (
-                <motion.a
+              {NAV_ITEMS.map(({ id, label, thumb }) => (
+                <a
                   key={id}
                   href={`#${id}`}
                   className={`mobile-link ${activeSection === id ? 'active' : ''}`}
                   aria-current={activeSection === id ? 'true' : undefined}
                   onClick={(e) => handleNavClick(e, id)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
                 >
                   <img src={thumb} alt="" aria-hidden="true" className="mobile-link-thumb" loading="lazy" />
                   <span>{label}</span>
-                </motion.a>
+                </a>
               ))}
-              <motion.a
+              <a
                 href="/maquete"
                 className="mobile-link mobile-link--cta"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: NAV_ITEMS.length * 0.05 }}
-                onClick={() => setMobileOpen(false)}
+                onClick={closeMenu}
               >
                 <img
                   src="/images/maquete-montagem-1.png"
@@ -193,7 +216,7 @@ export default function Navigation() {
                   loading="lazy"
                 />
                 <span>Abrir maquete em tela cheia</span>
-              </motion.a>
+              </a>
             </motion.div>
           </>
         )}

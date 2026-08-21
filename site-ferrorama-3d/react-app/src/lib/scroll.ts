@@ -8,6 +8,12 @@ export function getNavOffset(): number {
 
 /** Rola até a seção alinhando o título abaixo da navbar. */
 export function scrollToSection(id: string) {
+  // Início = topo real. Evita foco no hero (em iOS isso “pula” / trava após fechar o menu).
+  if (id === 'inicio') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
   const target = document.getElementById(id);
   if (!target) return;
 
