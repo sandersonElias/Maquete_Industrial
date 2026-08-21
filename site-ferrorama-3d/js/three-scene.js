@@ -67,7 +67,7 @@ class MaquetteScene {
       this.camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 1000);
       this.camera.position.set(0, 18, 22);
 
-      this.renderer = new THREE.WebGLRenderer({ antialias: true });
+      this.renderer = new THREE.WebGLRenderer({ antialias: true, stencil: false, powerPreference: 'high-performance' });
       this.renderer.setSize(w, h);
       this.isMobile = window.matchMedia('(max-width: 768px)').matches
         || (navigator.maxTouchPoints > 1 && Math.min(window.screen.width, window.screen.height) < 900);

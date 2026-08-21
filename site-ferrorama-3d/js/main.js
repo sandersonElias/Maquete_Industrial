@@ -109,9 +109,13 @@ class FerroramaApp {
     let animationId = null;
     let resizeTimer = null;
 
+    let vw = window.innerWidth;
+    let vh = window.innerHeight;
     const resize = () => {
-      this.particlesCanvas.width = window.innerWidth;
-      this.particlesCanvas.height = window.innerHeight;
+      vw = window.innerWidth;
+      vh = window.innerHeight;
+      this.particlesCanvas.width = vw;
+      this.particlesCanvas.height = vh;
     };
 
     resize();
@@ -123,8 +127,8 @@ class FerroramaApp {
     class Particle {
       constructor() { this.reset(); }
       reset() {
-        this.x = Math.random() * window.innerWidth;
-        this.y = Math.random() * window.innerHeight;
+        this.x = Math.random() * vw;
+        this.y = Math.random() * vh;
         this.size = Math.random() * 2 + 0.5;
         this.speedX = (Math.random() - 0.5) * 0.5;
         this.speedY = (Math.random() - 0.5) * 0.5;
@@ -134,7 +138,7 @@ class FerroramaApp {
       update() {
         this.x += this.speedX;
         this.y += this.speedY;
-        if (this.x < 0 || this.x > window.innerWidth || this.y < 0 || this.y > window.innerHeight) {
+        if (this.x < 0 || this.x > vw || this.y < 0 || this.y > vh) {
           this.reset();
         }
       }
@@ -151,21 +155,27 @@ class FerroramaApp {
     const particleCount = window.innerWidth < 700 ? 40 : 80;
     for (let i = 0; i < particleCount; i++) particles.push(new Particle());
 
+    const maxDist = 150;
+    const maxDistSq = maxDist * maxDist;
+
     const animate = () => {
       ctx.clearRect(0, 0, this.particlesCanvas.width, this.particlesCanvas.height);
       particles.forEach(p => { p.update(); p.draw(); });
 
       for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
+          const b = particles[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < maxDistSq) {
+            const dist = Math.sqrt(distSq);
             ctx.beginPath();
             ctx.strokeStyle = '#00d4ff';
-            ctx.globalAlpha = 0.1 * (1 - dist / 150);
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.globalAlpha = 0.1 * (1 - dist / maxDist);
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
             ctx.stroke();
             ctx.globalAlpha = 1;
           }

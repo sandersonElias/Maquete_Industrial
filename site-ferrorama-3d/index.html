@@ -16,7 +16,9 @@
   <meta name="twitter:description" content="Experiência interativa 3D do Ferrorama: maquete ferroviária com automação, mineração e logística.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -143,7 +145,7 @@
       <div class="cards-grid">
         <div class="card card-3d scroll-reveal" data-delay="0">
           <div class="card-icon">
-            <img src="images/trem.svg" alt="Trem" loading="lazy">
+            <img src="images/trem.svg" alt="Trem" loading="lazy" decoding="async">
           </div>
           <h3 class="card-title">Trem</h3>
           <p class="card-text">Locomotiva com 4 servos controlados por Arduino para movimentação nos trilhos.</p>
@@ -152,7 +154,7 @@
         
         <div class="card card-3d scroll-reveal" data-delay="1">
           <div class="card-icon">
-            <img src="images/caminhoes-3d.svg" alt="Caminhões" loading="lazy">
+            <img src="images/caminhoes-3d.svg" alt="Caminhões" loading="lazy" decoding="async">
           </div>
           <h3 class="card-title">Caminhões 3D</h3>
           <p class="card-text">3 caminhões basculantes impressos em PLA com motor DC e controle Bluetooth.</p>
@@ -161,7 +163,7 @@
         
         <div class="card card-3d scroll-reveal" data-delay="2">
           <div class="card-icon">
-            <img src="images/arduino.svg" alt="Arduino" loading="lazy">
+            <img src="images/arduino.svg" alt="Arduino" loading="lazy" decoding="async">
           </div>
           <h3 class="card-title">Arduino Mega</h3>
           <p class="card-text">Central de controle que coordena todos os componentes eletrônicos.</p>
@@ -170,7 +172,7 @@
         
         <div class="card card-3d scroll-reveal" data-delay="3">
           <div class="card-icon">
-            <img src="images/controle.svg" alt="Controle" loading="lazy">
+            <img src="images/controle.svg" alt="Controle" loading="lazy" decoding="async">
           </div>
           <h3 class="card-title">Controle Bluetooth</h3>
           <p class="card-text">HC-05 para comunicação sem fio entre app e caminhões.</p>
@@ -380,7 +382,7 @@
       
       <div class="porto-showcase">
         <div class="porto-image scroll-reveal">
-          <img src="images/porto.jpg" alt="Porto da maquete" loading="lazy">
+          <img src="images/porto.jpg" alt="Porto da maquete" loading="lazy" decoding="async">
           <div class="image-overlay"></div>
         </div>
         <div class="porto-content">
@@ -531,12 +533,12 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script src="js/three-scene.js"></script>
-  <script src="js/scroll-anim.js"></script>
-  <script src="js/main.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js" defer></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+  <script src="js/three-scene.js" defer></script>
+  <script src="js/scroll-anim.js" defer></script>
+  <script src="js/main.js" defer></script>
 </body>
 </html>
