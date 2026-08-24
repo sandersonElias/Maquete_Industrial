@@ -62,7 +62,7 @@ export default function HeroSection() {
       <div className="hero-bg">
         <motion.div className="hero-bg-media" style={{ y: bgY, scale: bgScale }}>
           <img
-            src="/images/maquete-montagem-1.png"
+            src="/images/pecas-conjunto.jpg"
             alt=""
             aria-hidden="true"
             className="hero-bg-image"

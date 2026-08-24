@@ -4,10 +4,10 @@ import { EASE_OUT_EXPO } from '../lib/motion';
 import { lockPageScroll, unlockPageScroll, scrollToSection } from '../lib/scroll';
 
 const NAV_ITEMS = [
-  { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-1.png' },
-  { id: 'maquete', label: 'Maquete', thumb: '/images/maquete-montagem-1.png' },
-  { id: 'montagem', label: 'Montagem', thumb: '/images/caminhao-3d.png' },
-  { id: 'codigo', label: 'Automação', thumb: '/images/arduino.jpg' },
+  { id: 'inicio', label: 'Início', thumb: '/images/pecas-conjunto.jpg' },
+  { id: 'maquete', label: 'Maquete', thumb: '/images/pecas-conjunto.jpg' },
+  { id: 'montagem', label: 'Montagem', thumb: '/images/caminhoes-mini-dump.jpg' },
+  { id: 'codigo', label: 'Automação', thumb: '/images/arduino-bancada.jpg' },
   { id: 'mina', label: 'Mina', thumb: '/images/mina-real.jpg' },
   { id: 'porto', label: 'Porto', thumb: '/images/porto.jpg' },
   { id: 'controle', label: 'Controle', thumb: '/images/scada-dashboard.jpg' },
@@ -190,7 +190,7 @@ export default function Navigation() {
               ))}
               <a href="/maquete" className="mobile-link mobile-link--cta" onClick={closeMenu}>
                 <img
-                  src="/images/maquete-montagem-1.png"
+                  src="/images/pecas-conjunto.jpg"
                   alt=""
                   aria-hidden="true"
                   className="mobile-link-thumb"

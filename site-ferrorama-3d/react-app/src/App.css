@@ -2610,6 +2610,7 @@ to { opacity: 1; transform: translateY(0); }
   width: 100%;
   height: 300px;
   object-fit: cover;
+  object-position: 50% 68%;
   display: block;
 }
 .montagem-hero-overlay {
@@ -4457,7 +4458,7 @@ body::after {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
-  object-position: 48% 28%;
+  object-position: 50% 55%;
   opacity: 1 !important;
   filter: saturate(1.05) contrast(1.08) brightness(0.55);
   transform: scale(1.02);
@@ -4780,6 +4781,7 @@ body::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 72%;
   display: block;
 }
 
