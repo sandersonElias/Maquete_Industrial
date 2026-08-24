@@ -9,7 +9,7 @@ export default function Loader() {
   const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setHidden(true), reduced ? 500 : 2000);
+    const timer = window.setTimeout(() => setHidden(true), reduced ? 280 : 750);
     return () => clearTimeout(timer);
   }, [reduced]);
 

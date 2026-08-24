@@ -11,6 +11,10 @@ export default function PageRails() {
   const rightRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Nos breakpoints em que os trilhos ficam `display: none`, não escuta scroll.
+    const mq = window.matchMedia('(max-width: 900px)');
+    if (mq.matches || reduced) return;
+
     const SPEED = 1.25;
     let raf = 0;
 
@@ -41,7 +45,7 @@ export default function PageRails() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, []);
+  }, [reduced]);
 
   return (
     <div className="page-rails" aria-hidden="true">

@@ -13,7 +13,6 @@ import Footer from './components/Footer';
 import PageRails from './components/PageRails';
 import MaquetePage from './components/MaquetePage';
 import PullToRefresh from './components/PullToRefresh';
-import useScrollAnimations from './hooks/useScrollAnimations';
 
 export default function App() {
   const soMaquete =
@@ -32,8 +31,6 @@ export default function App() {
 }
 
 function Site() {
-  useScrollAnimations();
-
   return (
     <>
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>

@@ -791,11 +791,8 @@ html { scroll-behavior: auto; }
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 2rem;
-  transition: all 0.5s var(--ease-out-expo);
+  transition: border-color 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo);
   overflow: hidden;
-  backdrop-filter: blur(8px);
-  transform-style: preserve-3d;
-  will-change: transform;
 }
 .card::before {
   content: '';
@@ -4460,7 +4457,7 @@ body::after {
   object-fit: cover !important;
   object-position: 50% 55%;
   opacity: 1 !important;
-  filter: saturate(1.05) contrast(1.08) brightness(0.55);
+  /* Sem filter CSS no bitmap — wash/vignette já escurecem (bem mais barato no scroll) */
   transform: scale(1.02);
 }
 
@@ -4469,7 +4466,7 @@ body::after {
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(6, 6, 10, 0.55) 0%, rgba(6, 6, 10, 0.35) 40%, rgba(6, 6, 10, 0.75) 78%, #06060a 100%),
+    linear-gradient(180deg, rgba(6, 6, 10, 0.62) 0%, rgba(6, 6, 10, 0.42) 40%, rgba(6, 6, 10, 0.8) 78%, #06060a 100%),
     linear-gradient(90deg, rgba(6, 6, 10, 0.55) 0%, transparent 35%, transparent 65%, rgba(6, 6, 10, 0.45) 100%);
 }
 
@@ -7033,5 +7030,53 @@ body::after {
   .maquete3d--cheia .maquete3d-palco {
     min-height: min(58svh, 520px);
     height: min(58svh, 520px);
+  }
+}
+
+/* —— Performance: menos trabalho no scroll e no paint —— */
+#maquete,
+#montagem,
+#codigo,
+#mina,
+#porto,
+#controle {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+.hero-section--cinematic .hero-bg-media {
+  will-change: auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-section--cinematic .hero-bg-media {
+    will-change: transform;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-section--cinematic .hero-bg-image {
+    filter: brightness(0.5);
+  }
+
+  .card,
+  .scada-monitor,
+  .porto-module__media,
+  .lab-bench__photo,
+  .montagem-hero-card,
+  .nav-glass,
+  .navbar.scrolled {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-section--cinematic .hero-bg-media {
+    will-change: auto;
   }
 }

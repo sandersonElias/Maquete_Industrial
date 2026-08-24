@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import CtaLink from './CtaLink';
-import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
+import { EASE_OUT_EXPO, useHasFinePointer, usePrefersReducedMotion } from '../lib/motion';
 import { scrollToSection } from '../lib/scroll';
 
 const textReveal = {
@@ -10,21 +10,21 @@ const textReveal = {
     y: 0,
     opacity: 1,
     transition: {
-      duration: 1,
-      delay: 0.35 + i * 0.12,
+      duration: 0.75,
+      delay: 0.2 + i * 0.08,
       ease: EASE_OUT_EXPO,
     },
   }),
 };
 
 const fadeUp = {
-  hidden: { y: 36, opacity: 0 },
+  hidden: { y: 28, opacity: 0 },
   visible: (i: number) => ({
     y: 0,
     opacity: 1,
     transition: {
-      duration: 0.75,
-      delay: 0.7 + i * 0.1,
+      duration: 0.55,
+      delay: 0.45 + i * 0.07,
       ease: EASE_OUT_EXPO,
     },
   }),
@@ -43,14 +43,17 @@ export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true });
   const reduced = usePrefersReducedMotion();
+  const finePointer = useHasFinePointer();
+  // Parallax no scroll custa caro no celular / trackpad contínuo — só desktop com mouse.
+  const parallax = !reduced && finePointer;
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end start'],
   });
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', reduced ? '0%' : '18%']);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, reduced ? 1 : 1.08]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', parallax ? '14%' : '0%']);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, parallax ? 1.05 : 1]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, parallax ? 0 : 1]);
 
   const go = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -60,7 +63,7 @@ export default function HeroSection() {
   return (
     <section id="inicio" className="hero-section hero-section--cinematic" data-bg="dark" ref={sectionRef}>
       <div className="hero-bg">
-        <motion.div className="hero-bg-media" style={{ y: bgY, scale: bgScale }}>
+        <motion.div className="hero-bg-media" style={parallax ? { y: bgY, scale: bgScale } : undefined}>
           <img
             src="/images/pecas-conjunto.jpg"
             alt=""
@@ -68,6 +71,7 @@ export default function HeroSection() {
             className="hero-bg-image"
             loading="eager"
             decoding="async"
+            fetchPriority="high"
           />
         </motion.div>
         <div className="hero-bg-wash" aria-hidden="true" />
@@ -75,7 +79,7 @@ export default function HeroSection() {
         <div className="hero-bg-rail" aria-hidden="true" />
       </div>
 
-      <motion.div className="hero-content" style={{ opacity: contentOpacity }}>
+      <motion.div className="hero-content" style={parallax ? { opacity: contentOpacity } : undefined}>
         <motion.p
           className="hero-brand"
           custom={0}

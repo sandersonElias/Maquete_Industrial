@@ -30,18 +30,16 @@ function isMobileViewport() {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
 }
 
-/** Só monta a cena 3D quando o usuário chega perto — no celular, só sob pedido. */
+/**
+ * Na home a maquete 3D só sob pedido (botão).
+ * Evita baixar Three.js + GLB no meio do scroll — principal causa de travada.
+ * Tela cheia (`/maquete`) continua carregando direto.
+ */
 function useProximoDaTela<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  const [proximo, setProximo] = useState(
-    () => typeof window !== 'undefined' && window.location.hash.includes('maquete') && !isMobileViewport()
-  );
-  const [pedido, setPedido] = useState(false);
+  const [proximo, setProximo] = useState(false);
 
-  const carregar = () => {
-    setPedido(true);
-    setProximo(true);
-  };
+  const carregar = () => setProximo(true);
 
   useEffect(() => {
     if (proximo) {
@@ -49,31 +47,7 @@ function useProximoDaTela<T extends HTMLElement>() {
     }
   }, [proximo]);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || pedido) return;
-
-    // No celular a home não puxa Three sozinha — evita travar o scroll da feira.
-    if (isMobileViewport()) return;
-
-    if (typeof IntersectionObserver === 'undefined') {
-      setProximo(true);
-      return;
-    }
-    const obs = new IntersectionObserver(
-      ([entrada]) => {
-        if (entrada.isIntersecting) {
-          setProximo(true);
-          obs.disconnect();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [pedido]);
-
-  return { ref, proximo, carregar, precisaToque: isMobileViewport() && !proximo };
+  return { ref, proximo, carregar, precisaToque: !proximo };
 }
 
 function Placeholder({
@@ -87,7 +61,11 @@ function Placeholder({
     <div className="maquete3d-carregando" role="status">
       {precisaToque ? (
         <>
-          <p>Na feira, a maquete leve fica em tela cheia.</p>
+          <p>
+            {isMobileViewport()
+              ? 'Na feira, a maquete leve fica em tela cheia.'
+              : 'A maquete 3D só carrega quando você pedir — assim o site não trava ao rolar.'}
+          </p>
           <div className="maquete-abrir maquete-abrir--stack">
             <a className="hero-cta" href="/maquete">
               Abrir maquete em tela cheia
