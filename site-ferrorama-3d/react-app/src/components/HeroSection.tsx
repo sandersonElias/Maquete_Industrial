@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, type RefObject } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import CtaLink from './CtaLink';
 import { EASE_OUT_EXPO, useHasFinePointer, usePrefersReducedMotion } from '../lib/motion';
@@ -40,21 +40,75 @@ const SECTION_JUMPS = [
 ];
 
 export default function HeroSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true });
   const reduced = usePrefersReducedMotion();
   const finePointer = useHasFinePointer();
-  // Parallax no scroll custa caro no celular / trackpad contínuo — só desktop com mouse.
   const parallax = !reduced && finePointer;
 
+  return parallax ? <HeroParallax /> : <HeroStatic />;
+}
+
+function HeroStatic() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true });
+
+  return (
+    <HeroShell sectionRef={sectionRef} isInView={isInView}>
+      <div className="hero-bg-media">
+        <HeroBgImage />
+      </div>
+    </HeroShell>
+  );
+}
+
+function HeroParallax() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true });
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end start'],
   });
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', parallax ? '14%' : '0%']);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, parallax ? 1.05 : 1]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, parallax ? 0 : 1]);
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '14%']);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
 
+  return (
+    <HeroShell
+      sectionRef={sectionRef}
+      isInView={isInView}
+      contentStyle={{ opacity: contentOpacity }}
+    >
+      <motion.div className="hero-bg-media" style={{ y: bgY, scale: bgScale }}>
+        <HeroBgImage />
+      </motion.div>
+    </HeroShell>
+  );
+}
+
+function HeroBgImage() {
+  return (
+    <img
+      src="/images/pecas-conjunto.jpg"
+      alt=""
+      aria-hidden="true"
+      className="hero-bg-image"
+      loading="eager"
+      decoding="async"
+      fetchPriority="high"
+    />
+  );
+}
+
+function HeroShell({
+  sectionRef,
+  isInView,
+  contentStyle,
+  children,
+}: {
+  sectionRef: RefObject<HTMLElement | null>;
+  isInView: boolean;
+  contentStyle?: Record<string, unknown>;
+  children: React.ReactNode;
+}) {
   const go = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     scrollToSection(id);
@@ -63,23 +117,13 @@ export default function HeroSection() {
   return (
     <section id="inicio" className="hero-section hero-section--cinematic" data-bg="dark" ref={sectionRef}>
       <div className="hero-bg">
-        <motion.div className="hero-bg-media" style={parallax ? { y: bgY, scale: bgScale } : undefined}>
-          <img
-            src="/images/pecas-conjunto.jpg"
-            alt=""
-            aria-hidden="true"
-            className="hero-bg-image"
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-          />
-        </motion.div>
+        {children}
         <div className="hero-bg-wash" aria-hidden="true" />
         <div className="hero-bg-vignette" aria-hidden="true" />
         <div className="hero-bg-rail" aria-hidden="true" />
       </div>
 
-      <motion.div className="hero-content" style={parallax ? { opacity: contentOpacity } : undefined}>
+      <motion.div className="hero-content" style={contentStyle}>
         <motion.p
           className="hero-brand"
           custom={0}
@@ -157,7 +201,7 @@ export default function HeroSection() {
         onClick={(e) => go(e, 'maquete')}
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.35, duration: 0.6 }}
+        transition={{ delay: 0.7, duration: 0.45 }}
       >
         <span>Desça a linha</span>
         <div className="scroll-arrow" />

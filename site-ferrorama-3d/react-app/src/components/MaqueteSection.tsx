@@ -60,7 +60,7 @@ function Placeholder({
   return (
     <div className="maquete3d-carregando" role="status">
       {precisaToque ? (
-        <>
+        <div className="maquete3d-carregando__inner">
           <p>
             {isMobileViewport()
               ? 'Na feira, a maquete leve fica em tela cheia.'
@@ -74,7 +74,7 @@ function Placeholder({
               Carregar preview aqui
             </button>
           </div>
-        </>
+        </div>
       ) : (
         <>
           <span className="maquete3d-spinner" aria-hidden="true" />
@@ -116,7 +116,7 @@ export default function MaqueteSection() {
           </p>
         </div>
 
-        <div ref={ref}>
+        <div ref={ref} className="maquete-preview-slot">
           {proximo ? (
             <MaqueteErro>
               <Suspense fallback={<Placeholder />}>
@@ -128,11 +128,13 @@ export default function MaqueteSection() {
           )}
         </div>
 
-        <p className="maquete-abrir">
-          <a className="hero-cta" href="/maquete">
-            Abrir maquete em tela cheia
-          </a>
-        </p>
+        {proximo ? (
+          <p className="maquete-abrir">
+            <a className="hero-cta" href="/maquete">
+              Abrir maquete em tela cheia
+            </a>
+          </p>
+        ) : null}
 
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>
