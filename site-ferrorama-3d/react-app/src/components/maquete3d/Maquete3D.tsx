@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows, Stars, Sky } from '@react-three/drei';
+import { OrbitControls, Html, ContactShadows, Stars, Sky, Environment, Lightformer } from '@react-three/drei';
 import * as THREE from 'three';
 import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA, CAMERAS_POV } from './modulos';
 import {
@@ -130,6 +130,76 @@ function CameraTour({
 }
 
 /* ============================================================
+   Responsividade de celular — classe do aparelho e enquadramento
+   ============================================================ */
+
+export type Qualidade = 'leve' | 'media' | 'alta';
+
+function medirQualidade(): Qualidade {
+  if (typeof window === 'undefined') return 'media';
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  const estreito = window.matchMedia('(max-width: 768px)').matches;
+  const toque = window.matchMedia('(pointer: coarse)').matches;
+  const memoria = nav.deviceMemory ?? 8;
+  const nucleos = navigator.hardwareConcurrency ?? 8;
+  if (estreito || memoria <= 4 || nucleos <= 4) return 'leve';
+  if (toque || memoria <= 8) return 'media';
+  return 'alta';
+}
+
+/**
+ * Largura de tela sozinha não diz se o aparelho aguenta: um tablet largo pode
+ * ser mais fraco que um celular novo. Cruzamos largura, tipo de ponteiro,
+ * memória e núcleos, e reavaliamos quando o aparelho gira — antes disso o valor
+ * era calculado uma vez durante o render e nunca mais mudava.
+ */
+function useQualidade(): Qualidade {
+  const [q, setQ] = useState<Qualidade>(medirQualidade);
+  useEffect(() => {
+    const recalcular = () => setQ(medirQualidade());
+    const mq = window.matchMedia('(max-width: 768px)');
+    mq.addEventListener('change', recalcular);
+    window.addEventListener('orientationchange', recalcular);
+    return () => {
+      mq.removeEventListener('change', recalcular);
+      window.removeEventListener('orientationchange', recalcular);
+    };
+  }, []);
+  return q;
+}
+
+/**
+ * Mantém o campo de visão HORIZONTAL constante.
+ *
+ * A maquete é larga (47 x 35) e o `fov` do three é vertical: numa tela de
+ * celular em pé o quadro fica estreito e a mina e o porto saem pelas laterais.
+ * Em vez de empurrar a câmera para trás — o que brigaria com o dedo do usuário
+ * no OrbitControls — abrimos o fov vertical na medida exata em que o aspecto
+ * encolheu. O enquadramento horizontal fica igual em qualquer tela.
+ */
+function EnquadramentoResponsivo({ base = 42, aspectoBase = 16 / 10 }: { base?: number; aspectoBase?: number }) {
+  const camera = useThree((s) => s.camera);
+  const largura = useThree((s) => s.size.width);
+  const altura = useThree((s) => s.size.height);
+
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    if (!cam.isPerspectiveCamera) return;
+    const aspecto = largura / Math.max(1, altura);
+    const fov =
+      aspecto >= aspectoBase
+        ? base
+        : THREE.MathUtils.radToDeg(
+            2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(base) / 2) * (aspectoBase / aspecto))
+          );
+    cam.fov = Math.min(fov, 78);
+    cam.updateProjectionMatrix();
+  }, [camera, largura, altura, base, aspectoBase]);
+
+  return null;
+}
+
+/* ============================================================
    Pausa o render quando a maquete sai da tela (só invalida — nunca para o loop)
    ============================================================ */
 
@@ -144,7 +214,12 @@ function PausarForaDaTela({ ativo }: { ativo: boolean }) {
 }
 
 /** Luzes — remonta ao trocar dia/noite para evitar acúmulo. */
-function Iluminacao({ noite }: { noite: boolean }) {
+function Iluminacao({ noite, qualidade = 'alta' }: { noite: boolean; qualidade?: Qualidade }) {
+  // O shadow map é uma passada extra da cena inteira: 2048 no desktop, 1024 em
+  // aparelho de toque. No 'leve' o Canvas já desliga sombra por completo.
+  const mapaSombra = qualidade === 'alta' ? 2048 : 1024;
+  const resAmbiente = qualidade === 'alta' ? 64 : 32;
+  const estrelas = qualidade === 'leve' ? 500 : 1200;
   return (
     <group key={noite ? 'noite' : 'dia'}>
       {noite ? (
@@ -152,7 +227,12 @@ function Iluminacao({ noite }: { noite: boolean }) {
           <ambientLight intensity={0.12} color="#1a2030" />
           <directionalLight position={[8, 14, 6]} intensity={0.35} color="#8899bb" />
           <hemisphereLight args={['#0a1020', '#020204', 0.25]} />
-          <Stars radius={80} depth={40} count={1200} factor={3} saturation={0.2} fade speed={0.4} />
+          {/* IBL noturno fraco: sem ele o metal fica preto chapado. */}
+          <Environment resolution={Math.min(resAmbiente, 32)} frames={1}>
+            <Lightformer intensity={0.5} color="#243044" position={[0, 8, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[16, 16, 1]} />
+            <Lightformer intensity={0.9} color="#ffc27a" position={[6, 2, 4]} scale={[4, 2, 1]} />
+          </Environment>
+          <Stars radius={80} depth={40} count={estrelas} factor={3} saturation={0.2} fade speed={0.4} />
           {MODULOS.map((mod) => (
             <pointLight
               key={`luz-${mod.id}`}
@@ -167,12 +247,22 @@ function Iluminacao({ noite }: { noite: boolean }) {
       ) : (
         <>
           <ambientLight intensity={0.22} color="#d8c8a8" />
+          {/* Fase 5 — IBL montado com Lightformers em vez de HDRI de CDN: a
+              maquete é aberta por QR code na 4G da feira e um .hdr de vários MB
+              não pode entrar no caminho crítico. Céu quente em cima, rebote
+              frio do horizonte, rebote de terra por baixo. */}
+          <Environment resolution={resAmbiente} frames={1}>
+            <Lightformer intensity={2.1} color="#fff2dc" position={[0, 9, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[18, 18, 1]} />
+            <Lightformer intensity={0.85} color="#b9d6ff" position={[-10, 3, -8]} rotation={[0, Math.PI / 3, 0]} scale={[10, 7, 1]} />
+            <Lightformer intensity={0.7} color="#cfe4ff" position={[10, 3, 8]} rotation={[0, -Math.PI / 3, 0]} scale={[10, 7, 1]} />
+            <Lightformer intensity={0.45} color="#6d5a3d" position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[18, 18, 1]} />
+          </Environment>
           <directionalLight
             position={[16, 22, 10]}
             intensity={1.55}
             color="#ffe4b8"
             castShadow
-            shadow-mapSize={[2048, 2048]}
+            shadow-mapSize={[mapaSombra, mapaSombra]}
             shadow-camera-left={-34}
             shadow-camera-right={34}
             shadow-camera-top={34}
@@ -227,6 +317,8 @@ function Etiqueta({
    ============================================================ */
 
 interface CenaProps {
+  /** Classe do aparelho: define shadow map, resolução do IBL e dpr. */
+  qualidade: Qualidade;
   selecionado: string | null;
   destacado: string | null;
   setSelecionado: (id: string | null) => void;
@@ -317,6 +409,7 @@ function Cena({
   fonte,
   onDesvio,
   controlsRef,
+  qualidade,
 }: CenaProps) {
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
   const blender = fonte === 'blender';
@@ -325,7 +418,8 @@ function Cena({
   return (
     <>
       <Ambiente noite={noite} />
-      <Iluminacao noite={noite} />
+      <Iluminacao noite={noite} qualidade={qualidade} />
+      <EnquadramentoResponsivo />
       {!noite && !blender && (
         <Sky sunPosition={[100, 42, 24]} turbidity={2.2} rayleigh={1.15} mieCoefficient={0.004} mieDirectionalG={0.82} />
       )}
@@ -429,7 +523,8 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
   const wrapperRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
   const reduzido = usePrefersReducedMotion();
-  const leve = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+  const qualidade = useQualidade();
+  const leve = qualidade === 'leve';
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -519,8 +614,12 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
       <div className="maquete3d-palco">
         <Canvas
           shadows={!leve}
-          frameloop="always"
-          dpr={leve ? [1, 1.25] : [1, 1.75]}
+          /* Fora da tela o loop para de verdade. Antes ficava em "always" e
+             renderizava a 60 fps mesmo com a maquete rolada para fora da
+             janela — o `invalidate` do PausarForaDaTela não tem efeito nesse
+             modo. Na tela cheia (/maquete) a seção está sempre visível. */
+          frameloop={visivel ? 'always' : 'never'}
+          dpr={leve ? [1, 1.25] : qualidade === 'media' ? [1, 1.5] : [1, 1.75]}
           camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 280 }}
           gl={{
             alpha: false,
@@ -555,6 +654,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
             fonte={fonte}
             onDesvio={girarDesvio}
             controlsRef={controlsRef}
+            qualidade={qualidade}
           />
         </Canvas>
 
