@@ -4,14 +4,14 @@ import { EASE_OUT_EXPO } from '../lib/motion';
 import { scrollToSection } from '../lib/scroll';
 
 const NAV_ITEMS = [
-  { id: 'inicio', label: 'Início' },
+  { id: 'inicio', label: 'Início', hideMobile: true },
   { id: 'maquete', label: 'Maquete' },
   { id: 'montagem', label: 'Montagem' },
-  { id: 'codigo', label: 'Automação' },
+  { id: 'codigo', label: 'Automação', shortMobile: 'Auto' },
   { id: 'mina', label: 'Mina' },
   { id: 'porto', label: 'Porto' },
   { id: 'controle', label: 'Controle' },
-];
+] as const;
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
@@ -119,11 +119,17 @@ export default function Navigation() {
           </a>
 
           <div className="nav-links" role="list">
-            {NAV_ITEMS.map(({ id, label }, i) => (
+            {NAV_ITEMS.map(({ id, label, hideMobile, shortMobile }, i) => (
               <motion.a
                 key={id}
                 href={`#${id}`}
-                className={`nav-link ${activeSection === id ? 'active' : ''}`}
+                className={[
+                  'nav-link',
+                  activeSection === id ? 'active' : '',
+                  hideMobile ? 'nav-link--hide-mobile' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 aria-current={activeSection === id ? 'true' : undefined}
                 onClick={(e) => handleNavClick(e, id)}
                 initial={{ opacity: 0, y: -8 }}
@@ -131,7 +137,16 @@ export default function Navigation() {
                 transition={{ duration: 0.35, delay: 0.25 + i * 0.04, ease: EASE_OUT_EXPO }}
                 role="listitem"
               >
-                {label}
+                {shortMobile ? (
+                  <>
+                    <span className="nav-link__full">{label}</span>
+                    <span className="nav-link__short" aria-hidden="true">
+                      {shortMobile}
+                    </span>
+                  </>
+                ) : (
+                  label
+                )}
               </motion.a>
             ))}
           </div>

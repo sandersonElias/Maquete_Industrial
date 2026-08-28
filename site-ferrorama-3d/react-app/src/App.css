@@ -422,6 +422,12 @@ html { scroll-behavior: auto; }
   background: rgba(255, 136, 68, 0.22);
   box-shadow: inset 0 0 0 1px rgba(255, 136, 68, 0.35);
 }
+.nav-link__short {
+  display: none;
+}
+.nav-link--hide-mobile {
+  display: inline-flex;
+}
 .nav-menu-btn {
   display: none;
   position: relative;
@@ -4726,6 +4732,13 @@ body::after {
   outline: none;
 }
 
+/* Header já cobre as seções no mobile — evita links duplicados no hero */
+@media (max-width: 900px) {
+  .hero-jumps {
+    display: none;
+  }
+}
+
 .hero-section--cinematic .scroll-indicator {
   z-index: 4;
   text-decoration: none;
@@ -5086,8 +5099,31 @@ body::after {
   transform: translateY(-3px) !important;
 }
 
-/* Nav compacto em telas estreitas — links sempre visíveis, rolagem horizontal */
+/* Nav compacto em telas estreitas — marca em cima, links embaixo */
 @media (max-width: 720px) {
+  :root {
+    --nav-offset: calc(6.35rem + var(--safe-top));
+  }
+
+  .nav {
+    align-items: stretch;
+    height: auto;
+    min-height: var(--nav-offset);
+    padding-bottom: 0.45rem;
+  }
+
+  .nav-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: stretch;
+    height: auto;
+    row-gap: 0.42rem;
+  }
+
+  .nav-brand {
+    min-height: 2.35rem;
+  }
+
   .nav-tagline {
     display: none;
   }
@@ -5103,12 +5139,35 @@ body::after {
   }
 
   .nav-title {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
+  }
+
+  .nav-links {
+    justify-content: flex-start;
+    width: 100%;
+    padding: 0.28rem;
+    gap: 0.12rem;
+    scroll-padding-inline: 0.35rem;
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  .nav-link--hide-mobile {
+    display: none;
   }
 
   .nav-link {
-    font-size: 0.58rem;
-    padding: 0.38rem 0.5rem;
+    font-size: 0.64rem;
+    padding: 0.48rem 0.62rem;
+    min-height: 2.05rem;
+  }
+
+  .nav-link__full {
+    display: none;
+  }
+
+  .nav-link__short {
+    display: inline;
   }
 }
 
