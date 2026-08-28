@@ -250,7 +250,7 @@ FIXOS = {
     "SiloCarvao": quad(-21.75, -4.6, 0.96, 0.96),
     "Barracao": quad(-22.6, -9.2, 2.3, 1.65),
     "MinaOficina": quad(-21.8, -6.8, 1.35, 1.05),
-    "SalaSCADA": quad(-5.8, 13.2, 3.2, 2.2),
+    "CentroControle": quad(-16.2, 11.1, 11.2, 9.0),
     "PatioPlat": quad(0.0, 3.2, 8.6, 0.55),
 }
 

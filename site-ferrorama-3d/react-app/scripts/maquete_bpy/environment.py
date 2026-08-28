@@ -86,26 +86,10 @@ def build_hills(m):
     lathe_solid("CapimOS", grass_prof, 22, (-RX - 0.5, 0.0, -1.85), m["grass"], 0.06, 1.2)
 
 
-def build_scada(m):
-    from .materials import pbr
-
-    cube("SalaPiso", (3.2, 0.08, 2.2), (-5.8, 0.08, 13.2), m["conc"], 0.01)
-    cube("Mesa", (2.55, 0.08, 1.15), (-5.8, 0.72, 13.05), m["desk"], 0.03)
-    cube("MesaPe", (2.4, 0.62, 1.0), (-5.8, 0.38, 13.05), m["desk"], 0.04)
-    for i, x in enumerate((-0.75, -0.25, 0.25, 0.75)):
-        cube(f"MonFrame{i}", (0.48, 0.34, 0.06), (-5.8 + x, 1.02, 13.42), m["black"], 0.008, rot=(-0.55, 0, 0))
-        cube(
-            f"Monitor{i}",
-            (0.42, 0.28, 0.02),
-            (-5.8 + x, 1.04, 13.52),
-            pbr(f"Mon{i}", color=(0.15, 0.75, 0.4), rough=0.2, emit=1.4),
-            0.002,
-            rot=(-0.55, 0, 0),
-        )
-    cube("Caneca", (0.12, 0.14, 0.12), (-4.75, 0.86, 13.25), m["white"], 0.02)
-    cube("Pasta0", (0.28, 0.04, 0.36), (-6.7, 0.8, 13.25), m["mrs_b"], 0.006)
-    cube("Pasta1", (0.28, 0.04, 0.36), (-6.68, 0.85, 13.22), m["white"], 0.006)
-    cube("Cadeira", (0.45, 0.55, 0.45), (-5.8, 0.35, 13.85), m["black"], 0.04)
+# `build_scada` saiu na fase 14. Era uma laje de 3,2 x 2,2 com uma mesa,
+# quatro monitores, uma caneca e uma cadeira — sem parede, sem teto e sem
+# entorno, uma sala de controle ao ar livre no meio do gramado. O que faz o
+# papel dela agora e o campus de `control_center.py`, no quadrante noroeste.
 
 
 def build_trees(m):
@@ -150,6 +134,9 @@ def build_trees(m):
             return False
         # Fase 13: o terminal logistico ocupa o retangulo que antes era vazio.
         if -0.4 < x < 10.0 and 6.2 < z < 15.6:
+            return False
+        # Fase 14: o campus da central de controle, no quadrante noroeste.
+        if -22.2 < x < -10.2 and 6.2 < z < 16.0:
             return False
         return True
 

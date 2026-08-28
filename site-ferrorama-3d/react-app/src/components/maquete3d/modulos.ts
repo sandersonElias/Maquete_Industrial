@@ -118,7 +118,7 @@ export const MODULOS: Modulo[] = [
     id: 'controle',
     nome: 'Central de Controle',
     cor: PALETA.danger,
-    alvo: [-5.8, 0.5, 13.2],
+    alvo: [-16.2, 0.6, 11.0],
     resumo:
       'Arduino Mega, gateway e dashboard: o cérebro que coordena os módulos.',
     detalhes: [

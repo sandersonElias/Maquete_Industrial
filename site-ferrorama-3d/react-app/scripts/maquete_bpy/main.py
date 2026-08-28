@@ -8,7 +8,8 @@ import bpy
 from .checks import report_overlaps
 from .coords import clear_scene, collection
 from .details import build_details
-from .environment import build_board, build_fair_lights, build_hills, build_scada, build_trees
+from .control_center import build_control_center
+from .environment import build_board, build_fair_lights, build_hills, build_trees
 from .harbour import build_harbour
 from .iron_mine import build_iron_mine
 from .landscape import build_landscape
@@ -77,7 +78,7 @@ def build():
     build_site(m)
     build_details(m)
     build_landscape(m)
-    build_scada(m)
+    build_control_center(m)
     build_trees(m)
     build_fair_lights(m)
     build_train(m)
@@ -128,7 +129,7 @@ def build():
         cols["IRON_MINE"],
     )
     _move_prefix(("Pickup", "Volvo", "VBody", "VCab", "VGlass", "VTrack", "VBoom", "VStick", "VBucket", "VTooth", "CAT", "CChassi", "CCab", "CGlass", "CBed", "COre", "C137", "Trem", "Loco", "Vagao"), cols["VEHICLES"])
-    _move_prefix(("Sala", "Mesa", "Mon", "Caneca", "Pasta", "Cadeira", "OpScada"), cols["SCADA"])
+    _move_prefix(("Centro", "MastroCom", "OpScada"), cols["SCADA"])
     _move_prefix(
         (
             "Morro", "Capim", "Tunel", "Tronco", "Copa",

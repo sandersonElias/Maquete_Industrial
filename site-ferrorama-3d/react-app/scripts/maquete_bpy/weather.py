@@ -102,6 +102,8 @@ INDUSTRIAIS = (
     "GuindasteTrelica", "ConteinerCais", "Barcaca", "Rebocador", "CavaShovel",
     # Fase 13: terminal logistico.
     "ArmazemLog", "GalpaoLog", "MuroTerminal", "PatioContLog", "Doca", "CarretaLog",
+    # Fase 14: campus da central de controle.
+    "CentroBaia", "CentroMuro", "CentroSeg", "CentroPortaria", "MastroCom",
 )
 
 

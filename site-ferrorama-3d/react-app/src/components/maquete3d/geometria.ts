@@ -21,7 +21,8 @@ export const LAYOUT = {
   mineradora: [-17.2, 0, -9.4] as [number, number, number],
   ferrovia: [0, 0, 0] as [number, number, number],
   porto: [17.6, 0, 8.6] as [number, number, number],
-  controle: [-5.8, 0, 13.2] as [number, number, number],
+  // Fase 14: a central de controle virou um campus no quadrante noroeste.
+  controle: [-16.2, 0, 11.0] as [number, number, number],
 };
 
 export function geometriaMorro(raio: number, altura: number, segs = 36) {

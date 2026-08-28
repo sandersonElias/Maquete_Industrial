@@ -230,7 +230,8 @@ def build_details(m):
     )
     grupo_pessoas("OpEmbarque", [(-15.7, -4.6, 0.9), (-13.0, -6.6, -2.0), (-13.4, -6.9, 1.7)], m)
     grupo_pessoas("OpPorto", [(16.9, 10.3, 2.4), (17.3, 7.4, 1.4), (17.4, 12.2, -0.9), (13.6, 12.0, 0.3)], m)
-    grupo_pessoas("OpScada", [(-5.0, 14.05, 3.0), (-6.75, 13.95, 2.6)], m)
+    # OpScada saiu daqui na fase 14: as pessoas nascem dentro do campus da
+    # central de controle, em `control_center.py`, na cota certa de cada patamar.
 
     pickup("PickupMina", -10.6, -10.4, m, yaw=0.35)
     pickup("PickupPorto", 13.9, 4.6, m, yaw=-0.5, cor=m["mrs_y"])

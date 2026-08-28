@@ -74,6 +74,11 @@ TOLERADOS = (
     # Galerias C e D se encontram na torre de transferencia B, e a D passa por
     # cima do portico da empilhadeira — as duas coisas sao o projeto.
     ("GaleriaC", "GaleriaD"), ("GaleriaD", "EmpilhPortico"),
+    # Fase 14 — o campus e feito de coisa dentro de coisa: interior dentro da
+    # baia, carro debaixo da cobertura, operador na portaria.
+    ("CentroBaia", "CentroEst"), ("CentroBaia", "CentroCtrl"),
+    ("CentroCarro", "CentroCob"), ("CentroPortaria", "OpScada"),
+    ("CentroBaia", "OpScada"), ("CentroPlata", "Centro"),
 )
 
 

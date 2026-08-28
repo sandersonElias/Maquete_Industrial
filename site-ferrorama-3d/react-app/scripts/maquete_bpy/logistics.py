@@ -77,9 +77,9 @@ def cobertura_vagas(name, x, z, m, vagas=6, passo=0.26, prof=0.62):
     return join(name, p)
 
 
-def carro(name, x, z, m, yaw=0.0, cor=None):
+def carro(name, x, z, m, yaw=0.0, cor=None, y=0.0):
     """Carro de passeio: dois volumes e quatro rodas. Só precisa ler de longe."""
-    pt = _base(x, z, yaw)
+    pt = _base(x, z, yaw, y)
     c = cor or m["white"]
     p = [
         cube(f"{name}Corpo", (0.34, 0.07, 0.16), pt(0, 0, 0.07), c, 0.02, rot=(0, yaw, 0)),
