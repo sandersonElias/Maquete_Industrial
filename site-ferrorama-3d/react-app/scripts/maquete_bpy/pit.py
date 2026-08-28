@@ -168,6 +168,36 @@ def escavadeira(name, x, z, m, yaw=0.0, y=0.0):
     return join(name, p)
 
 
+def escavadeira_cabo(name, x, z, m, yaw=0.0, y=0.0):
+    """Escavadeira a cabo (shovel elétrica) — a máquina azul da foto da cava.
+
+    É o equipamento mais antigo e mais reconhecível de uma mina a céu aberto:
+    casa de máquinas alta sobre esteiras curtas, lança treliçada fixa e a
+    caçamba pendurada no cabo, não num braço hidráulico. Uma máquina em cor
+    diferente também quebra o campo amarelo dos caminhões.
+    """
+    co, si = math.cos(yaw), math.sin(yaw)
+
+    def pt(a, t, h):
+        return (x + co * a - si * t, y + h, z + si * a + co * t)
+
+    p = [
+        cube(f"{name}Est0", (0.34, 0.09, 0.1), pt(0, -0.14, 0.045), m["black"], 0.012, rot=(0, yaw, 0)),
+        cube(f"{name}Est1", (0.34, 0.09, 0.1), pt(0, 0.14, 0.045), m["black"], 0.012, rot=(0, yaw, 0)),
+        cube(f"{name}Casa", (0.34, 0.3, 0.3), pt(-0.04, 0, 0.24), m["shovel_b"], 0.02, rot=(0, yaw, 0)),
+        cube(f"{name}Teto", (0.36, 0.04, 0.32), pt(-0.04, 0, 0.41), m["shovel_b"], 0.01, rot=(0, yaw, 0)),
+        cube(f"{name}Vidro", (0.02, 0.09, 0.12), pt(0.14, -0.1, 0.3), m["glass"], 0.0, rot=(0, yaw, 0)),
+        # Lança fixa, treliçada, e o cabo de içamento saindo do topo da casa.
+        barra(f"{name}Lanca", pt(0.1, 0, 0.2), pt(0.62, 0, 0.62), 0.045, 0.05, m["shovel_b"]),
+        barra(f"{name}LancaD", pt(0.14, 0, 0.16), pt(0.6, 0, 0.56), 0.02, 0.02, m["steel_rust"]),
+        barra(f"{name}Cabo", pt(0.62, 0, 0.6), pt(0.66, 0, 0.24), 0.012, 0.012, m["black"]),
+        # Braço da caçamba atravessa a lança, como na máquina real.
+        barra(f"{name}Braco", pt(0.24, 0, 0.3), pt(0.7, 0, 0.18), 0.035, 0.035, m["steel_rust"]),
+        cube(f"{name}Cacamba", (0.2, 0.18, 0.22), pt(0.76, 0, 0.14), m["steel_rust"], 0.015, rot=(0, yaw, 0)),
+    ]
+    return join(name, p)
+
+
 def caminhao_fora(name, x, z, m, yaw=0.0, y=0.0, carregado=True):
     """Fora-de-estrada parado: caçamba alta, cabine no canto, roda enorme."""
     co, si = math.cos(yaw), math.sin(yaw)
@@ -248,6 +278,14 @@ def cava_ferro(m):
     escavadeira("CavaEscav", cx + 0.62, cz + 0.28, m, yaw=2.5, y=0.28)
     caminhao_fora("CavaCaminhao", cx + 0.18, cz - 0.5, m, yaw=1.1, y=0.15)
     perfuratriz("CavaPerf", cx - 0.85, cz + 0.62, m, yaw=-0.7, y=0.44)
+    # Fase 12 — a foto da cava tem vários equipamentos em bancadas diferentes,
+    # e é essa sobreposição de níveis que faz a cava parecer funda. Uma
+    # escavadeira a cabo na berma do banco 2, um caminhão subindo a rampa e
+    # outro esperando na crista.
+    escavadeira_cabo("CavaShovel", cx - 0.55, cz - 0.42, m, yaw=0.66, y=0.28)
+    caminhao_fora("CavaCaminhao2", cx - 0.44, cz - 0.71, m, yaw=5.74, y=0.43, carregado=False)
+    caminhao_fora("CavaCaminhao3", cx + 0.42, cz + 1.07, m, yaw=2.77, y=0.62)
+    trator_esteira("CavaDozer", cx - 1.0, cz + 0.5, m, yaw=1.4, y=0.62)
 
 
 def pilha_esteril(m):

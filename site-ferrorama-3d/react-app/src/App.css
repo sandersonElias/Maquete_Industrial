@@ -7350,3 +7350,42 @@ body::after {
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
+
+/* ============================================
+   MAQUETE — alvos de toque (fase 12)
+   Vale por tipo de ponteiro, não por largura: um tablet largo também é dedo.
+   Os blocos por largura acima davam 48px ao CONTÊINER dos botões, mas o botão
+   em si ficava em ~33px de altura — abaixo do piso de 44px, e é o botão que
+   recebe o toque.
+   ============================================ */
+@media (pointer: coarse) {
+  .maquete3d-btn,
+  .maquete3d-check,
+  .maquete3d-slider {
+    min-height: 44px;
+  }
+
+  .maquete3d-btn {
+    padding-block: 0.7rem;
+  }
+
+  /* Polegar não acerta um thumb de 12px. */
+  .maquete3d-slider input[type='range'] {
+    height: 28px;
+  }
+  .maquete3d-slider input[type='range']::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+  .maquete3d-slider input[type='range']::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* A fileira rola na horizontal; sem a borda esmaecida ninguém percebe que
+     há mais botão fora da tela. */
+  .maquete3d-botoes {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 22px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 22px), transparent 100%);
+  }
+}

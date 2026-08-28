@@ -33,10 +33,21 @@ const COR_NOITE = '#040508';
 const COR_DIA = '#5a7a96';
 
 /* ============================================================
-   Câmera: aproxima suavemente do módulo selecionado
+   Câmera livre: solta por natureza, volta sozinha depois de 10 s parada
    ============================================================ */
 
-function CameraFoco({
+/** Lente de foto de maquete, usada quando a câmera desce ao nível do solo. */
+const BASE_FOV_SOLO = 34;
+const RETORNO_MS = 10000;
+/** A câmera não desce abaixo disto — é o que impede ver por baixo do tabuleiro. */
+const PISO_CAMERA = 0.18;
+const TECLAS_ANDAR = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight']);
+
+const _frente = new THREE.Vector3();
+const _lado = new THREE.Vector3();
+const _passo = new THREE.Vector3();
+
+function CameraLivre({
   selecionado,
   controlsRef,
   tourAtivo,
@@ -48,8 +59,11 @@ function CameraFoco({
   espelharZ?: boolean;
 }) {
   const { camera } = useThree();
-  const alvoPos = useRef(new THREE.Vector3());
+  const alvoPos = useRef(new THREE.Vector3().copy(CAMERA_INICIAL));
   const alvoOlhar = useRef(new THREE.Vector3(0, 0, 0));
+  /** Instante do último gesto. 0 = ninguém tocou ainda, então volta na hora. */
+  const ultimoGesto = useRef(0);
+  const teclas = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     if (tourAtivo) return;
@@ -62,15 +76,84 @@ function CameraFoco({
       alvoOlhar.current.set(0, 0, 0);
       alvoPos.current.copy(CAMERA_INICIAL);
     }
+    // Clicar num módulo é um pedido explícito: a câmera vai agora, não em 10 s.
+    ultimoGesto.current = 0;
   }, [selecionado, tourAtivo, espelharZ]);
+
+  useEffect(() => {
+    const controles = controlsRef.current;
+    const marcar = () => {
+      ultimoGesto.current = performance.now();
+    };
+    // Só o evento "start" do OrbitControls conta. O "change" dispara também
+    // durante o nosso próprio retorno e reiniciaria o cronômetro para sempre.
+    controles?.addEventListener?.('start', marcar);
+
+    const editando = () => {
+      const el = document.activeElement as HTMLElement | null;
+      return !!el && (el.isContentEditable || /^(input|textarea|select)$/i.test(el.tagName));
+    };
+    const apertou = (e: KeyboardEvent) => {
+      // Andar só depois que a pessoa já mexeu na maquete: sem essa trava, um
+      // W digitado em qualquer lugar da página moveria uma câmera fora de vista.
+      if (!TECLAS_ANDAR.has(e.code) || ultimoGesto.current === 0 || editando()) return;
+      teclas.current[e.code] = true;
+      marcar();
+    };
+    const soltou = (e: KeyboardEvent) => {
+      teclas.current[e.code] = false;
+    };
+    window.addEventListener('keydown', apertou);
+    window.addEventListener('keyup', soltou);
+    return () => {
+      controles?.removeEventListener?.('start', marcar);
+      window.removeEventListener('keydown', apertou);
+      window.removeEventListener('keyup', soltou);
+      teclas.current = {};
+    };
+  }, [controlsRef]);
 
   useFrame((_, delta) => {
     if (tourAtivo) return;
-    const k = Math.min(delta * 2.4, 1);
-    camera.position.lerp(alvoPos.current, k);
-    if (controlsRef.current) {
-      controlsRef.current.target.lerp(alvoOlhar.current, k);
-      controlsRef.current.update();
+    const controles = controlsRef.current;
+    const k = teclas.current;
+
+    // Caminhada: o alvo anda junto com a câmera. Orbitar um ponto fixo é o
+    // oposto de caminhar — sem mover o alvo, W só aproximaria do centro.
+    const frente = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
+    const lado = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
+    if ((frente || lado) && controles) {
+      ultimoGesto.current = performance.now();
+      _frente.subVectors(controles.target, camera.position);
+      _frente.y = 0;
+      if (_frente.lengthSq() > 1e-6) _frente.normalize();
+      _lado.set(_frente.z, 0, -_frente.x);
+      const vel = camera.position.distanceTo(controles.target) * 0.9 * delta;
+      _passo.set(0, 0, 0).addScaledVector(_frente, frente * vel).addScaledVector(_lado, lado * vel);
+      camera.position.add(_passo);
+      controles.target.add(_passo);
+      controles.update();
+    }
+
+    if (camera.position.y < PISO_CAMERA) {
+      camera.position.y = PISO_CAMERA;
+      controles?.update?.();
+    }
+
+    const agora = performance.now();
+    if (ultimoGesto.current !== 0 && agora - ultimoGesto.current < RETORNO_MS) return;
+    const perto =
+      camera.position.distanceToSquared(alvoPos.current) < 0.0025 &&
+      (!controles || controles.target.distanceToSquared(alvoOlhar.current) < 0.0025);
+    if (perto) return;
+    // Volta devagar quando é o retorno por inatividade, rápido quando é um
+    // clique num módulo — uma coisa é a câmera se recompor sozinha, outra é
+    // responder a um pedido.
+    const vel = Math.min(delta * (ultimoGesto.current === 0 ? 2.4 : 1.1), 1);
+    camera.position.lerp(alvoPos.current, vel);
+    if (controles) {
+      controles.target.lerp(alvoOlhar.current, vel);
+      controles.update();
     }
   });
 
@@ -209,20 +292,43 @@ function EnquadramentoResponsivo({ base = 42, aspectoBase = 16 / 10 }: { base?: 
   const camera = useThree((s) => s.camera);
   const largura = useThree((s) => s.size.width);
   const altura = useThree((s) => s.size.height);
+  const baseRef = useRef(base);
+
+  const aplicar = useCallback(
+    (baseGraus: number) => {
+      const cam = camera as THREE.PerspectiveCamera;
+      if (!cam.isPerspectiveCamera) return;
+      const aspecto = largura / Math.max(1, altura);
+      const fov =
+        aspecto >= aspectoBase
+          ? baseGraus
+          : THREE.MathUtils.radToDeg(
+              2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(baseGraus) / 2) * (aspectoBase / aspecto))
+            );
+      const novo = Math.min(fov, 78);
+      if (Math.abs(cam.fov - novo) < 0.05) return;
+      cam.fov = novo;
+      cam.updateProjectionMatrix();
+    },
+    [camera, largura, altura, aspectoBase]
+  );
 
   useEffect(() => {
-    const cam = camera as THREE.PerspectiveCamera;
-    if (!cam.isPerspectiveCamera) return;
-    const aspecto = largura / Math.max(1, altura);
-    const fov =
-      aspecto >= aspectoBase
-        ? base
-        : THREE.MathUtils.radToDeg(
-            2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(base) / 2) * (aspectoBase / aspecto))
-          );
-    cam.fov = Math.min(fov, 78);
-    cam.updateProjectionMatrix();
-  }, [camera, largura, altura, base, aspectoBase]);
+    baseRef.current = base;
+    aplicar(base);
+  }, [aplicar, base]);
+
+  // De cima, 42° enquadra o tabuleiro inteiro. No nível do solo a mesma lente
+  // distorce tudo que está perto — uma foto de maquete usa lente mais fechada.
+  // A transição acompanha a altura da câmera, entre 3,0 e 0,4.
+  useFrame(() => {
+    const y = camera.position.y;
+    const t = THREE.MathUtils.clamp((y - 0.4) / 2.6, 0, 1);
+    const alvo = THREE.MathUtils.lerp(BASE_FOV_SOLO, base, t);
+    if (Math.abs(alvo - baseRef.current) < 0.15) return;
+    baseRef.current = alvo;
+    aplicar(alvo);
+  });
 
   return null;
 }
@@ -537,7 +643,13 @@ function Cena({
         />
       )}
 
-      {/* No dedo o mesmo arrasto percorre muito mais ângulo que no mouse: sem
+      {/* `maxPolarAngle` estava travado em 84° para a câmera não passar por
+          baixo do tabuleiro, e `minDistance` em 5 impedia chegar perto de
+          qualquer coisa. Quem impede ver por baixo agora é o piso em y=0,18 do
+          CameraLivre, então o ângulo vai até rente ao horizonte e dá para
+          encostar num vagão.
+
+          No dedo o mesmo arrasto percorre muito mais ângulo que no mouse: sem
           reduzir a velocidade, um toque atravessa a maquete inteira e o
           visitante perde a referência. O amortecimento também sobe, para o
           giro parar sozinho em vez de derrapar. */}
@@ -545,9 +657,9 @@ function Cena({
         ref={controlsRef}
         enabled={livre}
         enablePan={livre}
-        minDistance={5}
+        minDistance={0.45}
         maxDistance={58}
-        maxPolarAngle={Math.PI / 2.15}
+        maxPolarAngle={Math.PI / 2 - 0.02}
         enableDamping
         dampingFactor={toque ? 0.11 : 0.07}
         rotateSpeed={toque ? 0.55 : 1}
@@ -558,7 +670,7 @@ function Cena({
 
       <CameraTour passo={passoTour} ativo={!blender && tourAtivo && pov === 'overview'} espelharZ={false} />
       {livre && (
-        <CameraFoco selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} espelharZ={blender} />
+        <CameraLivre selecionado={selecionado} controlsRef={controlsRef} tourAtivo={false} espelharZ={blender} />
       )}
       {!blender && <CameraPov modo={pov} />}
     </>

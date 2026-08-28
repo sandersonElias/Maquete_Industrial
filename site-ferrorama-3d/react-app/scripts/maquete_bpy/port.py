@@ -22,7 +22,10 @@ def build_port(m):
     # tanque de 10 unidades no meio do nada nao lia como mar. A lamina fica em
     # y=0.12 - acima do topo da grama (que vai a 0.072 com o displace) para nao
     # deixar o capim atravessar o mar, e 0.04 abaixo do topo do cais.
-    cube("Agua", (2.6, 0.14, 33.4), (22.3, 0.05, 0.0), m["water"], 0.0)
+    # Fase 12 — a laje virou so o corpo d'agua, com topo em 0,10. A superficie
+    # visivel e uma malha subdividida com deslocamento, em 0,125 (harbour.py):
+    # laje lisa de rugosidade 0,06 refletia uniforme e lia como plastico.
+    cube("AguaCorpo", (2.6, 0.10, 33.4), (22.3, 0.05, 0.0), m["water"], 0.0)
     # ArmazemP e GalpaoP agora sao galpoes com estrutura (structures.py), e o
     # armazem saiu de cima do ramal ferroviario.
     # Recuado para abrir o corredor da galeria C (ver process.py).

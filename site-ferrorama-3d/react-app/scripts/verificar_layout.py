@@ -177,7 +177,21 @@ PECAS = [
     ("PNMinaOval", ret(-8.21, -4.13, -1.002, 0.44, 0.5), "straddle"),
     ("ParaChoqueL0", ret(4.52, 3.55, 0.0, 0.15, 0.22), "straddle"),
     ("ParaChoqueL1", ret(4.52, 2.85, 0.0, 0.15, 0.22), "straddle"),
+    # --- Fase 12: o cais como a foto de referencia pede ---
+    # O guindaste entra em duas caixas: a base sobre esteiras, que e o que
+    # precisa de folga de bitola, e o alcance da lanca, que passa a 2,3 de
+    # altura — como a galeria e o shiploader, e por isso e "straddle".
+    ("GuindasteTrelica base", ret(18.75, 8.0, 0.0, 0.42, 0.4), "normal"),
+    ("GuindasteTrelica lanca", ret(19.28, 8.0, 0.0, 0.95, 0.14), "straddle"),
+    ("ConteinerCais", ret(19.3, 4.6, 0.06, 0.9, 0.6), "normal"),
 ]
+# Barcaca e rebocador flutuam: nao entram no gabarito ferroviario nem na
+# checagem de terra, mas precisam caber na faixa de agua (x 21,0 a 23,6).
+FLUTUANTES = {
+    "Barcaca": ret(22.2, 3.9, 1.62, 0.77, 0.45),
+    "Rebocador": ret(22.2, 13.2, 0.08, 0.6, 0.3),
+    "Navio": ret(22.3, 8.6, 0.0, 0.925, 2.8),
+}
 for _i, (_x, _z) in enumerate(((0.0, 5.95), (4.5, 5.95), (-4.5, 5.95), (9.3, 1.5), (-9.3, -1.5), (0.0, -5.95), (-4.5, -5.95))):
     PECAS.append((f"MarcoKm{_i}", quad(_x, _z, 0.12, 0.12), "normal"))
 
@@ -272,6 +286,8 @@ def main():
         # Fase 9: o AMV do ramal da mina e a passagem de nivel do oval ficam a
         # 0,81 um do outro — encostam de proposito, é o mesmo entroncamento.
         ("Desvio3", "PNMinaOval"),
+        # As duas caixas do guindaste sao o mesmo objeto, medido em dois papeis.
+        ("GuindasteTrelica base", "GuindasteTrelica lanca"),
     )
     caixas = [(n, p) for n, p, _ in PECAS] + [(n, p) for n, p in FIXOS.items()]
     achou = 0
@@ -353,6 +369,24 @@ def main():
     print(f"  {'ok    ' if dentro else 'ALERTA'}  alca do porto contida na laje do cais")
     if not molhados:
         print("  nenhuma peca na agua")
+    print()
+    print("3b) FLUTUANTES (faixa de agua x 21.00 a 23.60)")
+    fora = 0
+    for nome, pts in FLUTUANTES.items():
+        x0, x1 = min(p[0] for p in pts), max(p[0] for p in pts)
+        if x0 < X_BORDA_CAIS or x1 > 23.6:
+            fora += 1
+            print(f"  ALERTA  {nome} vai de x={x0:.2f} a x={x1:.2f}")
+    itens = list(FLUTUANTES.items())
+    for i, (na, pa) in enumerate(itens):
+        for nb, pb in itens[i + 1:]:
+            ox = min(max(p[0] for p in pa), max(p[0] for p in pb)) - max(min(p[0] for p in pa), min(p[0] for p in pb))
+            oz = min(max(p[1] for p in pa), max(p[1] for p in pb)) - max(min(p[1] for p in pa), min(p[1] for p in pb))
+            if ox > 0.02 and oz > 0.02:
+                fora += 1
+                print(f"  ALERTA  {na} x {nb} se tocam ({ox:.2f} x {oz:.2f} m)")
+    if not fora:
+        print("  nenhum")
 
     print("=" * 68)
 

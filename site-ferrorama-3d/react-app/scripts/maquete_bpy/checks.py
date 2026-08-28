@@ -16,7 +16,7 @@ import bpy
 IGNORAR = (
     "Placa", "Grama", "Agua", "Cais", "Apron", "Pad", "Patio", "Estrada", "Faixa",
     "Morro", "Capim", "Tunel", "Lastro", "Loop", "Diag", "Ramo", "Dorm", "Trilho",
-    "Sala", "Mesa", "Mon", "Caneca", "Pasta", "Cadeira",
+    "Sala", "Mesa", "Mon", "Caneca", "Pasta", "Cadeira", "AguaCorpo", "AguaSuperficie",
     "CarvaoCava", "CarvaoFundo", "Troncos", "Copas",
     # Fase 8: a cava, a pilha de esteril e o dique da bacia sao terreno, e
     # terreno engole por definicao tudo que esta apoiado nele.
@@ -49,6 +49,9 @@ TOLERADOS = (
     ("BaciaAgua", "BaciaVertedor"),
     ("BaciaTubo", "BaciaVertedor"),
     ("EsterilRampa", "EsterilDozer"),
+    # Fase 12 — o que encosta de proposito no cais e na cava.
+    ("Barcaca", "Rebocador"),
+    ("CavaShovel", "CavaEscav"),
 )
 
 

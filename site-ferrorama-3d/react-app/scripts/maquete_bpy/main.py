@@ -9,6 +9,7 @@ from .checks import report_overlaps
 from .coords import clear_scene, collection
 from .details import build_details
 from .environment import build_board, build_fair_lights, build_hills, build_scada, build_trees
+from .harbour import build_harbour
 from .iron_mine import build_iron_mine
 from .landscape import build_landscape
 from .materials import make_palette
@@ -69,6 +70,7 @@ def build():
     build_volvo_cat(m, road_mine)
     build_port(m)
     build_process_chain(m)
+    build_harbour(m)
     build_structures(m)
     build_site(m)
     build_details(m)
@@ -92,6 +94,8 @@ def build():
             "MastroLuzPorto", "OpPorto", "TamboresPorto", "PaletePorto", "ObraPorto",
             "PocaPorto", "OleoPorto", "SinalPorto", "Bandeiras", "ConePorto",
             "CercaPorto", "Defensa", "Balanca",
+            # Fase 12: o que a foto de referencia do porto pede.
+            "GuindasteTrelica", "ConteinerCais", "Barcaca", "Rebocador",
         ),
         cols["PORT"],
     )
