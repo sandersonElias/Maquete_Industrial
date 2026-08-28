@@ -12,7 +12,7 @@ import {
   tracadoComDesvio,
 } from './geometria';
 
-const URL = '/models/maquete-blender.glb?v=fase8';
+const URL = '/models/maquete-blender.glb?v=fase10';
 /**
  * Decodificador Draco servido pelo próprio site (`public/draco/`), não por CDN:
  * na 4G da feira uma requisição a um domínio de terceiro é mais um handshake
@@ -23,6 +23,23 @@ const URL = '/models/maquete-blender.glb?v=fase8';
  * GLTFLoader simplesmente não aciona o decodificador.
  */
 const DRACO = '/draco/';
+
+/**
+ * Fase 9 — composição articulada.
+ *
+ * Antes a locomotiva e os vagões eram filhos rígidos de um único `Trem`: o
+ * React posicionava o pai na curva e o resto ia junto, em linha reta. Nas
+ * curvas de raio 2,25 do oval a composição cortava o traçado por dentro e o
+ * último vagão saía do lastro.
+ *
+ * Agora cada veículo é um nó próprio (`TremLoco`, `TremVagao0..N`) e cada um
+ * anda no seu ponto de comprimento de arco, atrás do da frente. Os números
+ * abaixo espelham `PASSO_VAGAO` e `N_VAGOES` em `scripts/maquete_bpy/vehicles.py`.
+ */
+const PASSO_VAGAO = 0.86;
+const RECUO_PRIMEIRO_VAGAO = 1.06;
+/** Altura do topo do boleto: as peças são modeladas com a base da roda em y=0. */
+const ALTURA_BOLETO = 0.08;
 
 /**
  * Fase 5 — o modelo do Blender chegava sem sombra nenhuma: esta função tinha o
@@ -43,6 +60,16 @@ const SEM_SOMBRA = /^(agua|grama|placa|capim)/i;
  * negativo porque o `TerminalCarvao` da mina é legítimo e estava sendo
  * escondido junto — a cava de carvão aparecia sem o terminal de carga.
  */
+/**
+ * Fase 11 — adereços que o celular não precisa desenhar.
+ *
+ * Cone de trânsito, poça, mancha de óleo, palete, tambor e marco quilométrico
+ * ocupam dois ou três pixels num telefone e custam uma chamada de desenho
+ * cada. Some no tier `leve`; as pessoas ficam, porque são elas que dão a
+ * escala e sem elas a maquete vira maquete de novo.
+ */
+const ADERECOS = /^(cone|poca|oleo|palete|tambores|sucata|marcokm|bandeiras)/i;
+
 const OCULTOS = /^(pista|terminal(?!carvao)|hangar|torre|c5|estradaaero|termvidro|torrecab|plat2|casa2|telhado2|janela2)/i;
 
 const _haulDir = new Vector3();
@@ -75,7 +102,7 @@ function posicionarNoHaul(
   objeto.rotation.set(0, yaw, 0);
 }
 
-function prepararSombras(obj: Object3D) {
+function prepararSombras(obj: Object3D, leve: boolean) {
   obj.traverse((child) => {
     if (OCULTOS.test(child.name)) {
       child.visible = false;
@@ -90,6 +117,7 @@ function prepararSombras(obj: Object3D) {
       };
     };
     if (!mesh.isMesh) return;
+    child.visible = !(leve && ADERECOS.test(child.name));
 
     const g = mesh.geometry;
     if (g && !g.boundingSphere) g.computeBoundingSphere?.();
@@ -130,15 +158,19 @@ export function MaqueteBlender({
   velocidade = 1,
   desvios,
   onDesvio,
+  leve = false,
 }: {
   rodando: boolean;
   velocidade?: number;
   desvios: number[];
   onDesvio?: (indice: number) => void;
+  leve?: boolean;
 }) {
   const { scene, animations } = useGLTF(URL, DRACO);
   const { actions, mixer } = useAnimations(animations, scene);
   const tremRef = useRef<Object3D | null>(null);
+  /** Veículos na ordem da composição; vazio quando o .glb ainda é o antigo. */
+  const veiculosRef = useRef<Object3D[]>([]);
   const catRef = useRef<Object3D | null>(null);
   const cacambaRef = useRef<Object3D | null>(null);
   const progresso = useRef(0);
@@ -154,16 +186,26 @@ export function MaqueteBlender({
   );
 
   useLayoutEffect(() => {
-    prepararSombras(scene);
+    prepararSombras(scene, leve);
     tremRef.current = null;
     catRef.current = null;
     cacambaRef.current = null;
+    const vagoes: Object3D[] = [];
+    let loco: Object3D | null = null;
     scene.traverse((obj) => {
       if (obj.name === 'Trem') tremRef.current = obj;
+      if (obj.name === 'TremLoco') loco = obj;
+      const mv = /^TremVagao(\d+)$/.exec(obj.name);
+      if (mv) vagoes[Number(mv[1])] = obj;
       if (obj.name === 'CAT') catRef.current = obj;
       if (obj.name === 'CATCacamba') cacambaRef.current = obj;
     });
-  }, [scene]);
+    // `attach` tira o veículo de baixo do `Trem` preservando a pose no mundo;
+    // sem isso o transform do pai se somaria ao que escrevemos por quadro.
+    const lista = loco ? [loco, ...vagoes.filter(Boolean)] : [];
+    lista.forEach((v) => scene.attach(v));
+    veiculosRef.current = lista;
+  }, [scene, leve]);
 
   useEffect(() => {
     if (!tremRef.current) return;
@@ -191,9 +233,18 @@ export function MaqueteBlender({
       progresso.current += delta * 0.046 * velocidade;
       haulCiclo.current += delta * 0.055 * velocidade;
     }
-    if (tremRef.current) {
-      // LocoNariz no GLB está em local −Z.
-      posicionarNaCurva(tremRef.current, rota, progresso.current, 0.08, 'minusZ');
+    const veiculos = veiculosRef.current;
+    if (veiculos.length) {
+      // Cada veículo no seu comprimento de arco: a locomotiva na cabeça e cada
+      // vagão um passo atrás. O nariz do GLB fica em local −Z.
+      const volta = rota.getLength() || 1;
+      for (let i = 0; i < veiculos.length; i++) {
+        const recuo = i === 0 ? 0 : RECUO_PRIMEIRO_VAGAO + (i - 1) * PASSO_VAGAO;
+        posicionarNaCurva(veiculos[i], rota, progresso.current - recuo / volta, ALTURA_BOLETO, 'minusZ');
+      }
+    } else if (tremRef.current) {
+      // `.glb` antigo, sem os nós por veículo: move a composição inteira.
+      posicionarNaCurva(tremRef.current, rota, progresso.current, ALTURA_BOLETO, 'minusZ');
     }
     if (catRef.current) {
       const { u, dump } = faseHaulCat(haulCiclo.current);

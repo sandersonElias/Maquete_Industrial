@@ -96,6 +96,8 @@ INDUSTRIAIS = (
     "MastroLuz", "Portaria", "Balanca", "Sucata", "Pier", "Defensa", "Meio",
     # Fase 8: cava, estruturas de disposicao e usina.
     "Cava", "Esteril", "Bacia", "Peneira", "Espessador", "EstradaCava",
+    # Fase 9: aparelhos de via e a composicao.
+    "Desvio", "PN", "ParaChoque", "TremVagao", "TremLoco",
 )
 
 

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows, Stars, Sky, Environment, Lightformer } from '@react-three/drei';
+import { OrbitControls, Html, ContactShadows, Stars, Sky, Environment, Lightformer, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { MODULOS, PALETA, PASSOS_TOUR, TELEMETRIA, CAMERAS_POV } from './modulos';
 import {
@@ -155,6 +155,24 @@ function medirQualidade(): Qualidade {
   if (estreito || memoria <= 4 || nucleos <= 4) return 'leve';
   if (toque || memoria <= 8) return 'media';
   return 'alta';
+}
+
+/**
+ * Ponteiro grosso (dedo, caneta) — não é a mesma pergunta que "o aparelho é
+ * fraco": um tablet potente é toque, um notebook velho é mouse. Quem manda na
+ * sensibilidade dos controles é o ponteiro, não a qualidade gráfica.
+ */
+function usePonteiroGrosso(): boolean {
+  const [grosso, setGrosso] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)');
+    const ao = () => setGrosso(mq.matches);
+    mq.addEventListener('change', ao);
+    return () => mq.removeEventListener('change', ao);
+  }, []);
+  return grosso;
 }
 
 /**
@@ -385,6 +403,28 @@ function Modulo3D({
   }
 }
 
+/**
+ * Fase 11 — progresso do `.glb` dentro da cena.
+ *
+ * O `Suspense` da maquete tinha `fallback={null}`: enquanto os ~5 MB do modelo
+ * desciam pela 4G da feira, o visitante via uma tela vazia por dez segundos e
+ * concluía que não tinha funcionado. O fallback da seção (`maquete3d-carregando`)
+ * só cobre o carregamento do *chunk* JavaScript, que termina bem antes.
+ */
+function CarregandoModelo() {
+  const { progress } = useProgress();
+  return (
+    <Html center>
+      <div className="maquete3d-glb" role="status" aria-live="polite">
+        <div className="maquete3d-glb__barra">
+          <span style={{ width: `${Math.max(4, Math.round(progress))}%` }} />
+        </div>
+        <p>Carregando maquete · {Math.round(progress)}%</p>
+      </div>
+    </Html>
+  );
+}
+
 /** Aplica cor de fundo e névoa — mais confiável que `<color attach>` com R3F 9 + Three r185. */
 function Ambiente({ noite }: { noite: boolean }) {
   const { scene } = useThree();
@@ -424,6 +464,7 @@ function Cena({
   const alternar = (id: string) => setSelecionado(selecionado === id ? null : id);
   const blender = fonte === 'blender';
   const livre = pov === 'overview' && !tourAtivo;
+  const toque = usePonteiroGrosso();
 
   return (
     <>
@@ -435,8 +476,14 @@ function Cena({
       )}
 
       {blender ? (
-        <Suspense fallback={null}>
-          <MaqueteBlender rodando={rodando} velocidade={velocidade} desvios={desvios} onDesvio={onDesvio} />
+        <Suspense fallback={<CarregandoModelo />}>
+          <MaqueteBlender
+            rodando={rodando}
+            velocidade={velocidade}
+            desvios={desvios}
+            onDesvio={onDesvio}
+            leve={qualidade === 'leve'}
+          />
         </Suspense>
       ) : (
         <>
@@ -490,6 +537,10 @@ function Cena({
         />
       )}
 
+      {/* No dedo o mesmo arrasto percorre muito mais ângulo que no mouse: sem
+          reduzir a velocidade, um toque atravessa a maquete inteira e o
+          visitante perde a referência. O amortecimento também sobe, para o
+          giro parar sozinho em vez de derrapar. */}
       <OrbitControls
         ref={controlsRef}
         enabled={livre}
@@ -498,7 +549,10 @@ function Cena({
         maxDistance={58}
         maxPolarAngle={Math.PI / 2.15}
         enableDamping
-        dampingFactor={0.07}
+        dampingFactor={toque ? 0.11 : 0.07}
+        rotateSpeed={toque ? 0.55 : 1}
+        zoomSpeed={toque ? 0.7 : 1}
+        panSpeed={toque ? 0.7 : 1}
         makeDefault
       />
 

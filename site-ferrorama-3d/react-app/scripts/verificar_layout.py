@@ -55,7 +55,10 @@ def _oval():
 
 
 OVAL = _oval()
-VIAS = {"mina": RAMO_MINA, "porto": RAMO_PORTO, "oval": OVAL}
+# O ramal diagonal faltava aqui desde sempre: qualquer peca colocada perto dele
+# passava no gabarito por omissao.
+RAMO_DIAG = [(-5.1, 3.05), (-2.1, 1.4), (0.0, 0.0), (2.1, -1.4), (5.1, -3.05)]
+VIAS = {"mina": RAMO_MINA, "porto": RAMO_PORTO, "oval": OVAL, "diag": RAMO_DIAG}
 
 ESTRADA_MINA = [(-12.55, -6.75), (-11.2, -5.85), (-9.7, -4.95), (-8.15, -4.1)]
 ESTRADA_PORTO = [(8.2, 4.55), (11.5, 6.25), (14.6, 7.55), (16.9, 8.25)]
@@ -165,7 +168,26 @@ PECAS = [
     ("PeneiraUsina", quad(-20.6, -9.05, 0.62, 0.62), "normal"),
     ("Espessador", quad(-22.2, -7.9, 0.78, 0.72), "normal"),
     ("CaminhaoServico", ret(-20.5, -9.45, 1.9, 0.3, 0.2), "normal"),
+    # --- Fase 9: aparelhos de via (os que montam na via sao "straddle") ---
+    ("Desvio0", ret(5.10, -3.05, -0.5027, 0.56, 0.42), "straddle"),
+    ("Desvio1", ret(-5.10, 3.05, -0.5027, 0.56, 0.42), "straddle"),
+    ("Desvio2", ret(7.67, 4.74, 2.5002, 0.56, 0.42), "straddle"),
+    ("Desvio3", ret(-7.67, -4.74, -0.6414, 0.56, 0.42), "straddle"),
+    ("PNMinaRamal", ret(-10.32, -5.31, 0.044, 0.44, 0.5), "straddle"),
+    ("PNMinaOval", ret(-8.21, -4.13, -1.002, 0.44, 0.5), "straddle"),
+    ("ParaChoqueL0", ret(4.52, 3.55, 0.0, 0.15, 0.22), "straddle"),
+    ("ParaChoqueL1", ret(4.52, 2.85, 0.0, 0.15, 0.22), "straddle"),
 ]
+for _i, (_x, _z) in enumerate(((0.0, 5.95), (4.5, 5.95), (-4.5, 5.95), (9.3, 1.5), (-9.3, -1.5), (0.0, -5.95), (-4.5, -5.95))):
+    PECAS.append((f"MarcoKm{_i}", quad(_x, _z, 0.12, 0.12), "normal"))
+
+# --- Fase 10: os discos de terra batida nao podem cobrir dormente ---
+for _n, _discos in (
+    ("PatioMinaTerra", [(-22.4, -9.2, 1.5), (-21.6, -7.2, 1.4), (-20.6, -8.4, 1.05), (-20.6, -9.6, 1.0), (-22.2, -5.9, 1.0)]),
+    ("PatioCavaTerra", [(-18.9, -11.6, 0.9), (-18.2, -12.4, 0.8), (-16.0, -12.9, 0.8), (-15.4, -12.6, 0.7)]),
+):
+    for _j, (_x, _z, _r) in enumerate(_discos):
+        PECAS_VIA.append((f"{_n} disco {_j}", [(_x + math.cos(_a * math.pi / 6) * _r, _z + math.sin(_a * math.pi / 6) * _r) for _a in range(12)]))
 
 # Formas de revolucao da fase 8. Ficam fora da checagem de caixa envolvente —
 # a AABB de um circulo estoura 41% nos cantos e acusa encosto que nao existe —
@@ -247,6 +269,9 @@ def main():
         ("Britador", "EstradaCava 3"), ("Britador", "PeneiraUsina"),
         ("PeneiraUsina", "CaminhaoServico"), ("EstradaCava 2", "CaminhaoServico"),
         ("EstradaCava 1", "CaminhaoServico"), ("Barracao", "Espessador"),
+        # Fase 9: o AMV do ramal da mina e a passagem de nivel do oval ficam a
+        # 0,81 um do outro — encostam de proposito, é o mesmo entroncamento.
+        ("Desvio3", "PNMinaOval"),
     )
     caixas = [(n, p) for n, p, _ in PECAS] + [(n, p) for n, p in FIXOS.items()]
     achou = 0

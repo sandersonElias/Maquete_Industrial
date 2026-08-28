@@ -49,8 +49,9 @@ def build_railway(m):
     lay_track("RamoP", ramo_porto, m["ballast"], m["sleeper"], m["rail"], False, 0.78)
     lay_track("RamoM", ramo_mina, m["ballast"], m["sleeper"], m["rail"], False, 0.78)
 
-    for i, (x, z) in enumerate(((5.2, -3.85), (-5.2, 3.85), (7.55, 4.55), (-7.55, -4.55))):
-        cube(f"Desvio{i}", (0.38, 0.22, 0.38), (x, 0.14, z), m["glow"], 0.03)
+    # Fase 9: os quatro desvios eram cubos luminosos de 0,38 pousados perto da
+    # via — os dois do atalho a 0,81 do trilho mais proximo. Viraram AMVs no
+    # eixo da via, em `rail_detail.py`.
 
     # Pátio curto: 3 vias paralelas no interior do oval (lado norte)
     yard_a = densify(pts_three([(-4.2, 0.0, 3.55), (-1.4, 0.0, 3.55), (1.4, 0.0, 3.55), (4.2, 0.0, 3.55)]), 0.28, False)

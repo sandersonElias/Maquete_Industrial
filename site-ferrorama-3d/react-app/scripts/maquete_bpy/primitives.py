@@ -151,9 +151,16 @@ def parent_keep(child, parent_ob):
 
 
 def wheels(root, mat, xs, zs, r=0.08, y=0.08, depth=0.07):
+    """Rodas em `xs` (lateral) x `zs` (longitudinal), eixo na transversal.
+
+    A rotacao era `(math.pi/2, 0, 0)`, que no par (roll, yaw, pitch) desta
+    base e *roll*: deitava o cilindro ao longo de z e as rodas apareciam de
+    frente, como discos girados 90 graus. O correto e pitch — `(0, 0, pi/2)`
+    poe o eixo em x, que e a transversal de um veiculo que anda em z.
+    """
     for x in xs:
         for z in zs:
-            w = cyl(f"w{x}{z}", r, depth, (0, 0, 0), mat, 16, (math.pi / 2, 0, 0))
+            w = cyl(f"w{x}{z}", r, depth, (0, 0, 0), mat, 16, (0, 0, math.pi / 2))
             parent(w, root, (x, y, z))
 
 

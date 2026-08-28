@@ -7315,3 +7315,38 @@ body::after {
     will-change: auto;
   }
 }
+
+/* ============================================
+   MAQUETE — progresso do modelo .glb (fase 11)
+   O fallback da seção só cobre o chunk JS; estes ~5 MB de modelo descem
+   depois, e sem barra o visitante acha que travou.
+   ============================================ */
+.maquete3d-glb {
+  width: min(52vw, 260px);
+  text-align: center;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.maquete3d-glb__barra {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.maquete3d-glb__barra > span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transition: width 180ms linear;
+}
+
+.maquete3d-glb > p {
+  margin: 0.55rem 0 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}

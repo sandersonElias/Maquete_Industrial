@@ -10,10 +10,12 @@ from .coords import clear_scene, collection
 from .details import build_details
 from .environment import build_board, build_fair_lights, build_hills, build_scada, build_trees
 from .iron_mine import build_iron_mine
+from .landscape import build_landscape
 from .materials import make_palette
 from .pit import build_pit
 from .port import build_port
 from .process import build_process_chain
+from .rail_detail import build_rail_detail
 from .railway import build_railway
 from .roads import build_roads
 from .site import build_site
@@ -60,6 +62,7 @@ def build():
     build_board(m)
     build_railway(m)
     road_mine, _road_port = build_roads(m)
+    build_rail_detail(m)
     build_hills(m)
     build_iron_mine(m)
     build_pit(m)
@@ -69,6 +72,7 @@ def build():
     build_structures(m)
     build_site(m)
     build_details(m)
+    build_landscape(m)
     build_scada(m)
     build_trees(m)
     build_fair_lights(m)
@@ -92,7 +96,9 @@ def build():
         cols["PORT"],
     )
     _move_prefix(
-        ("Loop", "Diag", "Ramo", "PatioA", "PatioB", "PatioPlat", "Desvio", "Plat", "Casa", "Telhado", "Janela", "Sem", "LuzEst", "LuzOval"),
+        ("Loop", "Diag", "Ramo", "PatioA", "PatioB", "PatioPlat", "Desvio", "Plat", "Casa", "Telhado", "Janela", "Sem", "LuzEst", "LuzOval",
+         # Fase 9: aparelhos de via.
+         "PN", "ParaChoque", "MarcoKm"),
         cols["RAILWAY"],
     )
     _move_prefix(
@@ -112,7 +118,15 @@ def build():
     )
     _move_prefix(("Pickup", "Volvo", "VBody", "VCab", "VGlass", "VTrack", "VBoom", "VStick", "VBucket", "VTooth", "CAT", "CChassi", "CCab", "CGlass", "CBed", "COre", "C137", "Trem", "Loco", "Vagao"), cols["VEHICLES"])
     _move_prefix(("Sala", "Mesa", "Mon", "Caneca", "Pasta", "Cadeira", "OpScada"), cols["SCADA"])
-    _move_prefix(("Morro", "Capim", "Tunel", "Tronco", "Copa"), cols["ENVIRONMENT"])
+    _move_prefix(
+        (
+            "Morro", "Capim", "Tunel", "Tronco", "Copa",
+            # Fase 10: terra batida, revegetacao e cortina arborea.
+            "PatioMinaTerra", "PatioCavaTerra", "CavaVerde", "EsterilVerde",
+            "BaciaVerde", "Cortina",
+        ),
+        cols["ENVIRONMENT"],
+    )
 
     # Fase 4/5: desgaste e oclusao gravados em COLOR_0, depois dos joins.
     sujar_industriais()

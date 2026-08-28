@@ -126,9 +126,19 @@ def build_trees(m):
             return False
         if x > 12.0 and z > 3.0:
             return False
-        if (x + 17.2) ** 2 + (z + 9.4) ** 2 < 28:
+        # O raio grande em volta de IRON existia por causa do morro `MinaCava`,
+        # que saiu na fase 8. Sobra o que interessa: manter o interior da alca
+        # limpo, porque arvore entre trilhos nao existe.
+        if (x + 17.2) ** 2 + (z + 9.4) ** 2 < 10.5:
             return False
         if (x + 19.4) ** 2 + (z + 6.15) ** 2 < 12:
+            return False
+        # Fase 8: cava, pilha de esteril e bacia de decantacao.
+        if (x + 20.3) ** 2 + (z + 11.8) ** 2 < 4.4:
+            return False
+        if (x + 17.2) ** 2 + (z + 12.7) ** 2 < 2.9:
+            return False
+        if (x + 14.6) ** 2 + (z + 12.3) ** 2 < 2.2:
             return False
         return True
 
