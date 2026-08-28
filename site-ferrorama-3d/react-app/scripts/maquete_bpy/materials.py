@@ -200,6 +200,9 @@ def make_palette():
         "rubber": pbr("Borracha", color=(0.07, 0.07, 0.08), rough=0.92),
         "sign_b": pbr("PlacaAzul", color=(0.06, 0.22, 0.52), rough=0.4),
         "puddle": pbr("Poca", color=(0.1, 0.11, 0.1), rough=0.05, metal=0.35),
+        # Fase 8: agua de bacia de decantacao e de espessador nao e azul —
+        # e a lama vermelha em suspensao do minerio de ferro.
+        "tailings": pbr("Rejeito", color=(0.31, 0.16, 0.11), rough=0.24, metal=0.1),
         "amber": pbr("LuzMina", color=(1.0, 0.72, 0.28), rough=0.35, emit=0.55),
         "cont": [
             pbr("C1", color=(0.82, 0.28, 0.05), rough=0.45, metal=0.15),

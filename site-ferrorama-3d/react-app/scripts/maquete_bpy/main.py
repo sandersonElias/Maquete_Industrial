@@ -11,6 +11,7 @@ from .details import build_details
 from .environment import build_board, build_fair_lights, build_hills, build_scada, build_trees
 from .iron_mine import build_iron_mine
 from .materials import make_palette
+from .pit import build_pit
 from .port import build_port
 from .process import build_process_chain
 from .railway import build_railway
@@ -61,6 +62,7 @@ def build():
     road_mine, _road_port = build_roads(m)
     build_hills(m)
     build_iron_mine(m)
+    build_pit(m)
     build_volvo_cat(m, road_mine)
     build_port(m)
     build_process_chain(m)
@@ -103,6 +105,8 @@ def build():
             "Sucata", "TamboresOficina", "PaleteOficina", "ObraMina",
             "PocaEstrada", "PocaPatioMina", "OleoOficina", "SinalMina", "SinalVia",
             "LinhaMina", "ConeMina",
+            # Fase 8: cava descendente, disposicao de esteril/rejeito e usina.
+            "Cava", "Esteril", "Bacia", "Peneira", "Espessador", "Caminhao",
         ),
         cols["IRON_MINE"],
     )

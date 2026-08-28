@@ -7,53 +7,11 @@ from .railway import poste_luz
 
 def build_iron_mine(m):
     mx, mz = IRON
-    # Degraus da cava (bancadas)
-    lathe_solid(
-        "MinaCava",
-        [
-            (4.15, 0.02),
-            (3.85, 0.42),
-            (3.15, 0.52),
-            (2.75, 0.92),
-            (2.05, 1.08),
-            (1.55, 1.42),
-            (0.85, 1.55),
-            (0.28, 1.78),
-            (0.08, 1.86),
-        ],
-        40,
-        (mx, 0.0, mz),
-        m["rock"],
-        displace=0.1,
-        noise=2.0,
-    )
-    lathe_solid(
-        "MinaBanco1",
-        [(3.55, 0.38), (3.48, 0.46), (3.05, 0.48)],
-        28,
-        (mx, 0.0, mz),
-        m["dirt"],
-        displace=0.03,
-        noise=1.1,
-    )
-    lathe_solid(
-        "MinaBanco2",
-        [(2.55, 0.88), (2.48, 0.98), (2.08, 1.02)],
-        24,
-        (mx, 0.0, mz),
-        m["dirt"],
-        displace=0.025,
-        noise=1.0,
-    )
-    lathe_solid(
-        "MinaFundo",
-        [(0.06, 0.05), (0.95, 0.08), (0.8, 0.22), (0.12, 0.28)],
-        20,
-        (mx, 0.0, mz),
-        m["dirt"],
-        displace=0.04,
-        noise=0.8,
-    )
+    # Fase 8 — o morro saiu daqui. `MinaCava` era um cone de 1,86 de altura
+    # centrado em IRON, e a alca do ramal passa a 0,81 desse centro: o comboio
+    # corria por dentro da rocha. A cava de verdade, descendente e com
+    # bancadas, foi aberta no campo livre a sudoeste (`pit.py`); o que sobra
+    # aqui e o patio de britagem que alimenta a galeria A.
     # Barracao e MinaOficina agora sao galpoes com estrutura (structures.py).
     cube("Britador", (0.85, 0.95, 0.85), (mx - 3.55, 0.55, mz + 1.55), m["black"], 0.03)
     cube("BritadorBoca", (0.55, 0.22, 0.55), (mx - 3.55, 1.12, mz + 1.55), m["conc"], 0.015)

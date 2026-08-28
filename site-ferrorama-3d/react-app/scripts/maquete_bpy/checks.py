@@ -16,8 +16,12 @@ import bpy
 IGNORAR = (
     "Placa", "Grama", "Agua", "Cais", "Apron", "Pad", "Patio", "Estrada", "Faixa",
     "Morro", "Capim", "Tunel", "Lastro", "Loop", "Diag", "Ramo", "Dorm", "Trilho",
-    "Sala", "Mesa", "Mon", "Caneca", "Pasta", "Cadeira", "MinaCava", "MinaBanco",
-    "MinaFundo", "CarvaoCava", "CarvaoFundo", "Troncos", "Copas",
+    "Sala", "Mesa", "Mon", "Caneca", "Pasta", "Cadeira",
+    "CarvaoCava", "CarvaoFundo", "Troncos", "Copas",
+    # Fase 8: a cava, a pilha de esteril e o dique da bacia sao terreno, e
+    # terreno engole por definicao tudo que esta apoiado nele.
+    "CavaRocha", "CavaMinerio", "CavaLeira", "EsterilPilha", "EsterilLeira",
+    "BaciaDique",
 )
 
 # Pares que sabemos que se tocam de propósito (equipamento apoiado em laje,
@@ -36,6 +40,15 @@ TOLERADOS = (
     ("Virador", "Poco"),
     ("ShiploaderTorre", "GaleriaD"),
     ("PilhaPatio", "PatioTrilhos"),
+    # Fase 8 — o que encosta de proposito dentro da cava e na usina.
+    ("CavaRampa", "CavaAcesso"),
+    ("CavaSump", "CavaBomba"),
+    ("PeneiraUsina", "Britador"),
+    ("PeneiraUsina", "CaminhaoServico"),
+    ("Espessador", "Barracao"),
+    ("BaciaAgua", "BaciaVertedor"),
+    ("BaciaTubo", "BaciaVertedor"),
+    ("EsterilRampa", "EsterilDozer"),
 )
 
 

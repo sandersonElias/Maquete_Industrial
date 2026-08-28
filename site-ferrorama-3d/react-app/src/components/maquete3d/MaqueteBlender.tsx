@@ -12,7 +12,7 @@ import {
   tracadoComDesvio,
 } from './geometria';
 
-const URL = '/models/maquete-blender.glb?v=fase7';
+const URL = '/models/maquete-blender.glb?v=fase8';
 /**
  * Decodificador Draco servido pelo próprio site (`public/draco/`), não por CDN:
  * na 4G da feira uma requisição a um domínio de terceiro é mais um handshake
@@ -37,7 +37,13 @@ const DRACO = '/draco/';
  */
 const RAIO_MIN_SOMBRA = 0.28;
 const SEM_SOMBRA = /^(agua|grama|placa|capim)/i;
-const OCULTOS = /^(pista|terminal|hangar|torre|c5|estradaaero|termvidro|torrecab|plat2|casa2|telhado2|janela2)/i;
+/**
+ * Restos do aeroporto antigo, que nenhum script gera mais mas que ficariam
+ * visíveis se um `.glb` velho fosse servido. `terminal` leva um lookahead
+ * negativo porque o `TerminalCarvao` da mina é legítimo e estava sendo
+ * escondido junto — a cava de carvão aparecia sem o terminal de carga.
+ */
+const OCULTOS = /^(pista|terminal(?!carvao)|hangar|torre|c5|estradaaero|termvidro|torrecab|plat2|casa2|telhado2|janela2)/i;
 
 const _haulDir = new Vector3();
 const _haulPos = new Vector3();

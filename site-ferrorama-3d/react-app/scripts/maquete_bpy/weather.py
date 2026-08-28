@@ -93,7 +93,9 @@ INDUSTRIAIS = (
     "Galeria", "Transf", "Embarque", "Virador", "Empilh", "Ship", "PatioTrilhos",
     "Silo", "Britador", "Correia", "Barracao", "Armazem", "Galpao", "Cais",
     "Terminal", "Pilha", "Pilhar", "Cerca", "Tanque", "Subest", "PipeRack",
-    "Torreluz", "Portaria", "Balanca", "Sucata", "Pier", "Defensa", "Meio",
+    "MastroLuz", "Portaria", "Balanca", "Sucata", "Pier", "Defensa", "Meio",
+    # Fase 8: cava, estruturas de disposicao e usina.
+    "Cava", "Esteril", "Bacia", "Peneira", "Espessador", "EstradaCava",
 )
 
 

@@ -111,6 +111,9 @@ GB = ((-16.8, -3.9), (-13.6, -5.624))
 GC = ((15.55, 8.7), (13.9, 11.0))
 GD = ((13.9, 11.0), (20.4, 10.6))
 
+# Pecas redondas: so entram no gabarito ferroviario (secao 1).
+PECAS_VIA = []
+
 # (nome, pontos, modo)  modo: "normal" | "straddle"
 PECAS = [
     # --- Fase 1: cadeia de processo ---
@@ -158,10 +161,29 @@ PECAS = [
     ("SiloPorto", quad(12.3, 9.4, 1.05, 1.05), "normal"),
     ("TamboresOficina", quad(-22.55, -6.0, 0.22, 0.16), "normal"),
     ("TamboresPorto", quad(14.5, 4.2, 0.22, 0.16), "normal"),
+    # --- Fase 8: cava, disposicao e usina ---
+    ("PeneiraUsina", quad(-20.6, -9.05, 0.62, 0.62), "normal"),
+    ("Espessador", quad(-22.2, -7.9, 0.78, 0.72), "normal"),
+    ("CaminhaoServico", ret(-20.5, -9.45, 1.9, 0.3, 0.2), "normal"),
 ]
 
+# Formas de revolucao da fase 8. Ficam fora da checagem de caixa envolvente —
+# a AABB de um circulo estoura 41% nos cantos e acusa encosto que nao existe —
+# e entram na secao 2c, que mede circulo contra caixa de verdade.
+REDONDOS = {
+    "CavaFerro": (-20.3, -11.8, 1.85),
+    "EsterilPilha": (-17.2, -12.7, 1.40),
+    "BaciaDecant": (-14.6, -12.3, 1.20),
+}
+for _n, (_cx, _cz, _r) in REDONDOS.items():
+    PECAS_VIA.append((_n, [(_cx + math.cos(_a * math.pi / 8) * _r, _cz + math.sin(_a * math.pi / 8) * _r) for _a in range(16)]))
+for _i, _p in enumerate([(-20.05, -10.15), (-20.45, -9.7), (-20.6, -9.2), (-20.72, -8.6)]):
+    PECAS.append((f"EstradaCava {_i}", [_p], "normal"))
+for _i, _p in enumerate([(-19.2, -11.4), (-18.6, -12.35), (-17.9, -12.6)]):
+    PECAS.append((f"EstradaEsteril {_i}", [_p], "normal"))
+
 # Postes da linha de energia e pessoas entram como pontos soltos.
-for _i, _p in enumerate([(-12.0, -11.0), (-13.6, -11.9), (-15.2, -12.8), (-16.8, -13.7)]):
+for _i, _p in enumerate([(-11.6, -10.6), (-10.2, -11.4), (-8.8, -12.2), (-7.4, -13.0)]):
     PECAS.append((f"LinhaMina poste {_i}", [_p], "normal"))
 for _nome, _pts in (
     ("OpMina", [(-22.0, -8.32), (-21.9, -7.5), (-21.4, -8.3), (-21.9, -6.15), (-21.6, -7.6)]),
@@ -187,8 +209,13 @@ FIXOS = {
 # Sólidos de revolução: a caixa envolvente exagera muito, então entram como
 # círculo com o raio onde a saia já tem altura relevante (~0.4).
 CONES = {
-    "MinaCava": (-17.2, -9.4, 3.9),
+    # `MinaCava` saiu na fase 8: era um morro de 1,86 centrado em IRON, e a
+    # alca do ramal passava a 0,81 desse centro — o trem corria dentro da rocha.
     "CarvaoCava": (-19.4, -6.15, 2.2),
+    # Raio onde a saia ja tem altura relevante, nao o pe do talude.
+    "CavaFerro": (-20.3, -11.8, 1.62),
+    "EsterilPilha": (-17.2, -12.7, 1.24),
+    "BaciaDecant": (-14.6, -12.3, 1.06),
 }
 
 
@@ -196,7 +223,7 @@ def main():
     print("=" * 68)
     print("1) GABARITO FERROVIARIO (minimo %.2f)" % MIN_FOLGA)
     alertas = 0
-    for nome, pts, modo in PECAS:
+    for nome, pts, modo in PECAS + [(n, p, "normal") for n, p in PECAS_VIA]:
         d = min(dist_vias(p) for p in pts)
         if modo == "straddle":
             print(f"  ponte   {d:5.2f}  {nome} (monta sobre a via, isento)")
@@ -204,7 +231,7 @@ def main():
         if d < MIN_FOLGA:
             alertas += 1
             print(f"  ALERTA  {d:5.2f}  {nome}")
-    print(f"  -> {alertas} alerta(s) de {sum(1 for _, _, k in PECAS if k != 'straddle')} pecas")
+    print(f"  -> {alertas} alerta(s) de {sum(1 for _, _, k in PECAS if k != 'straddle') + len(PECAS_VIA)} pecas")
 
     print()
     print("2) INTERPENETRACAO EM PLANTA")
@@ -213,6 +240,13 @@ def main():
         ("PatioTrilhos", "PilhaPatio"), ("PatioTrilhos", "EmpilhPortico"),
         ("Britador", "PilharOre"), ("PilharOre", "MinaOficina"),
         ("Britador", "MinaOficina"),
+        # Fase 8: a estrada de servico nasce dentro da cava e morre no britador,
+        # e o ramal do esteril encosta no pe da pilha — e para isso que servem.
+        ("CavaFerro", "EstradaCava 0"), ("CavaFerro", "EstradaEsteril 0"),
+        ("EsterilPilha", "EstradaEsteril 2"), ("CavaFerro", "EsterilPilha"),
+        ("Britador", "EstradaCava 3"), ("Britador", "PeneiraUsina"),
+        ("PeneiraUsina", "CaminhaoServico"), ("EstradaCava 2", "CaminhaoServico"),
+        ("EstradaCava 1", "CaminhaoServico"), ("Barracao", "Espessador"),
     )
     caixas = [(n, p) for n, p, _ in PECAS] + [(n, p) for n, p in FIXOS.items()]
     achou = 0
@@ -236,14 +270,45 @@ def main():
 
     print()
     print("2b) INVASAO DAS CAVAS (circulo com altura relevante)")
+    # Estradas de servico existem justamente para entrar na cava e subir a
+    # pilha; nao sao invasao.
+    ok_cava = {("EstradaCava 0", "CavaFerro"), ("EstradaEsteril 0", "CavaFerro"),
+               ("EstradaEsteril 2", "EsterilPilha"), ("EstradaEsteril 1", "EsterilPilha")}
     achou_c = 0
     for nome, pts, _ in PECAS:
         for cn, (cx, cz, r) in CONES.items():
             d = min(math.hypot(p[0] - cx, p[1] - cz) for p in pts)
-            if d < r:
+            if d < r and (nome, cn) not in ok_cava:
                 achou_c += 1
                 print(f"  ALERTA  {nome} entra {r - d:.2f} m dentro de {cn}")
     if not achou_c:
+        print("  nenhuma")
+
+    print()
+    print("2c) FORMAS DE REVOLUCAO (circulo x caixa, sem exagero de AABB)")
+    achou_r = 0
+    itens = list(REDONDOS.items())
+    for i, (na, (ax, az, ar)) in enumerate(itens):
+        for nb, (bx, bz, br) in itens[i + 1:]:
+            folga = math.hypot(ax - bx, az - bz) - ar - br
+            if folga < -0.05:
+                achou_r += 1
+                print(f"  ALERTA  {na} x {nb} sobrepoem {-folga:.2f} m")
+        for nb, pb in FIXOS.items():
+            bx0, bx1 = min(p[0] for p in pb), max(p[0] for p in pb)
+            bz0, bz1 = min(p[1] for p in pb), max(p[1] for p in pb)
+            d = math.hypot(max(bx0 - ax, 0, ax - bx1), max(bz0 - az, 0, az - bz1)) - ar
+            if d < 0.0:
+                achou_r += 1
+                print(f"  ALERTA  {na} entra {-d:.2f} m em {nb}")
+        for nb, (bx, bz, br) in CONES.items():
+            if nb == na:
+                continue
+            folga = math.hypot(ax - bx, az - bz) - ar - br
+            if folga < -0.05:
+                achou_r += 1
+                print(f"  ALERTA  {na} x {nb} sobrepoem {-folga:.2f} m")
+    if not achou_r:
         print("  nenhuma")
 
     print()

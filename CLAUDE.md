@@ -98,7 +98,7 @@ the initial bundle — keep it that way.
 |---|---|---|
 | Initial bundle | ~117 KB | 165 KB |
 | `Maquete3D` chunk | ~283 KB | 330 KB |
-| `public/models/maquete-blender.glb` | **4.8 MB uncompressed** | needs Draco/Meshopt |
+| `public/models/maquete-blender.glb` | **~5 MB** | Draco is wired up (export in `scripts/maquete_bpy/main.py`, decoder in `public/draco/`) — rebuild to apply |
 
 The `.glb` is the real bottleneck — it is served to phones over fair-ground 4G.
 

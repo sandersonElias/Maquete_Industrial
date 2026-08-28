@@ -264,4 +264,7 @@ def build_details(m):
     placa("SinalVia", -14.2, -3.9, m, yaw=0.1, largura=0.26, altura=0.16, mat=m["sig_r"], h=0.3)
     bandeiras("BandeirasPorto", 10.0, 2.4, m)
 
-    linha_energia("LinhaMina", [(-12.0, -11.0), (-13.6, -11.9), (-15.2, -12.8), (-16.8, -13.7)], m)
+    # Fase 8: a linha corria por cima do que hoje e a pilha de esteril e a
+    # bacia de decantacao. Agora ela chega de fora, a leste, ate a subestacao —
+    # que e o sentido certo: energia entra no sitio, nao sai dele.
+    linha_energia("LinhaMina", [(-11.6, -10.6), (-10.2, -11.4), (-8.8, -12.2), (-7.4, -13.0)], m)
