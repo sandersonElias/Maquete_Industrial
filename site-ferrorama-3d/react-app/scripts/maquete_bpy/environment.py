@@ -121,6 +121,9 @@ def build_trees(m):
     ]
 
     def arvore_ok(x, z):
+        # A agua passou a ocupar toda a borda leste a partir de x=21.0.
+        if x > 20.5:
+            return False
         if x > 12.0 and z > 3.0:
             return False
         if (x + 17.2) ** 2 + (z + 9.4) ** 2 < 28:

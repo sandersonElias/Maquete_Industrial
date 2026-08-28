@@ -160,6 +160,46 @@ def make_palette():
         "sig_g": pbr("SigG", color=(0.06, 0.72, 0.22), rough=0.28, emit=1.5),
         "desk": pbr("MesaSCADA", color=(0.14, 0.16, 0.2), rough=0.55, metal=0.2),
         "belt": pbr("Correia", color=(0.08, 0.08, 0.09), rough=0.55, metal=0.12),
+        # Estrutura industrial: aço galvanizado das treliças e o amarelo de
+        # segurança das partes móveis/pontes rolantes.
+        "steel": pbr("Aco", color=(0.52, 0.55, 0.58), rough=0.42, metal=0.78),
+        "steel_y": pbr("AcoSeguranca", color=(0.84, 0.66, 0.07), rough=0.5, metal=0.32),
+        # --- Fase 4: desgaste --------------------------------------------
+        # Nada numa mineradora é novo. Estes materiais existem para as partes
+        # baixas e as superfícies que levam chuva, poeira e minério.
+        "steel_rust": pbr(
+            "AcoOxidado",
+            g(TEX, "rock_diff.jpg"),
+            g(TEX, "rock_nor.jpg"),
+            None,
+            color=(0.36, 0.18, 0.09),
+            rough=0.86,
+            metal=0.35,
+            uv=7.0,
+            tint=(0.42, 0.19, 0.08),
+            tint_fac=0.6,
+        ),
+        "conc_dirty": pbr(
+            "ConcretoEncardido",
+            g(TEX, "concrete_diff.jpg"),
+            g(TEX, "concrete_nor.jpg"),
+            g(TEX, "concrete_rough.jpg"),
+            uv=3.4,
+            tint=(0.24, 0.21, 0.18),
+            tint_fac=0.42,
+            rough=0.9,
+        ),
+        # Telha metálica trapezoidal: o normal map da rocha, bem esticado num
+        # eixo, já dá a leitura de nervura sem custar polígono.
+        "roof": pbr("TelhaMetalica", None, None, None, color=(0.38, 0.42, 0.46), rough=0.55, metal=0.55),
+        "roof_r": pbr("TelhaVermelha", None, None, None, color=(0.44, 0.19, 0.12), rough=0.7, metal=0.15),
+        "tank": pbr("Tanque", color=(0.72, 0.74, 0.74), rough=0.35, metal=0.6),
+        "hi_vis": pbr("Colete", color=(0.95, 0.38, 0.02), rough=0.75, emit=0.12),
+        "skin": pbr("Pele", color=(0.62, 0.44, 0.33), rough=0.78),
+        "helmet": pbr("Capacete", color=(0.9, 0.86, 0.2), rough=0.42),
+        "rubber": pbr("Borracha", color=(0.07, 0.07, 0.08), rough=0.92),
+        "sign_b": pbr("PlacaAzul", color=(0.06, 0.22, 0.52), rough=0.4),
+        "puddle": pbr("Poca", color=(0.1, 0.11, 0.1), rough=0.05, metal=0.35),
         "amber": pbr("LuzMina", color=(1.0, 0.72, 0.28), rough=0.35, emit=0.55),
         "cont": [
             pbr("C1", color=(0.82, 0.28, 0.05), rough=0.45, metal=0.15),

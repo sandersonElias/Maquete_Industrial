@@ -54,9 +54,7 @@ def build_iron_mine(m):
         displace=0.04,
         noise=0.8,
     )
-    cube("Barracao", (2.3, 1.05, 1.65), (mx - 5.4, 0.56, mz + 0.2), m["conc"], 0.05)
-    cube("BarracaoTeto", (2.5, 0.1, 1.85), (mx - 5.4, 1.14, mz + 0.2), m["dirt"], 0.02)
-    cube("MinaOficina", (1.35, 0.7, 1.05), (mx - 4.6, 0.4, mz + 2.6), m["conc"], 0.04)
+    # Barracao e MinaOficina agora sao galpoes com estrutura (structures.py).
     cube("Britador", (0.85, 0.95, 0.85), (mx - 3.55, 0.55, mz + 1.55), m["black"], 0.03)
     cube("BritadorBoca", (0.55, 0.22, 0.55), (mx - 3.55, 1.12, mz + 1.55), m["conc"], 0.015)
     ico("PilharOre", 0.62, (mx - 3.2, 0.42, mz + 2.35), m["ore"], 2, (1.5, 0.75, 1.2))

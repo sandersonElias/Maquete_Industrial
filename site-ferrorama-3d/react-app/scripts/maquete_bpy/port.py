@@ -12,24 +12,30 @@ from .railway import poste_luz
 
 def build_port(m):
     px, pz = PORT
-    cube("Cais", (4.4, 0.34, 9.2), (px - 2.05, 0.2, pz), m["conc"], 0.03)
-    cube("CaisBorda", (0.18, 0.22, 9.2), (px - 0.05, 0.42, pz), m["white"], 0.01)
-    cube("Agua", (7.8, 0.05, 10.0), (px + 2.05, 0.02, pz), m["water"], 0.0)
-    cube("ArmazemP", (2.4, 1.15, 3.2), (px - 5.4, 0.62, pz - 1.4), m["conc"], 0.04)
-    cube("ArmazemTeto", (2.6, 0.1, 3.4), (px - 5.4, 1.24, pz - 1.4), m["dirt"], 0.02)
-    cube("GalpaoP", (1.6, 0.85, 2.2), (px - 5.6, 0.48, pz + 2.6), m["white"], 0.04)
-    cube("SiloPorto", (1.05, 1.35, 1.05), (px - 4.55, 0.72, pz + 0.55), m["conc"], 0.04)
-    cube("CorreiaPorto", (4.6, 0.1, 0.32), (px - 1.15, 0.72, pz + 0.15), m["belt"], 0.01, rot=(0, 0.12, 0.08))
-    cube("CorreiaPortoPe0", (0.12, 0.62, 0.12), (px - 3.2, 0.35, pz + 0.05), m["black"], 0.008)
-    cube("CorreiaPortoPe1", (0.12, 0.78, 0.12), (px + 0.55, 0.42, pz + 0.28), m["black"], 0.008)
-    cube("HopperCais", (0.85, 0.55, 0.7), (px - 0.55, 0.55, pz + 0.2), m["black"], 0.02)
+    # Fase 7 - o cais foi estendido para leste ate x=21.0 e rebaixado para
+    # topo y=0.16. Com isso a alca do ramal do porto (que ia ate x~20.4) passa
+    # a correr sobre patio pavimentado em vez de sobre a agua, e a laje deixa
+    # de enterrar os trilhos, que ficam em y~0.
+    cube("Cais", (7.65, 0.16, 10.4), (17.175, 0.08, pz), m["conc"], 0.02)
+    cube("CaisBorda", (0.18, 0.14, 10.4), (20.91, 0.21, pz), m["white"], 0.01)
+    # A agua virou uma faixa ao longo de toda a borda leste do tabuleiro: um
+    # tanque de 10 unidades no meio do nada nao lia como mar. A lamina fica em
+    # y=0.12 - acima do topo da grama (que vai a 0.072 com o displace) para nao
+    # deixar o capim atravessar o mar, e 0.04 abaixo do topo do cais.
+    cube("Agua", (2.6, 0.14, 33.4), (22.3, 0.05, 0.0), m["water"], 0.0)
+    # ArmazemP e GalpaoP agora sao galpoes com estrutura (structures.py), e o
+    # armazem saiu de cima do ramal ferroviario.
+    # Recuado para abrir o corredor da galeria C (ver process.py).
+    cube("SiloPorto", (1.05, 1.35, 1.05), (px - 5.3, 0.72, pz + 0.8), m["conc"], 0.04)
     poste_luz("LuzPorto0", px - 3.4, pz - 3.6, m["black"], m["glow"], 1.7)
-    poste_luz("LuzPorto1", px - 3.4, pz + 3.6, m["black"], m["glow"], 1.7)
-    poste_luz("LuzPorto2", px - 1.2, pz, m["black"], m["glow"], 1.55)
+    # LuzPorto1 e LuzPorto2 saíram de cima do pátio de estocagem e do virador.
+    poste_luz("LuzPorto1", px - 4.05, pz + 4.3, m["black"], m["glow"], 1.7)
+    poste_luz("LuzPorto2", px - 1.4, pz - 3.4, m["black"], m["glow"], 1.55)
     poste_luz("LuzPorto3", px - 0.4, pz - 4.2, m["black"], m["glow"], 1.45)
     poste_luz("LuzPorto4", px - 0.4, pz + 4.2, m["black"], m["glow"], 1.45)
 
-    navio = empty("Navio", (px + 0.85, 0.18, pz))
+    # Navio rebaixado: antes o casco flutuava 0.15 acima da lamina d agua.
+    navio = empty("Navio", (22.3, -0.06, pz))
     parent(cube("Casco", (1.85, 0.5, 5.6), (0, 0, 0), m["ship"], 0.07), navio, (0, 0.26, 0))
     parent(cube("CascoB", (1.45, 0.2, 5.1), (0, 0, 0), m["black"], 0.03), navio, (0, 0.0, 0))
     parent(cube("Ponte", (1.15, 1.05, 1.15), (0, 0, 0), m["white"], 0.05), navio, (0, 1.05, -1.85))
@@ -48,12 +54,16 @@ def build_port(m):
         if idx > 17:
             break
 
-    cube("GuindBase", (0.55, 0.22, 0.55), (px - 1.55, 0.45, pz - 0.4), m["conc"], 0.02)
-    cyl("Guindaste", 0.1, 2.85, (px - 1.55, 1.7, pz - 0.4), m["glow"], 14)
-    guind = empty("GuindLanca", (px - 1.55, 3.05, pz - 0.4))
-    lanca = cube("LancaG", (2.85, 0.1, 0.14), (px + 0.0, 3.05, pz - 0.4), m["glow"], 0.02)
-    cabo = cube("CaboG", (0.03, 1.15, 0.03), (px + 1.15, 2.4, pz - 0.4), m["black"], 0.004)
-    carga = cube("CargaG", (0.5, 0.28, 0.44), (px + 1.15, 1.7, pz - 0.4), m["cont"][0], 0.012)
+    # Com o cais estendido, o guindaste de conteineres foi para a borda nova,
+    # a vante do navio: a faixa central do cais agora e da alca ferroviaria e
+    # do shiploader (cadeia de granel).
+    gx, gz = 20.35, 12.15
+    cube("GuindBase", (0.55, 0.22, 0.55), (gx, 0.28, gz), m["conc"], 0.02)
+    cyl("Guindaste", 0.1, 2.85, (gx, 1.55, gz), m["glow"], 14)
+    guind = empty("GuindLanca", (gx, 2.9, gz))
+    lanca = cube("LancaG", (2.85, 0.1, 0.14), (gx + 1.55, 2.9, gz), m["glow"], 0.02)
+    cabo = cube("CaboG", (0.03, 1.15, 0.03), (gx + 2.7, 2.25, gz), m["black"], 0.004)
+    carga = cube("CargaG", (0.5, 0.28, 0.44), (gx + 2.7, 1.55, gz), m["cont"][0], 0.012)
     parent_keep(lanca, guind)
     parent_keep(cabo, guind)
     parent_keep(carga, guind)
@@ -73,8 +83,8 @@ def build_port(m):
     for f in range(1, 241):
         u = (f - 1) / 240.0 * math.tau
         navio.location = tloc(
-            px + 0.85 + 0.16 * math.sin(u),
-            0.17 + 0.045 * math.sin(u * 2.0 + 0.4),
+            22.3 + 0.16 * math.sin(u),
+            -0.07 + 0.045 * math.sin(u * 2.0 + 0.4),
             pz + 0.28 * math.cos(u * 0.85),
         )
         navio.rotation_euler = (0.03 * math.sin(u * 1.4), 0, 0.04 * math.sin(u))
