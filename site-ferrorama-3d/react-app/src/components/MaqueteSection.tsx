@@ -66,13 +66,16 @@ function Placeholder({
               ? 'Na feira, a maquete leve fica em tela cheia.'
               : 'A maquete 3D só carrega quando você pedir — assim o site não trava ao rolar.'}
           </p>
-          <div className="maquete-abrir maquete-abrir--stack">
-            <a className="hero-cta" href="/maquete">
-              Abrir maquete em tela cheia
-            </a>
-            <button type="button" className="hero-cta-secondary" onClick={onCarregar}>
-              Carregar preview aqui
-            </button>
+          <div className="maquete-abrir">
+            {isMobileViewport() ? (
+              <a className="hero-cta" href="/maquete">
+                Abrir maquete em tela cheia
+              </a>
+            ) : (
+              <button type="button" className="hero-cta" onClick={onCarregar}>
+                Carregar maquete 3D
+              </button>
+            )}
           </div>
         </div>
       ) : (
@@ -127,14 +130,6 @@ export default function MaqueteSection() {
             <Placeholder precisaToque={precisaToque} onCarregar={carregar} />
           )}
         </div>
-
-        {proximo ? (
-          <p className="maquete-abrir">
-            <a className="hero-cta" href="/maquete">
-              Abrir maquete em tela cheia
-            </a>
-          </p>
-        ) : null}
 
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>

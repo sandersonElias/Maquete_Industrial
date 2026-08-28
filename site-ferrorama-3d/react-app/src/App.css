@@ -6924,10 +6924,19 @@ body::after {
   text-align: center;
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
-.maquete-abrir .hero-cta {
+.maquete-abrir .hero-cta,
+.maquete-abrir .hero-cta-secondary {
   display: inline-flex;
+  width: min(100%, 22rem);
+  justify-content: center;
+  min-height: 48px;
+}
+
+#maquete .maquete3d-carregando__inner .maquete-abrir {
+  margin-top: 0.85rem;
 }
 
 .maquete-abrir--stack {
