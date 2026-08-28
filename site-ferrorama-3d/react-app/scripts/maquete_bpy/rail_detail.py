@@ -141,8 +141,9 @@ def build_rail_detail(m):
     # Fim de linha das duas vias do pátio, só no lado leste: a ponta oeste
     # fica aberta porque é por onde o AMV do atalho entra. Via de pátio com
     # para-choque numa ponta e chave na outra é o arranjo normal.
-    for i, (px, pz) in enumerate(((4.52, 3.55), (4.52, 2.85))):
-        para_choque(f"ParaChoqueL{i}", px, pz, 0.0, m)
+    # Só a via A leva para-choque: a ponta leste da via B cai dentro da casa da
+    # estação, que já estava ali. Via de passagem sem para-choque é normal.
+    para_choque("ParaChoqueL0", 4.52, 3.55, 0.0, m)
 
     # Marcos ao longo do oval, do lado de fora do lastro.
     for i, (px, pz, pyaw) in enumerate(

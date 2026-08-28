@@ -151,7 +151,7 @@ PECAS = [
     # --- Fase 6/7: detalhes e sitio ---
     ("BalancaPorto", ret(10.8, 8.4, 0.54, 0.78, 0.4), "normal"),
     ("SucataOficina", quad(-22.9, -7.55, 0.6, 0.6), "normal"),
-    ("ObraMina", ret(-22.4, -5.6, 0.28, 0.27, 0.14), "normal"),
+    ("ObraMina", ret(-18.4, -11.0, 0.28, 0.27, 0.14), "normal"),
     ("ObraPorto", ret(13.9, 3.6, -0.42, 0.27, 0.14), "normal"),
     ("PickupMina", ret(-10.6, -10.4, 0.35, 0.19, 0.09), "normal"),
     ("PickupPorto", ret(13.9, 4.6, -0.5, 0.19, 0.09), "normal"),
@@ -162,7 +162,7 @@ PECAS = [
     ("BandeirasPorto", quad(10.0, 2.4, 0.6, 0.2), "normal"),
     ("GuindBase", quad(20.35, 12.15, 0.55, 0.55), "normal"),
     ("SiloPorto", quad(12.3, 9.4, 1.05, 1.05), "normal"),
-    ("TamboresOficina", quad(-22.55, -6.0, 0.22, 0.16), "normal"),
+    ("TamboresOficina", quad(-18.9, -10.6, 0.22, 0.16), "normal"),
     ("TamboresPorto", quad(14.5, 4.2, 0.22, 0.16), "normal"),
     # --- Fase 8: cava, disposicao e usina ---
     ("PeneiraUsina", quad(-20.6, -9.05, 0.62, 0.62), "normal"),
@@ -176,7 +176,6 @@ PECAS = [
     ("PNMinaRamal", ret(-10.32, -5.31, 0.044, 0.44, 0.5), "straddle"),
     ("PNMinaOval", ret(-8.21, -4.13, -1.002, 0.44, 0.5), "straddle"),
     ("ParaChoqueL0", ret(4.52, 3.55, 0.0, 0.15, 0.22), "straddle"),
-    ("ParaChoqueL1", ret(4.52, 2.85, 0.0, 0.15, 0.22), "straddle"),
     # --- Fase 12: o cais como a foto de referencia pede ---
     # O guindaste entra em duas caixas: a base sobre esteiras, que e o que
     # precisa de folga de bitola, e o alcance da lanca, que passa a 2,3 de
@@ -184,7 +183,20 @@ PECAS = [
     ("GuindasteTrelica base", ret(18.75, 8.0, 0.0, 0.42, 0.4), "normal"),
     ("GuindasteTrelica lanca", ret(19.28, 8.0, 0.0, 0.95, 0.14), "straddle"),
     ("ConteinerCais", ret(19.3, 4.6, 0.06, 0.9, 0.6), "normal"),
+    # --- Fase 13: terminal logistico ---
+    ("CavaCaminhao", ret(-18.6, -12.0, 0.7, 0.3, 0.2), "normal"),
+    ("PisoTerminal", quad(4.8, 11.0, 9.0, 8.2), "normal"),
+    ("ArmazemLog", quad(5.6, 13.3, 5.3, 3.2), "normal"),
+    ("GalpaoLog", quad(1.6, 12.9, 2.1, 2.3), "normal"),
+    ("AdminTerminal", quad(1.9, 8.5, 1.55, 1.15), "normal"),
+    ("PatioContLog", quad(7.3, 8.6, 3.1, 2.1), "normal"),
+    ("CoberturaLog", quad(3.78, 8.3, 1.6, 0.7), "normal"),
+    ("PortariaTerminal", quad(0.75, 9.5, 0.6, 1.4), "normal"),
+    ("MastroLog0", quad(1.1, 14.6, 0.3, 0.3), "normal"),
+    ("MastroLog1", quad(8.8, 7.4, 0.3, 0.3), "normal"),
 ]
+for _i, _px in enumerate((4.1, 6.1, 8.1)):
+    PECAS.append((f"CarretaLog{_i}", ret(_px, 11.35, math.pi / 2, 0.6, 0.2), "normal"))
 # Barcaca e rebocador flutuam: nao entram no gabarito ferroviario nem na
 # checagem de terra, mas precisam caber na faixa de agua (x 21,0 a 23,6).
 FLUTUANTES = {
@@ -228,7 +240,7 @@ for _nome, _pts in (
 ):
     for _i, _p in enumerate(_pts):
         PECAS.append((f"{_nome}{_i}", [_p], "normal"))
-for _i, _p in enumerate([(-22.6, -6.6), (-22.6, -6.85), (-22.6, -7.1), (13.6, 4.6)]):
+for _i, _p in enumerate([(-19.6, -9.9), (-19.45, -10.05), (-19.3, -10.2), (14.2, 4.3)]):
     PECAS.append((f"Cone{_i}", [_p], "normal"))
 
 # Construções e obstáculos que já existiam e não podem ser invadidos.
@@ -288,6 +300,16 @@ def main():
         ("Desvio3", "PNMinaOval"),
         # As duas caixas do guindaste sao o mesmo objeto, medido em dois papeis.
         ("GuindasteTrelica base", "GuindasteTrelica lanca"),
+        # O piso do terminal e o chao: tudo que esta no terminal fica sobre ele.
+        ("PisoTerminal", "ArmazemLog"), ("PisoTerminal", "GalpaoLog"),
+        ("PisoTerminal", "AdminTerminal"), ("PisoTerminal", "PatioContLog"),
+        ("PisoTerminal", "CoberturaLog"), ("PisoTerminal", "PortariaTerminal"),
+        ("PisoTerminal", "MastroLog0"), ("PisoTerminal", "MastroLog1"),
+        ("PisoTerminal", "CarretaLog0"), ("PisoTerminal", "CarretaLog1"),
+        ("PisoTerminal", "CarretaLog2"),
+        # As carretas encostam na doca do armazem de proposito.
+        ("ArmazemLog", "CarretaLog0"), ("ArmazemLog", "CarretaLog1"),
+        ("ArmazemLog", "CarretaLog2"),
     )
     caixas = [(n, p) for n, p, _ in PECAS] + [(n, p) for n, p in FIXOS.items()]
     achou = 0
@@ -314,7 +336,10 @@ def main():
     # Estradas de servico existem justamente para entrar na cava e subir a
     # pilha; nao sao invasao.
     ok_cava = {("EstradaCava 0", "CavaFerro"), ("EstradaEsteril 0", "CavaFerro"),
-               ("EstradaEsteril 2", "EsterilPilha"), ("EstradaEsteril 1", "EsterilPilha")}
+               ("EstradaEsteril 2", "EsterilPilha"), ("EstradaEsteril 1", "EsterilPilha"),
+               # Caminhao carregado na estrada que sobe a saia da cava: e onde
+               # ele tem de estar.
+               ("CavaCaminhao", "CavaFerro")}
     achou_c = 0
     for nome, pts, _ in PECAS:
         for cn, (cx, cz, r) in CONES.items():

@@ -98,9 +98,30 @@ the initial bundle — keep it that way.
 |---|---|---|
 | Initial bundle | ~117 KB | 165 KB |
 | `Maquete3D` chunk | ~283 KB | 330 KB |
-| `public/models/maquete-blender.glb` | **~5 MB** | Draco is wired up (export in `scripts/maquete_bpy/main.py`, decoder in `public/draco/`) — rebuild to apply |
+| `public/models/maquete-blender.glb` | **3.6 MB** (Draco) | 4.5 MB |
 
 The `.glb` is the real bottleneck — it is served to phones over fair-ground 4G.
+
+### Building the `.glb` without installing Blender
+
+The model is a build artifact; the source of truth is `scripts/maquete_bpy/`. Blender the
+application is not needed — `bpy` ships as a PyPI wheel. A virtualenv with **bpy 4.5 LTS** (the
+version this project targets; 5.x removed `Action.fcurves` and breaks `curves.py`) lives at
+`~/.claude/bpy-env`:
+
+```bash
+# one-off setup
+python -m venv ~/.claude/bpy-env
+~/.claude/bpy-env/Scripts/python.exe -m pip install "bpy==4.5.*"
+
+# every rebuild, from site-ferrorama-3d/react-app
+~/.claude/bpy-env/Scripts/python.exe scripts/build_maquete_blender.py -- public/models/maquete-blender.glb
+```
+
+Watch the tail of the output for `SUJEIRA_OK` (vertex-colour grime), `OVERLAP_REPORT` (should be
+near zero; pairs with an elongated bounding box are filtered out because a fence's AABB is mostly
+empty) and `EXPORT_OK`. **Regenerate after any change under `scripts/maquete_bpy/`** — the site
+serves the committed `.glb`, so script changes are invisible until it is rebuilt.
 
 **Scene composition.** `MaqueteBlender.tsx` loads the Blender `.glb` and drives the train along a
 curve from `geometria.ts`/`tracado.ts`. Everything else in `maquete3d/` is procedural Three.js

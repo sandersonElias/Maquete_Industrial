@@ -100,6 +100,8 @@ INDUSTRIAIS = (
     "Desvio", "PN", "ParaChoque", "TremVagao", "TremLoco",
     # Fase 12: equipamento novo de cais e de cava.
     "GuindasteTrelica", "ConteinerCais", "Barcaca", "Rebocador", "CavaShovel",
+    # Fase 13: terminal logistico.
+    "ArmazemLog", "GalpaoLog", "MuroTerminal", "PatioContLog", "Doca", "CarretaLog",
 )
 
 

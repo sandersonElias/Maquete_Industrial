@@ -240,16 +240,17 @@ def build_details(m):
     # da alca e a estrada correm colados, e nao havia 0,6 de folga para ela.
     balanca("BalancaPorto", 10.8, 8.4, m, yaw=0.54)
     sucata("SucataOficina", -22.9, -7.55, m)
-    tambores("TamboresOficina", -22.55, -6.0, m, yaw=0.3)
+    tambores("TamboresOficina", -18.9, -10.6, m, yaw=0.3)
     tambores("TamboresPorto", 14.5, 4.2, m, n=4, yaw=-0.4)
-    palete("PaleteOficina", -22.15, -6.05, m, yaw=0.2)
+    palete("PaleteOficina", -17.8, -10.3, m, yaw=0.2)
     palete("PaletePorto", 13.15, 4.85, m, yaw=-0.3, carga=False)
-    container_obra("ObraMina", -22.4, -5.6, m, yaw=0.28)
+    # O contentor e o palete estavam dentro da caixa do TerminalCarvao.
+    container_obra("ObraMina", -18.4, -11.0, m, yaw=0.28)
     container_obra("ObraPorto", 13.9, 3.6, m, yaw=-0.42, cor=m["cont"][3])
 
-    for i, (x, z) in enumerate(((-22.6, -6.6), (-22.6, -6.85), (-22.6, -7.1))):
+    for i, (x, z) in enumerate(((-19.6, -9.9), (-19.45, -10.05), (-19.3, -10.2))):
         cone_transito(f"ConeMina{i}", x, z, m)
-    cone_transito("ConePorto0", 13.6, 4.6, m)
+    cone_transito("ConePorto0", 14.2, 4.3, m)
 
     poca("PocaEstrada", -11.8, -6.15, m, r=0.26, escala=(1.6, 0.9))
     poca("PocaPatioMina", -8.8, -4.0, m, r=0.2, escala=(1.3, 1.1))

@@ -118,6 +118,14 @@ def build_trees(m):
         (16.8, -9.4), (18.6, -11.2), (15.2, -12.0),
         (-21.6, 2.4), (20.4, -4.8), (-4.2, -14.6), (9.6, 11.6),
         (21.2, 12.4), (-22.0, -3.2), (2.4, -13.2),
+        # Fase 13 — o pedido foi "mais cara de vida real, com arvores ao
+        # redor". Estes pontos preenchem as bordas que ficaram peladas depois
+        # que o terminal tomou o centro-norte.
+        (-2.2, 15.6), (-9.4, 15.4), (-13.2, 14.2), (-17.6, 12.8), (-21.4, 11.2),
+        (-22.4, 6.4), (-21.8, 1.2), (-16.4, 2.4), (-12.2, 3.6), (-11.6, 8.4),
+        (-8.6, 6.2), (-4.6, 8.8), (-1.8, 5.2), (12.8, -6.4), (16.4, -4.2),
+        (19.6, -7.6), (21.4, -12.4), (6.8, -15.6), (-2.6, -16.2), (-13.6, -16.4),
+        (-19.8, -16.2), (13.4, -14.6), (18.2, -15.4), (-6.2, -9.4), (-3.2, -12.6),
     ]
 
     def arvore_ok(x, z):
@@ -139,6 +147,9 @@ def build_trees(m):
         if (x + 17.2) ** 2 + (z + 12.7) ** 2 < 2.9:
             return False
         if (x + 14.6) ** 2 + (z + 12.3) ** 2 < 2.2:
+            return False
+        # Fase 13: o terminal logistico ocupa o retangulo que antes era vazio.
+        if -0.4 < x < 10.0 and 6.2 < z < 15.6:
             return False
         return True
 

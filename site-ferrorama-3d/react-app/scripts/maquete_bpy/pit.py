@@ -276,16 +276,19 @@ def cava_ferro(m):
     cyl("CavaBomba", 0.045, 0.1, (cx + 0.15, 0.17, cz + 0.08), m["steel_rust"], 10)
     # Frente de lavra na bancada de minério, e o desmonte no banco de cima.
     escavadeira("CavaEscav", cx + 0.62, cz + 0.28, m, yaw=2.5, y=0.28)
-    caminhao_fora("CavaCaminhao", cx + 0.18, cz - 0.5, m, yaw=1.1, y=0.15)
+    # A praca do fundo tem raio 0,44 e ja carrega escavadeira, shovel, sump e
+    # bomba. Este caminhao saiu para a estrada de servico, carregado, a
+    # caminho do britador — que e o que um caminhao de mina faz.
+    caminhao_fora("CavaCaminhao", -18.6, -12.0, m, yaw=0.7, y=0.1)
     perfuratriz("CavaPerf", cx - 0.85, cz + 0.62, m, yaw=-0.7, y=0.44)
     # Fase 12 — a foto da cava tem vários equipamentos em bancadas diferentes,
     # e é essa sobreposição de níveis que faz a cava parecer funda. Uma
     # escavadeira a cabo na berma do banco 2, um caminhão subindo a rampa e
     # outro esperando na crista.
     escavadeira_cabo("CavaShovel", cx - 0.55, cz - 0.42, m, yaw=0.66, y=0.28)
-    caminhao_fora("CavaCaminhao2", cx - 0.44, cz - 0.71, m, yaw=5.74, y=0.43, carregado=False)
+    caminhao_fora("CavaCaminhao2", cx + 0.23, cz - 0.72, m, yaw=6.59, y=0.39, carregado=False)
     caminhao_fora("CavaCaminhao3", cx + 0.42, cz + 1.07, m, yaw=2.77, y=0.62)
-    trator_esteira("CavaDozer", cx - 1.0, cz + 0.5, m, yaw=1.4, y=0.62)
+    trator_esteira("CavaDozer", cx - 0.35, cz + 1.05, m, yaw=1.4, y=0.62)
 
 
 def pilha_esteril(m):

@@ -12,6 +12,7 @@ from .environment import build_board, build_fair_lights, build_hills, build_scad
 from .harbour import build_harbour
 from .iron_mine import build_iron_mine
 from .landscape import build_landscape
+from .logistics import build_logistics
 from .materials import make_palette
 from .pit import build_pit
 from .port import build_port
@@ -72,6 +73,7 @@ def build():
     build_process_chain(m)
     build_harbour(m)
     build_structures(m)
+    build_logistics(m)
     build_site(m)
     build_details(m)
     build_landscape(m)
@@ -96,6 +98,11 @@ def build():
             "CercaPorto", "Defensa", "Balanca",
             # Fase 12: o que a foto de referencia do porto pede.
             "GuindasteTrelica", "ConteinerCais", "Barcaca", "Rebocador",
+            # Fase 13: terminal logistico (a segunda metade do porto).
+            "PisoTerminal", "MuroTerminal", "PortariaTerminal", "ArmazemLog",
+            "SolarLog", "GalpaoLog", "Doca", "CarretaLog", "AdminTerminal",
+            "VagasLog", "CoberturaLog", "CarroLog", "PatioContLog", "OpLog",
+            "MastroLog",
         ),
         cols["PORT"],
     )

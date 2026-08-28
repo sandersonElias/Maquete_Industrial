@@ -118,3 +118,7 @@ def build_landscape(m):
     # dois casos dentro da grama (que termina em |z| = 16,7).
     fileira_arvores("CortinaMina", [(-22.2, -15.2), (-16.2, -15.9), (-11.4, -14.8)], m)
     fileira_arvores("CortinaPorto", [(10.4, 15.9), (15.6, 16.1), (20.2, 16.0)], m)
+    # Fase 13 — alameda por dentro do muro do terminal logistico, no eixo da
+    # via interna. Alameda arborizada e o que separa um patio industrial novo
+    # de um estacionamento de galpao.
+    fileira_arvores("AlamedaLog", [(1.5, 10.2), (5.0, 10.2), (8.6, 10.2)], m, passo=1.1, jitter=0.14)

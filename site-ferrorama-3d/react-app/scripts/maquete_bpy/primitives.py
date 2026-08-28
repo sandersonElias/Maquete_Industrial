@@ -75,7 +75,16 @@ def cube(name, dims, loc, mat, bevel_w=0.025, rot=(0, 0, 0)):
     return ob
 
 
+# Fase 13 — piso de segmentos. Muitas chamadas pediam 6 ou 8 lados para poupar
+# poligono, o que dava postes com cara de prisma hexagonal. Com a camera podendo
+# descer ao nivel do chao isso aparece, e o custo e irrisorio: um cilindro de 16
+# lados tem 32 vertices contra 16 de um de 8.
+MIN_VERTS_CIL = 16
+MIN_SEGS_LATHE = 32
+
+
 def cyl(name, r, depth, loc, mat, verts=24, rot=(0, 0, 0), r2=None):
+    verts = max(verts, MIN_VERTS_CIL)
     kw = dict(radius=r, depth=depth, location=tloc(*loc), rotation=(rot[0], rot[2], rot[1]), vertices=verts)
     if r2 is not None:
         bpy.ops.mesh.primitive_cone_add(
@@ -92,6 +101,7 @@ def cyl(name, r, depth, loc, mat, verts=24, rot=(0, 0, 0), r2=None):
 
 
 def sphere(name, r, loc, mat, scale=(1, 1, 1), segs=28):
+    segs = max(segs, 24)
     bpy.ops.mesh.primitive_uv_sphere_add(radius=r, location=tloc(*loc), segments=segs, ring_count=max(12, segs // 2))
     ob = bpy.context.object
     ob.name = name
@@ -165,6 +175,7 @@ def wheels(root, mat, xs, zs, r=0.08, y=0.08, depth=0.07):
 
 
 def lathe_solid(name, profile, segs, loc, mat, displace=0.0, noise=1.4):
+    segs = max(segs, MIN_SEGS_LATHE)
     verts, faces = [], []
     rings = len(profile)
     for i in range(segs):

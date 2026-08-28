@@ -35,7 +35,8 @@ def build_port(m):
     poste_luz("LuzPorto1", px - 4.05, pz + 4.3, m["black"], m["glow"], 1.7)
     poste_luz("LuzPorto2", px - 1.4, pz - 3.4, m["black"], m["glow"], 1.55)
     poste_luz("LuzPorto3", px - 0.4, pz - 4.2, m["black"], m["glow"], 1.45)
-    poste_luz("LuzPorto4", px - 0.4, pz + 4.2, m["black"], m["glow"], 1.45)
+    # LuzPorto4 nascia dentro do portico da empilhadeira.
+    poste_luz("LuzPorto4", px + 0.9, pz + 4.7, m["black"], m["glow"], 1.45)
 
     # Navio rebaixado: antes o casco flutuava 0.15 acima da lamina d agua.
     navio = empty("Navio", (22.3, -0.06, pz))
