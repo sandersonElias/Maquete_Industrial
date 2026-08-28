@@ -108,13 +108,13 @@ export default function MontagemSection() {
         >
           <div className="montagem-hero-card">
             <img
-              src="/images/pecas-conjunto.jpg"
-              alt="Peças da maquete: caminhão, escavadeira, navio, locomotiva e guindaste"
+              src="/images/montagem-oficina.jpg"
+              alt="Montagem do caminhão basculante na oficina, com fiação e Arduino"
               className="montagem-hero-image"
               loading="lazy"
             />
             <p className="montagem-hero-caption">
-              Base 120&nbsp;cm · escala HO · cinco áreas interligadas
+              Oficina da equipe · impressão 3D, fiação e testes antes da feira
             </p>
           </div>
         </motion.div>

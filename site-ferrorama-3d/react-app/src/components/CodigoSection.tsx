@@ -68,8 +68,8 @@ export default function CodigoSection() {
         >
           <div className="lab-bench__photo">
             <img
-              src="/images/arduino-bancada.jpg"
-              alt="Arduino e módulo Bluetooth na bancada de automação"
+              src="/images/automacao-bluetooth.jpg"
+              alt="Terminal serial no celular e fiação do caminhão basculante na bancada"
               loading="lazy"
               decoding="async"
             />
