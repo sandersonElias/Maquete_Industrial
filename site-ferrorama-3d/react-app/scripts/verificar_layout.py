@@ -197,6 +197,26 @@ PECAS = [
 ]
 for _i, _px in enumerate((4.1, 6.1, 8.1)):
     PECAS.append((f"CarretaLog{_i}", ret(_px, 11.35, math.pi / 2, 0.6, 0.2), "normal"))
+
+# --- Fase 15: avenidas. O bordo da pista e que precisa de folga, nao o eixo,
+# entao cada ponto entra deslocado meia largura para os dois lados.
+_AV = {
+    "AvNorte": ([(-10.4, 6.3), (-4.0, 6.2), (0.4, 6.3), (5.2, 6.3), (9.2, 6.5), (10.8, 7.6), (11.6, 8.8)], 0.39),
+    "AvOeste": ([(-16.2, 6.3), (-14.6, 4.0), (-13.0, 0.6), (-12.2, -2.6), (-10.4, -3.4)], 0.35),
+    "RuaTerminal": ([(0.4, 6.3), (0.5, 8.2), (0.75, 9.2)], 0.25),
+}
+for _n, (_pts, _meia) in _AV.items():
+    _b = []
+    for _i, (_x, _z) in enumerate(_pts):
+        _j = min(_i, len(_pts) - 2)
+        _yaw = math.atan2(_pts[_j + 1][1] - _pts[_j][1], _pts[_j + 1][0] - _pts[_j][0])
+        for _s in (-1, 1):
+            _b.append((_x - math.sin(_yaw) * _meia * _s, _z + math.cos(_yaw) * _meia * _s))
+    PECAS_VIA.append((_n, _b))
+# As ruas de estacao cruzam a linha principal de proposito, com passagem de nivel.
+for _n, _x, _z in (("RuaEstL", 5.08, 4.6), ("RuaEstO", -9.0, -2.5),
+                   ("PNEstL", 5.08, 5.2), ("PNEstO", -8.55, -2.46)):
+    PECAS.append((_n, quad(_x, _z, 0.6, 0.6), "straddle"))
 # Barcaca e rebocador flutuam: nao entram no gabarito ferroviario nem na
 # checagem de terra, mas precisam caber na faixa de agua (x 21,0 a 23,6).
 FLUTUANTES = {
@@ -310,6 +330,8 @@ def main():
         # As carretas encostam na doca do armazem de proposito.
         ("ArmazemLog", "CarretaLog0"), ("ArmazemLog", "CarretaLog1"),
         ("ArmazemLog", "CarretaLog2"),
+        # Cada rua de estacao carrega a propria passagem de nivel.
+        ("RuaEstL", "PNEstL"), ("RuaEstO", "PNEstO"),
     )
     caixas = [(n, p) for n, p, _ in PECAS] + [(n, p) for n, p in FIXOS.items()]
     achou = 0

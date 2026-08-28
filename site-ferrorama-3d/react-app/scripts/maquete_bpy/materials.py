@@ -158,8 +158,20 @@ def make_palette():
         # Agua de doca: azul acinzentado sujo, e rugosidade acima da de
         # espelho — a ondulacao da malha faz o resto (ver harbour.py).
         "water": pbr("Agua", color=(0.17, 0.25, 0.32), rough=0.14, metal=0.3),
-        "leaf": pbr("Copa", color=(0.08, 0.24, 0.07), rough=0.95),
+        # Fase 15 — quatro tons de copa, do lima ao escuro azulado. A foto de
+        # referencia mostra que o tom nao acompanha a especie: ha conifera
+        # clara e folhosa escura, e e essa mistura que tira a cara de script.
+        "leaf_lima": pbr("CopaLima", color=(0.42, 0.62, 0.13), rough=0.93),
+        "leaf": pbr("Copa", color=(0.22, 0.45, 0.11), rough=0.95),
         "leaf2": pbr("Copa2", color=(0.12, 0.32, 0.09), rough=0.94),
+        "leaf_escuro": pbr("CopaEscura", color=(0.06, 0.19, 0.11), rough=0.96),
+        "flor_r": pbr("FlorVermelha", color=(0.72, 0.12, 0.14), rough=0.85),
+        "flor_a": pbr("FlorAmarela", color=(0.88, 0.72, 0.12), rough=0.85),
+        "flor_b": pbr("FlorBranca", color=(0.88, 0.84, 0.86), rough=0.88),
+        # Janela acesa: no video de referencia sao as fileiras de janelinhas
+        # que informam quantos andares um bloco tem. Emissiva baixa, para
+        # aparecer de dia sem estourar e brilhar de verdade no modo noite.
+        "janela": pbr("JanelaAcesa", color=(0.98, 0.92, 0.72), rough=0.18, emit=0.9),
         "trunk": pbr("Tronco", g(TEX, "wood_diff.jpg"), g(TEX, "wood_nor.jpg"), None, uv=1.2),
         "glow": pbr("Glow", color=(0.05, 0.9, 0.55), rough=0.35, metal=0.4, emit=0.35),
         "paint": pbr("Faixa", color=(0.93, 0.84, 0.12), rough=0.55),

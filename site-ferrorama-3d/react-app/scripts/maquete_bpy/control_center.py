@@ -115,30 +115,69 @@ def arbusto(name, x, z, m, r=0.14):
     return join(name, p)
 
 
-def baia(name, x, z, larg, m, prof=2.4, alt=0.86, mat_parede=None):
-    """Baia de frente aberta: fundo, laterais, laje e lintel com placa.
+def fachada_janelas(name, x, y, z, larg, alt, m, andares=3, por_andar=8, yaw=0.0, prof=0.03):
+    """Grade regular de janelas acesas.
 
-    A frente aberta é o que deixa ver o interior sem precisar cortar o prédio,
-    e é de onde vem a leitura de "modelo didático" das duas fotos.
+    E o que faz um predio de maquete ler como predio: no video de referencia
+    nao ha um so volume liso — todos tem duas ou tres fileiras de janelinhas
+    iluminadas, e e so isso que informa quantos andares o bloco tem.
     """
-    par = mat_parede or m["white"]
-    zf = z + prof * 0.5   # fundo (norte)
-    zi = z - prof * 0.5   # frente (sul), aberta
+    p = []
+    lj = min(0.16, larg / (por_andar * 1.7))
+    aj = min(0.11, alt / (andares * 2.2))
+    for i in range(andares):
+        py = y - alt * 0.5 + alt * (i + 0.62) / andares
+        for j in range(por_andar):
+            px = -larg * 0.5 + larg * (j + 0.5) / por_andar
+            p.append(
+                cube(
+                    f"{name}{i}_{j}",
+                    (lj, aj, prof),
+                    (x + math.cos(yaw) * px, py, z + math.sin(yaw) * px),
+                    m["janela"],
+                    0.0,
+                    rot=(0, yaw, 0),
+                )
+            )
+    return p
+
+
+def bloco(name, x, z, larg, prof, alt, m, andares=3, y0=Y_PLATA, mat=None, faixa=True):
+    """Bloco de varios pavimentos: corpo, platibanda, faixa e janelas.
+
+    Substitui as baias de frente aberta da fase 14. A baia era uma leitura de
+    modelo didatico em corte; o pedido agora e que pareca predio, e predio tem
+    volume fechado, empena, platibanda e janela repetida.
+    """
+    par = mat or m["white"]
+    yc = y0 + alt * 0.5
     p = [
-        cube(f"{name}Fundo", (larg, alt, 0.07), (x, Y_PLATA + alt * 0.5, zf), par, 0.012),
-        cube(f"{name}LadoE", (0.07, alt, prof), (x - larg * 0.5, Y_PLATA + alt * 0.5, z), par, 0.012),
-        cube(f"{name}LadoD", (0.07, alt, prof), (x + larg * 0.5, Y_PLATA + alt * 0.5, z), par, 0.012),
-        cube(f"{name}Laje", (larg + 0.14, 0.06, prof + 0.1), (x, Y_PLATA + alt + 0.03, z), m["white"], 0.012),
-        cube(f"{name}Piso", (larg, 0.03, prof), (x, Y_PLATA + 0.015, z), m["conc"], 0.006),
-        # Lintel e placa: o lintel é a viga da frente, a placa mora nele.
-        cube(f"{name}Lintel", (larg + 0.1, 0.16, 0.09), (x, Y_PLATA + alt - 0.02, zi), m["mrs_b"], 0.01),
+        cube(f"{name}Corpo", (larg, alt, prof), (x, yc, z), par, 0.02),
+        cube(f"{name}Platibanda", (larg + 0.08, 0.1, prof + 0.08), (x, y0 + alt + 0.03, z), par, 0.014),
+        cube(f"{name}Rodape", (larg + 0.03, 0.1, prof + 0.03), (x, y0 + 0.05, z), m["conc_dirty"], 0.01),
     ]
-    p.append(placa_azul(f"{name}Placa", x, Y_PLATA + alt - 0.02, zi - 0.06, m, larg=larg * 0.62))
-    return join(name, p), (zi, zf)
+    if faixa:
+        # Faixa horizontal na altura do primeiro piso: quebra a empena cega.
+        p.append(cube(f"{name}Faixa", (larg + 0.02, 0.05, prof + 0.02), (x, y0 + alt * 0.34, z), m["mrs_b"], 0.008))
+    # Janelas nas duas faces que a camera ve: a sul e a leste.
+    p += fachada_janelas(f"{name}JanS", x, yc, z - prof * 0.5 - 0.012, larg * 0.88, alt * 0.82, m, andares=andares, por_andar=max(4, int(larg * 2.4)))
+    p += fachada_janelas(
+        f"{name}JanL", x + larg * 0.5 + 0.012, yc, z, prof * 0.88, alt * 0.82, m,
+        andares=andares, por_andar=max(3, int(prof * 2.4)), yaw=math.pi / 2,
+    )
+    return p
+
+
+def caixa_dagua(name, x, z, y, m, r=0.16, h=0.34):
+    """Caixa d'agua sobre pilotis: laje industrial limpa nao existe."""
+    p = [cyl(f"{name}T", r, h, (x, y + 0.34, z), m["conc_dirty"], 16)]
+    for i, (dx, dz) in enumerate(((-r * 0.6, -r * 0.6), (r * 0.6, -r * 0.6), (-r * 0.6, r * 0.6), (r * 0.6, r * 0.6))):
+        p.append(cyl(f"{name}P{i}", 0.018, 0.34, (x + dx, y + 0.17, z + dz), m["steel"], 8))
+    return p
 
 
 def interior_estoque(name, x, z, m, prof=2.4, larg=3.0):
-    """Prateleira com paletes: o que enche uma baia de armazenagem."""
+    """Prateleira com paletes, vista pelo terreo envidracado do bloco."""
     p = []
     k = 0
     for i in range(3):
@@ -253,20 +292,43 @@ def build_control_center(m):
     # Reveste o degrau entre o patio (0,11) e a plataforma (0,42).
     meio_fio("CentroMeioFio", cx, Z_PLATA - 0.06, LESTE - OESTE - 0.2, m, y=0.11, h=0.31)
 
-    # --- baias do patamar alto ---------------------------------------------
-    # A do meio é a sala de controle: é o módulo que dá nome a este canto.
-    baia("CentroBaiaO", -19.0, 13.4, 3.4, m)
-    interior_estoque("CentroEstO", -19.0, 13.4, m)
-    baia("CentroBaiaC", -15.3, 13.4, 3.4, m)
-    interior_controle("CentroCtrl", -15.3, 13.4, m)
-    baia("CentroBaiaL", -11.9, 13.4, 2.8, m, mat_parede=m["white"])
-    interior_estoque("CentroEstL", -11.9, 13.4, m, larg=2.4)
+    # --- prédios do patamar alto -----------------------------------------
+    # Três blocos de alturas diferentes, como no vídeo de referência: um baixo
+    # e largo, a torre principal e um médio. Alturas iguais leem como estante.
+    partes = []
+    partes += bloco("CentroBlocoO", -19.0, 13.4, 3.4, 2.3, 0.95, m, andares=3)
+    partes += bloco("CentroBlocoC", -15.3, 13.6, 3.2, 2.6, 1.55, m, andares=5)
+    partes += bloco("CentroBlocoL", -11.9, 13.2, 2.6, 2.0, 0.72, m, andares=2, mat=m["conc_dirty"])
+    # Passarela ligando a torre ao bloco leste, na altura do segundo piso.
+    partes.append(cube("CentroPassarela", (1.4, 0.24, 0.5), (-13.6, Y_PLATA + 0.62, 13.3), m["white"], 0.015))
+    partes.append(cube("CentroPassVidro", (1.3, 0.14, 0.02), (-13.6, Y_PLATA + 0.64, 13.04), m["janela"], 0.0))
+    partes += caixa_dagua("CentroCaixa", -20.4, 13.9, Y_PLATA + 0.95, m)
+    partes.append(cube("CentroCasaMaq", (0.9, 0.3, 0.7), (-15.3, Y_PLATA + 1.7, 13.9), m["conc_dirty"], 0.015))
+    join("CentroBlocos", partes)
 
-    # Casa de máquinas e caixa d'água na laje, e a escada de acesso.
-    cube("CentroCasaMaq", (0.9, 0.3, 0.7), (-20.4, Y_PLATA + 1.05, 13.9), m["conc_dirty"], 0.015)
-    cyl("CentroCaixa", 0.28, 0.4, (-11.2, Y_PLATA + 1.12, 14.4), m["conc_dirty"], 16)
+    # A sala de controle é o térreo envidraçado da torre: fita de vidro na
+    # fachada sul e o painel de vídeo visível por ela.
+    cube("CentroCtrlVidro", (3.1, 0.34, 0.03), (-15.3, Y_PLATA + 0.22, 12.28), m["glass"], 0.0)
+    interior_controle("CentroCtrl", -15.3, 12.9, m)
+    # Terreo do bloco oeste: armazenagem, tambem atras de vidro.
+    cube("CentroEstOVidro", (3.2, 0.3, 0.03), (-19.0, Y_PLATA + 0.2, 12.23), m["glass"], 0.0)
+    interior_estoque("CentroEstO", -19.0, 13.4, m)
+
+    # Marquise de entrada da torre, sobre o acesso principal.
+    cube("CentroMarquise", (2.0, 0.05, 0.6), (-15.3, Y_PLATA + 0.42, 11.95), m["white"], 0.01)
+    for i, px in enumerate((-16.1, -14.5)):
+        cyl(f"CentroMarqPe{i}", 0.024, 0.42, (px, Y_PLATA + 0.21, 12.2), m["steel"], 12)
+    placa_azul("CentroPlacaTorre", -15.3, Y_PLATA + 0.58, 11.93, m, larg=1.5, alt=0.18)
+
+    # Escada de acesso entre os dois patamares, no canto oeste.
+    escada = []
     for i in range(5):
-        cube(f"CentroDegrau{i}", (0.9, 0.07, 0.16), (-21.1, Y_PATIO + 0.05 + i * 0.07, 11.2 + i * 0.16), m["conc_dirty"], 0.006)
+        escada.append(
+            cube(f"CentroDegrau{i}", (0.9, 0.07, 0.16), (-21.1, Y_PATIO + 0.05 + i * 0.07, 11.16 + i * 0.16), m["conc_dirty"], 0.006)
+        )
+    escada.append(cube("CentroGuardaE", (0.03, 0.24, 0.86), (-21.53, Y_PATIO + 0.36, 11.5), m["steel"], 0.006))
+    escada.append(cube("CentroGuardaD", (0.03, 0.24, 0.86), (-20.67, Y_PATIO + 0.36, 11.5), m["steel"], 0.006))
+    join("CentroEscada", escada)
 
     # --- pátio: portarias, guarita, estacionamento -------------------------
     for i, px in enumerate((-19.6, -16.2, -12.8)):

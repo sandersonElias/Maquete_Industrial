@@ -26,8 +26,9 @@ from __future__ import annotations
 
 import math
 
+from .flora import fileira
 from .pit import BACIA, CAVA, ESTERIL
-from .primitives import cyl, ico, join, lathe_solid
+from .primitives import cyl, join, lathe_solid
 
 # A grama vai a 0,072 com o displace; a terra batida nasce logo acima.
 Y_TERRA = 0.082
@@ -52,28 +53,13 @@ def anel_verde(name, centro, perfil, m, segs=36):
 
 
 def fileira_arvores(prefixo, pontos, m, passo=1.25, jitter=0.28):
-    """Cortina arbórea seguindo uma polilinha, com altura e desvio variados."""
-    troncos, copas = [], []
-    k = 0
-    for i in range(len(pontos) - 1):
-        x0, z0 = pontos[i]
-        x1, z1 = pontos[i + 1]
-        comp = math.hypot(x1 - x0, z1 - z0)
-        n = max(1, int(round(comp / passo)))
-        for j in range(n):
-            t = (j + 0.5) / n
-            # Ruído estável por índice: a fileira não pode ser um pente.
-            r = math.sin(k * 12.9898) * 43758.5453
-            r -= math.floor(r)
-            x = x0 + (x1 - x0) * t + (r - 0.5) * jitter
-            z = z0 + (z1 - z0) * t + (r * 0.7 - 0.35) * jitter
-            h = 0.5 + (k % 4) * 0.09
-            troncos.append(cyl(f"{prefixo}Tronco{k}", 0.06, h, (x, h / 2, z), m["trunk"], 6, r2=0.04))
-            folha = m["leaf"] if k % 2 == 0 else m["leaf2"]
-            copas.append(ico(f"{prefixo}Copa{k}", 0.36 + (k % 3) * 0.05, (x, h + 0.24, z), folha, 1, (1.05, 0.9, 1.0)))
-            k += 1
-    join(f"{prefixo}Troncos", troncos)
-    join(f"{prefixo}Copas", copas)
+    """Cortina arborea seguindo uma polilinha.
+
+    Desde a fase 15 a arvore em si vem de `flora.py`, que sorteia especie, tom
+    e altura. Aqui fica so o tracado: a funcao continua existindo porque as
+    chamadas dela descrevem *onde* passa a cortina, que e decisao de paisagem.
+    """
+    return fileira(prefixo, pontos, m, passo=passo, jitter=jitter, escala=0.9, arbustos=0.28)
 
 
 # ---------------------------------------------------------------------------

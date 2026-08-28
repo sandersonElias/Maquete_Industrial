@@ -6,6 +6,7 @@ import bpy
 
 from .coords import RX, RZ
 from .primitives import apply_mods, assign, boolean_cut, cube, cyl, ico, join, lathe_solid, smooth, unwrap
+from .flora import bosque
 from .railway import poste_luz, semaforo
 
 
@@ -138,19 +139,18 @@ def build_trees(m):
         # Fase 14: o campus da central de controle, no quadrante noroeste.
         if -22.2 < x < -10.2 and 6.2 < z < 16.0:
             return False
+        # Fase 15: a faixa das avenidas ja tem alameda propria.
+        if -11.0 < x < 12.6 and 5.4 < z < 7.6:
+            return False
+        if -17.0 < x < -9.8 and -4.4 < z < 6.8:
+            return False
         return True
 
-    trunks, copas = [], []
-    for i, (x, z) in enumerate(spots):
-        if not arvore_ok(x, z):
-            continue
-        h = 0.55 + (i % 5) * 0.08
-        trunks.append(cyl(f"Tronco{i}", 0.07, h, (x, h / 2, z), m["trunk"], 8, r2=0.045))
-        leaf = m["leaf"] if i % 2 == 0 else m["leaf2"]
-        copas.append(ico(f"Copa{i}a", 0.42 + (i % 3) * 0.04, (x, h + 0.28, z), leaf, 2, (1.05, 0.85, 1.0)))
-        copas.append(ico(f"Copa{i}b", 0.28, (x + 0.22, h + 0.18, z + 0.1), leaf, 1, (1, 0.8, 1)))
-    join("Troncos", trunks)
-    join("Copas", copas)
+    # Fase 15 — a receita unica (cilindro + duas icoesferas) saiu daqui. O
+    # sorteio de especie, tom e altura vive em `flora.py`; aqui so sobra a
+    # lista de pontos e o filtro do que nao pode receber arvore.
+    pontos = [(x, z) for x, z in spots if arvore_ok(x, z)]
+    bosque("Bosque", pontos, m)
 
 
 def build_fair_lights(m):

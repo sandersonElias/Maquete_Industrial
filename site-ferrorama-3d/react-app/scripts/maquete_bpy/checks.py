@@ -79,6 +79,7 @@ TOLERADOS = (
     ("CentroBaia", "CentroEst"), ("CentroBaia", "CentroCtrl"),
     ("CentroCarro", "CentroCob"), ("CentroPortaria", "OpScada"),
     ("CentroBaia", "OpScada"), ("CentroPlata", "Centro"),
+    ("CentroCtrl", "OpScada"), ("CentroBloco", "Centro"),
 )
 
 

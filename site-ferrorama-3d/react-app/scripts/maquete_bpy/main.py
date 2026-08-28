@@ -22,6 +22,7 @@ from .rail_detail import build_rail_detail
 from .railway import build_railway
 from .roads import build_roads
 from .site import build_site
+from .streets import build_streets
 from .structures import build_structures
 from .vehicles import build_train, build_volvo_cat
 from .weather import sujar_industriais
@@ -75,6 +76,7 @@ def build():
     build_harbour(m)
     build_structures(m)
     build_logistics(m)
+    build_streets(m)
     build_site(m)
     build_details(m)
     build_landscape(m)
@@ -84,7 +86,15 @@ def build():
     build_train(m)
 
     _move_prefix(("Placa", "Grama"), cols["BOARD"])
-    _move_prefix(("Estrada", "Faixa", "Apron", "Pad", "PatioMina", "LuzEstrada", "Portaria"), cols["ROADS"])
+    _move_prefix(
+        (
+            "Estrada", "Faixa", "Apron", "Pad", "PatioMina", "LuzEstrada", "Portaria",
+            # Fase 15: as avenidas que ligam os modulos.
+            "AvNorte", "AvOeste", "RuaEst", "RuaTerminal", "LuzAvN", "LuzAvO",
+            "PNEst", "AlamedaAv",
+        ),
+        cols["ROADS"],
+    )
     _move_prefix(
         (
             "Cais", "Agua", "Armazem", "Galpao", "Guind", "Lanca", "Cabo", "Carga", "Navio",
@@ -132,7 +142,7 @@ def build():
     _move_prefix(("Centro", "MastroCom", "OpScada"), cols["SCADA"])
     _move_prefix(
         (
-            "Morro", "Capim", "Tunel", "Tronco", "Copa",
+            "Morro", "Capim", "Tunel", "Bosque", "Cortina", "Alameda",
             # Fase 10: terra batida, revegetacao e cortina arborea.
             "PatioMinaTerra", "PatioCavaTerra", "CavaVerde", "EsterilVerde",
             "BaciaVerde", "Cortina",
