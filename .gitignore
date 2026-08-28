@@ -56,3 +56,7 @@ app_kotlin/local.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# Python (scripts de geração da maquete 3D)
+__pycache__/
+*.pyc
