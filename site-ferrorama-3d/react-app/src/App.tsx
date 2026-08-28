@@ -13,38 +13,39 @@ import BackToTop from './components/BackToTop';
 import Footer from './components/Footer';
 import PageRails from './components/PageRails';
 import MaquetePage from './components/MaquetePage';
-import useScrollAnimations from './hooks/useScrollAnimations';
+import PullToRefresh from './components/PullToRefresh';
 
 export default function App() {
   const soMaquete =
     typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') === '/maquete';
 
   if (soMaquete) {
-    return <MaquetePage />;
+    return (
+      <>
+        <PullToRefresh />
+        <MaquetePage />
+      </>
+    );
   }
 
   return <Site />;
 }
 
 function Site() {
-  useScrollAnimations();
-
   return (
     <>
-      {/* Primeiro item focável: permite pular a navegação com o teclado */}
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
 
+      <PullToRefresh />
       <Loader />
       <PageRails />
       <Navigation />
 
       <main id="conteudo">
-        {/* Section 00: Hero / Início */}
         <HeroSection />
 
         <SectionDivider />
 
-        {/* Section 01: Maquete 3D interativa */}
         <MaqueteSection />
 
         <SectionDivider />

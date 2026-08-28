@@ -12,13 +12,13 @@ const strata = [
   {
     depth: '−1',
     title: 'Na maquete',
-    text: 'Poços em escala, ferro avermelhado e carvão escuro. Caminhões e vagões carregam ali.',
+    text: 'Poços de ferro e carvão. Volvo escava; CAT 793B leva até a área de carga do trem.',
     accent: 'ferrugem',
   },
   {
     depth: '−2',
     title: 'Até o trem',
-    text: 'Extração → britagem → trilhos HO → porto.',
+    text: 'Extração → caminhão → trilhos HO → porto (único destino de exportação).',
     accent: 'trilhos',
   },
 ];
@@ -78,7 +78,7 @@ export default function MinaSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Corte do poço — da terra real à carga nos trilhos
+            Dois poços na placa — ferro e carvão — até o CAT e o trem
           </motion.p>
         </div>
 

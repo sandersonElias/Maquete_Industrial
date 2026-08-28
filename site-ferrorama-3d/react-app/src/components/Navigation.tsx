@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EASE_OUT_EXPO } from '../lib/motion';
-import { scrollToSection } from '../lib/scroll';
+import { lockPageScroll, unlockPageScroll, scrollToSection } from '../lib/scroll';
 
 const NAV_ITEMS = [
-  { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-1.png' },
-  { id: 'maquete', label: 'Maquete', thumb: '/images/maquete-montagem-1.png' },
-  { id: 'preparacao', label: 'Preparação', thumb: '/images/maquete-montagem-3.png' },
-  { id: 'montagem', label: 'Montagem', thumb: '/images/caminhao-3d.png' },
-  { id: 'codigo', label: 'Automação', thumb: '/images/arduino.jpg' },
+  { id: 'inicio', label: 'Início', thumb: '/images/pecas-conjunto.jpg' },
+  { id: 'maquete', label: 'Maquete', thumb: '/images/pecas-conjunto.jpg' },
+  { id: 'preparacao', label: 'Preparação', thumb: '/images/caminhao-eletronica.jpg' },
+  { id: 'montagem', label: 'Montagem', thumb: '/images/caminhoes-mini-dump.jpg' },
+  { id: 'codigo', label: 'Automação', thumb: '/images/arduino-bancada.jpg' },
   { id: 'mina', label: 'Mina', thumb: '/images/mina-real.jpg' },
   { id: 'porto', label: 'Porto', thumb: '/images/porto.jpg' },
   { id: 'controle', label: 'Controle', thumb: '/images/scada-dashboard.jpg' },
@@ -20,16 +20,25 @@ export default function Navigation() {
   const [activeSection, setActiveSection] = useState('inicio');
   const [scrollProgress, setScrollProgress] = useState(0);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const scrollTimer = useRef<number | null>(null);
 
   useEffect(() => {
+    let raf = 0;
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0);
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setScrolled(window.scrollY > 50);
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        setScrollProgress(docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0);
+      });
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   useEffect(() => {
@@ -55,26 +64,34 @@ export default function Navigation() {
   useEffect(() => {
     if (!mobileOpen) return;
 
+    lockPageScroll();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMobileOpen(false);
         menuBtnRef.current?.focus();
       }
     };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', onKeyDown);
-
     return () => {
-      document.body.style.overflow = prevOverflow;
       document.removeEventListener('keydown', onKeyDown);
+      unlockPageScroll();
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
+    };
+  }, []);
+
+  const closeMenu = () => setMobileOpen(false);
+
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    setMobileOpen(false);
-    window.requestAnimationFrame(() => scrollToSection(id));
+    closeMenu();
+    if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
+    // Após o unlock do position:fixed, o scrollY é restaurado — aí sim navega.
+    scrollTimer.current = window.setTimeout(() => scrollToSection(id), 120);
   };
 
   return (
@@ -130,18 +147,19 @@ export default function Navigation() {
           ))}
         </div>
 
-        <motion.button
+        <button
           ref={menuBtnRef}
           type="button"
-          className={`nav-menu-btn ${mobileOpen ? 'active' : ''}`}
-          onClick={() => setMobileOpen(!mobileOpen)}
-          whileTap={{ scale: 0.9 }}
+          className={`nav-menu-btn ${mobileOpen ? 'is-open' : ''}`}
+          onClick={() => setMobileOpen((o) => !o)}
           aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={mobileOpen}
           aria-controls="menu-mobile"
         >
-          <span></span><span></span><span></span>
-        </motion.button>
+          <span className="nav-menu-btn__bar" aria-hidden="true" />
+          <span className="nav-menu-btn__bar" aria-hidden="true" />
+          <span className="nav-menu-btn__bar" aria-hidden="true" />
+        </button>
       </motion.nav>
 
       <AnimatePresence>
@@ -149,35 +167,46 @@ export default function Navigation() {
           <>
             <motion.div
               className="mobile-menu-backdrop"
-              onClick={() => setMobileOpen(false)}
+              onClick={closeMenu}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               aria-hidden="true"
             />
             <motion.div
               id="menu-mobile"
               className="mobile-menu active"
-              initial={{ opacity: 0, y: -20 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu de seções"
+              initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: EASE_OUT_EXPO }}
             >
-              {NAV_ITEMS.map(({ id, label, thumb }, i) => (
-                <motion.a
+              {NAV_ITEMS.map(({ id, label, thumb }) => (
+                <a
                   key={id}
                   href={`#${id}`}
                   className={`mobile-link ${activeSection === id ? 'active' : ''}`}
                   aria-current={activeSection === id ? 'true' : undefined}
                   onClick={(e) => handleNavClick(e, id)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
                 >
                   <img src={thumb} alt="" aria-hidden="true" className="mobile-link-thumb" loading="lazy" />
                   <span>{label}</span>
-                </motion.a>
+                </a>
               ))}
+              <a href="/maquete" className="mobile-link mobile-link--cta" onClick={closeMenu}>
+                <img
+                  src="/images/pecas-conjunto.jpg"
+                  alt=""
+                  aria-hidden="true"
+                  className="mobile-link-thumb"
+                  loading="lazy"
+                />
+                <span>Abrir maquete em tela cheia</span>
+              </a>
             </motion.div>
           </>
         )}

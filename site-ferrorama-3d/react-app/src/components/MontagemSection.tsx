@@ -21,36 +21,48 @@ const cards: Array<{
   title: string;
   text: string;
   tag: string;
-  fit?: 'contain';
 }> = [
   {
-    image: '/images/trem.jpg',
-    alt: 'Trem ferroviário em escala HO',
+    image: '/images/locomotiva-ho.jpg',
+    alt: 'Locomotiva HO azul e laranja impressa em 3D',
     title: 'Locomotiva',
-    text: 'Locomotiva com 4 servos controlados por Arduino para movimentação nos trilhos. Velocidade regulada por PWM.',
+    text: 'Locomotiva em escala HO com 4 servos no Arduino para movimentação nos trilhos. Velocidade regulada por PWM.',
     tag: 'Trilhos',
   },
   {
-    image: '/images/caminhao-3d.png',
-    alt: 'Caminhão basculante Mini Dump impresso em 3D',
+    image: '/images/caminhoes-mini-dump.jpg',
+    alt: 'Caminhões Mini Dump branco e laranja com faróis LED',
     title: 'Caminhões 3D',
-    text: 'Basculantes Mini Dump em PLA (laranja/preto) com motor DC, caçamba móvel e Bluetooth — levam o minério da mina aos trilhos.',
+    text: 'Basculantes Mini Dump em PLA com motor DC, caçamba móvel e Bluetooth — levam o minério da mina aos trilhos.',
     tag: 'PLA',
   },
   {
-    image: '/images/arduino.jpg',
-    alt: 'Arduino Mega 2560',
-    title: 'Arduino Mega',
-    text: 'Central de controle que coordena todos os componentes eletrônicos. Comunicação via Serial e Bluetooth.',
+    image: '/images/escavadeira-mini-dig.jpg',
+    alt: 'Escavadeira Mini Dig laranja e preta impressa em 3D',
+    title: 'Escavadeira',
+    text: 'Mini Dig na boca da mina: esteiras, braço articulado e caçamba — o primeiro elo da extração na maquete.',
+    tag: 'Mina',
+  },
+  {
+    image: '/images/porto-navio-guindaste.jpg',
+    alt: 'Navio cargueiro e guindaste de porto impressos em 3D',
+    title: 'Porto',
+    text: 'Cais com navio e guindaste: o minério chega de trem e segue para o embarque simulado no terminal.',
+    tag: 'Cais',
+  },
+  {
+    image: '/images/arduino-bancada.jpg',
+    alt: 'Arduino e módulo Bluetooth ligados na bancada',
+    title: 'Arduino',
+    text: 'Central de controle que coordena servos, motores e o HC-05. Comunicação via Serial e Bluetooth.',
     tag: 'Eletrônica',
   },
   {
-    image: '/images/hc-05.png',
-    alt: 'Ligação do módulo Bluetooth HC-05 ao Arduino (VCC, GND, TX e RX)',
+    image: '/images/caminhao-eletronica.jpg',
+    alt: 'Interior do Mini Dump com fiação, motor e placa de controle',
     title: 'Bluetooth HC-05',
-    text: 'Comunicação sem fio entre app mobile e caminhões. Protocolo serial de baixa energia para controle remoto.',
+    text: 'App e caminhão no mesmo canal serial — faróis, direção e caçamba no protocolo curto da feira.',
     tag: 'Wireless',
-    fit: 'contain',
   },
 ];
 
@@ -96,8 +108,8 @@ export default function MontagemSection() {
         >
           <div className="montagem-hero-card">
             <img
-              src="/images/montagem-geral.svg"
-              alt="Montagem geral da maquete ferroviária"
+              src="/images/pecas-conjunto.jpg"
+              alt="Peças da maquete: caminhão, escavadeira, navio, locomotiva e guindaste"
               className="montagem-hero-image"
               loading="lazy"
             />
@@ -111,7 +123,7 @@ export default function MontagemSection() {
           {cards.map((card, i) => (
             <motion.div
               key={card.title}
-              className={`card card-image montagem-part${card.fit === 'contain' ? ' card-image--diagram' : ''}`}
+              className="card card-image montagem-part"
               custom={i}
               variants={cardVariants}
               initial="hidden"

@@ -2,6 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 
 const Maquete3D = lazy(() => import('./maquete3d/Maquete3D'));
 
+const DISMISS_KEY = 'ferrorama-maquete-vire-ok';
+
 function podeTravarPaisagem() {
   return typeof screen !== 'undefined' && 'orientation' in screen && 'lock' in (screen.orientation ?? {});
 }
@@ -9,6 +11,9 @@ function podeTravarPaisagem() {
 export default function MaquetePage() {
   const [retrato, setRetrato] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(orientation: portrait) and (max-width: 900px)').matches
+  );
+  const [avisoOk, setAvisoOk] = useState(
+    () => typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DISMISS_KEY) === '1'
   );
 
   useEffect(() => {
@@ -18,7 +23,13 @@ export default function MaquetePage() {
     return () => mq.removeEventListener('change', sync);
   }, []);
 
-  const abrir = useCallback(async () => {
+  const dispensar = useCallback(() => {
+    sessionStorage.setItem(DISMISS_KEY, '1');
+    setAvisoOk(true);
+  }, []);
+
+  const abrirPaisagem = useCallback(async () => {
+    dispensar();
     try {
       await document.documentElement.requestFullscreen();
     } catch {
@@ -29,9 +40,11 @@ export default function MaquetePage() {
         await (screen.orientation as ScreenOrientation & { lock: (o: string) => Promise<void> }).lock('landscape');
       }
     } catch {
-      /* Safari: o aviso “Vire o celular” permanece */
+      /* Safari: usuário vira o celular na mão */
     }
-  }, []);
+  }, [dispensar]);
+
+  const mostrarAviso = retrato && !avisoOk;
 
   return (
     <div className="maquete-page">
@@ -42,13 +55,24 @@ export default function MaquetePage() {
         <span className="maquete-page__titulo">Ferrorama · Maquete 3D</span>
       </header>
 
-      {retrato && (
-        <div className="maquete-vire" role="dialog" aria-label="Vire o celular">
-          <p>Vire o celular de lado para ver melhor a maquete.</p>
-          <button type="button" className="maquete3d-btn maquete3d-btn-tour" onClick={abrir}>
-            Abrir maquete
-          </button>
+      {mostrarAviso && (
+        <div className="maquete-vire" role="dialog" aria-label="Dica de orientação">
+          <p>De lado (paisagem) a maquete fica maior — mas dá para usar em pé.</p>
+          <div className="maquete-vire__acoes">
+            <button type="button" className="maquete3d-btn maquete3d-btn-tour" onClick={abrirPaisagem}>
+              Tentar tela cheia
+            </button>
+            <button type="button" className="maquete3d-btn" onClick={dispensar}>
+              Continuar assim
+            </button>
+          </div>
         </div>
+      )}
+
+      {retrato && avisoOk && (
+        <p className="maquete-vire-faixa" role="status">
+          Dica: vire o celular de lado para ver melhor.
+        </p>
       )}
 
       <div className="maquete-page__palco">
