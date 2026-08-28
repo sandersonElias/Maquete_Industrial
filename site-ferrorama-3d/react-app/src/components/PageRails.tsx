@@ -1,42 +1,120 @@
-import { useEffect, useRef } from 'react';
-import { usePrefersReducedMotion } from '../lib/motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useMotionValueEvent, useScroll } from 'framer-motion';
+import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
+
+const HEADER_SCROLL_ON = 24;
+const HEADER_SCROLL_OFF = 8;
+const RAIL_SPEED = 1.25;
+
+function isLoaderGone() {
+  return !document.querySelector('.loader');
+}
+
+function paintRails(
+  left: HTMLDivElement | null,
+  right: HTMLDivElement | null,
+  scrollY: number
+) {
+  const period = (left?.offsetHeight ?? 0) / 2 || 800;
+  const shift = (scrollY * RAIL_SPEED) % period;
+  const leftTransform = `translate3d(0, ${-shift}px, 0)`;
+  const rightTransform = `translate3d(0, ${shift - period}px, 0)`;
+
+  if (left) left.style.transform = leftTransform;
+  if (right) right.style.transform = rightTransform;
+
+  document.documentElement.style.setProperty('--rail-shift', shift.toFixed(2));
+}
 
 /**
- * Trilhos laterais: andam com o scroll da página.
- * Usa listener direto (mais previsível que parallax fraco no padrão repetido).
+ * Trilhos laterais contínuos (cabeçalho + página) — detalhe sutil.
+ * Parallax no scroll; ocultos no mobile.
  */
 export default function PageRails() {
   const reduced = usePrefersReducedMotion();
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(reduced);
+  const [headerCovered, setHeaderCovered] = useState(() =>
+    typeof window !== 'undefined' ? window.scrollY > HEADER_SCROLL_ON : false
+  );
+  const [desktop, setDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 901px)').matches : true
+  );
+  const { scrollY } = useScroll();
 
   useEffect(() => {
-    // Nos breakpoints em que os trilhos ficam `display: none`, não escuta scroll.
-    const mq = window.matchMedia('(max-width: 900px)');
-    if (mq.matches || reduced) return;
+    if (reduced) {
+      setReady(true);
+      return;
+    }
 
-    const SPEED = 1.25;
+    if (isLoaderGone()) {
+      const timer = window.setTimeout(() => setReady(true), 80);
+      return () => window.clearTimeout(timer);
+    }
+
+    const observer = new MutationObserver(() => {
+      if (!isLoaderGone()) return;
+      observer.disconnect();
+      window.setTimeout(() => setReady(true), 120);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    const fallback = window.setTimeout(() => {
+      observer.disconnect();
+      setReady(true);
+    }, 1600);
+
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
+  }, [reduced]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 901px)');
+    const onMq = () => setDesktop(mq.matches);
+    onMq();
+    mq.addEventListener('change', onMq);
+    return () => mq.removeEventListener('change', onMq);
+  }, []);
+
+  useMotionValueEvent(scrollY, 'change', (y) => {
+    if (!desktop) return;
+    setHeaderCovered((prev) => {
+      if (!prev && y > HEADER_SCROLL_ON) return true;
+      if (prev && y < HEADER_SCROLL_OFF) return false;
+      return prev;
+    });
+    paintRails(leftRef.current, rightRef.current, y);
+  });
+
+  useEffect(() => {
+    if (!desktop) return;
+
+    const syncHeader = () => {
+      const y = window.scrollY;
+      setHeaderCovered((prev) => {
+        if (!prev && y > HEADER_SCROLL_ON) return true;
+        if (prev && y < HEADER_SCROLL_OFF) return false;
+        return prev;
+      });
+    };
+
     let raf = 0;
-
-    const paint = () => {
-      raf = 0;
-      const left = leftRef.current;
-      const right = rightRef.current;
-      if (!left || !right) return;
-
-      const period = left.offsetHeight / 2 || 800;
-      const raw = window.scrollY * SPEED;
-      const shift = raw % period;
-
-      left.style.transform = `translate3d(0, ${-shift}px, 0)`;
-      right.style.transform = `translate3d(0, ${shift - period}px, 0)`;
-    };
-
     const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(paint);
+      if (!raf) {
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const y = window.scrollY;
+          syncHeader();
+          paintRails(leftRef.current, rightRef.current, y);
+        });
+      }
     };
 
-    paint();
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
 
@@ -45,25 +123,56 @@ export default function PageRails() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, [reduced]);
+  }, [desktop]);
+
+  if (!desktop) return null;
+
+  const motionTransition = reduced
+    ? { duration: 0 }
+    : { duration: 0.65, ease: EASE_OUT_EXPO };
 
   return (
-    <div className="page-rails" aria-hidden="true">
-      <div className="page-rail page-rail--left">
+    <motion.div
+      className="page-rail-columns"
+      aria-hidden="true"
+      initial={reduced ? false : { opacity: 0 }}
+      animate={{ opacity: ready ? 1 : 0 }}
+      transition={motionTransition}
+    >
+      <div className="page-rail-column page-rail-column--left">
         <div className="page-rail__track" ref={leftRef}>
           <RailSvg id="l" />
           <RailSvg id="l2" />
         </div>
         <div className={`page-rail__scrub${reduced ? ' is-static' : ''}`} />
+        <motion.div
+          className="page-rail__nav-veil"
+          initial={false}
+          animate={{
+            opacity: headerCovered ? 1 : 0,
+            y: headerCovered ? 0 : -6,
+          }}
+          transition={motionTransition}
+        />
       </div>
-      <div className="page-rail page-rail--right">
+
+      <div className="page-rail-column page-rail-column--right">
         <div className="page-rail__track" ref={rightRef}>
           <RailSvg id="r" mirror />
           <RailSvg id="r2" mirror />
         </div>
         <div className={`page-rail__scrub page-rail__scrub--alt${reduced ? ' is-static' : ''}`} />
+        <motion.div
+          className="page-rail__nav-veil"
+          initial={false}
+          animate={{
+            opacity: headerCovered ? 1 : 0,
+            y: headerCovered ? 0 : -6,
+          }}
+          transition={motionTransition}
+        />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -97,7 +206,6 @@ function RailSvg({ id, mirror = false }: { id: string; mirror?: boolean }) {
       <rect x="11.8" y="0" width="1.2" height="800" fill="#fff" opacity="0.28" />
       <rect x="33.8" y="0" width="1.2" height="800" fill="#fff" opacity="0.28" />
 
-      {/* marcas irregulares — facilitam ver o movimento */}
       <g fill="none" stroke="#ff8844" strokeWidth="1.6" opacity="0.85">
         <path d="M13 40 H4 V70 H13" />
         <path d="M35 110 H44 V150 H35" />
