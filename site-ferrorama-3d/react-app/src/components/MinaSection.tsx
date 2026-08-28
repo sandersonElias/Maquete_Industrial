@@ -106,8 +106,8 @@ export default function MinaSection() {
           </div>
           <figure className="pit-split__pane">
             <img
-              src="/images/mina-veiculos.jpg"
-              alt="Escavadeira Mini Dig e caminhão basculante na área da mina da maquete"
+              src="/images/mina-maquete.jpg"
+              alt="Mina reproduzida na maquete"
               loading="lazy"
               decoding="async"
             />

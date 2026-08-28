@@ -8,8 +8,8 @@ const modules = [
     num: '01',
     title: 'Terminal Portuário',
     lead: 'Ponto final do minério na maquete — da descarga do trem ao embarque simulado.',
-    image: '/images/porto-navios.jpg',
-    alt: 'Navios cargueiros impressos em 3D no terminal da maquete',
+    image: '/images/porto.jpg',
+    alt: 'Terminal portuário na maquete',
     body: [
       'No porto, o trem chega com vagões de minério de ferro e carvão. Correia e guindaste levam a carga ao navio no cais.',
       'É a única rota de exportação na maquete: volume alto, custo menor por tonelada — como nos grandes terminais brasileiros.',
