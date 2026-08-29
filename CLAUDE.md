@@ -123,6 +123,34 @@ near zero; pairs with an elongated bounding box are filtered out because a fence
 empty) and `EXPORT_OK`. **Regenerate after any change under `scripts/maquete_bpy/`** — the site
 serves the committed `.glb`, so script changes are invisible until it is rebuilt.
 
+### The asset catalogue — build pieces there, not inline
+
+`scripts/maquete_bpy/assets/` holds 106 reusable pieces, each a pure function that builds in
+**local** coordinates `(avanço, lateral, altura)` and gets placed by a `Sitio` frame. Every asset
+has the same signature and is addressed by a stable slug:
+
+```python
+from .assets import plantar
+plantar("galpao-industrial", "GalpaoOficina", -12.4, 3.8, m, yaw=0.6, comp=4.2)
+```
+
+The older modules (`process.py`, `structures.py`, `logistics.py`, …) still write world coordinates
+inline. That is what made the model impossible to improve piece by piece — a silo could not be
+repeated, rotated, or judged on its own. **New geometry goes in `assets/`**, and existing modules
+migrate to `plantar()` as each part of the board is reworked. Scale there is 1 unit = 10 m via
+`metros()`; the rail gauge in `assets/ferrovia.py` is pinned to `0.18` to match `curves.lay_track`.
+
+Every asset declares the reference photo it came from (`design/referencias/`). To look at pieces
+in isolation — the only way to judge quality — build the contact sheet:
+
+```bash
+~/.claude/bpy-env/Scripts/python.exe scripts/gerar_folha_assets.py -- public/models/assets-catalogo.glb
+... -- saida.glb extracao porto      # one or more families
+... -- saida.glb slug:silo-conico    # a single asset, for fast iteration
+```
+
+Full documentation in `scripts/maquete_bpy/assets/README.md`.
+
 **Scene composition.** `MaqueteBlender.tsx` loads the Blender `.glb` and drives the train along a
 curve from `geometria.ts`/`tracado.ts`. Everything else in `maquete3d/` is procedural Three.js
 layered on top (terrain, vehicles, holographic telemetry panels, POV cameras, camera tour).

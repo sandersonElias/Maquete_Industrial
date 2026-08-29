@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>Catálogo de assets · Ferrorama</title>
+<style>
+  :root {
+    --fundo: #0d1014;
+    --painel: #161b21;
+    --linha: #252d36;
+    --texto: #e6ebf0;
+    --fraco: #8b97a4;
+    --acento: #f2b33d;
+    --acento-2: #4da3ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fundo); color: var(--texto);
+    font: 14px/1.5 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
+  #app { display: grid; grid-template-columns: 300px 1fr; height: 100%; }
+  aside { background: var(--painel); border-right: 1px solid var(--linha); display: flex; flex-direction: column; min-height: 0; }
+  header { padding: 14px 16px 10px; border-bottom: 1px solid var(--linha); }
+  header h1 { margin: 0; font-size: 15px; letter-spacing: .02em; }
+  header p { margin: 4px 0 0; color: var(--fraco); font-size: 12px; }
+  .busca { padding: 10px 12px; border-bottom: 1px solid var(--linha); }
+  .busca input { width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--linha);
+    background: #0f1419; color: var(--texto); font: inherit; }
+  .busca input:focus { outline: 2px solid var(--acento-2); outline-offset: -1px; }
+  .lista { overflow-y: auto; flex: 1; padding: 6px 0 24px; min-height: 0; }
+  .fam { padding: 12px 16px 4px; color: var(--acento); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .09em; font-weight: 600; }
+  .item { display: block; width: 100%; text-align: left; padding: 6px 16px; border: 0; background: none;
+    color: var(--texto); font: inherit; cursor: pointer; border-left: 2px solid transparent; }
+  .item:hover { background: #1d242c; }
+  .item[aria-current="true"] { background: #1d242c; border-left-color: var(--acento-2); }
+  .item small { display: block; color: var(--fraco); font-size: 11px; }
+  main { position: relative; min-width: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .hud { position: absolute; left: 16px; bottom: 16px; background: rgba(13,16,20,.82);
+    backdrop-filter: blur(8px); border: 1px solid var(--linha); border-radius: 10px;
+    padding: 12px 14px; max-width: 380px; }
+  .hud h2 { margin: 0 0 2px; font-size: 15px; }
+  .hud code { color: var(--acento); font-size: 12px; }
+  .hud dl { margin: 8px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 12px; }
+  .hud dt { color: var(--fraco); }
+  .hud dd { margin: 0; }
+  .hud button { margin-top: 10px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--linha);
+    background: #0f1419; color: var(--texto); font: inherit; font-size: 12px; cursor: pointer; }
+  .hud button:hover { border-color: var(--acento-2); }
+  .dicas { position: absolute; right: 16px; top: 16px; color: var(--fraco); font-size: 12px; text-align: right;
+    background: rgba(13,16,20,.7); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--linha); }
+  .carregando { position: absolute; inset: 0; display: grid; place-items: center; color: var(--fraco); }
+  dialog { border: 1px solid var(--linha); border-radius: 12px; background: var(--painel); color: var(--texto);
+    max-width: min(94vw, 1100px); padding: 0; }
+  dialog::backdrop { background: rgba(0,0,0,.72); }
+  dialog img { display: block; max-width: 100%; max-height: 78vh; }
+  dialog .barra { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px;
+    border-bottom: 1px solid var(--linha); font-size: 13px; }
+  dialog .barra button { background: none; border: 0; color: var(--fraco); font-size: 20px; cursor: pointer; }
+  @media (max-width: 860px) {
+    #app { grid-template-columns: 1fr; grid-template-rows: 42% 58%; }
+    aside { border-right: 0; border-bottom: 1px solid var(--linha); }
+    .dicas { display: none; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <header>
+      <h1>Catálogo de assets</h1>
+      <p id="contagem">carregando…</p>
+    </header>
+    <div class="busca"><input id="busca" type="search" placeholder="Buscar por nome ou slug…" autocomplete="off" /></div>
+    <div class="lista" id="lista"></div>
+  </aside>
+  <main>
+    <div class="carregando" id="carregando">Carregando o modelo…</div>
+    <div class="dicas">Arraste para girar · role para aproximar<br />← → percorre os assets · G alterna a grade</div>
+    <div class="hud" id="hud" hidden>
+      <h2 id="hudNome"></h2>
+      <code id="hudSlug"></code>
+      <dl>
+        <dt>Família</dt><dd id="hudFam"></dd>
+        <dt>Pegada</dt><dd id="hudPeg"></dd>
+        <dt>Referência</dt><dd id="hudRef"></dd>
+      </dl>
+      <button id="verRef" type="button">Ver a foto de referência</button>
+    </div>
+  </main>
+</div>
+
+<dialog id="modal">
+  <div class="barra"><span id="modalTitulo"></span><button type="button" id="fecharModal" aria-label="Fechar">×</button></div>
+  <img id="modalImg" alt="" />
+</dialog>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const cena = new THREE.Scene();
+cena.background = new THREE.Color(0x0d1014);
+
+const alvoEl = document.querySelector('main');
+const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 900);
+camera.position.set(0, 14, 22);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+alvoEl.appendChild(renderer.domElement);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+cena.environment = pmrem.fromScene(new RoomEnvironment(), 0.05).texture;
+
+const sol = new THREE.DirectionalLight(0xfff3e0, 2.4);
+sol.position.set(18, 26, 12);
+sol.castShadow = true;
+sol.shadow.mapSize.set(2048, 2048);
+sol.shadow.camera.left = -70; sol.shadow.camera.right = 70;
+sol.shadow.camera.top = 70; sol.shadow.camera.bottom = -70;
+sol.shadow.bias = -0.0006;
+cena.add(sol, new THREE.HemisphereLight(0xbcd4f0, 0x2a2118, 1.1));
+
+const grade = new THREE.GridHelper(400, 200, 0x2a3542, 0x1a2129);
+grade.position.y = -0.03;
+cena.add(grade);
+
+const controles = new OrbitControls(camera, renderer.domElement);
+controles.enableDamping = true;
+controles.dampingFactor = 0.08;
+controles.maxPolarAngle = Math.PI / 2 - 0.02;
+controles.minDistance = 0.6;
+controles.maxDistance = 320;
+controles.target.set(0, 0.6, 0);
+
+function redimensionar() {
+  const { clientWidth: w, clientHeight: h } = alvoEl;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+}
+addEventListener('resize', redimensionar);
+redimensionar();
+
+// --- dados e modelo -------------------------------------------------------
+const draco = new DRACOLoader().setDecoderPath('/draco/');
+const loader = new GLTFLoader().setDRACOLoader(draco);
+
+const [indice, gltf] = await Promise.all([
+  fetch('/models/assets-catalogo.json').then((r) => r.json()),
+  loader.loadAsync('/models/assets-catalogo.glb'),
+]);
+
+gltf.scene.traverse((o) => {
+  if (!o.isMesh) return;
+  o.castShadow = true;
+  o.receiveShadow = true;
+  if (o.material) o.material.envMapIntensity = 0.6;
+});
+cena.add(gltf.scene);
+document.getElementById('carregando').remove();
+
+// --- lista lateral --------------------------------------------------------
+const ROTULOS = {
+  extracao: 'Extração', beneficiamento: 'Beneficiamento', edificacoes: 'Edificações',
+  ferrovia: 'Ferrovia', porto: 'Porto', rodoviario: 'Rodoviário',
+  infraestrutura: 'Infraestrutura', patio: 'Pátio', vegetacao: 'Vegetação',
+};
+const assets = indice.assets;
+document.getElementById('contagem').textContent = `${assets.length} peças · ${Object.keys(ROTULOS).length} famílias`;
+
+const listaEl = document.getElementById('lista');
+const botoes = new Map();
+
+function desenharLista(filtro = '') {
+  listaEl.textContent = '';
+  botoes.clear();
+  const f = filtro.trim().toLowerCase();
+  let familiaAtual = null;
+  assets.forEach((a, i) => {
+    if (f && !(`${a.nome} ${a.slug} ${a.familia}`.toLowerCase().includes(f))) return;
+    if (a.familia !== familiaAtual) {
+      familiaAtual = a.familia;
+      const h = document.createElement('div');
+      h.className = 'fam';
+      h.textContent = ROTULOS[a.familia] ?? a.familia;
+      listaEl.appendChild(h);
+    }
+    const b = document.createElement('button');
+    b.className = 'item';
+    b.type = 'button';
+    b.innerHTML = `${a.nome}<small>${a.slug}</small>`;
+    b.addEventListener('click', () => irPara(i));
+    listaEl.appendChild(b);
+    botoes.set(i, b);
+  });
+}
+
+document.getElementById('busca').addEventListener('input', (e) => desenharLista(e.target.value));
+desenharLista();
+
+// --- navegação entre assets ----------------------------------------------
+let atual = -1;
+const alvoCam = new THREE.Vector3();
+const alvoOlho = new THREE.Vector3();
+let voando = false;
+
+function irPara(i) {
+  if (i < 0 || i >= assets.length) return;
+  atual = i;
+  const a = assets[i];
+  const [cx, cz] = a.celula;
+  const [larg, prof, alt] = a.pegada;
+  // Enquadra pela maior dimensão, com folga generosa: a peça precisa caber
+  // inteira e sobrar chão em volta para o olho medir a escala.
+  const raio = Math.max(larg, prof, alt) * 0.5 + 0.9;
+  const dist = raio / Math.tan((camera.fov * Math.PI) / 360) * 1.5;
+  alvoCam.set(cx, alt * 0.45, cz);
+  alvoOlho.set(cx + dist * 0.62, alt * 0.45 + dist * 0.52, cz + dist * 0.62);
+  voando = true;
+
+  for (const [k, b] of botoes) b.setAttribute('aria-current', String(k === i));
+  botoes.get(i)?.scrollIntoView({ block: 'nearest' });
+
+  document.getElementById('hud').hidden = false;
+  document.getElementById('hudNome').textContent = a.nome;
+  document.getElementById('hudSlug').textContent = a.slug;
+  document.getElementById('hudFam').textContent = ROTULOS[a.familia] ?? a.familia;
+  document.getElementById('hudPeg').textContent = `${larg} × ${prof} × ${alt} u`;
+  document.getElementById('hudRef').textContent = a.referencia;
+}
+
+addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') irPara(Math.min(atual + 1, assets.length - 1));
+  else if (e.key === 'ArrowLeft') irPara(Math.max(atual - 1, 0));
+  else if (e.key.toLowerCase() === 'g') grade.visible = !grade.visible;
+});
+
+// --- foto de referência lado a lado --------------------------------------
+const modal = document.getElementById('modal');
+document.getElementById('verRef').addEventListener('click', () => {
+  if (atual < 0) return;
+  const a = assets[atual];
+  document.getElementById('modalTitulo').textContent = `${a.nome} · ${a.referencia}`;
+  const img = document.getElementById('modalImg');
+  // As fotos de referência ficam em `design/referencias/`, fora de `public/`:
+  // são material de terceiros e não devem ir para o site publicado. O Vite
+  // serve a raiz do projeto em desenvolvimento, então a comparação lado a lado
+  // funciona com `npm run dev` e degrada para um aviso em produção.
+  img.src = `/design/referencias/${a.referencia}`;
+  img.alt = `Foto de referência de ${a.nome}`;
+  img.onerror = () => {
+    document.getElementById('modalTitulo').textContent =
+      `${a.referencia} — disponível só em desenvolvimento (design/referencias/)`;
+  };
+  modal.showModal();
+});
+document.getElementById('fecharModal').addEventListener('click', () => modal.close());
+
+// --- laço -----------------------------------------------------------------
+renderer.setAnimationLoop(() => {
+  if (voando) {
+    camera.position.lerp(alvoOlho, 0.09);
+    controles.target.lerp(alvoCam, 0.09);
+    if (camera.position.distanceTo(alvoOlho) < 0.02) voando = false;
+  }
+  controles.update();
+  renderer.render(cena, camera);
+});
+
+irPara(0);
+</script>
+</body>
+</html>
