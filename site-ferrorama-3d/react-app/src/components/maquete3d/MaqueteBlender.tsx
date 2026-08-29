@@ -12,7 +12,7 @@ import {
   tracadoComDesvio,
 } from './geometria';
 
-const URL = '/models/maquete-blender.glb?v=fase15';
+const URL = '/models/maquete-blender.glb?v=fase16';
 /**
  * Decodificador Draco servido pelo próprio site (`public/draco/`), não por CDN:
  * na 4G da feira uma requisição a um domínio de terceiro é mais um handshake
@@ -53,7 +53,7 @@ const ALTURA_BOLETO = 0.08;
  * não aparece. O `Canvas` já desliga sombra inteira no celular (`shadows={!leve}`).
  */
 const RAIO_MIN_SOMBRA = 0.28;
-const SEM_SOMBRA = /^(agua|grama|placa|capim)/i;
+const SEM_SOMBRA = /^(agua|grama|terreno|placa|capim)/i;
 /**
  * Restos do aeroporto antigo, que nenhum script gera mais mas que ficariam
  * visíveis se um `.glb` velho fosse servido. `terminal` leva um lookahead

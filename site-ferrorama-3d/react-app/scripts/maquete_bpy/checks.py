@@ -14,7 +14,7 @@ import bpy
 
 # Terreno, lajes, pisos e água: sobrepõem tudo por definição, não interessam.
 IGNORAR = (
-    "Placa", "Grama", "Agua", "Cais", "Apron", "Pad", "Patio", "Estrada", "Faixa",
+    "Placa", "Terreno", "Grama", "Agua", "Cais", "Apron", "Pad", "Patio", "Estrada", "Faixa",
     "Morro", "Capim", "Tunel", "Lastro", "Loop", "Diag", "Ramo", "Dorm", "Trilho",
     "Sala", "Mesa", "Mon", "Caneca", "Pasta", "Cadeira", "AguaCorpo", "AguaSuperficie",
     "CarvaoCava", "CarvaoFundo", "Troncos", "Copas",

@@ -8,6 +8,7 @@ from .coords import RX, RZ
 from .primitives import apply_mods, assign, boolean_cut, cube, cyl, ico, join, lathe_solid, smooth, unwrap
 from .flora import bosque
 from .railway import poste_luz, semaforo
+from .terrain import build_terrain
 
 
 def cut_tunnel(hills, x, radius=0.58, length=3.4):
@@ -52,22 +53,9 @@ def tunel_forro(prefix, x, m_conc):
 
 def build_board(m):
     cube("Placa", (47.2, 0.42, 35.0), (0, -0.28, 0), m["wood"], 0.04)
-    bpy.ops.mesh.primitive_grid_add(x_subdivisions=110, y_subdivisions=82, size=1, location=(0, 0, 0.05))
-    grass = bpy.context.object
-    grass.name = "Grama"
-    grass.scale = (45.4, 33.4, 1)
-    bpy.ops.object.transform_apply(scale=True)
-    tex = bpy.data.textures.new("GrassDisp", "CLOUDS")
-    tex.noise_scale = 1.35
-    tex.noise_depth = 2
-    disp = grass.modifiers.new("Disp", "DISPLACE")
-    disp.texture = tex
-    disp.strength = 0.045
-    disp.mid_level = 0.5
-    apply_mods(grass)
-    assign(grass, m["grass"])
-    unwrap(grass)
-    smooth(grass, 70)
+    # Fase 16 — a grade de grama lisa saiu daqui. O terreno agora e um campo de
+    # altura com cobertura recortada, em `terrain.py`.
+    build_terrain(m)
 
 
 def build_hills(m):

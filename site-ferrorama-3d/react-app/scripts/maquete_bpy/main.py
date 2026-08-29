@@ -85,7 +85,7 @@ def build():
     build_fair_lights(m)
     build_train(m)
 
-    _move_prefix(("Placa", "Grama"), cols["BOARD"])
+    _move_prefix(("Placa", "Terreno"), cols["BOARD"])
     _move_prefix(
         (
             "Estrada", "Faixa", "Apron", "Pad", "PatioMina", "LuzEstrada", "Portaria",
