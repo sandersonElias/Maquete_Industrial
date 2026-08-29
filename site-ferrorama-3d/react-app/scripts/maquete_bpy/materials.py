@@ -165,6 +165,12 @@ def make_palette():
         "leaf": pbr("Copa", color=(0.22, 0.45, 0.11), rough=0.95),
         "leaf2": pbr("Copa2", color=(0.12, 0.32, 0.09), rough=0.94),
         "leaf_escuro": pbr("CopaEscura", color=(0.06, 0.19, 0.11), rough=0.96),
+        # Fase 17 — mata do entorno. Escura e dessaturada de proposito: e assim
+        # que mata a quilometros aparece, e e o que deixa a nevoa apaga-la sem
+        # deixar mancha verde berrante no horizonte.
+        "mata": pbr("Mata", g(TEX, "grass_diff.jpg"), g(TEX, "grass_nor.jpg"), None,
+                    color=(0.13, 0.22, 0.13), rough=0.97, uv=22.0,
+                    tint=(0.14, 0.24, 0.16), tint_fac=0.62),
         "flor_r": pbr("FlorVermelha", color=(0.72, 0.12, 0.14), rough=0.85),
         "flor_a": pbr("FlorAmarela", color=(0.88, 0.72, 0.12), rough=0.85),
         "flor_b": pbr("FlorBranca", color=(0.88, 0.84, 0.86), rough=0.88),

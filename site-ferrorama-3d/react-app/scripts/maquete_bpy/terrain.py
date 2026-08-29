@@ -32,7 +32,7 @@ import math
 
 import bpy
 
-from .primitives import assign, smooth, unwrap
+from .primitives import assign, cube, smooth, unwrap
 
 # Tabuleiro. A grama antiga ia a 45,4 x 33,4; o terreno mantém a mesma área.
 LARG, PROF = 45.4, 33.4
@@ -42,6 +42,18 @@ NX, NZ = 152, 112
 SAIA = 2.2
 # Altura máxima do relevo de borda.
 RELEVO = 0.78
+
+# --- Fase 17: o mundo além do tabuleiro ---------------------------------
+# O tabuleiro deixou de ter borda. Fora do retângulo detalhado entra uma malha
+# grossa que sobe em morro arborizado até sumir na névoa, e a leste a água vai
+# até o horizonte. Sem isso a maquete termina num corte reto no ar, e é esse
+# corte que denuncia "quadrado sobre a mesa".
+LARG_LONGE, PROF_LONGE = 280.0, 220.0
+NX_L, NZ_L = 104, 82
+# Onde a serra começa a subir, medido a partir da borda do tabuleiro.
+RAMPA_LONGE = 16.0
+# Limite da terra a leste: dali para lá é mar.
+X_MAR = 21.0
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +182,26 @@ def altura(x, z):
     return max(0.0, h) * peso + (_fbm(x * 1.4, z * 1.4, 55.0) - 0.5) * 0.02 * peso
 
 
+def altura_longe(x, z):
+    """Relevo fora do tabuleiro. Cresce com a distância, como serra ao fundo.
+
+    Encosta no zero exatamente na borda do retângulo detalhado — onde o relevo
+    interno também já foi recortado para zero —, então a emenda entre as duas
+    malhas não aparece mesmo com resoluções diferentes.
+    """
+    dx = max(0.0, abs(x) - LARG * 0.5)
+    dz = max(0.0, abs(z) - PROF * 0.5)
+    d = math.hypot(dx, dz)
+    if d <= 0.0:
+        return 0.0
+    rampa = _suave(d / RAMPA_LONGE)
+    # A escala cresce com a distância: morro perto, serra longe.
+    escala = min(1.0 + d * 0.085, 7.5)
+    h = (_fbm(x * 0.052, z * 0.052, 7.0) - 0.34) * 3.0
+    h += (_fbm(x * 0.135, z * 0.135, 23.0) - 0.5) * 1.0
+    return max(0.0, h) * rampa * escala
+
+
 def cobertura(x, z):
     """Quanto de grama há neste ponto. 0 = solo exposto, 1 = grama fechada.
 
@@ -230,7 +262,55 @@ def _grade(name, mat, offset, so_cobertos, limiar=0.5):
     return ob
 
 
+def _grade_longe(name, mat, m):
+    """Malha grossa do entorno: tudo que está fora do retângulo detalhado.
+
+    A face só nasce se o centro dela estiver fora do tabuleiro e em terra —
+    a leste de X_MAR não há chão, há mar.
+    """
+    verts, faces = [], []
+    idx = {}
+    for j in range(NZ_L + 1):
+        z = -PROF_LONGE * 0.5 + PROF_LONGE * j / NZ_L
+        for i in range(NX_L + 1):
+            x = -LARG_LONGE * 0.5 + LARG_LONGE * i / NX_L
+            idx[(i, j)] = len(verts)
+            verts.append((x, z, altura_longe(x, z) - 0.02))
+    for j in range(NZ_L):
+        for i in range(NX_L):
+            cx = -LARG_LONGE * 0.5 + LARG_LONGE * (i + 0.5) / NX_L
+            cz = -PROF_LONGE * 0.5 + PROF_LONGE * (j + 0.5) / NZ_L
+            if abs(cx) < LARG * 0.5 - 0.2 and abs(cz) < PROF * 0.5 - 0.2:
+                continue
+            if cx > X_MAR:
+                continue
+            faces.append((idx[(i, j)], idx[(i + 1, j)], idx[(i + 1, j + 1)], idx[(i, j + 1)]))
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    ob = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(ob)
+    bpy.context.view_layer.objects.active = ob
+    ob.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.delete_loose()
+    bpy.ops.object.mode_set(mode="OBJECT")
+    ob.select_set(False)
+    assign(ob, mat)
+    unwrap(ob)
+    smooth(ob, 66)
+    return ob
+
+
 def build_terrain(m):
-    """Terreno base de terra e a cobertura de grama recortada por cima."""
+    """Terreno base de terra, cobertura de grama recortada, e o entorno."""
     _grade("TerrenoBase", m["dirt"], 0.0, False)
     _grade("TerrenoGrama", m["grass"], 0.006, True)
+    # Serra arborizada em volta. Material proprio, mais escuro e dessaturado:
+    # e assim que mata longe aparece, e e o que permite a nevoa apaga-la sem
+    # deixar mancha verde berrante no horizonte.
+    _grade_longe("TerrenoLonge", m["mata"], m)
+    # Mar ate o horizonte, a leste. A lamina detalhada com ondulacao continua
+    # sendo a da faixa do cais; esta aqui e so o fundo.
+    cube("TerrenoMar", (LARG_LONGE, 0.1, PROF_LONGE), (X_MAR + LARG_LONGE * 0.5 - 0.2, 0.07, 0.0), m["water"], 0.0)

@@ -52,7 +52,9 @@ def tunel_forro(prefix, x, m_conc):
 
 
 def build_board(m):
-    cube("Placa", (47.2, 0.42, 35.0), (0, -0.28, 0), m["wood"], 0.04)
+    # Fase 17 — a placa de madeira saiu. Ela era a mesa: um bloco de 47 x 35
+    # com quina viva, e era ela que dizia "isto e um quadrado apoiado em algum
+    # lugar". O terreno agora continua ate o horizonte (`terrain.py`).
     # Fase 16 — a grade de grama lisa saiu daqui. O terreno agora e um campo de
     # altura com cobertura recortada, em `terrain.py`.
     build_terrain(m)

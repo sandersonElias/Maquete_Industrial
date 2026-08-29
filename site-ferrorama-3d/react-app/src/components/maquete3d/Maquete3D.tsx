@@ -538,7 +538,12 @@ function Ambiente({ noite }: { noite: boolean }) {
 
   useEffect(() => {
     scene.background = new THREE.Color(cor);
-    scene.fog = new THREE.Fog(cor, noite ? 36 : 70, noite ? 68 : 140);
+    // Fase 17 — o terreno agora vai a ~178 de raio. A distância final da névoa
+    // tem de bater com esse raio: mais curta e a serra some, mais longa e a
+    // borda da malha externa aparece como um corte reto no ar. Com 175 a serra
+    // perto (20 a 40) fica limpa e a de longe (100+) esmaece para o céu, que é
+    // a perspectiva atmosférica de verdade.
+    scene.fog = new THREE.Fog(cor, noite ? 40 : 70, noite ? 110 : 175);
     return () => {
       scene.fog = null;
     };
@@ -658,7 +663,7 @@ function Cena({
         enabled={livre}
         enablePan={livre}
         minDistance={0.45}
-        maxDistance={58}
+        maxDistance={105}
         maxPolarAngle={Math.PI / 2 - 0.02}
         enableDamping
         dampingFactor={toque ? 0.11 : 0.07}
@@ -796,7 +801,7 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
              modo. Na tela cheia (/maquete) a seção está sempre visível. */
           frameloop={visivel ? 'always' : 'never'}
           dpr={leve ? [1, 1.25] : qualidade === 'media' ? [1, 1.5] : [1, 1.75]}
-          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 280 }}
+          camera={{ position: CAMERA_INICIAL.toArray(), fov: 42, near: 0.1, far: 520 }}
           gl={{
             alpha: false,
             antialias: !leve,
