@@ -517,8 +517,8 @@ html { scroll-behavior: auto; }
 }
 /* Sections */
 .section {
-  min-height: 100vh;
-  padding: clamp(6rem, 12vh, 9rem) clamp(1.25rem, 4vw, 2.5rem) clamp(4rem, 8vh, 6rem);
+  min-height: 0;
+  padding: clamp(3rem, 7vh, 5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(2.5rem, 5vh, 4rem);
   position: relative;
   display: flex;
   align-items: center;
@@ -530,7 +530,7 @@ html { scroll-behavior: auto; }
 }
 .section-header {
   text-align: center;
-  margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+  margin-bottom: clamp(1.5rem, 3.5vw, 2.5rem);
 }
 .section-number {
   font-family: var(--font-mono);
@@ -1984,7 +1984,7 @@ html { scroll-behavior: auto; }
 }
 @media (max-width: 768px) {
   .section {
-    padding: 80px 1.5rem 3rem;
+    padding: calc(var(--nav-offset) + 0.5rem) 1.5rem 2rem;
   }
 .hero-title {
     font-size: clamp(2.25rem, 10vw, 3.5rem);
@@ -2073,7 +2073,7 @@ html { scroll-behavior: auto; }
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
-  padding: 2rem 2.5rem;
+  padding: 0.5rem 2.5rem;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -2100,7 +2100,7 @@ html { scroll-behavior: auto; }
    ============================================ */
 .section-header {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 2.5rem;
 }
 .section-title {
   font-size: clamp(2.5rem, 5vw, 4rem);
@@ -4549,7 +4549,7 @@ body::after {
 
 .section {
   min-height: 0 !important;
-  padding: clamp(4.5rem, 10vh, 7.5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(3.5rem, 7vh, 5.5rem) !important;
+  padding: clamp(2.5rem, 5vh, 4rem) clamp(1.25rem, 4vw, 2.5rem) clamp(2rem, 4vh, 3.25rem) !important;
 }
 
 .section-number {
@@ -4583,7 +4583,7 @@ body::after {
 }
 
 .section-header {
-  margin-bottom: clamp(2.5rem, 5vw, 4rem) !important;
+  margin-bottom: clamp(1.5rem, 3.5vw, 2.5rem) !important;
 }
 
 /* —— Hero cinematográfico —— */
@@ -4846,7 +4846,7 @@ body::after {
 
 /* —— Dividers —— */
 .section-divider {
-  padding: 1.25rem 2rem !important;
+  padding: 0.35rem 2rem !important;
   opacity: 0.9;
 }
 
@@ -5674,7 +5674,7 @@ body::after {
 .section-divider {
   display: flex !important;
   justify-content: center;
-  padding: 0.85rem 2rem !important;
+  padding: 0.35rem 2rem !important;
 }
 
 .section-divider .divider-line {
@@ -6782,9 +6782,9 @@ body::after {
   .section {
     min-height: 0;
     padding:
-      calc(var(--nav-offset) + 1.25rem)
+      calc(var(--nav-offset) + 0.75rem)
       max(1rem, var(--safe-right))
-      calc(2.5rem + var(--safe-bottom))
+      calc(1.75rem + var(--safe-bottom))
       max(1rem, var(--safe-left));
     align-items: flex-start;
   }
@@ -7304,7 +7304,7 @@ body::after {
 .prep-etapas {
   display: flex;
   flex-direction: column;
-  gap: clamp(2.5rem, 5vw, 4rem);
+  gap: clamp(1.75rem, 3.5vw, 2.75rem);
   margin: 0;
   padding: 0;
   list-style: none;
