@@ -96,11 +96,22 @@ the initial bundle — keep it that way.
 
 | | Current | Ceiling |
 |---|---|---|
-| Initial bundle | ~117 KB | 165 KB |
-| `Maquete3D` chunk | ~283 KB | 330 KB |
-| `public/models/maquete-blender.glb` | **3.6 MB** (Draco) | 4.5 MB |
+| Initial bundle | ~119 KB | 165 KB |
+| `Maquete3D` chunk | ~304 KB | 330 KB |
+| `public/models/maquete-blender.glb` | **4.48 MiB** (4,700,820 bytes, Draco) | 4.5 MiB |
 
-The `.glb` is the real bottleneck — it is served to phones over fair-ground 4G.
+The `.glb` is the real bottleneck — it is served to phones over fair-ground 4G. Measure it in
+bytes (`stat -c %s`), not with a rounded `ls -lh`: the ceiling has under 20 KB of headroom, so a
+rounded figure hides an overrun. It sits at 357k vertices across 518 meshes.
+
+**Polygon budget is set in `primitives.py`, not per piece.** `bevel()` picks its segment count
+from the chamfer width (3 above 0.02, 2 above 0.008, else 1) and `cyl()` drops its 16-side floor
+to 8 below radius 0.015. A cube chamfered with 3 segments costs ~150 vertices against ~36 with
+one, and most of the catalogue asks for chamfers of 1–6 mm where the difference is invisible.
+Passing `segments=` explicitly overrides this — do it only where the silhouette earns it.
+The other trap is repetition inside an asset: a drainage channel emitting one grate every 80 cm
+over a 4.2-unit run cost 8,574 vertices, more than the locomotive. Check the cost of a new asset
+with `node scripts/pesar_glb.mjs` before assuming it is cheap.
 
 ### Building the `.glb` without installing Blender
 

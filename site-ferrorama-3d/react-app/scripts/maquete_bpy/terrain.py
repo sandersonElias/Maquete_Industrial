@@ -66,7 +66,7 @@ PLANAS = [
     (5.8, 21.6, 2.6, 14.8),      # alça e pátio do porto, cais
     (-20.6, -5.8, -11.4, -3.6),  # alça da mina
     (-24.0, -18.2, -11.6, -3.8),  # britagem, barracão, oficina, carvão
-    (-22.6, -13.2, -14.8, -9.4),  # cava, pilha de estéril, bacia
+    (-22.6, -12.0, -16.4, -9.4),  # cava, estéril, bacia e a faixa industrial (fase 19)
     (-0.6, 10.2, 6.0, 15.8),     # terminal logístico
     (-22.4, -10.0, 6.0, 16.0),   # campus da central de controle
     (-11.4, 13.0, 5.2, 9.2),     # corredor da Avenida Norte
@@ -94,7 +94,7 @@ MORROS = [
 # do tabuleiro como terreiro de terra.
 PISOTEADO = [
     (-24.0, -18.2, -11.6, -3.8),   # patio de britagem
-    (-22.6, -13.2, -14.8, -9.4),   # cava, esteril, bacia
+    (-22.6, -12.0, -16.4, -9.4),   # cava, esteril, bacia e a faixa industrial
     (13.2, 21.6, 3.2, 14.0),       # laje do cais
     (-0.2, 9.6, 6.6, 15.4),        # patio do terminal logistico
     (-21.8, -10.6, 6.6, 11.6),     # patio da central de controle

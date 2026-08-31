@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import math
 
+from .assets import plantar
 from .primitives import cube, cyl, join, lathe_solid
 from .process import barra
 
@@ -147,113 +148,32 @@ def acesso_externo(name, cx, cz, m, ang=1.75, n=6):
     return join(name, p)
 
 
+# As cinco maquinas da cava eram desenhadas aqui a mao, em coordenadas de mundo
+# e com as rodas giradas no eixo errado (`rot=(pi/2, yaw, 0)` e roll, nao pitch:
+# o mesmo defeito que `primitives.wheels` tinha). Agora sao termos do catalogo,
+# e o que sobra aqui e so a posicao. `E_MAQ` esta documentado em `iron_mine.py`:
+# e o maior porte que cabe na praca de fundo desta cava.
+E_MAQ = 0.5
+
+
 def escavadeira(name, x, z, m, yaw=0.0, y=0.0):
-    """Escavadeira hidráulica na bancada: esteira, giro, cabine e lança."""
-    co, si = math.cos(yaw), math.sin(yaw)
-
-    def pt(a, t, h):
-        return (x + co * a - si * t, y + h, z + si * a + co * t)
-
-    p = [
-        cube(f"{name}Est0", (0.34, 0.07, 0.09), pt(0, -0.11, 0.035), m["black"], 0.012, rot=(0, yaw, 0)),
-        cube(f"{name}Est1", (0.34, 0.07, 0.09), pt(0, 0.11, 0.035), m["black"], 0.012, rot=(0, yaw, 0)),
-        cube(f"{name}Giro", (0.26, 0.06, 0.24), pt(-0.02, 0, 0.1), m["steel_y"], 0.015, rot=(0, yaw, 0)),
-        cube(f"{name}Cabine", (0.13, 0.13, 0.14), pt(-0.05, -0.05, 0.19), m["steel_y"], 0.015, rot=(0, yaw, 0)),
-        cube(f"{name}Vidro", (0.02, 0.09, 0.11), pt(0.02, -0.05, 0.2), m["glass"], 0.0, rot=(0, yaw, 0)),
-        cube(f"{name}Contra", (0.09, 0.11, 0.2), pt(-0.16, 0, 0.16), m["black"], 0.015, rot=(0, yaw, 0)),
-        barra(f"{name}Lanca", pt(0.05, 0.05, 0.16), pt(0.3, 0.05, 0.34), 0.05, 0.06, m["steel_y"]),
-        barra(f"{name}Braco", pt(0.3, 0.05, 0.34), pt(0.46, 0.05, 0.12), 0.045, 0.05, m["steel_y"]),
-        cube(f"{name}Concha", (0.12, 0.1, 0.14), pt(0.5, 0.05, 0.08), m["steel_rust"], 0.012, rot=(0, yaw, 0)),
-    ]
-    return join(name, p)
+    return plantar("escavadeira-hidraulica", name, x, z, m, yaw=yaw, escala=E_MAQ, y=y)
 
 
 def escavadeira_cabo(name, x, z, m, yaw=0.0, y=0.0):
-    """Escavadeira a cabo (shovel elétrica) — a máquina azul da foto da cava.
-
-    É o equipamento mais antigo e mais reconhecível de uma mina a céu aberto:
-    casa de máquinas alta sobre esteiras curtas, lança treliçada fixa e a
-    caçamba pendurada no cabo, não num braço hidráulico. Uma máquina em cor
-    diferente também quebra o campo amarelo dos caminhões.
-    """
-    co, si = math.cos(yaw), math.sin(yaw)
-
-    def pt(a, t, h):
-        return (x + co * a - si * t, y + h, z + si * a + co * t)
-
-    p = [
-        cube(f"{name}Est0", (0.34, 0.09, 0.1), pt(0, -0.14, 0.045), m["black"], 0.012, rot=(0, yaw, 0)),
-        cube(f"{name}Est1", (0.34, 0.09, 0.1), pt(0, 0.14, 0.045), m["black"], 0.012, rot=(0, yaw, 0)),
-        cube(f"{name}Casa", (0.34, 0.3, 0.3), pt(-0.04, 0, 0.24), m["shovel_b"], 0.02, rot=(0, yaw, 0)),
-        cube(f"{name}Teto", (0.36, 0.04, 0.32), pt(-0.04, 0, 0.41), m["shovel_b"], 0.01, rot=(0, yaw, 0)),
-        cube(f"{name}Vidro", (0.02, 0.09, 0.12), pt(0.14, -0.1, 0.3), m["glass"], 0.0, rot=(0, yaw, 0)),
-        # Lança fixa, treliçada, e o cabo de içamento saindo do topo da casa.
-        barra(f"{name}Lanca", pt(0.1, 0, 0.2), pt(0.62, 0, 0.62), 0.045, 0.05, m["shovel_b"]),
-        barra(f"{name}LancaD", pt(0.14, 0, 0.16), pt(0.6, 0, 0.56), 0.02, 0.02, m["steel_rust"]),
-        barra(f"{name}Cabo", pt(0.62, 0, 0.6), pt(0.66, 0, 0.24), 0.012, 0.012, m["black"]),
-        # Braço da caçamba atravessa a lança, como na máquina real.
-        barra(f"{name}Braco", pt(0.24, 0, 0.3), pt(0.7, 0, 0.18), 0.035, 0.035, m["steel_rust"]),
-        cube(f"{name}Cacamba", (0.2, 0.18, 0.22), pt(0.76, 0, 0.14), m["steel_rust"], 0.015, rot=(0, yaw, 0)),
-    ]
-    return join(name, p)
+    return plantar("escavadeira-cabo", name, x, z, m, yaw=yaw, escala=E_MAQ * 0.72, y=y)
 
 
 def caminhao_fora(name, x, z, m, yaw=0.0, y=0.0, carregado=True):
-    """Fora-de-estrada parado: caçamba alta, cabine no canto, roda enorme."""
-    co, si = math.cos(yaw), math.sin(yaw)
-
-    def pt(a, t, h):
-        return (x + co * a - si * t, y + h, z + si * a + co * t)
-
-    p = [
-        cube(f"{name}Chassi", (0.52, 0.07, 0.3), pt(0, 0, 0.14), m["black"], 0.012, rot=(0, yaw, 0)),
-        cube(f"{name}Cacamba", (0.4, 0.14, 0.32), pt(-0.05, 0, 0.25), m["cat"], 0.02, rot=(0, yaw, 0)),
-        cube(f"{name}Cabine", (0.12, 0.12, 0.13), pt(0.21, -0.07, 0.26), m["cat"], 0.015, rot=(0, yaw, 0)),
-        cube(f"{name}Vidro", (0.02, 0.07, 0.1), pt(0.28, -0.07, 0.28), m["glass"], 0.0, rot=(0, yaw, 0)),
-    ]
-    if carregado:
-        p.append(cube(f"{name}Carga", (0.34, 0.06, 0.26), pt(-0.05, 0, 0.34), m["ore"], 0.02, rot=(0, yaw, 0)))
-    k = 0
-    for a in (0.18, -0.16):
-        for t in (-0.17, 0.17):
-            p.append(cyl(f"{name}R{k}", 0.11, 0.07, pt(a, t, 0.11), m["black"], 14, rot=(math.pi / 2, yaw, 0)))
-            k += 1
-    return join(name, p)
+    return plantar("caminhao-fora-estrada", name, x, z, m, yaw=yaw, escala=E_MAQ, y=y, carga=carregado)
 
 
 def perfuratriz(name, x, z, m, yaw=0.0, y=0.0):
-    """Perfuratriz de banco: a máquina que abre os furos do desmonte."""
-    co, si = math.cos(yaw), math.sin(yaw)
-
-    def pt(a, t, h):
-        return (x + co * a - si * t, y + h, z + si * a + co * t)
-
-    p = [
-        cube(f"{name}Est", (0.24, 0.06, 0.19), pt(0, 0, 0.03), m["black"], 0.01, rot=(0, yaw, 0)),
-        cube(f"{name}Corpo", (0.2, 0.13, 0.16), pt(-0.02, 0, 0.12), m["steel_y"], 0.015, rot=(0, yaw, 0)),
-        cube(f"{name}Mastro", (0.05, 0.34, 0.05), pt(0.11, 0, 0.24), m["steel_rust"], 0.008, rot=(0, yaw, 0)),
-        cyl(f"{name}Haste", 0.012, 0.3, pt(0.11, 0, 0.2), m["steel"], 8),
-    ]
-    return join(name, p)
+    return plantar("perfuratriz", name, x, z, m, yaw=yaw, escala=E_MAQ * 0.8, y=y)
 
 
 def trator_esteira(name, x, z, m, yaw=0.0, y=0.0):
-    """Trator de esteira espalhando estéril no topo da pilha."""
-    co, si = math.cos(yaw), math.sin(yaw)
-
-    def pt(a, t, h):
-        return (x + co * a - si * t, y + h, z + si * a + co * t)
-
-    p = [
-        cube(f"{name}Est0", (0.26, 0.07, 0.07), pt(0, -0.09, 0.035), m["black"], 0.01, rot=(0, yaw, 0)),
-        cube(f"{name}Est1", (0.26, 0.07, 0.07), pt(0, 0.09, 0.035), m["black"], 0.01, rot=(0, yaw, 0)),
-        cube(f"{name}Corpo", (0.2, 0.09, 0.16), pt(-0.02, 0, 0.11), m["cat"], 0.015, rot=(0, yaw, 0)),
-        cube(f"{name}Cabine", (0.1, 0.1, 0.12), pt(-0.06, 0, 0.2), m["cat"], 0.012, rot=(0, yaw, 0)),
-        cube(f"{name}Lamina", (0.03, 0.13, 0.3), pt(0.19, 0, 0.09), m["steel_rust"], 0.008, rot=(0, yaw, 0)),
-        barra(f"{name}Braco", pt(0.02, -0.1, 0.08), pt(0.17, -0.1, 0.06), 0.02, 0.02, m["steel_rust"]),
-        barra(f"{name}Braco2", pt(0.02, 0.1, 0.08), pt(0.17, 0.1, 0.06), 0.02, 0.02, m["steel_rust"]),
-    ]
-    return join(name, p)
+    return plantar("trator-esteira", name, x, z, m, yaw=yaw, escala=E_MAQ, y=y)
 
 
 # ---------------------------------------------------------------------------

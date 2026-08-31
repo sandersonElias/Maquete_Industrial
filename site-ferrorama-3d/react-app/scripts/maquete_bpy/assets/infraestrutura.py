@@ -56,7 +56,7 @@ def torre_holofote(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, altura=No
     for i in range(3):
         a = i * math.tau / 3
         s.barra(f"Perna{i}", (math.cos(a) * rb, math.sin(a) * rb, metros(0.6)), (math.cos(a) * rt, math.sin(a) * rt, h), metros(0.16), metros(0.16), aco)
-    nm = 8
+    nm = 5
     for k in range(nm):
         f0, f1 = k / nm, (k + 1) / nm
         r0 = rb + (rt - rb) * f0
@@ -243,7 +243,7 @@ def cerca_industrial(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, comp=No
     for i in range(n + 1):
         a = -c * 0.5 + c * i / n
         s.tubo(f"Mourao{i}", metros(0.09), h, (a, 0, h * 0.5), aco, verts=8)
-        s.caixa(f"Sapata{i}", (metros(0.35), metros(0.3), metros(0.35)), (a, 0, metros(0.15)), m["conc_dirty"], bevel=0.003)
+        s.caixa(f"Sapata{i}", (metros(0.35), metros(0.3), metros(0.35)), (a, 0, metros(0.15)), m["conc_dirty"], bevel=0.0)
         if arame:
             s.barra(f"Bracete{i}", (a, 0, h), (a, metros(0.4), h + metros(0.4)), metros(0.05), metros(0.05), aco)
     for k, hy in ((0, metros(0.25)), (1, h - metros(0.05))):
@@ -251,8 +251,11 @@ def cerca_industrial(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, comp=No
     # A tela: uma malha rala, feita de poucos fios visíveis por vão.
     for k in range(5):
         s.tubo(f"Fio{k}", metros(0.02), c, (0, 0, metros(0.4) + k * metros(0.45)), aco, eixo="a", verts=6)
-    for i in range(n * 3):
-        a = -c * 0.5 + c * (i + 0.5) / (n * 3)
+    # Um montante de tela por vao, nao tres: com 2 cm de largura real eles nao
+    # se distinguem, e eram o grosso do custo da peca (4.000 vertices por
+    # cerca de 3 de comprimento).
+    for i in range(n):
+        a = -c * 0.5 + c * (i + 0.5) / n
         s.caixa(f"Vert{i}", (metros(0.02), h * 0.85, metros(0.02)), (a, 0, h * 0.5), aco, bevel=0.0)
     if arame:
         for k in range(3):
@@ -356,9 +359,12 @@ def canaleta_drenagem(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, comp=N
     c = comp if comp is not None else metros(20)
     s.caixa("Bordo", (c, metros(0.4), metros(1.1)), (0, 0, -metros(0.2)), m["conc_dirty"], bevel=0.004)
     s.caixa("Calha", (c, metros(0.3), metros(0.6)), (0, 0, -metros(0.14)), m["black"], bevel=0.003)
-    n = max(6, int(c / metros(0.8)))
+    # A grelha e uma linha escura vista de cima: uma barra a cada 3 m conta a
+    # mesma coisa que uma a cada 80 cm. No trecho de 4,2 do patio da mina a
+    # versao densa gerava 52 caixas e 8.500 vertices — mais que a locomotiva.
+    n = max(5, int(c / metros(3.0)))
     for i in range(n):
-        s.caixa(f"Grelha{i}", (metros(0.3), metros(0.08), metros(0.66)), (-c * 0.5 + c * (i + 0.5) / n, 0, metros(0.02)), m["steel_rust"], bevel=0.002)
+        s.caixa(f"Grelha{i}", (metros(0.5), metros(0.08), metros(0.66)), (-c * 0.5 + c * (i + 0.5) / n, 0, metros(0.02)), m["steel_rust"], bevel=0.0)
     s.caixa("Caixa", (metros(1.2), metros(0.5), metros(1.2)), (c * 0.42, 0, -metros(0.2)), m["conc_dirty"], bevel=0.005)
     s.caixa("Tampa", (metros(1.0), metros(0.1), metros(1.0)), (c * 0.42, 0, metros(0.03)), m["steel_rust"], bevel=0.003)
     s.tubo("Bueiro", metros(0.35), metros(2.0), (c * 0.42, metros(1.2), -metros(0.3)), m["conc"], eixo="t", verts=12)

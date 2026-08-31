@@ -420,9 +420,11 @@ def marca_pneu(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, comp=None, bi
     c = comp if comp is not None else metros(14)
     b = bitola if bitola is not None else metros(4.0)
     for st in (-1, 1):
-        n = max(3, int(c / metros(1.2)))
+        # Rastro no chao: e uma mancha, nao uma corrente de elos. Um talo a
+        # cada 2,4 m em vez de 1,2 corta metade do custo sem mudar a leitura.
+        n = max(3, int(c / metros(2.4)))
         for i in range(n):
             a = -c * 0.5 + c * (i + 0.5) / n
             desv = (s.rnd(i * 1.7 + st) - 0.5) * metros(0.35)
-            s.caixa(f"Rastro{st}{i}", (metros(1.1), metros(0.05), metros(0.9)), (a, st * b * 0.5 + desv, metros(0.02)), m["dirt"], bevel=0.002)
+            s.caixa(f"Rastro{st}{i}", (metros(2.0), metros(0.05), metros(0.9)), (a, st * b * 0.5 + desv, metros(0.02)), m["dirt"], bevel=0.0)
     return s.entregar()

@@ -28,7 +28,19 @@ def apply_mods(obj):
     obj.select_set(False)
 
 
-def bevel(obj, width=0.03, segments=3):
+def bevel(obj, width=0.03, segments=None):
+    """Chanfro. O numero de segmentos acompanha a largura do chanfro.
+
+    Tres segmentos em toda caixa do tabuleiro custavam ~150 vertices por
+    cubo, contra ~36 de um segmento so. Num chanfro de 3 mm — que e o que
+    346 das 516 caixas do catalogo de assets pedem — a diferenca entre um e
+    tres segmentos nao existe na tela, mas na conta ela e a diferenca entre
+    caber e nao caber no orcamento do `.glb`, que e servido no 4G da feira.
+    Chanfro largo (0,02 para cima: galpao, muro, predio) continua com tres,
+    porque ali ele aparece de verdade na silhueta.
+    """
+    if segments is None:
+        segments = 3 if width >= 0.02 else (2 if width >= 0.008 else 1)
     m = obj.modifiers.new("Bevel", "BEVEL")
     m.width = width
     m.segments = segments
@@ -84,7 +96,10 @@ MIN_SEGS_LATHE = 32
 
 
 def cyl(name, r, depth, loc, mat, verts=24, rot=(0, 0, 0), r2=None):
-    verts = max(verts, MIN_VERTS_CIL)
+    # O piso de 16 lados vale do raio de poste para cima. Um fio de cerca de
+    # 2 mm de raio com 16 lados e poligono jogado fora: ele ocupa menos de um
+    # pixel de largura na tela do celular.
+    verts = max(verts, 8 if r < 0.015 else MIN_VERTS_CIL)
     kw = dict(radius=r, depth=depth, location=tloc(*loc), rotation=(rot[0], rot[2], rot[1]), vertices=verts)
     if r2 is not None:
         bpy.ops.mesh.primitive_cone_add(

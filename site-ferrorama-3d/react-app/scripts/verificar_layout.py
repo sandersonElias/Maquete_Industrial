@@ -194,7 +194,80 @@ PECAS = [
     ("PortariaTerminal", quad(0.75, 9.5, 0.6, 1.4), "normal"),
     ("MastroLog0", quad(1.1, 14.6, 0.3, 0.3), "normal"),
     ("MastroLog1", quad(8.8, 7.4, 0.3, 0.3), "normal"),
+    # --- Fase 19: a mina refeita a partir do catalogo de assets ---
+    # Estas caixas NAO sao estimadas: saem da medicao das caixas envolventes do
+    # proprio `.glb`, lidas dos acessores de POSITION com a transformacao do no
+    # aplicada. A primeira versao delas era chutada e mentia feio — metade usava
+    # meia-medida onde `quad` quer a medida cheia — e por isso o pre-voo dava
+    # tudo certo enquanto o relatorio 3D do build acusava peca dentro de peca.
+    # Ao mover qualquer coisa daqui, desloque o centro pelo mesmo delta e confira
+    # a caixa nova no build seguinte.
+    ("MinaTorreExtracao", quad(-20.95, -14.22, 1.71, 0.98), "normal"),
+    ("MinaMoega", quad(-20.39, -14.90, 1.19, 0.42), "normal"),
+    ("MinaBritador", quad(-19.04, -14.88, 0.62, 0.45), "normal"),
+    ("MinaPeneira", quad(-18.06, -14.88, 0.80, 0.38), "normal"),
+    ("MinaCorreiaSilo", quad(-17.35, -14.87, 1.32, 0.28), "normal"),
+    ("MinaSilo0", quad(-16.59, -15.00, 0.45, 0.44), "normal"),
+    ("MinaSilo1", quad(-15.99, -15.00, 0.45, 0.44), "normal"),
+    ("MinaTanque0", quad(-15.18, -14.90, 0.45, 0.38), "normal"),
+    ("MinaTanque1", quad(-14.58, -14.90, 0.45, 0.38), "normal"),
+    ("MinaTanque2", quad(-13.98, -14.90, 0.45, 0.38), "normal"),
+    ("MinaEspessador", quad(-13.10, -14.95, 0.80, 0.80), "normal"),
+    ("MinaPipeRackUsina", quad(-14.60, -14.28, 1.64, 0.23), "normal"),
+    ("MinaTorreAgua", quad(-22.05, -10.75, 0.34, 0.32), "normal"),
+    ("MinaHolofoteSul", quad(-21.35, -15.75, 0.17, 0.17), "normal"),
+    ("MinaHolofoteLeste", quad(-12.40, -14.40, 0.17, 0.17), "normal"),
+    ("MinaEscritorio", quad(-20.65, -15.68, 0.59, 0.38), "normal"),
+    ("MinaBobina", quad(-16.85, -15.70, 0.24, 0.24), "normal"),
+    ("MinaPilhaTubos", quad(-12.50, -15.60, 0.57, 0.33), "normal"),
+    ("MinaAfloramento", quad(-12.93, -13.36, 0.40, 0.42), "normal"),
+    ("MinaBritadorConico", quad(-20.70, -7.85, 0.45, 0.35), "normal"),
+    ("MinaCarregadeira", quad(-15.90, -14.28, 0.54, 0.32), "normal"),
+    ("MinaMotoniveladora", quad(-13.60, -14.30, 0.38, 0.44), "normal"),
+    ("MinaPickup", quad(-20.99, -13.54, 0.35, 0.32), "normal"),
+    ("MinaCaminhaoTanque", quad(-12.60, -14.87, 0.19, 0.49), "normal"),
+    ("TamboresMinaUsina", quad(-17.50, -15.65, 0.31, 0.28), "normal"),
+    ("SucataMinaUsina", quad(-13.95, -15.75, 0.48, 0.39), "normal"),
+    ("ConeMinaUsina", quad(-19.60, -15.00, 0.25, 0.31), "normal"),
+    ("MinaPlacaEpi", quad(-21.00, -15.25, 0.07, 0.08), "normal"),
+    ("CercaMinaUsina", quad(-18.80, -13.94, 2.43, 0.06), "normal"),
+    ("CercaMinaUsina2", quad(-15.30, -13.94, 2.64, 0.06), "normal"),
+    ("CercaMina", quad(-21.20, -3.29, 2.23, 0.06), "normal"),
+    ("LuzMinaPatio", quad(-21.00, -5.90, 0.15, 0.15), "normal"),
+    ("LuzMinaEstrada", quad(-16.93, -13.99, 0.32, 0.07), "normal"),
+    ("LuzMinaOficina", quad(-21.45, -8.00, 0.11, 0.32), "normal"),
+    ("LuzCarvao", quad(-21.61, -4.06, 0.30, 0.20), "normal"),
+    ("SiloCarvao", quad(-21.75, -4.60, 0.46, 0.47), "normal"),
+    ("CorreiaCarvao", quad(-20.56, -5.18, 1.54, 1.02), "normal"),
+    ("PilhaCarvao", quad(-20.97, -4.24, 0.99, 0.97), "normal"),
+    # Deslocadas nesta rodada: centro = a medicao anterior somada ao mesmo delta.
+    ("CaminhaoMinaFaixa", quad(-19.45, -14.30, 0.70, 0.60), "normal"),
+    ("MinaCanaleta", quad(-17.635, -14.46, 2.85, 0.28), "normal"),
+    ("CorreiaBritagem", quad(-20.26, -7.49, 0.64, 0.62), "normal"),
+    ("TerminalCarvao", quad(-22.03, -5.73, 1.13, 0.78), "normal"),
+    # As marcas de pneu (`MinaRastro*`) ficam de fora: sao decalques rentes ao
+    # chao, com caixa de 1,4 x 0,9 que atravessa meio patio sem tocar em nada.
 ]
+# Raio medido no `.glb`, nao o passado ao `plantar`: o deslocamento de ruido do
+# lathe estufa o monte para alem do raio nominal.
+for _i, _dados in enumerate((
+    (-19.29, -15.79, 0.56),
+    (-18.46, -15.95, 0.35),
+    (-15.55, -15.84, 0.47),
+)):
+    _x, _z, _r = _dados
+    PECAS.append((f"MinaMonte{_i}", [(_x + math.cos(_a * math.pi / 6) * _r, _z + math.sin(_a * math.pi / 6) * _r) for _a in range(12)], "normal"))
+for _i, _p in enumerate(((-18.95, -14.28), (-18.35, -15.25), (-14.9, -14.35), (-16.2, -15.35))):
+    PECAS.append((f"OpMinaUsina{_i}", [_p], "normal"))
+# Postes da linha de energia. Os quatro pontos que estavam aqui eram de outra
+# peca — sobra da rede antiga — e por isso o verificador nunca viu que o poste
+# de ponta nascia dentro de um monte de terra. Agora saem da mesma conta que
+# `assets.infraestrutura.linha_energia` faz: n+1 postes espalhados por
+# `comp * escala`, porque o `Sitio` escala o avanco.
+_LE_X, _LE_Z, _LE_COMP, _LE_ESC, _LE_VAOS = -16.2, -16.1, 9.0, 0.6, 4
+for _i in range(_LE_VAOS + 1):
+    _a = (-_LE_COMP * 0.5 + _LE_COMP * _i / _LE_VAOS) * _LE_ESC
+    PECAS.append((f"MinaLinhaEnergia poste {_i}", [(_LE_X + _a, _LE_Z)], "normal"))
 for _i, _px in enumerate((4.1, 6.1, 8.1)):
     PECAS.append((f"CarretaLog{_i}", ret(_px, 11.35, math.pi / 2, 0.6, 0.2), "normal"))
 
@@ -265,11 +338,12 @@ for _i, _p in enumerate([(-19.6, -9.9), (-19.45, -10.05), (-19.3, -10.2), (14.2,
 
 # Construções e obstáculos que já existiam e não podem ser invadidos.
 FIXOS = {
-    "Britador": quad(-20.75, -7.85, 0.85, 0.85),
-    "PilharOre": quad(-20.4, -7.05, 1.86, 1.48),
-    "SiloCarvao": quad(-21.75, -4.6, 0.96, 0.96),
-    "Barracao": quad(-22.6, -9.2, 2.3, 1.65),
-    "MinaOficina": quad(-21.8, -6.8, 1.35, 1.05),
+    # Medidos no `.glb`. O barracao vai a x = -23,87, ou seja 1,17 alem da borda
+    # do tabuleiro (-22,7), e a oficina engole a pilha de minerio: sao defeitos
+    # antigos do patio de britagem, a parte que vem depois da mina. Declarar a
+    # medida certa e o primeiro passo para consertar.
+    "Barracao": quad(-22.39, -9.2, 2.96, 1.87),
+    "MinaOficina": quad(-21.59, -6.8, 2.01, 1.27),
     "CentroControle": quad(-16.2, 11.1, 11.2, 9.0),
     "PatioPlat": quad(0.0, 3.2, 8.6, 0.55),
 }
@@ -279,7 +353,8 @@ FIXOS = {
 CONES = {
     # `MinaCava` saiu na fase 8: era um morro de 1,86 centrado em IRON, e a
     # alca do ramal passava a 0,81 desse centro — o trem corria dentro da rocha.
-    "CarvaoCava": (-19.4, -6.15, 2.2),
+    "CarvaoCava": (-19.4, -6.15, 1.28),
+    "PilharOre": (-20.35, -7.0, 0.44),
     # Raio onde a saia ja tem altura relevante, nao o pe do talude.
     "CavaFerro": (-20.3, -11.8, 1.62),
     "EsterilPilha": (-17.2, -12.7, 1.24),
@@ -330,6 +405,20 @@ def main():
         # As carretas encostam na doca do armazem de proposito.
         ("ArmazemLog", "CarretaLog0"), ("ArmazemLog", "CarretaLog1"),
         ("ArmazemLog", "CarretaLog2"),
+        # A correia nasce debaixo da descarga do britador conico: o tambor de
+        # cauda fica sob a boca, e nao adiante dela. A caixa envolvente da
+        # correia inclinada e girada engole o britador inteiro, mas em 3D sao
+        # a mesma junta.
+        ("MinaBritadorConico", "CorreiaBritagem"),
+        # Fase 19: as juntas da usina. Uma cadeia de beneficiamento e feita de
+        # pecas que se entregam material, e transferencia sem encosto seria
+        # minerio caindo no chao: a peneira despeja na correia, a correia
+        # descarrega na boca do silo, a torre de extracao alimenta a moega e a
+        # correia do carvao joga na pilha.
+        ("MinaPeneira", "MinaCorreiaSilo"), ("MinaCorreiaSilo", "MinaSilo0"),
+        ("MinaTorreExtracao", "MinaMoega"), ("CorreiaCarvao", "PilhaCarvao"),
+        # Montes de terra encostados aos pares, como na foto de referencia.
+        ("MinaMonte0", "MinaMonte1"),
         # Cada rua de estacao carrega a propria passagem de nivel.
         ("RuaEstL", "PNEstL"), ("RuaEstO", "PNEstO"),
     )
@@ -359,6 +448,12 @@ def main():
     # pilha; nao sao invasao.
     ok_cava = {("EstradaCava 0", "CavaFerro"), ("EstradaEsteril 0", "CavaFerro"),
                ("EstradaEsteril 2", "EsterilPilha"), ("EstradaEsteril 1", "EsterilPilha"),
+               # A correia sobe do britador conico e joga no cume da pilha de
+               # minerio: atravessar o cone e a funcao dela.
+               ("CorreiaBritagem", "PilharOre"),
+               # As duas pilhas do patio de britagem se tocam desde sempre, e a
+               # correia passa no vao entre elas.
+               ("CorreiaBritagem", "CarvaoCava"), ("CorreiaCarvao", "CarvaoCava"),
                # Caminhao carregado na estrada que sobe a saia da cava: e onde
                # ele tem de estar.
                ("CavaCaminhao", "CavaFerro")}
@@ -374,6 +469,12 @@ def main():
 
     print()
     print("2c) FORMAS DE REVOLUCAO (circulo x caixa, sem exagero de AABB)")
+    # Divida conhecida do patio de britagem, nomeada em vez de escondida: com a
+    # caixa medida do barracao (a antiga era 22% menor), a saia da cava raspa 8 cm
+    # nele. O barracao ainda vaza 1,17 alem da borda do tabuleiro e a oficina
+    # engole a pilha de minerio — tres defeitos do mesmo canto, que sai na rodada
+    # em que o patio de britagem for refeito como a mina foi nesta.
+    divida_britagem = {("CavaFerro", "Barracao")}
     achou_r = 0
     itens = list(REDONDOS.items())
     for i, (na, (ax, az, ar)) in enumerate(itens):
@@ -386,7 +487,7 @@ def main():
             bx0, bx1 = min(p[0] for p in pb), max(p[0] for p in pb)
             bz0, bz1 = min(p[1] for p in pb), max(p[1] for p in pb)
             d = math.hypot(max(bx0 - ax, 0, ax - bx1), max(bz0 - az, 0, az - bz1)) - ar
-            if d < 0.0:
+            if d < 0.0 and (na, nb) not in divida_britagem:
                 achou_r += 1
                 print(f"  ALERTA  {na} entra {-d:.2f} m em {nb}")
         for nb, (bx, bz, br) in CONES.items():

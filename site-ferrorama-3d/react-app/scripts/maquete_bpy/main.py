@@ -130,7 +130,7 @@ def build():
             "GaleriaA", "GaleriaB", "TransfA", "Embarque",
             # Fases 2/3/6/7 do lado da mina.
             "Subest", "Tanque", "PipeRack", "MastroLuzMina", "OpMina", "OpEmbarque",
-            "Sucata", "TamboresOficina", "PaleteOficina", "ObraMina",
+            "Sucata", "TamboresOficina", "TamboresMina", "PaleteOficina", "ObraMina",
             "PocaEstrada", "PocaPatioMina", "OleoOficina", "SinalMina", "SinalVia",
             "LinhaMina", "ConeMina",
             # Fase 8: cava descendente, disposicao de esteril/rejeito e usina.
