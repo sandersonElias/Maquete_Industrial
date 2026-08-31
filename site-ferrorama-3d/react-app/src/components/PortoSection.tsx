@@ -68,15 +68,29 @@ const routes = [
   {
     id: 'sea',
     badge: 'MAR',
-    name: 'Porto',
+    name: 'Porto marítimo',
     tone: 'sea',
     rows: [
-      ['Volume', 'Alto — milhões de toneladas'],
-      ['Custo', 'Menor por tonelada'],
-      ['Tempo', 'Semanas (marítimo)'],
-      ['Carga típica', 'Minério de ferro, carvão'],
-      ['Na maquete', 'Rota do trem até o cais'],
-      ['Referência', 'Terminal de Tubarão (ES)'],
+      ['Volume', 'Alto — milhões de toneladas/ano'],
+      ['Custo', 'Menor por tonelada transportada'],
+      ['Tempo', 'Semanas até o destino final'],
+      ['Carga típica', 'Minério de ferro e carvão mineral'],
+      ['Papel na cadeia', 'Último elo antes do oceano'],
+      ['Referência BR', 'Terminal de Tubarão (Vitória, ES)'],
+    ],
+  },
+  {
+    id: 'cais',
+    badge: 'CAIS',
+    name: 'Embarque na maquete',
+    tone: 'air',
+    rows: [
+      ['Chegada', 'Trem HO com vagões da mina'],
+      ['Descarga', 'Minério vai do vagão à correia'],
+      ['Transferência', 'Guindaste leva a carga ao navio'],
+      ['Sinalização', 'LEDs no cais indicam o ciclo'],
+      ['Ramal', 'Desvio SW3 posiciona o trem no porto'],
+      ['Navios', 'Cargueiros impressos em 3D no cais'],
     ],
   },
 ];
@@ -192,6 +206,10 @@ export default function PortoSection() {
           transition={{ duration: 0.75, delay: 0.45, ease: EASE_OUT_EXPO }}
         >
           <h3 className="porto-routes__heading">A saída marítima</h3>
+          <p className="porto-routes__lead">
+            Exportação real no Brasil e o que acontece no cais da maquete — da descarga do trem ao
+            embarque no navio.
+          </p>
           <div className="porto-routes__grid">
             {routes.map((r) => (
               <article key={r.id} className={`porto-route porto-route--${r.tone}`}>
