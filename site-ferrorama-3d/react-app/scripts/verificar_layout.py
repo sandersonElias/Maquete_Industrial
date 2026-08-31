@@ -160,7 +160,6 @@ PECAS = [
     ("SinalPorto", quad(9.8, 4.0, 0.5, 0.5), "normal"),
     ("SinalVia", quad(-14.2, -3.9, 0.3, 0.3), "normal"),
     ("BandeirasPorto", quad(10.0, 2.4, 0.6, 0.2), "normal"),
-    ("GuindBase", quad(20.35, 12.15, 0.55, 0.55), "normal"),
     ("SiloPorto", quad(12.3, 9.4, 1.05, 1.05), "normal"),
     ("TamboresOficina", quad(-18.9, -10.6, 0.22, 0.16), "normal"),
     ("TamboresPorto", quad(14.5, 4.2, 0.22, 0.16), "normal"),
@@ -180,6 +179,16 @@ PECAS = [
     # O guindaste entra em duas caixas: a base sobre esteiras, que e o que
     # precisa de folga de bitola, e o alcance da lanca, que passa a 2,3 de
     # altura — como a galeria e o shiploader, e por isso e "straddle".
+    # --- Fase 20: a operacao do cais ---
+    # Caixas estimadas nesta rodada; serao trocadas pelas medidas do `.glb` no
+    # proximo build, como as da fase 19.
+    # A lanca do guindaste nao entra: ela gira a 2,7 de altura e passa por cima
+    # de tudo. So o mastro toca o chao.
+    ("GuindMastro", quad(20.10, 12.15, 0.60, 0.60), "normal"),
+    ("EscavCais", quad(20.11, 13.02, 0.39, 0.58), "normal"),
+    ("PaletePorto0", quad(18.75, 12.85, 0.20, 0.18), "normal"),
+    ("PaletePorto1", quad(18.75, 12.35, 0.21, 0.18), "normal"),
+    ("TamboresCais", quad(19.30, 13.15, 0.31, 0.28), "normal"),
     ("GuindasteTrelica base", ret(18.75, 8.0, 0.0, 0.42, 0.4), "normal"),
     ("GuindasteTrelica lanca", ret(19.28, 8.0, 0.0, 0.95, 0.14), "straddle"),
     ("ConteinerCais", ret(19.3, 4.6, 0.06, 0.9, 0.6), "normal"),
@@ -292,10 +301,13 @@ for _n, _x, _z in (("RuaEstL", 5.08, 4.6), ("RuaEstO", -9.0, -2.5),
     PECAS.append((_n, quad(_x, _z, 0.6, 0.6), "straddle"))
 # Barcaca e rebocador flutuam: nao entram no gabarito ferroviario nem na
 # checagem de terra, mas precisam caber na faixa de agua (x 21,0 a 23,6).
+# Fase 20: o navio-caixa de 5,6 virou o graneleiro do catalogo, com 8,0 de
+# comprimento nominal — 8,4 de ponta a ponta, porque a proa avanca 0,55c e a
+# popa recua 0,50c. Barcaca e rebocador recuaram para abrir espaco para ele.
 FLUTUANTES = {
-    "Barcaca": ret(22.2, 3.9, 1.62, 0.77, 0.45),
-    "Rebocador": ret(22.2, 13.2, 0.08, 0.6, 0.3),
-    "Navio": ret(22.3, 8.6, 0.0, 0.925, 2.8),
+    "Barcaca": ret(22.2, 3.45, 1.62, 0.77, 0.45),
+    "Rebocador": ret(22.2, 13.7, 0.08, 0.6, 0.3),
+    "Navio": ret(21.9, 8.8, 0.0, 0.66, 4.2),
 }
 for _i, (_x, _z) in enumerate(((0.0, 5.95), (4.5, 5.95), (-4.5, 5.95), (9.3, 1.5), (-9.3, -1.5), (0.0, -5.95), (-4.5, -5.95))):
     PECAS.append((f"MarcoKm{_i}", quad(_x, _z, 0.12, 0.12), "normal"))
@@ -330,6 +342,7 @@ for _nome, _pts in (
     ("OpMina", [(-22.0, -8.32), (-21.9, -7.5), (-21.4, -8.3), (-21.9, -6.15), (-21.6, -7.6)]),
     ("OpEmbarque", [(-15.7, -4.6), (-13.0, -6.6), (-13.4, -6.9)]),
     ("OpPorto", [(16.9, 10.3), (17.3, 7.4), (17.4, 12.2), (13.6, 12.0)]),
+    ("OpCais", [(19.75, 12.35), (18.4, 13.15)]),
 ):
     for _i, _p in enumerate(_pts):
         PECAS.append((f"{_nome}{_i}", [_p], "normal"))

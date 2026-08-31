@@ -4,10 +4,25 @@ import math
 
 import bpy
 
+from .assets import plantar
 from .coords import PORT, tloc
 from .curves import smooth_keys
-from .primitives import cube, cyl, empty, parent, parent_keep
+from .process import Y_CAIS
+from .primitives import cube, empty, join, parent_keep
 from .railway import poste_luz
+
+
+# Onde o navio atraca. O costado fica a 0,07 da defensa do cais: encostado,
+# como na foto, e nao boiando no meio do canal. O balanco da animacao foi de
+# 0,16 para 0,08 justamente por causa dessa folga — com 0,16 o casco entrava
+# na defensa no ponto baixo do ciclo.
+#
+# `E_NAVIO` junto de `C_NAVIO` e o ponto todo. So encurtar o `comp` deixava o
+# navio com 3,44 de altura — mais alto que o shiploader — porque as alturas do
+# asset sao fixas em `metros()` e nao acompanham o comprimento. Com escala 0,62
+# e comprimento 12,9 a pegada em planta continua a mesma (8,4 x 1,31) e a
+# altura cai para 2,13: a proporcao comprida e baixa da foto de referencia.
+X_NAVIO, C_NAVIO, E_NAVIO = 21.9, 12.9, 0.62
 
 
 def build_port(m):
@@ -38,58 +53,68 @@ def build_port(m):
     # LuzPorto4 nascia dentro do portico da empilhadeira.
     poste_luz("LuzPorto4", px + 0.9, pz + 4.7, m["black"], m["glow"], 1.45)
 
-    # Navio rebaixado: antes o casco flutuava 0.15 acima da lamina d agua.
-    navio = empty("Navio", (22.3, -0.06, pz))
-    parent(cube("Casco", (1.85, 0.5, 5.6), (0, 0, 0), m["ship"], 0.07), navio, (0, 0.26, 0))
-    parent(cube("CascoB", (1.45, 0.2, 5.1), (0, 0, 0), m["black"], 0.03), navio, (0, 0.0, 0))
-    parent(cube("Ponte", (1.15, 1.05, 1.15), (0, 0, 0), m["white"], 0.05), navio, (0, 1.05, -1.85))
-    parent(cube("PonteVidro", (0.95, 0.26, 0.05), (0, 0, 0), m["glass"], 0.004), navio, (0, 1.22, -1.26))
-    parent(cyl("Chamine", 0.14, 0.55, (0, 0, 0), m["black"], 12), navio, (0.32, 1.7, -1.85))
-    idx = 0
-    for z in (-0.55, 0.25, 1.05, 1.85, 2.55):
-        for x in (-0.52, 0.52):
-            for y in (0.58, 0.9):
-                parent(cube(f"Cnt{idx}", (0.52, 0.3, 0.46), (0, 0, 0), m["cont"][idx % 5], 0.012), navio, (x, y, z))
-                idx += 1
-                if idx > 17:
-                    break
-            if idx > 17:
-                break
-        if idx > 17:
-            break
+    # --- O navio (fase 20) -----------------------------------------------
+    # O que estava aqui era um bloco de 1,85 x 5,6 com dezoito conteineres
+    # empilhados no conves. Alem de nao parecer com nada da foto de referencia
+    # (`design/referencias/porto-maquete-navio.png`, um cargueiro de granel
+    # verde, comprido e baixo, atracado paralelo ao cais), ele contradizia o
+    # proprio cais: a cadeia daqui e virador de vagoes -> correia -> galeria D
+    # -> shiploader, ou seja granel. Shiploader nao carrega porta-conteiner.
+    #
+    # O asset traz o que faz o navio ler como navio: faixa vermelha de fundo e
+    # boot top preta na linha d agua, amurada, escotilhas com tampa amarela e
+    # guincho ao lado, castelo de popa de quatro andares com janela — e e a
+    # fileira de janelinhas que da escala ao casco inteiro.
+    #
+    # A proporcao sai de `escala` e `comp` juntos — ver a nota em `E_NAVIO`.
+    navio = empty("Navio", (X_NAVIO, 0.0, pz))
+    for peca in plantar(
+        "navio-graneleiro", "NavioCargueiro", X_NAVIO, pz, m,
+        yaw=math.pi / 2, y=-0.05, escala=E_NAVIO, comp=C_NAVIO, poroes=4,
+    ):
+        parent_keep(peca, navio)
 
-    # Com o cais estendido, o guindaste de conteineres foi para a borda nova,
-    # a vante do navio: a faixa central do cais agora e da alca ferroviaria e
-    # do shiploader (cadeia de granel).
-    gx, gz = 20.35, 12.15
-    cube("GuindBase", (0.55, 0.22, 0.55), (gx, 0.28, gz), m["conc"], 0.02)
-    cyl("Guindaste", 0.1, 2.85, (gx, 1.55, gz), m["glow"], 14)
-    guind = empty("GuindLanca", (gx, 2.9, gz))
-    lanca = cube("LancaG", (2.85, 0.1, 0.14), (gx + 1.55, 2.9, gz), m["glow"], 0.02)
-    cabo = cube("CaboG", (0.03, 1.15, 0.03), (gx + 2.7, 2.25, gz), m["black"], 0.004)
-    carga = cube("CargaG", (0.5, 0.28, 0.44), (gx + 2.7, 1.55, gz), m["cont"][0], 0.012)
-    parent_keep(lanca, guind)
-    parent_keep(cabo, guind)
-    parent_keep(carga, guind)
+    # --- O guindaste do cais (fase 20) -----------------------------------
+    # Era um cilindro liso de 2,85 com uma caixa de 2,85 fazendo de lanca: a
+    # silhueta mais pobre do tabuleiro, num ponto onde o olho sempre para.
+    # Virou o guindaste de torre do catalogo — mastro de quatro cordoalhas com
+    # X entre modulos, coroa de giro, cabine envidracada, lanca trelicada,
+    # contra-lanca com contrapeso, e o carro corredico com cabo e gancho. Sem a
+    # contra-lanca o olho le uma maquina prestes a tombar, e e o vazio entre as
+    # barras que separa trelica de poste.
+    #
+    # O mastro recuou de x 20,35 para 20,10: a base de 0,6 caia em cima da
+    # defensa do cais. A lanca encurtou de 2,85 para 1,6 porque com 2,85 a ponta
+    # passava do costado e ia parar do outro lado do navio.
+    gx, gz = 20.1, 12.15
+    H_TORRE, L_LANCA = 2.5, 1.6
+    pecas = [p for p in plantar(
+        "guindaste-torre", "GuindPortico", gx, gz, m,
+        yaw=0.0, y=Y_CAIS, altura=H_TORRE, lanca=L_LANCA, juntar=False,
+    ) if p]
+    # Num guindaste de torre gira tudo o que esta acima da coroa. O cabo e o
+    # gancho ja vem do asset, entao a carga nao precisa mais ser uma caixa
+    # pendurada no ar por conta propria.
+    GIRAM = ("Coroa", "Cabine", "Lanca", "Contra", "PicoA", "Tirante", "Carro", "CaboG", "Gancho")
+    corte = len("GuindPortico")
+    moveis = [p for p in pecas if p.name[corte:].startswith(GIRAM)]
+    fixas = [p for p in pecas if p not in moveis]
+    join("GuindMastro", fixas)
+    guind = empty("GuindLanca", (gx, Y_CAIS + H_TORRE + 0.2, gz))
+    parent_keep(join("GuindLancaConj", moveis), guind)
     bpy.context.view_layer.update()
-    z_carga = carga.location.z
     for f in range(1, 241):
         u = (f - 1) / 240.0 * math.tau
-        yaw = 0.12 + 0.82 * math.sin(u)
-        drop = -0.42 * (0.5 + 0.5 * math.sin(u * 2.0 + 0.6))
-        guind.rotation_euler = (0, 0, yaw)
+        guind.rotation_euler = (0, 0, 0.12 + 0.82 * math.sin(u))
         guind.keyframe_insert("rotation_euler", frame=f)
-        carga.location.z = z_carga + drop
-        carga.keyframe_insert("location", frame=f)
     smooth_keys(guind)
-    smooth_keys(carga)
 
     for f in range(1, 241):
         u = (f - 1) / 240.0 * math.tau
         navio.location = tloc(
-            22.3 + 0.16 * math.sin(u),
-            -0.07 + 0.045 * math.sin(u * 2.0 + 0.4),
-            pz + 0.28 * math.cos(u * 0.85),
+            X_NAVIO + 0.08 * math.sin(u),
+            0.03 * math.sin(u * 2.0 + 0.4),
+            pz + 0.15 * math.cos(u * 0.85),
         )
         navio.rotation_euler = (0.03 * math.sin(u * 1.4), 0, 0.04 * math.sin(u))
         navio.keyframe_insert("location", frame=f)

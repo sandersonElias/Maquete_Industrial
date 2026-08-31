@@ -98,11 +98,11 @@ the initial bundle — keep it that way.
 |---|---|---|
 | Initial bundle | ~119 KB | 165 KB |
 | `Maquete3D` chunk | ~304 KB | 330 KB |
-| `public/models/maquete-blender.glb` | **4.48 MiB** (4,700,820 bytes, Draco) | 4.5 MiB |
+| `public/models/maquete-blender.glb` | **4.47 MiB** (4,692,196 bytes, Draco) | 4.5 MiB |
 
 The `.glb` is the real bottleneck — it is served to phones over fair-ground 4G. Measure it in
 bytes (`stat -c %s`), not with a rounded `ls -lh`: the ceiling has under 20 KB of headroom, so a
-rounded figure hides an overrun. It sits at 357k vertices across 518 meshes.
+rounded figure hides an overrun. It sits at ~361k vertices across 499 meshes.
 
 **Polygon budget is set in `primitives.py`, not per piece.** `bevel()` picks its segment count
 from the chamfer width (3 above 0.02, 2 above 0.008, else 1) and `cyl()` drops its 16-side floor
@@ -112,6 +112,10 @@ Passing `segments=` explicitly overrides this — do it only where the silhouett
 The other trap is repetition inside an asset: a drainage channel emitting one grate every 80 cm
 over a 4.2-unit run cost 8,574 vertices, more than the locomotive. Check the cost of a new asset
 with `node scripts/pesar_glb.mjs` before assuming it is cheap.
+
+**A chamfer wider than the box it sits on is a modelling bug, not just a cost one.** The worker
+asked for 0.02 on limbs 0.011 thick: Blender clamps it, so the arms rounded into capsules and
+still paid for three segments. Keep the chamfer well under the box's smallest dimension.
 
 ### Building the `.glb` without installing Blender
 

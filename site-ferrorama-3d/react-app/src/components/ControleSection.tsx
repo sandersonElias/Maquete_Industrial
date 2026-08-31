@@ -103,7 +103,7 @@ export default function ControleSection() {
           transition={{ duration: 0.6, delay: 0.25 }}
         >
           Na mesa da maquete: monitores ao vivo da escavadeira, do caminhão, do trem MRS e do
-          porta-contêineres. Na feira, o visitante escolhe a visão — o hub é a sala de controle.
+          navio graneleiro. Na feira, o visitante escolhe a visão — o hub é a sala de controle.
         </motion.p>
 
         {/* Banner de console */}

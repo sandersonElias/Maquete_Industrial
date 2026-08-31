@@ -98,8 +98,9 @@ MIN_SEGS_LATHE = 32
 def cyl(name, r, depth, loc, mat, verts=24, rot=(0, 0, 0), r2=None):
     # O piso de 16 lados vale do raio de poste para cima. Um fio de cerca de
     # 2 mm de raio com 16 lados e poligono jogado fora: ele ocupa menos de um
-    # pixel de largura na tela do celular.
-    verts = max(verts, 8 if r < 0.015 else MIN_VERTS_CIL)
+    # pixel de largura na tela do celular. Entre 1,5 e 5 cm de raio — tubo de
+    # trelica, camada de conifera, haste — doze lados ja fecham a silhueta.
+    verts = max(verts, 8 if r < 0.015 else (12 if r < 0.05 else MIN_VERTS_CIL))
     kw = dict(radius=r, depth=depth, location=tloc(*loc), rotation=(rot[0], rot[2], rot[1]), vertices=verts)
     if r2 is not None:
         bpy.ops.mesh.primitive_cone_add(

@@ -30,6 +30,7 @@ import math
 
 import bpy
 
+from .assets import plantar
 from .coords import tloc
 from .primitives import apply_mods, assign, cube, cyl, join, smooth, unwrap
 from .process import Y_CAIS, barra
@@ -42,8 +43,15 @@ from .process import Y_CAIS, barra
 # mastro de iluminacao e a 0,52 do eixo da via.
 GUINDASTE = (18.75, 8.0)
 CONTEINERES = (19.3, 4.6)
-BARCACA = (22.2, 3.9)
-REBOCADOR = (22.2, 13.2)
+# Recuadas na fase 20: o graneleiro mede 8,4 de ponta a ponta contra os 5,6 do
+# navio-caixa que estava aqui, e ocupa de z 4,6 a 13,0.
+BARCACA = (22.2, 3.45)
+REBOCADOR = (22.2, 13.7)
+
+# Fase 20 — a operacao do cais. O corredor entre a alca do ramal e a defensa
+# e estreito no trecho sul (a via passa em (20,2 ; 7,05)), entao a descarga
+# ficou no extremo norte, onde o cais alarga e a proa do navio para.
+DESCARGA = (20.15, 12.9)
 
 
 def _base(x, z, yaw, y0=0.0):
@@ -223,9 +231,45 @@ def superficie_agua(name, m, x=22.3, z=0.0, larg=2.6, comp=33.4, y=0.125):
     return ob
 
 
+def operacao_do_cais(m):
+    """Fase 20 — o que faz o cais parecer em operacao, e nao decorado.
+
+    Na foto de referencia o que prende o olho nao e o navio parado: e a
+    escavadeira de garra debrucada sobre o porao, com a lanca por cima da
+    amurada. Uma maquina no meio de um gesto conta a operacao inteira; navio,
+    cais e guindaste parados contam so que existe um porto.
+
+    Ela fica no unico trecho onde o cais alarga: no sul a alca do ramal passa a
+    menos de 0,45 da borda e nao sobra gabarito. O yaw aponta a lanca para a
+    agua, na direcao do porao — voltada para o outro lado, como estava, a
+    maquina deixa de contar a cena e vira mais um objeto no cais. Ao lado dela
+    vao a carga desembarcada e os operarios que dao a escala: a mesma regra da
+    mina, peca grande cercada de peca pequena.
+    """
+    dx, dz = DESCARGA
+    plantar(
+        "escavadeira-hidraulica", "EscavCais", dx, dz, m,
+        yaw=0.25, escala=0.42, y=Y_CAIS,
+    )
+    # Carga geral desembarcada, esperando o caminhao. Na referencia sao fardos
+    # claros empilhados no cais, nao conteiner: e carga solta de granel ensacado.
+    # Dois paletes, nao tres: o terceiro nao mudava a leitura e custava 10 KB
+    # no `.glb`, que e o mesmo que o navio inteiro gasta em escotilhas.
+    for i, (px, pz_, giro) in enumerate(
+        ((18.75, 12.85, 0.1), (18.75, 12.35, -0.15))
+    ):
+        plantar("palete-carga", f"PaletePorto{i}", px, pz_, m, yaw=giro, escala=1.6, y=Y_CAIS)
+    plantar("tambores", "TamboresCais", 19.3, 13.15, m, yaw=0.4, escala=1.0, y=Y_CAIS, n=5)
+    for i, (px, pz_, pose, giro) in enumerate(
+        ((19.75, 12.35, "apontando", 1.4), (18.4, 13.15, "parado", 2.7))
+    ):
+        plantar("operario", f"OpCais{i}", px, pz_, m, yaw=giro, escala=1.0, y=Y_CAIS, pose=pose)
+
+
 def build_harbour(m):
     guindaste_trelica("GuindasteTrelica", GUINDASTE[0], GUINDASTE[1], m, yaw=0.0)
     conteineres_cais("ConteinerCais", CONTEINERES[0], CONTEINERES[1], m, yaw=0.06)
     barcaca_garra("Barcaca", BARCACA[0], BARCACA[1], m, yaw=1.62)
     rebocador("Rebocador", REBOCADOR[0], REBOCADOR[1], m, yaw=0.08)
     superficie_agua("AguaSuperficie", m)
+    operacao_do_cais(m)

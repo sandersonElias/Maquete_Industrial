@@ -103,7 +103,7 @@ def palete_carga(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, camadas=3, 
                 (c * 0.92, metros(0.22), l * 0.44),
                 (0, (j - 0.5) * l * 0.46, metros(0.28) + k * metros(0.24)),
                 m["white"] if (k + j) % 2 else m["conc"],
-                bevel=0.012,
+                bevel=0.005,
             )
     if filme and camadas > 0:
         s.caixa("Filme", (c * 0.98, camadas * metros(0.24), l * 0.98), (0, 0, metros(0.28) + (camadas - 1) * metros(0.12)), m["glass"], bevel=0.006)
@@ -338,30 +338,35 @@ def operario(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, pose="parado"):
 
     `pose`: `parado`, `apontando` ou `agachado`. Uma figura humana em pose
     diferente da vizinha é o que impede a leitura de "bonequinho repetido".
+
+    Os chanfros são deliberadamente miúdos: um braço tem 0,011 de espessura, e
+    o 0,02 que estava aqui era quase o dobro da peça — o membro arredondava até
+    virar cápsula e ainda pagava três segmentos de chanfro. Chanfro sempre bem
+    menor que a menor dimensão da caixa.
     """
     s = Sitio(name, x, z, m, yaw, escala, sal, y)
     h = metros(1.75)
     pele, colete, calca = m["skin"], m["hi_vis"], m["mrs_b"]
     if pose == "agachado":
-        s.caixa("Tronco", (metros(0.24), h * 0.3, metros(0.36)), (0, 0, h * 0.42), colete, bevel=0.02)
+        s.caixa("Tronco", (metros(0.24), h * 0.3, metros(0.36)), (0, 0, h * 0.42), colete, bevel=0.005)
         for st in (-1, 1):
-            s.caixa(f"Coxa{st}", (metros(0.36), metros(0.16), metros(0.15)), (metros(0.14), st * metros(0.11), h * 0.28), calca, bevel=0.02)
-            s.caixa(f"Perna{st}", (metros(0.14), h * 0.26, metros(0.14)), (metros(0.28), st * metros(0.11), h * 0.14), calca, bevel=0.02)
-            s.caixa(f"Braco{st}", (metros(0.12), h * 0.2, metros(0.12)), (metros(0.16), st * metros(0.2), h * 0.34), colete, bevel=0.02)
+            s.caixa(f"Coxa{st}", (metros(0.36), metros(0.16), metros(0.15)), (metros(0.14), st * metros(0.11), h * 0.28), calca, bevel=0.003)
+            s.caixa(f"Perna{st}", (metros(0.14), h * 0.26, metros(0.14)), (metros(0.28), st * metros(0.11), h * 0.14), calca, bevel=0.003)
+            s.caixa(f"Braco{st}", (metros(0.12), h * 0.2, metros(0.12)), (metros(0.16), st * metros(0.2), h * 0.34), colete, bevel=0.003)
         s.bola("Cabeca", metros(0.11), (metros(0.04), 0, h * 0.6), pele, (1, 1.12, 1))
         s.tubo("Capacete", metros(0.13), metros(0.14), (metros(0.04), 0, h * 0.64), m["helmet"], verts=14, r2=metros(0.1))
         return s.entregar()
     for st in (-1, 1):
-        s.caixa(f"Perna{st}", (metros(0.15), h * 0.45, metros(0.15)), (0, st * metros(0.1), h * 0.22), calca, bevel=0.02)
-        s.caixa(f"Bota{st}", (metros(0.26), metros(0.1), metros(0.15)), (metros(0.04), st * metros(0.1), metros(0.05)), m["black"], bevel=0.01)
-    s.caixa("Tronco", (metros(0.22), h * 0.3, metros(0.4)), (0, 0, h * 0.6), colete, bevel=0.02)
+        s.caixa(f"Perna{st}", (metros(0.15), h * 0.45, metros(0.15)), (0, st * metros(0.1), h * 0.22), calca, bevel=0.003)
+        s.caixa(f"Bota{st}", (metros(0.26), metros(0.1), metros(0.15)), (metros(0.04), st * metros(0.1), metros(0.05)), m["black"], bevel=0.003)
+    s.caixa("Tronco", (metros(0.22), h * 0.3, metros(0.4)), (0, 0, h * 0.6), colete, bevel=0.005)
     s.caixa("Faixa", (metros(0.24), metros(0.05), metros(0.42)), (0, 0, h * 0.58), m["white"], bevel=0.005)
     if pose == "apontando":
-        s.caixa("BracoD", (metros(0.4), metros(0.11), metros(0.11)), (metros(0.22), metros(0.26), h * 0.68), colete, bevel=0.02)
-        s.caixa("BracoE", (metros(0.11), h * 0.28, metros(0.11)), (0, -metros(0.26), h * 0.58), colete, bevel=0.02)
+        s.caixa("BracoD", (metros(0.4), metros(0.11), metros(0.11)), (metros(0.22), metros(0.26), h * 0.68), colete, bevel=0.003)
+        s.caixa("BracoE", (metros(0.11), h * 0.28, metros(0.11)), (0, -metros(0.26), h * 0.58), colete, bevel=0.003)
     else:
         for st in (-1, 1):
-            s.caixa(f"Braco{st}", (metros(0.11), h * 0.28, metros(0.11)), (0, st * metros(0.26), h * 0.58), colete, bevel=0.02)
+            s.caixa(f"Braco{st}", (metros(0.11), h * 0.28, metros(0.11)), (0, st * metros(0.26), h * 0.58), colete, bevel=0.003)
     s.tubo("Pescoco", metros(0.055), metros(0.1), (0, 0, h * 0.78), pele, verts=10)
     s.bola("Cabeca", metros(0.105), (0, 0, h * 0.87), pele, (1, 1.15, 1))
     s.tubo("Capacete", metros(0.125), metros(0.13), (0, 0, h * 0.92), m["helmet"], verts=14, r2=metros(0.095))

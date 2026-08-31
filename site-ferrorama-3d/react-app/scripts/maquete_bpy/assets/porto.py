@@ -130,11 +130,17 @@ def guindaste_trelicado(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, giro
     return s.entregar()
 
 
-def guindaste_torre(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, altura=None, lanca=None, cor=None):
+def guindaste_torre(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, altura=None, lanca=None, cor=None, juntar=True):
     """Guindaste de torre — o vermelho do fundo da foto de referência.
 
     Mastro modular quadrado, lança horizontal com carro corrediço, contra-lança
     curta e contrapeso. É o objeto mais alto de qualquer canteiro.
+
+    `juntar=False` devolve as peças soltas, com os sufixos preservados. É o
+    único jeito de uma peça do catálogo entrar numa animação: num guindaste de
+    torre gira tudo o que está acima da coroa — pico, tirantes, lança,
+    contra-lança, contrapeso, carro, cabo e gancho — enquanto mastro e base
+    ficam parados, e o `join` de tudo torna isso impossível.
     """
     s = Sitio(name, x, z, m, yaw, escala, sal, y)
     mat = cor or m["sig_r"]
@@ -169,7 +175,7 @@ def guindaste_torre(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, altura=N
     s.caixa("Carro", (metros(1.6), metros(0.8), metros(1.4)), (lb * 0.62, 0, h + metros(1.3)), aco, bevel=0.005)
     s.barra("CaboG", (lb * 0.62, 0, h + metros(1.0)), (lb * 0.62, 0, metros(8)), metros(0.06), metros(0.06), m["black"])
     s.caixa("Gancho", (metros(0.9), metros(1.4), metros(0.9)), (lb * 0.62, 0, metros(7.2)), aco, bevel=0.005)
-    return s.entregar()
+    return s.entregar(juntar)
 
 
 def shiploader(name, x, z, m, yaw=0.0, escala=1.0, sal=0.0, y=0.0, alcance=None):

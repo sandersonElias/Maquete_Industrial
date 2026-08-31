@@ -107,6 +107,8 @@ def build():
             "MastroLuzPorto", "OpPorto", "TamboresPorto", "PaletePorto", "ObraPorto",
             "PocaPorto", "OleoPorto", "SinalPorto", "Bandeiras", "ConePorto",
             "CercaPorto", "Defensa", "Balanca",
+            # Fase 20: a operacao do cais (escavadeira, carga, operarios).
+            "EscavCais", "PaletePorto", "TamboresCais", "OpCais",
             # Fase 12: o que a foto de referencia do porto pede.
             "GuindasteTrelica", "ConteinerCais", "Barcaca", "Rebocador",
             # Fase 13: terminal logistico (a segunda metade do porto).
