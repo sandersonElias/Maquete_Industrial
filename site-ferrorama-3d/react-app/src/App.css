@@ -518,6 +518,7 @@ html { scroll-behavior: auto; }
 /* Sections */
 .section {
   min-height: 100vh;
+  min-height: 100svh;
   padding: clamp(6rem, 12vh, 9rem) clamp(1.25rem, 4vw, 2.5rem) clamp(4rem, 8vh, 6rem);
   position: relative;
   display: flex;
@@ -886,7 +887,7 @@ html { scroll-behavior: auto; }
 /* Cards Grid */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 1.5rem;
   perspective: 1000px;
 }
@@ -1758,7 +1759,7 @@ html { scroll-behavior: auto; }
 /* Dashboard Section */
 .controle-dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
   gap: 1.25rem;
 }
 .dashboard-card {
@@ -3323,7 +3324,7 @@ to { opacity: 1; transform: translateY(0); }
 }
 .maquete-objectives-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 1rem;
 }
 .maquete-objective-item {
@@ -3539,7 +3540,7 @@ to { opacity: 1; transform: translateY(0); }
 }
 .porto-export-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 1rem;
 }
 .porto-export-item {
@@ -3605,7 +3606,7 @@ to { opacity: 1; transform: translateY(0); }
 }
 .glossary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   gap: 0.75rem;
 }
 .glossary-item {
@@ -5420,7 +5421,7 @@ body::after {
   padding: 0;
   display: grid;
   gap: 1.35rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
 }
 
 .shell-fact {
@@ -7237,6 +7238,8 @@ body::after {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  /* O voltar e o unico caminho de saida desta pagina: ele nunca cede espaco. */
+  flex-shrink: 0;
 }
 
 .maquete-page__titulo {
@@ -7246,6 +7249,13 @@ body::after {
   text-transform: uppercase;
   font-size: 0.78rem;
   color: var(--text-muted);
+  /* Num aparelho estreito o titulo apara em vez de empurrar o voltar para fora
+     da barra — e ele e so um rotulo, quem chegou aqui pelo QR ja sabe onde
+     esta. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .maquete-page__palco {
