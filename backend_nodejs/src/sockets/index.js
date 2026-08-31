@@ -129,6 +129,66 @@ async function handleGatewayData(data, io, socket) {
       });
     }
 
+    // ── Sensores (EVENT|SENSOR|<id>|<DETECTED|CLEAR>|<ts>) ──
+    if (rawData.startsWith("EVENT|SENSOR")) {
+      const sensorId = parts[2];
+      const state = parts[3];
+
+      if (!sensorId || !["DETECTED", "CLEAR"].includes(state)) {
+        logger.warn(`Evento de sensor invalido: ${rawData}`);
+        return;
+      }
+
+      const active = state === "DETECTED";
+      await ferroviaService.updateSensor(sensorId, active);
+
+      io.to("dashboard").emit("sensor:update", {
+        sensorId,
+        active,
+        timestamp: Date.now(),
+      });
+
+      logger.info(`Sensor ${sensorId}: ${state}`);
+    }
+
+    // ── Status completo dos sensores (STATUS|SENSOR|<id>|<0|1>|<ts>) ──
+    if (rawData.startsWith("STATUS|SENSOR")) {
+      const sensorId = parts[2];
+      const active = parts[3] === "1";
+
+      if (!sensorId) {
+        logger.warn(`Status de sensor invalido: ${rawData}`);
+        return;
+      }
+
+      await ferroviaService.updateSensor(sensorId, active);
+
+      io.to("dashboard").emit("sensor:update", {
+        sensorId,
+        active,
+        timestamp: Date.now(),
+      });
+    }
+
+    // ── Semáforo (STATUS|GATE|<RED|YELLOW|GREEN>) ──
+    if (rawData.startsWith("STATUS|GATE")) {
+      const gateState = parts[2];
+
+      if (!["RED", "YELLOW", "GREEN"].includes(gateState)) {
+        logger.warn(`Estado do gate invalido: ${gateState}`);
+        return;
+      }
+
+      await ferroviaService.setSemaphore(gateState);
+
+      io.to("dashboard").emit("semaphore:update", {
+        state: gateState,
+        timestamp: Date.now(),
+      });
+
+      logger.info(`Semaforo: ${gateState}`);
+    }
+
     // ── Dados do Caminhão ──
     if (rawData.startsWith("ACK|TRUCK")) {
       const action = parts[2];

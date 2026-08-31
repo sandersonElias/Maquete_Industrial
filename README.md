@@ -1,20 +1,32 @@
 # Maquete Industrial - Sistema Integrado
 
-Sistema completo de monitoramento e controle para maquete industrial com 4 módulos: Ferrovia, Mineradora, Porto Logístico e Química.
+Sistema completo de monitoramento e controle para maquete industrial com 4 módulos temáticos: **Ferrovia (Ferrorama)**, **Mineradora**, **Porto Logístico** e **Química** — integrando web, mobile, Bluetooth e firmware Arduino em tempo real.
+
+![Node](https://img.shields.io/badge/Node.js-18%2B-339933.svg?logo=node.js)
+![React](https://img.shields.io/badge/React-18-61DAFB.svg)
+![Three.js](https://img.shields.io/badge/Three.js-0.185-000000.svg?logo=three.js)
+![Kotlin](https://img.shields.io/badge/Kotlin+Compose-1.9.22-7F52FF.svg?logo=kotlin)
+![Arduino](https://img.shields.io/badge/Arduino-UNO-00979D.svg?logo=arduino)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
 ## Arquitetura
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
 │  Dashboard  │◄───►│   Backend    │◄───►│   Gateway   │──► Arduino
-│  React/CRA  │  WS │  Express +   │  WS │  Node.js +  │   BT/Serial
-│  Tailwind   │     │  PostgreSQL  │     │  SerialPort │
+│  React/CRA  │  WS │  Express +   │  WS  │  Node.js +  │   BT/Serial
+│  Tailwind   │     │  PostgreSQL  │     │  SerialPort │   (modo simulação)
 └─────────────┘     │  + Redis     │     └─────────────┘
                     └──────────────┘
 
 ┌─────────────┐      Bluetooth
 │  App Kotlin │◄──────────────────► HC-05 (caminhão)
 │  (Android)  │
+└─────────────┘
+
+┌─────────────┐      REST/estático
+│ Site 3D     │◄──────────────────► Backend
+│ (Three.js)  │      (tour interativo Ferrorama 3D)
 └─────────────┘
 ```
 
@@ -37,14 +49,14 @@ maquete_industrial/
 │       └── seed.js              # Popula dados iniciais
 ├── dashboard_react/             # Dashboard React.js
 │   └── src/
-│       ├── pages/               # 6 páginas (Overview, Ferrovia, Mina, Porto, Química, Relatórios)
+│       ├── pages/               # 10+ páginas (Overview, Ferrovia, Mina, Porto, Química, Relatórios, Alertas, Admin...)
 │       ├── components/          # Sidebar, Header
 │       └── contexts/            # AuthContext, SocketContext
-├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi)
-├── app_kotlin/                  # App Android (Kotlin) - controle BT do caminhão
-├── site-ferrorama-3d/           # Site 3D da maquete (React + Three.js)
-├── firmware_arduino_ferrovia/   # Arduino - 3 servos SG90 + 7 sensores + semáforo + HC-05
-└── firmware_arduino_caminhao_basculante/  # Arduino - carrinho basculante RC
+├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi) — modo simulação p/ feira
+├── app_kotlin/                  # App Android "Maquete Truck" (Kotlin/Compose) - controle BT do caminhão
+├── site-ferrorama-3d/           # Site 3D da maquete (React 19 + Three.js/R3F) - tour cinematográfico + modo noturno
+├── firmware_arduino_ferrovia/   # Arduino v4.0 - 3 servos SG90 + 7 sensores + semáforo + HC-05
+└── firmware_arduino_caminhao_basculante/  # Arduino - carrinho basculante RC (direção + caçamba + LEDs)
 ```
 
 ## Início Rápido
@@ -252,11 +264,14 @@ Todas as rotas estão sob o prefixo `/api/`. Rotas autenticadas requerem header 
 | Camada       | Tecnologias                                                       |
 | ------------ | ----------------------------------------------------------------- |
 | Frontend Web | React 18, Tailwind CSS, Socket.IO Client, Recharts, Lucide Icons  |
-| Backend      | Node.js, Express, Socket.IO, PostgreSQL, Redis, JWT, bcryptjs     |
-| Gateway      | Node.js, SerialPort, Socket.IO Client, Winston                    |
-| Mobile       | Kotlin, Jetpack Compose, Material 3, Bluetooth RFCOMM          |
-| Hardware     | Arduino, Servos SG90, HC-05 Bluetooth, Motor DC                   |
+| Site 3D      | React 19, Three.js + React Three Fiber, drei, framer-motion, GSAP |
+| Backend      | Node.js, Express, Socket.IO, PostgreSQL + PostGIS, Redis, JWT, bcryptjs |
+| Gateway      | Node.js, SerialPort, Socket.IO Client, Winston (modo simulação)   |
+| Mobile       | Kotlin, Jetpack Compose, Material 3, Bluetooth RFCOMM             |
+| Hardware     | Arduino, Servos SG90, HC-05 Bluetooth, Motor DC L298M, Sensores HW-201 |
 | Testes       | Jest (backend) - 52 testes unitários                              |
+
+> 💡 O [Gateway Bluetooth](./gateway_bluetooth) possui **modo simulação** (`SIMULATION_MODE=true`) como plano B para exibições — permite desenvolver e demonstrar toda a stack sem hardware físico.
 
 ## Tema Visual
 
@@ -274,3 +289,23 @@ Paleta de cores (minimalista escuro):
 | Warning | `#F59E0B` | Alertas, bateria média           |
 | Danger  | `#EF4444` | Erros, bateria baixa, stop       |
 | Química | `#06B6D4` | Equipamentos químicos            |
+
+## Funcionalidades em Destaque
+
+- **Monitoramento e controle em tempo real** via Socket.IO (dashboard, gateway e app)
+- **Módulo Ferrovia (Ferrorama)**: 3 desvios com servos SG90, semáforo de cancela e 7 sensores infravermelho de localização da locomotiva
+- **Caminhão basculante 3D** (modelo impresso): controle Bluetooth de direção, caçamba, motor DC e iluminação (faróis, setas, pisca-alerta)
+- **App Android "Maquete Truck"**: joystick 2D com 9 zonas, gravação/reprodução de movimentos e botão de emergência
+- **Site 3D "Ferrorama 3D"**: experiência interativa com tour cinematográfico e modo noturno
+- **API REST com autenticação JWT** por função + telemetria e geração de relatórios (PDF/Excel/CSV)
+- **Docker Compose** da stack completa + runbook para o dia da feira
+
+## Licença
+
+Distribuído sob a [licença MIT](./LICENSE).
+
+## Autor
+
+**Sanderson André Elias**
+- GitHub: [@sandersonElias](https://github.com/sandersonElias)
+- LinkedIn: [in/sandersonelias](https://www.linkedin.com/in/sandersonelias)

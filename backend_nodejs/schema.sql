@@ -147,9 +147,9 @@ CREATE INDEX IF NOT EXISTS idx_alerts_module ON alerts(module, severity, created
 
 -- Dados iniciais
 INSERT INTO switches (switch_id, name, current_angle, current_state) VALUES
-(1, 'Desvio Norte', 90, 'CENTER'),
-(2, 'Desvio Leste', 90, 'CENTER'),
-(3, 'Desvio Sul', 90, 'CENTER')
+(1, 'Desvio Superior', 90, 'CENTER'),
+(2, 'Desvio Central', 90, 'CENTER'),
+(3, 'Desvio Direito', 90, 'CENTER')
 ON CONFLICT (switch_id) DO NOTHING;
 
 INSERT INTO trucks (id, name, origin_x, origin_y, max_load) VALUES
@@ -159,6 +159,43 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO ships (id, name, cargo_type, cargo_weight, eta, dock_number) VALUES
 ('SHIP-001', 'Navio Cargueiro Alpha', 'Minério de Ferro', 15000, NOW() + INTERVAL '2 hours', 1)
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+--  Tabelas de Sensores e Semáforo (Ferrovia)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS sensors (
+    id SERIAL PRIMARY KEY,
+    sensor_id VARCHAR(5) UNIQUE NOT NULL, -- S1, S2, ..., S7
+    name VARCHAR(50) NOT NULL,
+    location VARCHAR(50) NOT NULL, -- reta_superior, reta_inferior, via_secundaria
+    active BOOLEAN DEFAULT FALSE,
+    triggered_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ferrovia_semaphore (
+    id SERIAL PRIMARY KEY,
+    state VARCHAR(10) DEFAULT 'RED' CHECK (state IN ('RED', 'YELLOW', 'GREEN')),
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_sensors_active ON sensors(sensor_id);
+
+-- Sensores iniciais (7 sensores HW-201)
+INSERT INTO sensors (sensor_id, name, location) VALUES
+('S1', 'Sensor Entrada Superior', 'reta_superior'),
+('S2', 'Sensor Meio Superior', 'reta_superior'),
+('S3', 'Sensor Curva Direita', 'reta_superior'),
+('S4', 'Sensor Saída SW3', 'reta_inferior'),
+('S5', 'Sensor Via Secundária', 'via_secundaria'),
+('S6', 'Sensor Antes Estação', 'reta_inferior'),
+('S7', 'Sensor Chegada Estação', 'reta_inferior')
+ON CONFLICT (sensor_id) DO NOTHING;
+
+-- Semáforo inicial
+INSERT INTO ferrovia_semaphore (state) VALUES ('RED')
+ON CONFLICT DO NOTHING;
 
 -- ============================================================
 --  Tabelas de Química

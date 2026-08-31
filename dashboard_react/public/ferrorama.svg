@@ -1,90 +1,137 @@
-<svg width="533" height="177" viewBox="0 0 533 177" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="800" height="500" viewBox="0 0 800 500" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Caminho da animação da locomotiva (baseado no layout original) -->
-    <path id="trainPath" d="
-      M 114 16 
-      L 266 16 
-      L 300 16 
-      L 398 16 
-      C 412 16, 425 20, 435 33 
-      L 443 45 
-      L 478 45 
-      C 485 44, 492 45, 498 48 
-      C 505 51, 511 56, 516 62 
-      C 521 68, 525 76, 528 84 
-      C 530 92, 532 101, 532 110 
-      C 532 119, 531 128, 528 136 
-      C 526 144, 522 152, 517 158 
-      C 512 164, 506 169, 500 172 
-      C 494 175, 487 177, 480 176 
-      L 269 175 
-      L 240 148 
-      L 230 148 
-      L 53 148 
-      L 230 140 
-      L 247 145 
-      L 297 140 
-      L 241 88 
-      L 303 140 
-      L 314 145 
-      L 400 145 
-      L 314 148 
-      L 297 148 
-      L 247 148 
-      L 241 148 
-      L 269 174 
-      L 482 174 
-      C 488 175, 494 173, 500 170 
-      C 506 167, 511 163, 516 157 
-      C 521 151, 525 143, 527 135 
-      C 529 127, 531 119, 531 110 
-      C 531 101, 529 93, 526 85 
-      C 524 77, 520 69, 515 64 
-      C 510 58, 504 53, 498 50 
-      C 492 47, 485 46, 478 47 
-      L 444 46 
-      C 445 49, 447 52, 448 55 
-      C 450 63, 452 72, 452 81 
-      C 452 90, 451 98, 448 107 
-      C 446 115, 442 122, 437 128 
-      C 432 135, 426 139, 420 142 
-      C 414 146, 407 147, 400 147 
-      L 314 147 
-      L 135 46 
-      L 106 20 
-      L 97 17 
-      L 53 17 
-      L 97 12 
-      L 114 16 
-    " fill="none" stroke="none"/>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-strong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
 
-  <!-- SVG ORIGINAL DO FERRORAMA -->
-  <path d="M114 16.3467H266V11.8467H300V16.3467H398.205L398.192 16.1348C404.982 15.5277 411.807 16.74 418.249 19.6973C424.691 22.6546 430.615 27.294 435.656 33.332C438.652 36.9195 441.298 40.9558 443.544 45.3467H478.235L478.203 44.8057C484.992 44.1945 491.817 45.4172 498.26 48.3994C504.702 51.3817 510.627 56.0603 515.669 62.1484C520.711 68.2366 524.766 75.6059 527.584 83.8047C530.402 92.0035 531.924 100.859 532.057 109.828C532.19 118.797 530.931 127.691 528.357 135.964C525.783 144.237 521.948 151.715 517.088 157.939C512.228 164.164 506.444 169.005 500.093 172.163C493.741 175.322 486.955 176.732 480.15 176.309L480.178 175.346L269 175.308V174.847L268.658 175.212L239.406 147.847H230V146.347H53.0001V145.347H230V139.847H247V145.347H297V139.847H301.194L240.676 88.2275L241.324 87.4658L302.736 139.847H314V145.347H400V146.347H314V147.847H297V146.347H247V147.847H240.87L269.155 174.308L482 174.347V174.446C488.001 174.528 493.957 173.144 499.565 170.355C505.73 167.29 511.343 162.592 516.061 156.55C520.778 150.508 524.501 143.248 526.999 135.218C529.498 127.187 530.72 118.555 530.591 109.849C530.462 101.143 528.984 92.5463 526.249 84.5879C523.514 76.6295 519.578 69.4761 514.684 63.5664C509.789 57.6568 504.039 53.1155 497.785 50.2207C491.532 47.3259 484.907 46.1383 478.316 46.7314L478.294 46.3467H444.044C445.372 49.0471 446.55 51.8755 447.567 54.8115C450.384 62.9435 451.906 71.7276 452.037 80.624C452.169 89.5203 450.908 98.3425 448.333 106.549C445.758 114.755 441.923 122.173 437.063 128.348C432.202 134.523 426.417 139.324 420.066 142.458C413.714 145.592 406.927 146.992 400.122 146.572L400.179 144.659C406.784 145.066 413.372 143.708 419.537 140.666C425.703 137.624 431.317 132.963 436.035 126.969C440.754 120.975 444.477 113.774 446.977 105.809C449.476 97.8428 450.699 89.2791 450.571 80.6436C450.444 72.0082 448.968 63.4823 446.233 55.5889C445.117 52.3651 443.8 49.2744 442.299 46.3467H135V45.8467L134.658 46.2119L106.476 19.8467H97.0001V17.3467H53.0001V16.3467H97.0001V11.8467H114V16.3467Z" fill="#D9D9D9"/>
+  <!-- Fundo -->
+  <rect width="800" height="500" fill="#0a0e14"/>
 
   <!-- ============================================ -->
-  <!-- LOCOMOTIVA ANIMADA (por cima do SVG original) -->
+  <!-- TRILHOS - Linhas do circuito -->
   <!-- ============================================ -->
-  
-  <g>
-    <animateMotion
-      dur="30s"
-      repeatCount="indefinite"
-      rotate="auto"
-    >
-      <mpath href="#trainPath"/>
-    </animateMotion>
-    
-    <!-- Corpo da locomotiva -->
-    <rect x="-10" y="-5" width="20" height="10" rx="2" fill="#D97706"/>
-    
-    <!-- Farol piscando -->
-    <circle cx="8" cy="0" r="2" fill="#FCD34D">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite"/>
-    </circle>
-    
-    <!-- Rodas -->
-    <circle cx="-5" cy="6" r="2" fill="#1a1510" stroke="#5a5550" stroke-width="0.5"/>
-    <circle cx="5" cy="6" r="2" fill="#1a1510" stroke="#5a5550" stroke-width="0.5"/>
-  </g>
+
+  <!-- Reta superior: esquerda → SW1 → S2 → S3 -->
+  <path d="M 120 80 L 240 80" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 280 80 L 440 80" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 480 80 L 650 80" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Curva direita superior → inferior -->
+  <path d="M 650 80 C 720 80, 740 140, 740 200 C 740 260, 720 320, 650 380" stroke="#3a4050" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- Reta inferior: S4 → SW3 → SW2 → S6 → Estação → S7 -->
+  <path d="M 650 380 L 520 380" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 480 380 L 420 380" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 380 380 L 330 380" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 290 380 L 240 380" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 160 380 L 120 380" stroke="#3a4050" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Curva esquerda inferior → superior -->
+  <path d="M 120 380 C 50 380, 50 320, 50 260 C 50 200, 50 140, 120 80" stroke="#3a4050" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- ============================================ -->
+  <!-- RAMAIS E CROSSOVER -->
+  <!-- ============================================ -->
+
+  <!-- Crossover: SW1 → SW3 (diagonal) -->
+  <path d="M 260 80 L 500 380" stroke="#3a4050" stroke-width="3" stroke-dasharray="8,4" stroke-linecap="round"/>
+
+  <!-- Ramal de SW2: via secundária com S5 -->
+  <path d="M 400 380 L 450 450 L 600 450 L 650 380" stroke="#3a4050" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- ============================================ -->
+  <!-- SENSORES (S1-S7) - Retângulos azuis -->
+  <!-- ============================================ -->
+
+  <!-- S1 - Reta superior, antes de SW1 -->
+  <rect x="170" y="65" width="20" height="14" rx="3" fill="#2563eb" filter="url(#glow)"/>
+  <text x="180" y="60" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold">S1</text>
+
+  <!-- S2 - Reta superior, entre SW1 e S3 -->
+  <rect x="440" y="65" width="20" height="14" rx="3" fill="#2563eb" filter="url(#glow)"/>
+  <text x="450" y="60" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold">S2</text>
+
+  <!-- S3 - Reta superior, antes da curva direita -->
+  <rect x="620" y="65" width="20" height="14" rx="3" fill="#2563eb" filter="url(#glow)"/>
+  <text x="630" y="60" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold">S3</text>
+
+  <!-- S4 - Reta inferior, após SW3 -->
+  <rect x="560" y="365" width="20" height="14" rx="3" fill="#2563eb" filter="url(#glow)"/>
+  <text x="570" y="360" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold">S4</text>
+
+  <!-- S5 - Via secundária (ramal de SW2) -->
+  <rect x="500" y="435" width="20" height="14" rx="3" fill="#2563eb" filter="url(#glow)"/>
+  <text x="510" y="430" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold">S5</text>
+
+  <!-- S6 - Reta inferior, entre SW2 e Estação -->
+  <rect x="310" y="365" width="20" height="14" rx="3" fill="#2563eb" filter="url(#glow)"/>
+  <text x="320" y="360" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold">S6</text>
+
+  <!-- S7 - Reta inferior, antes da Estação -->
+  <rect x="170" y="365" width="20" height="14" rx="3" fill="#2563eb" filter="url(#glow)"/>
+  <text x="180" y="360" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold">S7</text>
+
+  <!-- ============================================ -->
+  <!-- ESTAÇÃO / PLATAFORMA -->
+  <!-- ============================================ -->
+  <rect x="200" y="368" width="40" height="22" rx="4" fill="#d97706" stroke="#f59e0b" stroke-width="2"/>
+  <text x="220" y="383" text-anchor="middle" fill="#fef3c7" font-family="monospace" font-size="8" font-weight="bold">EST</text>
+
+  <!-- ============================================ -->
+  <!-- SEMÁFORO / CANCELA -->
+  <!-- ============================================ -->
+  <circle cx="220" cy="420" r="8" fill="#dc2626" filter="url(#glow-strong)"/>
+  <text x="220" y="445" text-anchor="middle" fill="#fca5a5" font-family="monospace" font-size="9">SEMAF</text>
+
+  <!-- ============================================ -->
+  <!-- SWITCHES (SW1, SW2, SW3) - Blocos cinza -->
+  <!-- ============================================ -->
+
+  <!-- SW1 - Reta superior -->
+  <rect x="240" y="68" width="40" height="22" rx="4" fill="#374151" stroke="#6b7280" stroke-width="2"/>
+  <text x="260" y="83" text-anchor="middle" fill="#d1d5db" font-family="monospace" font-size="10" font-weight="bold">SW1</text>
+
+  <!-- SW2 - Reta inferior, centro -->
+  <rect x="380" y="368" width="40" height="22" rx="4" fill="#374151" stroke="#6b7280" stroke-width="2"/>
+  <text x="400" y="383" text-anchor="middle" fill="#d1d5db" font-family="monospace" font-size="10" font-weight="bold">SW2</text>
+
+  <!-- SW3 - Reta inferior, direita -->
+  <rect x="480" y="368" width="40" height="22" rx="4" fill="#374151" stroke="#6b7280" stroke-width="2"/>
+  <text x="500" y="383" text-anchor="middle" fill="#d1d5db" font-family="monospace" font-size="10" font-weight="bold">SW3</text>
+
+  <!-- ============================================ -->
+  <!-- TÍTULO E LEGENDA -->
+  <!-- ============================================ -->
+  <text x="400" y="25" text-anchor="middle" fill="#9ca3af" font-family="monospace" font-size="12" font-weight="bold">DIAGRAMA DE TRILHOS — MAQUETE INDUSTRIAL</text>
+
+  <!-- Legenda -->
+  <rect x="20" y="460" width="12" height="8" rx="2" fill="#3a4050"/>
+  <text x="38" y="468" fill="#6b7280" font-family="monospace" font-size="9">Trilho</text>
+
+  <rect x="100" y="460" width="12" height="8" rx="2" fill="#2563eb"/>
+  <text x="118" y="468" fill="#6b7280" font-family="monospace" font-size="9">Sensor</text>
+
+  <rect x="180" y="460" width="12" height="8" rx="2" fill="#374151" stroke="#6b7280" stroke-width="1"/>
+  <text x="198" y="468" fill="#6b7280" font-family="monospace" font-size="9">Desvio</text>
+
+  <rect x="260" y="460" width="12" height="8" rx="2" fill="#d97706"/>
+  <text x="278" y="468" fill="#6b7280" font-family="monospace" font-size="9">Estação</text>
+
+  <circle cx="356" cy="464" r="5" fill="#dc2626"/>
+  <text x="368" y="468" fill="#6b7280" font-family="monospace" font-size="9">Semáforo</text>
+
+  <line x1="430" y1="464" x2="450" y2="464" stroke="#3a4050" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="456" y="468" fill="#6b7280" font-family="monospace" font-size="9">Crossover</text>
 </svg>

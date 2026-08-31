@@ -13,7 +13,6 @@
 backend_nodejs/.env
 gateway_bluetooth/.env
 dashboard_react/.env
-app_react_native/.env
 
 # Docker volumes
 postgres_data/
