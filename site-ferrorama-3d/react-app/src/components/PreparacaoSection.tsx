@@ -152,7 +152,7 @@ export default function PreparacaoSection() {
               scrollToSection('montagem');
             }}
           >
-            ver os componentes da montagem
+            Ver os componentes da montagem
           </a>
         </motion.p>
       </div>

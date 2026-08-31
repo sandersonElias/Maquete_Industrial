@@ -4,6 +4,7 @@ import { scrollToSection } from '../lib/scroll';
 const FOOTER_LINKS = [
   { id: 'inicio', label: 'Início' },
   { id: 'maquete', label: 'Maquete' },
+  { id: 'preparacao', label: 'Preparação' },
   { id: 'montagem', label: 'Montagem' },
   { id: 'codigo', label: 'Automação' },
   { id: 'mina', label: 'Mina' },

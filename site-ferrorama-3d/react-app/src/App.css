@@ -4756,6 +4756,7 @@ body::after {
 /* Seções: pouso limpo sob a navbar */
 #inicio,
 #maquete,
+#preparacao,
 #montagem,
 #codigo,
 #porto,
@@ -7476,6 +7477,7 @@ body::after {
 
 /* —— Performance: menos trabalho no scroll e no paint —— */
 #maquete,
+#preparacao,
 #montagem,
 #codigo,
 #mina,

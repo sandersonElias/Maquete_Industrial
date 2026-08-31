@@ -32,6 +32,7 @@ const fadeUp = {
 
 const SECTION_JUMPS = [
   { id: 'maquete', label: 'Maquete' },
+  { id: 'preparacao', label: 'Preparação' },
   { id: 'montagem', label: 'Montagem' },
   { id: 'codigo', label: 'Automação' },
   { id: 'mina', label: 'Mina' },
