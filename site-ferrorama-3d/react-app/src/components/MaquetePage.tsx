@@ -2,6 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 
 const Maquete3D = lazy(() => import('./maquete3d/Maquete3D'));
 
+// A chave mantem o prefixo antigo de proposito: trocar por 'maquete-...' faria
+// o aviso de virar o celular reaparecer para quem ja o dispensou.
 const DISMISS_KEY = 'ferrorama-maquete-vire-ok';
 
 function podeTravarPaisagem() {
@@ -52,7 +54,7 @@ export default function MaquetePage() {
         <a className="maquete-page__voltar" href="/">
           Voltar ao site
         </a>
-        <span className="maquete-page__titulo">Ferrorama · Maquete 3D</span>
+        <span className="maquete-page__titulo">Maquete Industrial · 3D</span>
       </header>
 
       {mostrarAviso && (

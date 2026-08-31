@@ -26,7 +26,7 @@ export default function Loader() {
           className="loader"
           role="status"
           aria-live="polite"
-          aria-label="Carregando Ferrorama"
+          aria-label="Carregando a Maquete Industrial"
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45, ease: EASE_OUT_EXPO }}
         >

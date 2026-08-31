@@ -134,7 +134,7 @@ export default function MaqueteSection() {
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>
           <p className="shell-block__lead">
-            O Ferrorama simula a cadeia do minério de ferro e carvão — da mina ao porto —
+            A maquete simula a cadeia do minério de ferro e carvão — da mina ao porto —
             com modelismo ferroviário, impressão 3D e Arduino.
           </p>
           <ul className="shell-facts">

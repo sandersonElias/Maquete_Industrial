@@ -72,7 +72,7 @@ export function Pedestal() {
   );
 }
 
-/** Letreiro "FERRORAMA" desenhado em canvas — sem baixar fonte nem imagem. */
+/** Letreiro do projeto desenhado em canvas — sem baixar fonte nem imagem. */
 function useTexturaLetreiro() {
   return useMemo(() => {
     const c = document.createElement('canvas');
@@ -81,16 +81,27 @@ function useTexturaLetreiro() {
     const ctx = c.getContext('2d')!;
     ctx.clearRect(0, 0, c.width, c.height);
 
-    ctx.font = 'bold 112px Archivo, Inter, sans-serif';
+    const texto = 'MAQUETE INDUSTRIAL';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    // A fonte se ajusta ao texto em vez de ser fixa: 'MAQUETE INDUSTRIAL' tem o
+    // dobro das letras do nome antigo e, com os 112px de antes, transbordava a
+    // textura pelas duas pontas. Mede-se uma vez e encolhe o corpo se precisar.
+    const largura = c.width * 0.9;
+    let corpo = 112;
+    ctx.font = `bold ${corpo}px Archivo, Inter, sans-serif`;
+    const medida = ctx.measureText(texto).width;
+    if (medida > largura) {
+      corpo = Math.floor(corpo * (largura / medida));
+      ctx.font = `bold ${corpo}px Archivo, Inter, sans-serif`;
+    }
     // Halo azul em volta das letras, como letreiro de acrílico iluminado
     ctx.shadowColor = PALETA.accent;
     ctx.shadowBlur = 34;
     ctx.fillStyle = '#eaf4ff';
-    ctx.fillText('FERRORAMA', c.width / 2, c.height / 2);
+    ctx.fillText(texto, c.width / 2, c.height / 2);
     ctx.shadowBlur = 0;
-    ctx.fillText('FERRORAMA', c.width / 2, c.height / 2);
+    ctx.fillText(texto, c.width / 2, c.height / 2);
 
     const t = new THREE.CanvasTexture(c);
     t.anisotropy = 4;

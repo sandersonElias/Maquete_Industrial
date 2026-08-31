@@ -1,5 +1,5 @@
 /* ============================================
-   FERRORAMA 3D - STYLES
+   MAQUETE INDUSTRIAL 3D - STYLES
    Dark/Tech Theme with Neon Effects
    ============================================ */
 
@@ -305,7 +305,7 @@ html { scroll-behavior: auto; }
 .nav-title {
   display: inline-flex;
   align-items: center;
-  gap: 0;
+  gap: 0.32em;
   font-family: var(--font-display-expanded);
   font-weight: 800;
   font-size: 1rem;
@@ -3779,6 +3779,19 @@ section[id]:focus {
     height: 28px;
   }
 }
+/* Janela baixa (celular deitado, desktop redimensionado): o indicador de
+   rolagem e a primeira coisa a sair, porque ele disputa o rodape com os botoes
+   principais e e o unico elemento do hero que nao carrega informacao. */
+@media (max-height: 620px) {
+  .scroll-indicator {
+    display: none;
+  }
+
+  .hero-section--cinematic {
+    padding-bottom: calc(1.5rem + var(--safe-bottom));
+  }
+}
+
 /* ============================================
    MOVIMENTO REDUZIDO — complementos
    ============================================ */
@@ -4587,9 +4600,19 @@ body::after {
 }
 
 /* —— Hero cinematográfico —— */
+/* O indicador de rolagem e `position: absolute` no rodape do hero, entao ele
+   nao ocupa espaco no fluxo: sem reservar essa faixa, o conteudo centralizado
+   cresce por baixo dele e a seta cai em cima do botao "Abrir maquete em tela
+   cheia". A medida e a altura real do indicador — 0,75rem de padding em cima e
+   embaixo, o texto, o gap de 0,75rem e a seta de 30px — mais o afastamento do
+   rodape. */
+:root {
+  --hero-scroll-space: 7.25rem;
+}
+
 .hero-section--cinematic {
   min-height: 100svh;
-  padding: var(--nav-offset) max(clamp(1.25rem, 4vw, 2.5rem), var(--safe-right)) var(--safe-bottom) max(clamp(1.25rem, 4vw, 2.5rem), var(--safe-left));
+  padding: var(--nav-offset) max(clamp(1.25rem, 4vw, 2.5rem), var(--safe-right)) calc(var(--hero-scroll-space) + var(--safe-bottom)) max(clamp(1.25rem, 4vw, 2.5rem), var(--safe-left));
   isolation: isolate;
 }
 
@@ -5139,7 +5162,12 @@ body::after {
   }
 
   .nav-title {
-    font-size: 0.92rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    line-height: 1.02;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
   }
 
   .nav-links {
@@ -5577,7 +5605,7 @@ body::after {
   height: 100%;
   object-fit: contain;
   display: block;
-  /* PNG escuro → cobre Ferrorama */
+  /* PNG escuro → cobre a marca */
   filter:
     brightness(0) saturate(100%)
     invert(62%) sepia(68%) saturate(1800%) hue-rotate(340deg) brightness(1.08);
@@ -6804,7 +6832,7 @@ body::after {
     padding:
       calc(var(--nav-offset) + 0.75rem)
       max(1rem, var(--safe-right))
-      calc(3.25rem + var(--safe-bottom))
+      calc(var(--hero-scroll-space) + var(--safe-bottom))
       max(1rem, var(--safe-left));
     align-items: center;
     justify-content: center;
@@ -6899,7 +6927,12 @@ body::after {
   }
 
   .nav-title {
-    font-size: 0.95rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    line-height: 1.02;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
   }
 
   .nav-brand-mark {
@@ -7101,6 +7134,12 @@ body::after {
     padding-top: calc(var(--nav-offset) + 0.75rem);
     padding-bottom: calc(1.5rem + var(--safe-bottom));
     align-items: center;
+  }
+
+  /* Em paisagem sobram ~350px de altura: o indicador nao cabe e ficava em cima
+     dos botoes. Quem virou o aparelho ja sabe que a pagina rola. */
+  .hero-section--cinematic .scroll-indicator {
+    display: none;
   }
 
   .maquete3d-palco,

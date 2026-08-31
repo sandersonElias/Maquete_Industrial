@@ -131,7 +131,7 @@ function HeroShell({
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
-          Ferrorama
+          Maquete Industrial
         </motion.p>
 
         <h1 className="hero-title">
@@ -154,7 +154,7 @@ function HeroShell({
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
-          Mina, trilhos e porto — automação Arduino em escala HO. O QR da feira abre a maquete em tela cheia.
+          Mina a céu aberto, ferrovia e porto — automação Arduino em escala HO. O QR da feira abre a maquete em tela cheia.
         </motion.p>
 
         <motion.div

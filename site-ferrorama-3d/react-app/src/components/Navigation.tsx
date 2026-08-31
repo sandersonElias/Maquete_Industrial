@@ -111,7 +111,7 @@ export default function Navigation() {
             className="nav-brand"
             href="#inicio"
             onClick={(e) => handleNavClick(e, 'inicio')}
-            aria-label="Ferrorama — voltar ao início"
+            aria-label="Maquete Industrial — voltar ao início"
           >
             <span className="nav-brand-mark" aria-hidden="true">
               <img
@@ -125,8 +125,8 @@ export default function Navigation() {
             </span>
             <span className="nav-brand-text">
               <span className="nav-title">
-                <span className="nav-title-part">Ferr</span>
-                <span className="nav-title-part">rama</span>
+                <span className="nav-title-part">Maquete</span>
+                <span className="nav-title-part">Industrial</span>
               </span>
               <span className="nav-tagline">Da mina ao porto</span>
             </span>

@@ -19,7 +19,7 @@ export default function Footer() {
   return (
     <footer className="site-footer" ref={ref}>
       <div className="site-footer__inner">
-        <p className="site-footer__brand">Ferrorama</p>
+        <p className="site-footer__brand">Maquete Industrial</p>
         <p className="site-footer__tag">Terceirão · Feira de ciências · 2026</p>
 
         <a
@@ -27,7 +27,7 @@ export default function Footer() {
           href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Instagram do projeto Ferrorama (@projeto3sis2)"
+          aria-label="Instagram do projeto Maquete Industrial (@projeto3sis2)"
         >
           <svg
             className="site-footer__instagram-icon"
@@ -81,7 +81,7 @@ export default function Footer() {
         </nav>
 
         <p className="site-footer__copy">
-          © 2026 Ferrorama
+          © 2026 Maquete Industrial
           <span className="site-footer__sep" aria-hidden="true">·</span>
           Three.js, Arduino, React
         </p>
