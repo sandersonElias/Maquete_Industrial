@@ -40,7 +40,7 @@ const cards: Array<{
     image: '/images/escavadeira-mini-dig.jpg',
     alt: 'Escavadeira Mini Dig laranja e preta impressa em 3D',
     title: 'Escavadeira',
-    text: 'Mini Dig na boca da mina: esteiras, braço articulado e caçamba, o primeiro elo da extração na maquete.',
+    text: 'Mini Dig na boca da mina: esteiras, braço articulado e caçamba, e é o primeiro elo da extração na maquete.',
     tag: 'Mina',
   },
   {

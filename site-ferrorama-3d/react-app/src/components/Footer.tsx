@@ -62,6 +62,10 @@ export default function Footer() {
             <span className="site-footer__credit-name">Sanderson</span>
             <span className="site-footer__credit-role">App e sistemas</span>
           </li>
+          <li>
+            <span className="site-footer__credit-name">Davi</span>
+            <span className="site-footer__credit-role">Performance web</span>
+          </li>
         </ul>
 
         <nav className="site-footer__nav" aria-label="Rodapé">

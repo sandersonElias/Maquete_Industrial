@@ -7086,6 +7086,19 @@ body::after {
       calc(1.25rem + var(--safe-bottom))
       max(1.15rem, var(--safe-left)) !important;
   }
+
+  .site-footer__credits {
+    gap: 0.65rem 0.85rem;
+  }
+
+  .site-footer__credits li {
+    min-width: 5.25rem;
+  }
+
+  .site-footer__nav a {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.2rem;
+  }
 }
 
 @media (max-width: 480px) {

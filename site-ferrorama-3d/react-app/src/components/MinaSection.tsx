@@ -18,7 +18,7 @@ const strata = [
   {
     depth: '−2',
     title: 'Até o trem',
-    text: 'Extração → caminhão → trilhos HO → porto (único destino de exportação).',
+    text: 'Extração, caminhão, trilhos HO e porto (único destino de exportação).',
     accent: 'trilhos',
   },
 ];

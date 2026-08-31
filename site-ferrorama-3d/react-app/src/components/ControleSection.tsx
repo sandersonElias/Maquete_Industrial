@@ -53,7 +53,7 @@ const modes = [
   {
     id: 'auto',
     title: 'Automático',
-    blurb: 'Sequência mina → trem → exportação sem intervenção.',
+    blurb: 'Sequência mina, trem e exportação sem intervenção.',
   },
   {
     id: 'e-stop',
@@ -124,7 +124,7 @@ export default function ControleSection() {
           <div className="scada-banner__copy">
             <p className="scada-banner__eyebrow">LINHA AO VIVO</p>
             <p className="scada-banner__line">
-              Arduino → Gateway → Backend → Dashboard / App
+              Arduino, Gateway, Backend, Dashboard e App
             </p>
             <p className="scada-banner__sub">
               O mesmo pulso que move o trem aparece no painel em milissegundos.

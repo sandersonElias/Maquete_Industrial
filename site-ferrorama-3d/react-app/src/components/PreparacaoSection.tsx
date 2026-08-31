@@ -102,7 +102,7 @@ export default function PreparacaoSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             Três registros de sala de aula, da mesa forrada de papel kraft até o circuito rodando
-            do jeito que é hoje
+            do jeito que é hoje.
           </motion.p>
         </div>
 

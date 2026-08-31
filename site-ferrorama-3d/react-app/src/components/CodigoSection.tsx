@@ -106,7 +106,7 @@ export default function CodigoSection() {
               {'  }\n}'}
             </code></pre>
             <p className="lab-bench__hint">
-              Uma letra no ar → um ângulo no servo. Protocolo mínimo, efeito máximo na escala HO.
+              Uma letra no ar vira um ângulo no servo. Protocolo mínimo, efeito máximo na escala HO.
             </p>
           </div>
         </motion.div>

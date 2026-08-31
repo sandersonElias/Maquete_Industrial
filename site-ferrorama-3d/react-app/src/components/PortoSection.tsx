@@ -102,7 +102,7 @@ const hubs = [
   },
   {
     label: 'EFVM',
-    text: 'Ferrovia Vitória–Minas: mina no interior → litoral. Inspira o circuito HO.',
+    text: 'Ferrovia Vitória–Minas: mina no interior até o litoral. Inspira o circuito HO.',
   },
   {
     label: 'Exportação',

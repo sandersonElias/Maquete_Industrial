@@ -91,7 +91,7 @@ function Placeholder({
 const objectives = [
   {
     label: 'Objetivo',
-    text: 'Mostrar a cadeia mina → caminhão → trem → porto, do poço ao navio.',
+    text: 'Mostrar a cadeia mina, caminhão, trem e porto, do poço ao navio.',
   },
   {
     label: 'Aprendizado',
@@ -188,7 +188,7 @@ export default function MaqueteSection() {
               <summary>É possível controlar cada parte separadamente?</summary>
               <p>
                 Sim. A central possui modo manual (cada subsistema independente) e modo automático
-                (sequência completa mina → caminhões → trem → porto).
+                (sequência completa mina, caminhões, trem e porto).
               </p>
             </details>
             <details className="maquete-accordion-item">
