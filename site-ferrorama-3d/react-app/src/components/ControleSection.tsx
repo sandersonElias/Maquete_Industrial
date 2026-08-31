@@ -76,7 +76,7 @@ export default function ControleSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            06
+            07
           </motion.span>
           <motion.h2
             className="section-title"
@@ -92,9 +92,19 @@ export default function ControleSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Console SCADA da maquete — quatro monitores, um comando
+            Sala SCADA — quatro monitores (Volvo, CAT, MRS, navio) e o stack da operação
           </motion.p>
         </div>
+
+        <motion.p
+          className="scada-pov-note"
+          initial={{ opacity: 0, y: 16 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.25 }}
+        >
+          Na mesa da maquete: monitores ao vivo da escavadeira, do caminhão, do trem MRS e do
+          navio graneleiro. Na feira, o visitante escolhe a visão — o hub é a sala de controle.
+        </motion.p>
 
         {/* Banner de console */}
         <motion.div

@@ -113,8 +113,11 @@ def make_palette():
             g(TEX, "mud_nor.jpg"),
             g(TEX, "mud_rough.jpg"),
             uv=4.5,
-            tint=(0.28, 0.18, 0.1),
-            tint_fac=0.25,
+            # Fase 12 — laterita. Nas duas fotos de referencia nao existe cinza
+            # no terreno: pista e berma sao terra vermelha, mais escura e mais
+            # saturada que a rocha exposta.
+            tint=(0.56, 0.35, 0.2),
+            tint_fac=0.45,
         ),
         "rock": pbr(
             "Rocha",
@@ -122,8 +125,10 @@ def make_palette():
             g(TEX, "rock_nor.jpg"),
             g(TEX, "rock_rough.jpg"),
             uv=3.8,
-            tint=(0.32, 0.26, 0.2),
-            tint_fac=0.2,
+            # Fase 12 — ocre. A rocha era cinza-neutra; na foto da cava a
+            # bancada e ocre clara, e e essa cor que domina a imagem inteira.
+            tint=(0.79, 0.64, 0.36),
+            tint_fac=0.5,
         ),
         "asph": pbr("Asfalto", g(TEX, "asphalt_diff.jpg"), g(TEX, "asphalt_nor.jpg"), g(TEX, "asphalt_rough.jpg"), uv=5.0),
         "conc": pbr("Concreto", g(TEX, "concrete_diff.jpg"), g(TEX, "concrete_nor.jpg"), g(TEX, "concrete_rough.jpg"), uv=3.4),
@@ -141,17 +146,38 @@ def make_palette():
         "rail": pbr("Trilho", color=(0.42, 0.44, 0.48), rough=0.28, metal=0.88, uv=1),
         "mrs_b": pbr("MRS_Azul", color=(0.04, 0.12, 0.38), rough=0.28, metal=0.35),
         "mrs_y": pbr("MRS_Amarelo", color=(0.95, 0.78, 0.04), rough=0.32, metal=0.15),
-        "ore": pbr("Minerio", g(TEX, "mud_diff.jpg"), g(TEX, "mud_nor.jpg"), None, color=(0.28, 0.14, 0.08), rough=1, uv=8),
+        # Fase 12 — minerio de ferro e vermelho-arroxeado, nao marrom.
+        "ore": pbr("Minerio", g(TEX, "mud_diff.jpg"), g(TEX, "mud_nor.jpg"), None, color=(0.43, 0.18, 0.13), rough=1, uv=8),
         "coal": pbr("Carvao", g(TEX, "rock_diff.jpg"), g(TEX, "rock_nor.jpg"), None, color=(0.06, 0.05, 0.05), rough=0.95, uv=10, tint=(0.04, 0.04, 0.04), tint_fac=0.7),
         "volvo": pbr("Volvo", color=(0.95, 0.78, 0.04), rough=0.35, metal=0.18),
         "cat": pbr("CAT", color=(0.95, 0.62, 0.0), rough=0.38, metal=0.16),
         "black": pbr("Preto", color=(0.05, 0.05, 0.06), rough=0.45, metal=0.4),
         "glass": pbr("Vidro", color=(0.55, 0.78, 0.92), rough=0.06, metal=0.12),
         "white": pbr("Branco", color=(0.86, 0.84, 0.8), rough=0.48, metal=0.08),
-        "ship": pbr("Navio", color=(0.12, 0.38, 0.55), rough=0.28, metal=0.35),
-        "water": pbr("Agua", color=(0.08, 0.32, 0.42), rough=0.06, metal=0.25),
-        "leaf": pbr("Copa", color=(0.08, 0.24, 0.07), rough=0.95),
+        "ship": pbr("Navio", color=(0.11, 0.29, 0.23), rough=0.42, metal=0.3),
+        # Agua de doca: azul acinzentado sujo, e rugosidade acima da de
+        # espelho — a ondulacao da malha faz o resto (ver harbour.py).
+        "water": pbr("Agua", color=(0.17, 0.25, 0.32), rough=0.14, metal=0.3),
+        # Fase 15 — quatro tons de copa, do lima ao escuro azulado. A foto de
+        # referencia mostra que o tom nao acompanha a especie: ha conifera
+        # clara e folhosa escura, e e essa mistura que tira a cara de script.
+        "leaf_lima": pbr("CopaLima", color=(0.42, 0.62, 0.13), rough=0.93),
+        "leaf": pbr("Copa", color=(0.22, 0.45, 0.11), rough=0.95),
         "leaf2": pbr("Copa2", color=(0.12, 0.32, 0.09), rough=0.94),
+        "leaf_escuro": pbr("CopaEscura", color=(0.06, 0.19, 0.11), rough=0.96),
+        # Fase 17 — mata do entorno. Escura e dessaturada de proposito: e assim
+        # que mata a quilometros aparece, e e o que deixa a nevoa apaga-la sem
+        # deixar mancha verde berrante no horizonte.
+        "mata": pbr("Mata", g(TEX, "grass_diff.jpg"), g(TEX, "grass_nor.jpg"), None,
+                    color=(0.13, 0.22, 0.13), rough=0.97, uv=22.0,
+                    tint=(0.14, 0.24, 0.16), tint_fac=0.62),
+        "flor_r": pbr("FlorVermelha", color=(0.72, 0.12, 0.14), rough=0.85),
+        "flor_a": pbr("FlorAmarela", color=(0.88, 0.72, 0.12), rough=0.85),
+        "flor_b": pbr("FlorBranca", color=(0.88, 0.84, 0.86), rough=0.88),
+        # Janela acesa: no video de referencia sao as fileiras de janelinhas
+        # que informam quantos andares um bloco tem. Emissiva baixa, para
+        # aparecer de dia sem estourar e brilhar de verdade no modo noite.
+        "janela": pbr("JanelaAcesa", color=(0.98, 0.92, 0.72), rough=0.18, emit=0.9),
         "trunk": pbr("Tronco", g(TEX, "wood_diff.jpg"), g(TEX, "wood_nor.jpg"), None, uv=1.2),
         "glow": pbr("Glow", color=(0.05, 0.9, 0.55), rough=0.35, metal=0.4, emit=0.35),
         "paint": pbr("Faixa", color=(0.93, 0.84, 0.12), rough=0.55),
@@ -160,6 +186,53 @@ def make_palette():
         "sig_g": pbr("SigG", color=(0.06, 0.72, 0.22), rough=0.28, emit=1.5),
         "desk": pbr("MesaSCADA", color=(0.14, 0.16, 0.2), rough=0.55, metal=0.2),
         "belt": pbr("Correia", color=(0.08, 0.08, 0.09), rough=0.55, metal=0.12),
+        # Estrutura industrial: aço galvanizado das treliças e o amarelo de
+        # segurança das partes móveis/pontes rolantes.
+        "steel": pbr("Aco", color=(0.52, 0.55, 0.58), rough=0.42, metal=0.78),
+        "steel_y": pbr("AcoSeguranca", color=(0.84, 0.66, 0.07), rough=0.5, metal=0.32),
+        # --- Fase 4: desgaste --------------------------------------------
+        # Nada numa mineradora é novo. Estes materiais existem para as partes
+        # baixas e as superfícies que levam chuva, poeira e minério.
+        "steel_rust": pbr(
+            "AcoOxidado",
+            g(TEX, "rock_diff.jpg"),
+            g(TEX, "rock_nor.jpg"),
+            None,
+            color=(0.36, 0.18, 0.09),
+            rough=0.86,
+            metal=0.35,
+            uv=7.0,
+            tint=(0.42, 0.19, 0.08),
+            tint_fac=0.6,
+        ),
+        "conc_dirty": pbr(
+            "ConcretoEncardido",
+            g(TEX, "concrete_diff.jpg"),
+            g(TEX, "concrete_nor.jpg"),
+            g(TEX, "concrete_rough.jpg"),
+            uv=3.4,
+            tint=(0.24, 0.21, 0.18),
+            tint_fac=0.42,
+            rough=0.9,
+        ),
+        # Telha metálica trapezoidal: o normal map da rocha, bem esticado num
+        # eixo, já dá a leitura de nervura sem custar polígono.
+        "roof": pbr("TelhaMetalica", None, None, None, color=(0.38, 0.42, 0.46), rough=0.55, metal=0.55),
+        "roof_r": pbr("TelhaVermelha", None, None, None, color=(0.44, 0.19, 0.12), rough=0.7, metal=0.15),
+        "tank": pbr("Tanque", color=(0.72, 0.74, 0.74), rough=0.35, metal=0.6),
+        "hi_vis": pbr("Colete", color=(0.95, 0.38, 0.02), rough=0.75, emit=0.12),
+        "skin": pbr("Pele", color=(0.62, 0.44, 0.33), rough=0.78),
+        "helmet": pbr("Capacete", color=(0.9, 0.86, 0.2), rough=0.42),
+        "rubber": pbr("Borracha", color=(0.07, 0.07, 0.08), rough=0.92),
+        "sign_b": pbr("PlacaAzul", color=(0.06, 0.22, 0.52), rough=0.4),
+        "puddle": pbr("Poca", color=(0.1, 0.11, 0.1), rough=0.05, metal=0.35),
+        # Fase 8: agua de bacia de decantacao e de espessador nao e azul —
+        # e a lama vermelha em suspensao do minerio de ferro.
+        "tailings": pbr("Rejeito", color=(0.31, 0.16, 0.11), rough=0.24, metal=0.1),
+        # Fase 12: amarelo de guindaste portuario (mais apagado que o de
+        # maquina de mina) e o azul das escavadeiras a cabo da foto da cava.
+        "crane_y": pbr("AmareloGuindaste", color=(0.83, 0.63, 0.09), rough=0.52, metal=0.25),
+        "shovel_b": pbr("AzulEscavadeira", color=(0.21, 0.31, 0.48), rough=0.45, metal=0.3),
         "amber": pbr("LuzMina", color=(1.0, 0.72, 0.28), rough=0.35, emit=0.55),
         "cont": [
             pbr("C1", color=(0.82, 0.28, 0.05), rough=0.45, metal=0.15),

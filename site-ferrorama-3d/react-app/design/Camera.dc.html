@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; }
+    a { color: #ff8844; } a:hover { color: #ff9e6b; }
+    th, td { text-align: left; padding: 11px 14px; font-size: 12.5px; border-bottom: 1px solid #1d1a2a; }
+    th { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #8a7f74; font-weight: 500; }
+    td code { font-family: 'JetBrains Mono', monospace; color: #ff8844; font-size: 11.5px; }
+  </style>
+</helmet>
+
+<div style="width: 1180px; min-height: 820px; box-sizing: border-box; background: #08080d; color: #f0ebe4; padding: 40px 44px; display: flex; flex-direction: column; gap: 26px;">
+
+  <div style="border-bottom: 1px solid #1d1a2a; padding-bottom: 18px;">
+    <p style="margin: 0 0 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #ff8844;">CÂMERA · MODO LIVRE</p>
+    <h1 style="margin: 0; font-family: 'Archivo', system-ui, sans-serif; font-weight: 800; font-size: 34px; line-height: 1.05; letter-spacing: -0.02em;">Descer ao nível do trilho</h1>
+    <p style="margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: #8a7f74; max-width: 760px; text-wrap: pretty;">Hoje a câmera orbita a maquete de cima, com o ângulo polar travado em 84° e distância mínima de 5. Nunca dá para ficar ao lado de um vagão. O modo livre solta os dois limites e acrescenta caminhada.</p>
+  </div>
+
+  <div style="display: flex; gap: 26px; align-items: flex-start;">
+
+    <svg width="560" height="330" viewBox="0 0 560 330" style="flex-shrink: 0; background: #0e0e16; border: 1px solid #1d1a2a; border-radius: 14px;">
+      <line x1="30" y1="268" x2="530" y2="268" stroke="#3a3444" stroke-width="1.5"/>
+      <g fill="#1d1a2a">
+        <rect x="150" y="248" width="120" height="20" rx="2"/>
+        <rect x="300" y="230" width="80" height="38" rx="2"/>
+      </g>
+      <g stroke="#5e554b" stroke-width="1.2" fill="none">
+        <path d="M 60 268 h 460" stroke-dasharray="3 6"/>
+      </g>
+
+      <!-- arco de órbita atual -->
+      <path d="M 100 268 A 180 180 0 0 1 460 268" fill="none" stroke="#2d8b8b" stroke-width="1.6" stroke-dasharray="5 5"/>
+      <text x="196" y="98" font-family="JetBrains Mono, monospace" font-size="10" fill="#2d8b8b">ÓRBITA ATUAL · polar ≤ 84°</text>
+
+      <!-- zona nova liberada -->
+      <path d="M 100 268 A 180 180 0 0 1 118 208 L 280 268 Z" fill="#ff8844" opacity="0.1"/>
+      <path d="M 460 268 A 180 180 0 0 0 442 208 L 280 268 Z" fill="#ff8844" opacity="0.1"/>
+      <text x="330" y="252" font-family="JetBrains Mono, monospace" font-size="10" fill="#ff8844">até 89°</text>
+
+      <!-- câmera a nível do solo -->
+      <g transform="translate(96, 250)" stroke="#ff8844" stroke-width="1.8" fill="#2a1608">
+        <rect x="-14" y="-9" width="28" height="18" rx="3"/>
+        <path d="M 14 -4 l 12 -6 v 20 l -12 -6 Z"/>
+        <path d="M 26 0 L 130 0" stroke-width="1" stroke-dasharray="4 5" fill="none"/>
+      </g>
+      <text x="60" y="292" font-family="JetBrains Mono, monospace" font-size="10" fill="#ff8844">olho a 0,22 · ≈ 2,8 m</text>
+
+      <text x="150" y="300" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#5e554b">vagão</text>
+      <text x="300" y="300" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#5e554b">galpão</text>
+    </svg>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; flex-grow: 1;">
+      <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+        <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">O CHÃO É O LIMITE, NÃO UM ÂNGULO</p>
+        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Travar o polar em 84° existe para a câmera não passar por baixo do tabuleiro. Um piso rígido em y ≥ 0,18 faz o mesmo trabalho e deixa descer até a altura do olho de quem está na maquete.</p>
+      </div>
+      <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+        <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">O ALVO ANDA COM VOCÊ</p>
+        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">No modo livre o arrasto gira a vista no lugar e as teclas movem o alvo pelo plano — orbitar um ponto fixo é o oposto de caminhar. No celular, um dedo gira e dois arrastam.</p>
+      </div>
+      <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+        <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">FOV MAIS FECHADO EMBAIXO</p>
+        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">De cima, 42° enquadra o tabuleiro. No nível do solo, 42° distorce tudo que está perto. O modo livre fecha para 34°, que é a lente que uma foto de maquete usa.</p>
+      </div>
+    </div>
+  </div>
+
+  <table style="width: 100%; border-collapse: collapse; background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; overflow: hidden;">
+    <thead>
+      <tr>
+        <th style="width: 20%;">PARÂMETRO</th>
+        <th style="width: 26%;">VISTA GERAL (hoje)</th>
+        <th style="width: 26%;">MODO LIVRE (novo)</th>
+        <th>POR QUÊ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>maxPolarAngle</code></td><td>π/2,15 &nbsp;≈ 84°</td><td>π/2 − 0,02 &nbsp;≈ 89°</td><td>Deixa a linha do horizonte entrar no quadro.</td></tr>
+      <tr><td><code>minDistance</code></td><td>5,0</td><td>0,45</td><td>0,45 é a distância de encostar num vagão sem atravessá-lo.</td></tr>
+      <tr><td><code>maxDistance</code></td><td>58</td><td>58</td><td>Sem mudança — o afastamento máximo já enquadra tudo.</td></tr>
+      <tr><td>Piso da câmera</td><td>—</td><td>y ≥ 0,18</td><td>Substitui o travamento do polar; impede ver por baixo do tabuleiro.</td></tr>
+      <tr><td><code>fov</code></td><td>42° (horizontal fixo)</td><td>34°</td><td>Lente de foto de maquete; 42° distorce no nível do solo.</td></tr>
+      <tr><td>Alvo do orbit</td><td>centro fixo (0, 0, 0)</td><td>segue o deslocamento</td><td>É o que transforma órbita em caminhada.</td></tr>
+      <tr><td>Teclado</td><td>—</td><td>W A S D · Shift corre</td><td>Convenção que ninguém precisa aprender.</td></tr>
+      <tr><td>Toque</td><td>1 dedo gira · 2 movem</td><td>igual</td><td>Já é o comportamento certo; só herda a velocidade reduzida do dedo.</td></tr>
+    </tbody>
+  </table>
+
+  <div style="background: #11111c; border: 1px solid #ff8844; border-radius: 14px; padding: 20px 24px;">
+    <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">O QUE ISSO COBRA DO MODELO</p>
+    <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Câmera no chão vê o que a vista de cima perdoava: fundo de galpão sem parede, chapa de um lado só, objeto flutuando meio centímetro acima do terreno. Descer a câmera é assumir que o modelo aguenta ser visto de perto — e essa é justamente a razão de descer.</p>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

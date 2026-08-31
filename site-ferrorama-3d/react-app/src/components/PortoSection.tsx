@@ -11,14 +11,14 @@ const modules = [
     image: '/images/porto.jpg',
     alt: 'Terminal portuário na maquete',
     body: [
-      'No porto, o trem chega com vagões de minério de ferro e carvão. Guindastes e esteiras representam a transferência da carga para o navio.',
-      'É a rota principal de exportação: volume alto, custo menor por tonelada — como nos grandes terminais brasileiros.',
+      'No porto, o trem chega com vagões de minério de ferro e carvão. Correia e guindaste levam a carga ao navio no cais.',
+      'É a única rota de exportação na maquete: volume alto, custo menor por tonelada — como nos grandes terminais brasileiros.',
     ],
     points: [
-      'Cais com descarga do trem',
-      'Guindaste / movimento de carga no cais',
-      'LEDs indicando navio atracado e fluxo contínuo',
-      'Rota padrão do circuito ferroviário',
+      'Cais com correia até o navio',
+      'Guindaste em ciclo no cais',
+      'Ramal SW3 até o terminal',
+      'Sem aeroporto — o destino é o mar',
     ],
   },
   {
@@ -110,7 +110,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            05
+            06
           </motion.span>
           <motion.h2
             className="section-title"

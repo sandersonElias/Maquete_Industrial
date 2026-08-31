@@ -1,34 +1,58 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { EASE_OUT_EXPO } from '../lib/motion';
 import { scrollToSection } from '../lib/scroll';
 
-const NAV_ITEMS = [
-  { id: 'inicio', label: 'Início', thumb: '/images/maquete-montagem-1.png' },
-  { id: 'maquete', label: 'Maquete', thumb: '/images/maquete-montagem-1.png' },
-  { id: 'montagem', label: 'Montagem', thumb: '/images/caminhao-3d.png' },
-  { id: 'codigo', label: 'Automação', thumb: '/images/arduino.jpg' },
-  { id: 'mina', label: 'Mina', thumb: '/images/mina-real.jpg' },
-  { id: 'porto', label: 'Porto', thumb: '/images/porto.jpg' },
-  { id: 'controle', label: 'Controle', thumb: '/images/scada-dashboard.jpg' },
+/**
+ * `as const` sozinho fazia o array virar uma união de literais em que só o item
+ * de `inicio` tem `hideMobile` e só o de `codigo` tem `shortMobile` — e aí o
+ * `.map(({ id, label, hideMobile, shortMobile }) => ...)` não compila. Com o
+ * tipo explícito os dois campos ficam opcionais em todos os itens.
+ */
+type ItemNav = {
+  id: string;
+  label: string;
+  hideMobile?: boolean;
+  shortMobile?: string;
+};
+
+const NAV_ITEMS: readonly ItemNav[] = [
+  { id: 'inicio', label: 'Início', hideMobile: true },
+  { id: 'maquete', label: 'Maquete' },
+  { id: 'preparacao', label: 'Preparação', shortMobile: 'Prep' },
+  { id: 'montagem', label: 'Montagem' },
+  { id: 'codigo', label: 'Automação', shortMobile: 'Auto' },
+  { id: 'mina', label: 'Mina' },
+  { id: 'porto', label: 'Porto' },
+  { id: 'controle', label: 'Controle' },
 ];
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('inicio');
   const [scrollProgress, setScrollProgress] = useState(0);
-  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const scrollTimer = useRef<number | null>(null);
 
   useEffect(() => {
+    let raf = 0;
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0);
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const y = window.scrollY;
+        setScrolled(y > 50);
+        const navBlend = Math.min(1, Math.max(0, y / 96));
+        document.documentElement.style.setProperty('--nav-scroll', navBlend.toFixed(3));
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        setScrollProgress(docHeight > 0 ? (y / docHeight) * 100 : 0);
+      });
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   useEffect(() => {
@@ -52,28 +76,15 @@ export default function Navigation() {
   }, []);
 
   useEffect(() => {
-    if (!mobileOpen) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setMobileOpen(false);
-        menuBtnRef.current?.focus();
-      }
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('keydown', onKeyDown);
-
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.removeEventListener('keydown', onKeyDown);
+      if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
     };
-  }, [mobileOpen]);
+  }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    setMobileOpen(false);
-    window.requestAnimationFrame(() => scrollToSection(id));
+    if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => scrollToSection(id), 0);
   };
 
   return (
@@ -95,92 +106,66 @@ export default function Navigation() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.2 }}
       >
-        <a
-          className="nav-brand"
-          href="#inicio"
-          onClick={(e) => handleNavClick(e, 'inicio')}
-          aria-label="Ferrorama — voltar ao início"
-        >
-          <img
-            src="/images/trem-circuito.svg"
-            alt=""
-            aria-hidden="true"
-            style={{ height: '32px', width: 'auto', marginRight: '0.5rem' }}
-            loading="eager"
-          />
-          <span className="nav-title">Ferrorama</span>
-        </a>
+        <div className="nav-inner">
+          <a
+            className="nav-brand"
+            href="#inicio"
+            onClick={(e) => handleNavClick(e, 'inicio')}
+            aria-label="Maquete Industrial — voltar ao início"
+          >
+            <span className="nav-brand-mark" aria-hidden="true">
+              <img
+                src="/images/loader-gear.png"
+                alt=""
+                width={28}
+                height={28}
+                decoding="async"
+                loading="eager"
+              />
+            </span>
+            <span className="nav-brand-text">
+              <span className="nav-title">
+                <span className="nav-title-part">Maquete</span>
+                <span className="nav-title-part">Industrial</span>
+              </span>
+              <span className="nav-tagline">Da mina ao porto</span>
+            </span>
+          </a>
 
-        <div className="nav-links">
-          {NAV_ITEMS.map(({ id, label }, i) => (
-            <motion.a
-              key={id}
-              href={`#${id}`}
-              className={`nav-link ${activeSection === id ? 'active' : ''}`}
-              aria-current={activeSection === id ? 'true' : undefined}
-              onClick={(e) => handleNavClick(e, id)}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.4 + i * 0.05, ease: EASE_OUT_EXPO }}
-              whileHover={{ y: -2 }}
-            >
-              {label}
-            </motion.a>
-          ))}
+          <div className="nav-links" role="list">
+            {NAV_ITEMS.map(({ id, label, hideMobile, shortMobile }, i) => (
+              <motion.a
+                key={id}
+                href={`#${id}`}
+                className={[
+                  'nav-link',
+                  activeSection === id ? 'active' : '',
+                  hideMobile ? 'nav-link--hide-mobile' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                aria-current={activeSection === id ? 'true' : undefined}
+                onClick={(e) => handleNavClick(e, id)}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.25 + i * 0.04, ease: EASE_OUT_EXPO }}
+                role="listitem"
+              >
+                {shortMobile ? (
+                  <>
+                    <span className="nav-link__full">{label}</span>
+                    <span className="nav-link__short" aria-hidden="true">
+                      {shortMobile}
+                    </span>
+                  </>
+                ) : (
+                  label
+                )}
+              </motion.a>
+            ))}
+          </div>
         </div>
-
-        <motion.button
-          ref={menuBtnRef}
-          type="button"
-          className={`nav-menu-btn ${mobileOpen ? 'active' : ''}`}
-          onClick={() => setMobileOpen(!mobileOpen)}
-          whileTap={{ scale: 0.9 }}
-          aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
-          aria-expanded={mobileOpen}
-          aria-controls="menu-mobile"
-        >
-          <span></span><span></span><span></span>
-        </motion.button>
       </motion.nav>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              className="mobile-menu-backdrop"
-              onClick={() => setMobileOpen(false)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              aria-hidden="true"
-            />
-            <motion.div
-              id="menu-mobile"
-              className="mobile-menu active"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
-            >
-              {NAV_ITEMS.map(({ id, label, thumb }, i) => (
-                <motion.a
-                  key={id}
-                  href={`#${id}`}
-                  className={`mobile-link ${activeSection === id ? 'active' : ''}`}
-                  aria-current={activeSection === id ? 'true' : undefined}
-                  onClick={(e) => handleNavClick(e, id)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <img src={thumb} alt="" aria-hidden="true" className="mobile-link-thumb" loading="lazy" />
-                  <span>{label}</span>
-                </motion.a>
-              ))}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </>
   );
 }

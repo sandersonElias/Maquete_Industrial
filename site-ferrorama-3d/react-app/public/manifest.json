@@ -2,7 +2,7 @@
   "name": "Ferrorama — Maquete Ferroviária",
   "short_name": "Ferrorama",
   "description": "Documentação da maquete ferroviária com automação Arduino.",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#06060a",
   "theme_color": "#ff8844",

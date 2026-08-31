@@ -280,23 +280,43 @@ export function CaminhaoCAT({
   );
 }
 
-/** Porta-contêineres — POV na ponte, olhando o convés. */
-export function PortaConteineres() {
-  const cores = ['#e85d04', '#2d6a4f', '#c9a227', '#1d3557', '#f4f1ea', '#9b2226', '#457b9d', '#6d4c41'];
+/** Navio graneleiro — POV na ponte, olhando o convés.
+ *
+ * Era um porta-contêineres azul com oito contêineres no convés, o que
+ * contradizia o próprio porto: a cadeia daqui é virador de vagões → correia →
+ * shiploader, e shiploader carrega granel pelo porão, não contêiner por cima.
+ * A cor do casco é a mesma do material `ship` do Blender (0.11, 0.29, 0.23),
+ * para que esta cena e a maquete do `.glb` mostrem o mesmo navio.
+ */
+export function NavioGraneleiro() {
+  const CASCO = '#1c4a3b';
   return (
     <group name="pov-navio">
       <mesh castShadow position={[0, 0.16, 0]}>
         <boxGeometry args={[1.7, 0.42, 4.8]} />
-        <meshStandardMaterial color="#2f87bc" roughness={0.28} metalness={0.35} />
+        <meshStandardMaterial color={CASCO} roughness={0.42} metalness={0.3} />
+      </mesh>
+      {/* Faixa vermelha de fundo: nenhum casco é de uma cor só, e é ela que
+          marca a linha d'água. */}
+      <mesh position={[0, 0.0, 0]}>
+        <boxGeometry args={[1.73, 0.14, 4.7]} />
+        <meshStandardMaterial color="#9b2226" roughness={0.6} />
       </mesh>
       <mesh receiveShadow position={[0, 0.38, 0.35]}>
         <boxGeometry args={[1.55, 0.04, 3.2]} />
-        <meshStandardMaterial color="#1e4a62" roughness={0.7} />
+        <meshStandardMaterial color="#6b6f63" roughness={0.8} />
       </mesh>
       <mesh castShadow position={[0, 0.06, 2.25]} rotation={[0.4, 0, 0]}>
         <boxGeometry args={[1.62, 0.24, 0.55]} />
-        <meshStandardMaterial color="#2478a8" roughness={0.32} metalness={0.3} />
+        <meshStandardMaterial color={CASCO} roughness={0.42} metalness={0.3} />
       </mesh>
+      {/* Amurada: sem ela o convés lê como uma tampa lisa. */}
+      {[-0.79, 0.79].map((x) => (
+        <mesh key={x} castShadow position={[x, 0.45, 0.35]}>
+          <boxGeometry args={[0.05, 0.14, 3.2]} />
+          <meshStandardMaterial color={CASCO} roughness={0.5} />
+        </mesh>
+      ))}
       <mesh castShadow position={[0, 0.82, -1.72]}>
         <boxGeometry args={[1.22, 0.88, 1.08]} />
         <meshStandardMaterial color="#f4f1ea" roughness={0.55} />
@@ -312,14 +332,27 @@ export function PortaConteineres() {
           <meshStandardMaterial color="#c9a227" roughness={0.35} metalness={0.5} />
         </mesh>
       </group>
-      {[-0.38, 0.38].map((x, xi) =>
-        [-0.55, 0.1, 0.75, 1.4].map((z, zi) => (
-          <mesh key={`${x}-${z}`} castShadow position={[x, 0.54, z]}>
-            <boxGeometry args={[0.62, 0.32, 0.55]} />
-            <meshStandardMaterial color={cores[(xi * 4 + zi) % cores.length]} roughness={0.55} metalness={0.08} />
+      {/* Quatro porões: braçola baixa e tampa amarela, com os guinchos ao lado.
+          É a tampa amarela contra o casco verde que faz o convés de um
+          graneleiro ser reconhecível de longe. */}
+      {[-0.62, 0.24, 1.1, 1.96].map((z) => (
+        <group key={z} position={[0, 0, z]}>
+          <mesh castShadow position={[0, 0.46, 0]}>
+            <boxGeometry args={[1.0, 0.14, 0.62]} />
+            <meshStandardMaterial color="#6b6f63" roughness={0.75} />
           </mesh>
-        ))
-      )}
+          <mesh castShadow position={[0, 0.55, 0]}>
+            <boxGeometry args={[0.96, 0.05, 0.58]} />
+            <meshStandardMaterial color="#c9a227" roughness={0.5} metalness={0.15} />
+          </mesh>
+          {[-0.56, 0.56].map((x) => (
+            <mesh key={x} castShadow position={[x, 0.48, -0.36]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.05, 0.05, 0.12, 8]} />
+              <meshStandardMaterial color="#8a6a4a" roughness={0.8} />
+            </mesh>
+          ))}
+        </group>
+      ))}
       <mesh position={[0, 1.32, -1.7]}>
         <cylinderGeometry args={[0.05, 0.05, 0.28, 8]} />
         <meshStandardMaterial color="#ddd" roughness={0.4} />

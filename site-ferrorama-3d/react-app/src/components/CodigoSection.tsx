@@ -4,6 +4,11 @@ import { EASE_OUT_EXPO } from '../lib/motion';
 
 const signals = [
   {
+    tag: 'SW',
+    title: '4 desvios',
+    text: 'SW1/2 atalho, SW3 porto, SW4 mina — CMD|SWITCH|id|SET|LEFT/RIGHT/CENTER.',
+  },
+  {
     tag: 'TX',
     title: 'Bluetooth HC-05',
     text: 'App e Arduino no mesmo canal serial — comandos curtos, resposta rápida.',
@@ -11,17 +16,12 @@ const signals = [
   {
     tag: 'PWM',
     title: 'Servos SG90',
-    text: 'Ângulo fino para direção, caçamba e movimentos do basculante.',
-  },
-  {
-    tag: 'IR',
-    title: 'Sensores',
-    text: 'TCRT5000 e reed switch marcam presença nos trilhos.',
+    text: 'Ângulo fino para desvios, direção e caçamba do basculante.',
   },
   {
     tag: 'LED',
     title: 'Indicadores',
-    text: 'Faróis, setas e status — leitura imediata na feira.',
+    text: 'Faróis, setas e status no cais — leitura imediata na feira.',
   },
 ];
 
@@ -39,7 +39,7 @@ export default function CodigoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            03
+            04
           </motion.span>
           <motion.h2
             className="section-title"
@@ -68,8 +68,8 @@ export default function CodigoSection() {
         >
           <div className="lab-bench__photo">
             <img
-              src="/images/arduino.jpg"
-              alt="Arduino Mega na bancada de automação"
+              src="/images/arduino-bancada.jpg"
+              alt="Arduino e módulo Bluetooth na bancada de automação"
               loading="lazy"
               decoding="async"
             />

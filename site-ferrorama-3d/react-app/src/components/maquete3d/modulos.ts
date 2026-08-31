@@ -43,7 +43,7 @@ export const PASSOS_TOUR = [
   },
   {
     moduloId: 'porto' as const,
-    legenda: 'Guindaste embarca o contêiner no porta-contêineres',
+    legenda: 'Shiploader enche o porão do graneleiro atracado',
     duracao: 5,
   },
   {
@@ -62,12 +62,12 @@ export const CAMERAS_POV = [
   { id: 'volvo' as const, label: 'Escavadeira Volvo', modulo: 'mineradora' },
   { id: 'cat' as const, label: 'Caminhão CAT', modulo: 'mineradora' },
   { id: 'mrs' as const, label: 'Trem MRS', modulo: 'ferrovia' },
-  { id: 'navio' as const, label: 'Porta-contêineres', modulo: 'porto' },
+  { id: 'navio' as const, label: 'Navio graneleiro', modulo: 'porto' },
 ];
 export const TELEMETRIA: Record<string, string> = {
   mineradora: 'Volvo + CAT 793 · ciclo da mina',
   ferrovia: 'MRS ES44ACi · ramal automático',
-  porto: 'Porta-contêineres · guindaste no cais',
+  porto: 'Navio graneleiro · shiploader no cais',
   controle: '4 monitores · sala SCADA',
 };
 
@@ -118,7 +118,7 @@ export const MODULOS: Modulo[] = [
     id: 'controle',
     nome: 'Central de Controle',
     cor: PALETA.danger,
-    alvo: [-5.8, 0.5, 13.2],
+    alvo: [-16.2, 0.6, 11.0],
     resumo:
       'Arduino Mega, gateway e dashboard: o cérebro que coordena os módulos.',
     detalhes: [

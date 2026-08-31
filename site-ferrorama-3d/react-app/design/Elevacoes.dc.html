@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; }
+    a { color: #ff8844; } a:hover { color: #ff9e6b; }
+  </style>
+</helmet>
+
+<div style="width: 1180px; min-height: 700px; box-sizing: border-box; background: #08080d; color: #f0ebe4; padding: 40px 44px; display: flex; flex-direction: column; gap: 24px;">
+
+  <div style="border-bottom: 1px solid #1d1a2a; padding-bottom: 18px;">
+    <p style="margin: 0 0 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #ff8844;">PORTO · ELEVAÇÕES</p>
+    <h1 style="margin: 0; font-family: 'Archivo', system-ui, sans-serif; font-weight: 800; font-size: 34px; line-height: 1.05; letter-spacing: -0.02em;">Tudo medido contra uma pessoa de 1,80 m</h1>
+    <p style="margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: #8a7f74; max-width: 720px; text-wrap: pretty;">A figura humana é 0,15 na escala do modelo. É ela que decide se um equipamento parece grande: um guindaste de 2,8 só lê como guindaste porque tem alguém de 0,15 ao pé dele.</p>
+  </div>
+
+  <svg width="1092" height="430" viewBox="0 0 1092 430" style="background: #0e0e16; border: 1px solid #1d1a2a; border-radius: 14px;">
+    <!-- linha do solo e cotas -->
+    <line x1="40" y1="372" x2="1052" y2="372" stroke="#3a3444" stroke-width="1.5"/>
+    <g stroke="#16162a" stroke-width="1" stroke-dasharray="4 6">
+      <line x1="40" y1="302" x2="1052" y2="302"/>
+      <line x1="40" y1="232" x2="1052" y2="232"/>
+      <line x1="40" y1="162" x2="1052" y2="162"/>
+      <line x1="40" y1="92" x2="1052" y2="92"/>
+    </g>
+    <g font-family="JetBrains Mono, monospace" font-size="9.5" fill="#5e554b">
+      <text x="6" y="376">0 m</text>
+      <text x="6" y="306">12 m</text>
+      <text x="6" y="236">25 m</text>
+      <text x="6" y="166">37 m</text>
+      <text x="6" y="96">50 m</text>
+    </g>
+
+    <!-- 1 · pessoa -->
+    <g transform="translate(78, 372)">
+      <circle cx="0" cy="-16" r="3.6" fill="#ff8844"/>
+      <path d="M 0 -13 v 8 M -4 -9 h 8 M 0 -5 l -3.4 5 M 0 -5 l 3.4 5" stroke="#ff8844" stroke-width="1.7" fill="none"/>
+      <text x="-22" y="20" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#8a7f74">1,80 m</text>
+    </g>
+
+    <!-- 2 · guindaste treliçado (novo) -->
+    <g transform="translate(210, 372)" stroke="#ff8844" fill="none" stroke-width="2">
+      <rect x="-38" y="-22" width="76" height="20" rx="4" fill="#2a1608"/>
+      <rect x="-26" y="-48" width="46" height="27" rx="3" fill="#2a1608"/>
+      <rect x="-40" y="-44" width="16" height="20" rx="2" fill="#2a1608"/>
+      <path d="M 8 -46 L 96 -238"/>
+      <path d="M -2 -44 L 88 -240"/>
+      <path d="M 6 -60 L -1 -58 M 16 -82 L 9 -80 M 26 -104 L 19 -102 M 36 -126 L 29 -124 M 46 -148 L 39 -146 M 56 -170 L 49 -168 M 66 -192 L 59 -190 M 76 -214 L 69 -212"/>
+      <path d="M 92 -239 L 92 -300" stroke-width="1.2"/>
+      <path d="M -20 -50 L 88 -238" stroke-width="1.1" stroke-dasharray="3 5"/>
+      <rect x="83" y="-300" width="18" height="14" rx="2" fill="#2a1608" stroke-width="1.4"/>
+      <g transform="translate(-58, 0)" stroke="#5e554b" stroke-width="1.4">
+        <circle cx="0" cy="-16" r="3.2" fill="#5e554b"/>
+        <path d="M 0 -13 v 8 M -3.6 -9 h 7.2 M 0 -5 l -3 5 M 0 -5 l 3 5"/>
+      </g>
+      <text x="-40" y="26" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#ff8844" stroke="none">GUINDASTE TRELIÇADO · 2,4</text>
+    </g>
+
+    <!-- 3 · contêineres empilhados (novo) -->
+    <g transform="translate(430, 372)" stroke="#ff8844" stroke-width="1.6" fill="#2a1608">
+      <rect x="0" y="-24" width="52" height="22" rx="1.5"/>
+      <rect x="0" y="-47" width="52" height="22" rx="1.5"/>
+      <rect x="0" y="-70" width="52" height="22" rx="1.5"/>
+      <rect x="56" y="-24" width="52" height="22" rx="1.5"/>
+      <rect x="56" y="-47" width="52" height="22" rx="1.5"/>
+      <g transform="translate(-20, 0)" stroke="#5e554b" stroke-width="1.4" fill="none">
+        <circle cx="0" cy="-16" r="3.2" fill="#5e554b"/>
+        <path d="M 0 -13 v 8 M -3.6 -9 h 7.2 M 0 -5 l -3 5 M 0 -5 l 3 5"/>
+      </g>
+      <text x="0" y="26" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#ff8844" stroke="none">PILHA 3 ALTO · 0,90</text>
+    </g>
+
+    <!-- 4 · barcaça (novo) -->
+    <g transform="translate(600, 372)" stroke="#ff8844" stroke-width="1.8" fill="#2a1608">
+      <line x1="-14" y1="0" x2="140" y2="0" stroke="#2d8b8b" stroke-width="2" stroke-dasharray="6 5"/>
+      <path d="M -6 -6 L 126 -6 L 118 14 L 2 14 Z"/>
+      <rect x="30" y="-30" width="34" height="24" rx="3"/>
+      <path d="M 60 -28 L 116 -78" stroke-width="2"/>
+      <path d="M 116 -78 L 116 -46" stroke-width="1.2"/>
+      <path d="M 110 -46 h 12 l -3 12 h -6 Z" stroke-width="1.4"/>
+      <text x="-6" y="40" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#ff8844" stroke="none">BARCAÇA + GARRA · 1,05</text>
+    </g>
+
+    <!-- 5 · shiploader (existente) -->
+    <g transform="translate(800, 372)" stroke="#4db8b8" stroke-width="2" fill="#12232a">
+      <rect x="-26" y="-14" width="52" height="14" rx="2"/>
+      <path d="M -18 -14 L -12 -150 M 18 -14 L 12 -150"/>
+      <path d="M -16 -44 L 16 -44 M -14 -74 L 14 -74 M -13 -104 L 13 -104 M -12 -134 L 12 -134" stroke-width="1.1"/>
+      <rect x="-16" y="-166" width="32" height="18" rx="2"/>
+      <path d="M 12 -158 L 118 -132" stroke-width="2.4"/>
+      <path d="M 118 -132 L 118 -70" stroke-width="1.4"/>
+      <text x="-26" y="26" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#4db8b8" stroke="none">SHIPLOADER · 2,3 (existe)</text>
+    </g>
+
+    <!-- 6 · navio (existente) -->
+    <g transform="translate(950, 372)" stroke="#2f7a4a" stroke-width="2" fill="#123321">
+      <path d="M -4 -8 L 118 -8 L 110 22 L 4 22 Z"/>
+      <rect x="8" y="-42" width="40" height="34" rx="3" fill="#1a1a22" stroke="#8a7f74"/>
+      <rect x="14" y="-36" width="28" height="9" rx="1" fill="#4db8b8" stroke="none"/>
+      <path d="M 30 -42 L 30 -60" stroke="#8a7f74" stroke-width="1.4"/>
+      <text x="-4" y="46" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#2f7a4a" stroke="none">NAVIO · 5,6 de comprimento</text>
+    </g>
+  </svg>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;">
+    <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+      <p style="margin: 0 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">A REGRA DA TRELIÇA</p>
+      <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Lança de guindaste é vazada, não é uma barra. Dois banzos paralelos e diagonais a cada 0,22 já dão a leitura, e o vazio entre elas é o que separa um guindaste de um poste inclinado.</p>
+    </div>
+    <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+      <p style="margin: 0 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">CONTRAPESO É OBRIGATÓRIO</p>
+      <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Todo guindaste de lança longa tem massa atrás do eixo de giro. Sem ela o olho lê o modelo como prestes a tombar, mesmo sem saber por quê.</p>
+    </div>
+    <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+      <p style="margin: 0 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">CABO PENDURADO, SEMPRE</p>
+      <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Da ponta da lança desce um cabo com moitão ou garra. É barato — um cilindro fino e um bloco — e é o que diz que a máquina está trabalhando, não estacionada.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

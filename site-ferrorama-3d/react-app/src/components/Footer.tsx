@@ -11,14 +11,42 @@ const FOOTER_LINKS = [
   { id: 'controle', label: 'Controle' },
 ];
 
+const INSTAGRAM_URL = 'https://www.instagram.com/projeto3sis2';
+
 export default function Footer() {
   const ref = useRef<HTMLElement>(null);
 
   return (
     <footer className="site-footer" ref={ref}>
       <div className="site-footer__inner">
-        <p className="site-footer__brand">Ferrorama</p>
+        <p className="site-footer__brand">Maquete Industrial</p>
         <p className="site-footer__tag">Terceirão · Feira de ciências · 2026</p>
+
+        <a
+          className="site-footer__instagram"
+          href={INSTAGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram do projeto Maquete Industrial (@projeto3sis2)"
+        >
+          <svg
+            className="site-footer__instagram-icon"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+          </svg>
+          <span>@projeto3sis2</span>
+        </a>
 
         <ul className="site-footer__credits">
           <li>
@@ -53,7 +81,7 @@ export default function Footer() {
         </nav>
 
         <p className="site-footer__copy">
-          © 2026 Ferrorama
+          © 2026 Maquete Industrial
           <span className="site-footer__sep" aria-hidden="true">·</span>
           Three.js, Arduino, React
         </p>

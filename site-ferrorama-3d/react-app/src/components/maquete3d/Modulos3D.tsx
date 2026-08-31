@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PALETA } from './modulos';
 import { criarTracado, criarDiagonal, criarRamoPorto, criarRamoMina, matrizesDormentes, posicionarNaCurva, ramoAtivo, geometriaFita, geometriaTrilho, DESTINO_PORTO, ESTACAO_MINA, PARADA_MINA, PARADA_PORTO, criarPercursoCaminhao, BITOLA, tMaisProximo, geometriaMorro, TUNEL_OESTE, TUNEL_LESTE, tracadoComDesvio } from './geometria';
-import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, PortaConteineres, MesaControle } from './veiculos';
+import { LocoMRS, VagaoMinerio, EscavadeiraVolvo, CaminhaoCAT, NavioGraneleiro, MesaControle } from './veiculos';
 import { texGrama, texAsfalto, texConcreto, texAgua, texMetal, texMadeira, texLastro, texTerra, texRocha } from './texturas';
 
 /* ============================================================
@@ -620,7 +620,7 @@ export function Porto({ rodando, noite = false }: { rodando: boolean; noite?: bo
 
       {/* Navio colado no cais — casco encosta na face leste do píer */}
       <group ref={navio} position={[0.22, 0.08, 0.2]}>
-        <PortaConteineres />
+        <NavioGraneleiro />
       </group>
     </group>
   );
