@@ -7,25 +7,25 @@ const modules = [
     id: 'terminal',
     num: '01',
     title: 'Terminal Portuário',
-    lead: 'Ponto final do minério na maquete — da descarga do trem ao embarque simulado.',
+    lead: 'Ponto final do minério na maquete, da descarga do trem ao embarque simulado.',
     image: '/images/porto.jpg',
     alt: 'Terminal portuário na maquete',
     body: [
       'No porto, o trem chega com vagões de minério de ferro e carvão. Correia e guindaste levam a carga ao navio no cais.',
-      'É a única rota de exportação na maquete: volume alto, custo menor por tonelada — como nos grandes terminais brasileiros.',
+      'É a única rota de exportação na maquete: volume alto, custo menor por tonelada, como nos grandes terminais brasileiros.',
     ],
     points: [
       'Cais com correia até o navio',
       'Guindaste em ciclo no cais',
       'Ramal SW3 até o terminal',
-      'Sem aeroporto — o destino é o mar',
+      'Sem aeroporto: o destino é o mar',
     ],
   },
   {
     id: 'ferrovia',
     num: '02',
     title: 'Ferrovia',
-    lead: 'Espinha dorsal da logística — liga a mina ao porto.',
+    lead: 'Espinha dorsal da logística: liga a mina ao porto.',
     image: '/images/trem.jpg',
     alt: 'Ferrovia e trem da maquete',
     body: [
@@ -71,7 +71,7 @@ const routes = [
     name: 'Porto marítimo',
     tone: 'sea',
     rows: [
-      ['Volume', 'Alto — milhões de toneladas/ano'],
+      ['Volume', 'Alto: milhões de toneladas/ano'],
       ['Custo', 'Menor por tonelada transportada'],
       ['Tempo', 'Semanas até o destino final'],
       ['Carga típica', 'Minério de ferro e carvão mineral'],
@@ -98,7 +98,7 @@ const routes = [
 const hubs = [
   {
     label: 'Tubarão',
-    text: 'Terminal em Vitória (ES) — um dos maiores do mundo e referência do cais na maquete.',
+    text: 'Terminal em Vitória (ES), um dos maiores do mundo e referência do cais na maquete.',
   },
   {
     label: 'EFVM',
@@ -106,7 +106,7 @@ const hubs = [
   },
   {
     label: 'Exportação',
-    text: 'Brasil entre os maiores exportadores de ferro — China, Japão e Europa no destino.',
+    text: 'Brasil entre os maiores exportadores de ferro: China, Japão e Europa no destino.',
   },
 ];
 
@@ -140,7 +140,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Da mina ao mar — o trilho decide o destino no cais
+            Da mina ao mar: o trilho decide o destino no cais
           </motion.p>
         </div>
 
@@ -207,7 +207,7 @@ export default function PortoSection() {
         >
           <h3 className="porto-routes__heading">A saída marítima</h3>
           <p className="porto-routes__lead">
-            Exportação real no Brasil e o que acontece no cais da maquete — da descarga do trem ao
+            Exportação real no Brasil e o que acontece no cais da maquete, da descarga do trem ao
             embarque no navio.
           </p>
           <div className="porto-routes__grid">

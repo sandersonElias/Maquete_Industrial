@@ -33,14 +33,14 @@ const cards: Array<{
     image: '/images/caminhoes-mini-dump.jpg',
     alt: 'Caminhões Mini Dump branco e laranja com faróis LED',
     title: 'Caminhões 3D',
-    text: 'Basculantes Mini Dump em PLA com motor DC, caçamba móvel e Bluetooth — levam o minério da mina aos trilhos.',
+    text: 'Basculantes Mini Dump em PLA com motor DC, caçamba móvel e Bluetooth. Levam o minério da mina aos trilhos.',
     tag: 'PLA',
   },
   {
     image: '/images/escavadeira-mini-dig.jpg',
     alt: 'Escavadeira Mini Dig laranja e preta impressa em 3D',
     title: 'Escavadeira',
-    text: 'Mini Dig na boca da mina: esteiras, braço articulado e caçamba — o primeiro elo da extração na maquete.',
+    text: 'Mini Dig na boca da mina: esteiras, braço articulado e caçamba, o primeiro elo da extração na maquete.',
     tag: 'Mina',
   },
   {
@@ -61,7 +61,7 @@ const cards: Array<{
     image: '/images/caminhao-eletronica.jpg',
     alt: 'Interior do Mini Dump com fiação, motor e placa de controle',
     title: 'Bluetooth HC-05',
-    text: 'App e caminhão no mesmo canal serial — faróis, direção e caçamba no protocolo curto da feira.',
+    text: 'App e caminhão no mesmo canal serial: faróis, direção e caçamba no protocolo curto da feira.',
     tag: 'Wireless',
   },
 ];

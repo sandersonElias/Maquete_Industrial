@@ -64,7 +64,7 @@ function Placeholder({
           <p>
             {isMobileViewport()
               ? 'Na feira, a maquete leve fica em tela cheia.'
-              : 'A maquete 3D só carrega quando você pedir — assim o site não trava ao rolar.'}
+              : 'A maquete 3D só carrega quando você pedir, assim o site não trava ao rolar.'}
           </p>
           <div className="maquete-abrir">
             {isMobileViewport() ? (
@@ -99,7 +99,7 @@ const objectives = [
   },
   {
     label: 'Contexto',
-    text: 'Minério de ferro e carvão como narrativa da exportação brasileira — sem aeroporto na placa.',
+    text: 'Minério de ferro e carvão como narrativa da exportação brasileira, sem aeroporto na placa.',
   },
 ];
 
@@ -115,7 +115,7 @@ export default function MaqueteSection() {
           <span className="section-number">01</span>
           <h2 className="section-title">Maquete 3D Interativa</h2>
           <p className="section-subtitle">
-            Gire, aproxime e abra em tela cheia — o QR da feira aponta direto para a experiência
+            Gire, aproxime e abra em tela cheia. O QR da feira aponta direto para a experiência
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export default function MaqueteSection() {
         <div className="shell-block">
           <h3 className="shell-block__title">Sobre o projeto</h3>
           <p className="shell-block__lead">
-            O Ferrorama simula a cadeia do minério de ferro e carvão — da mina ao porto —
+            O Ferrorama simula a cadeia do minério de ferro e carvão, da mina ao porto,
             com modelismo ferroviário, impressão 3D e Arduino.
           </p>
           <ul className="shell-facts">
@@ -150,7 +150,7 @@ export default function MaqueteSection() {
         <div className="shell-block">
           <h3 className="shell-block__title">A cadeia na maquete</h3>
           <p className="shell-block__lead">
-            Extração, transporte e exportação — o mesmo caminho do minério no Brasil, em escala HO.
+            Extração, transporte e exportação: o mesmo caminho do minério no Brasil, em escala HO.
           </p>
           <ol className="shell-pipeline" aria-label="Cadeia logística">
             {chain.map((step, i) => (

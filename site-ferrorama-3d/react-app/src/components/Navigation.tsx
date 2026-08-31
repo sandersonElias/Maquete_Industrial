@@ -111,7 +111,7 @@ export default function Navigation() {
             className="nav-brand"
             href="#inicio"
             onClick={(e) => handleNavClick(e, 'inicio')}
-            aria-label="Ferrorama — voltar ao início"
+            aria-label="Ferrorama, voltar ao início"
           >
             <span className="nav-brand-mark" aria-hidden="true">
               <img

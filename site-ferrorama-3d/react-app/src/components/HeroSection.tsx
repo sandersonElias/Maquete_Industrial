@@ -154,7 +154,7 @@ function HeroShell({
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
-          Mina, trilhos e porto — automação Arduino em escala HO. O QR da feira abre a maquete em tela cheia.
+          Mina, trilhos e porto. Automação Arduino em escala HO. O QR da feira abre a maquete em tela cheia.
         </motion.p>
 
         <motion.div

@@ -6,12 +6,12 @@ const signals = [
   {
     tag: 'SW',
     title: '4 desvios',
-    text: 'SW1/2 atalho, SW3 porto, SW4 mina — CMD|SWITCH|id|SET|LEFT/RIGHT/CENTER.',
+    text: 'SW1/2 atalho, SW3 porto, SW4 mina. CMD|SWITCH|id|SET|LEFT/RIGHT/CENTER.',
   },
   {
     tag: 'TX',
     title: 'Bluetooth HC-05',
-    text: 'App e Arduino no mesmo canal serial — comandos curtos, resposta rápida.',
+    text: 'App e Arduino no mesmo canal serial: comandos curtos, resposta rápida.',
   },
   {
     tag: 'PWM',
@@ -21,7 +21,7 @@ const signals = [
   {
     tag: 'LED',
     title: 'Indicadores',
-    text: 'Faróis, setas e status no cais — leitura imediata na feira.',
+    text: 'Faróis, setas e status no cais: leitura imediata na feira.',
   },
 ];
 
@@ -55,7 +55,7 @@ export default function CodigoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Bancada do firmware — o sketch que faz o metal se mexer
+            Bancada do firmware: o sketch que faz o metal se mexer
           </motion.p>
         </div>
 
@@ -148,7 +148,7 @@ export default function CodigoSection() {
             loading="lazy"
             decoding="async"
           />
-          <figcaption>Esquema — trilhos e traços como uma placa viva</figcaption>
+          <figcaption>Esquema: trilhos e traços como uma placa viva</figcaption>
         </motion.figure>
       </div>
     </section>

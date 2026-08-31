@@ -47,7 +47,7 @@ const ETAPAS: Etapa[] = [
     selos: ['Foto 02 · Elevação', 'Rampa'],
     chamada: 'Com o traçado aprovado, a linha ganha altura e a base cresce para a mesa vizinha.',
     texto:
-      'Calços de papelão erguem o trecho da curva e criam a rampa que separa o ramal da mina do resto do circuito — o mesmo desnível que aparece hoje na maquete 3D.',
+      'Calços de papelão erguem o trecho da curva e criam a rampa que separa o ramal da mina do resto do circuito, o mesmo desnível que aparece hoje na maquete 3D.',
     itens: [
       'Calços de papelão sob os trilhos, em degraus',
       'Curva elevada formando rampa contínua',
@@ -62,7 +62,7 @@ const ETAPAS: Etapa[] = [
     selos: ['Foto 03 · Ensaio geral', 'Frota'],
     chamada: 'Última etapa antes do acabamento: a maquete roda inteira, com equipe em volta.',
     texto:
-      'Locomotiva, vagões e os caminhões basculantes impressos em 3D entram nos seus lugares, os postes de sinalização são fixados e o circuito é testado ponta a ponta — mina, trilhos e porto na mesma volta.',
+      'Locomotiva, vagões e os caminhões basculantes impressos em 3D entram nos seus lugares, os postes de sinalização são fixados e o circuito é testado ponta a ponta: mina, trilhos e porto na mesma volta.',
     itens: [
       'Locomotiva e vagões posicionados nos trilhos',
       'Caminhões basculantes na área da mina',
@@ -101,7 +101,7 @@ export default function PreparacaoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Três registros de sala de aula — da mesa forrada de papel kraft até o circuito rodando
+            Três registros de sala de aula, da mesa forrada de papel kraft até o circuito rodando
             do jeito que é hoje
           </motion.p>
         </div>
@@ -144,7 +144,7 @@ export default function PreparacaoSection() {
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          Depois desta etapa entram o paisagismo, a fiação definitiva e a central de controle —{' '}
+          Depois desta etapa entram o paisagismo, a fiação definitiva e a central de controle.{' '}
           <a
             href="#montagem"
             onClick={(e) => {
