@@ -32,6 +32,7 @@ const fadeUp = {
 
 const SECTION_JUMPS = [
   { id: 'maquete', label: 'Maquete' },
+  { id: 'preparacao', label: 'Preparação' },
   { id: 'montagem', label: 'Montagem' },
   { id: 'codigo', label: 'Automação' },
   { id: 'mina', label: 'Mina' },
@@ -193,19 +194,6 @@ function HeroShell({
           ))}
         </motion.nav>
       </motion.div>
-
-      <motion.a
-        href="#maquete"
-        className="scroll-indicator"
-        aria-label="Ir para a maquete 3D"
-        onClick={(e) => go(e, 'maquete')}
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.45 }}
-      >
-        <span>Desça a linha</span>
-        <div className="scroll-arrow" />
-      </motion.a>
     </section>
   );
 }

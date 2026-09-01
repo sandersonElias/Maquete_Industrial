@@ -7,25 +7,25 @@ const modules = [
     id: 'terminal',
     num: '01',
     title: 'Terminal Portuário',
-    lead: 'Ponto final do minério na maquete — da descarga do trem ao embarque simulado.',
+    lead: 'Ponto final do minério na maquete, da descarga do trem ao embarque simulado.',
     image: '/images/porto.jpg',
     alt: 'Terminal portuário na maquete',
     body: [
       'No porto, o trem chega com vagões de minério de ferro e carvão. Correia e guindaste levam a carga ao navio no cais.',
-      'É a única rota de exportação na maquete: volume alto, custo menor por tonelada — como nos grandes terminais brasileiros.',
+      'É a única rota de exportação na maquete: volume alto, custo menor por tonelada, como nos grandes terminais brasileiros.',
     ],
     points: [
       'Cais com correia até o navio',
       'Guindaste em ciclo no cais',
       'Ramal SW3 até o terminal',
-      'Sem aeroporto — o destino é o mar',
+      'Sem aeroporto: o destino é o mar',
     ],
   },
   {
     id: 'ferrovia',
     num: '02',
     title: 'Ferrovia',
-    lead: 'Espinha dorsal da logística — liga a mina ao porto.',
+    lead: 'Espinha dorsal da logística: liga a mina ao porto.',
     image: '/images/trem.jpg',
     alt: 'Ferrovia e trem da maquete',
     body: [
@@ -68,15 +68,29 @@ const routes = [
   {
     id: 'sea',
     badge: 'MAR',
-    name: 'Porto',
+    name: 'Porto marítimo',
     tone: 'sea',
     rows: [
-      ['Volume', 'Alto — milhões de toneladas'],
-      ['Custo', 'Menor por tonelada'],
-      ['Tempo', 'Semanas (marítimo)'],
-      ['Carga típica', 'Minério de ferro, carvão'],
-      ['Na maquete', 'Rota do trem até o cais'],
-      ['Referência', 'Terminal de Tubarão (ES)'],
+      ['Volume', 'Alto: milhões de toneladas/ano'],
+      ['Custo', 'Menor por tonelada transportada'],
+      ['Tempo', 'Semanas até o destino final'],
+      ['Carga típica', 'Minério de ferro e carvão mineral'],
+      ['Papel na cadeia', 'Último elo antes do oceano'],
+      ['Referência BR', 'Terminal de Tubarão (Vitória, ES)'],
+    ],
+  },
+  {
+    id: 'cais',
+    badge: 'CAIS',
+    name: 'Embarque na maquete',
+    tone: 'air',
+    rows: [
+      ['Chegada', 'Trem HO com vagões da mina'],
+      ['Descarga', 'Minério vai do vagão à correia'],
+      ['Transferência', 'Guindaste leva a carga ao navio'],
+      ['Sinalização', 'LEDs no cais indicam o ciclo'],
+      ['Ramal', 'Desvio SW3 posiciona o trem no porto'],
+      ['Navios', 'Cargueiros impressos em 3D no cais'],
     ],
   },
 ];
@@ -84,15 +98,15 @@ const routes = [
 const hubs = [
   {
     label: 'Tubarão',
-    text: 'Terminal em Vitória (ES) — um dos maiores do mundo e referência do cais na maquete.',
+    text: 'Terminal em Vitória (ES), um dos maiores do mundo e referência do cais na maquete.',
   },
   {
     label: 'EFVM',
-    text: 'Ferrovia Vitória–Minas: mina no interior → litoral. Inspira o circuito HO.',
+    text: 'Ferrovia Vitória–Minas: mina no interior até o litoral. Inspira o circuito HO.',
   },
   {
     label: 'Exportação',
-    text: 'Brasil entre os maiores exportadores de ferro — China, Japão e Europa no destino.',
+    text: 'Brasil entre os maiores exportadores de ferro: China, Japão e Europa no destino.',
   },
 ];
 
@@ -126,7 +140,7 @@ export default function PortoSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Da mina ao mar — o trilho decide o destino no cais
+            Da mina ao mar: o trilho decide o destino no cais
           </motion.p>
         </div>
 
@@ -192,6 +206,10 @@ export default function PortoSection() {
           transition={{ duration: 0.75, delay: 0.45, ease: EASE_OUT_EXPO }}
         >
           <h3 className="porto-routes__heading">A saída marítima</h3>
+          <p className="porto-routes__lead">
+            Exportação real no Brasil e o que acontece no cais da maquete, da descarga do trem ao
+            embarque no navio.
+          </p>
           <div className="porto-routes__grid">
             {routes.map((r) => (
               <article key={r.id} className={`porto-route porto-route--${r.tone}`}>

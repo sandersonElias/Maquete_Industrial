@@ -28,6 +28,8 @@ node_modules/
 # Build outputs
 build/
 dist/
+.vite/
+Site _Ferrorama/
 .next/
 .nuxt/
 
