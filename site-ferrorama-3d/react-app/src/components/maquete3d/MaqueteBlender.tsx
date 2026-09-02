@@ -12,7 +12,7 @@ import {
   tracadoComDesvio,
 } from './geometria';
 
-const URL = '/models/maquete-blender.glb?v=fase17';
+const URL = '/models/maquete-blender.glb?v=fase21';
 /**
  * Decodificador Draco servido pelo próprio site (`public/draco/`), não por CDN:
  * na 4G da feira uma requisição a um domínio de terceiro é mais um handshake
