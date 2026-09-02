@@ -12,7 +12,7 @@ import {
   tracadoComDesvio,
 } from './geometria';
 
-const URL = '/models/maquete-blender.glb?v=fase17';
+const URL = '/models/maquete-blender.glb?v=fase21';
 /**
  * Decodificador Draco servido pelo próprio site (`public/draco/`), não por CDN:
  * na 4G da feira uma requisição a um domínio de terceiro é mais um handshake
@@ -40,6 +40,34 @@ const PASSO_VAGAO = 0.86;
 const RECUO_PRIMEIRO_VAGAO = 1.06;
 /** Altura do topo do boleto: as peças são modeladas com a base da roda em y=0. */
 const ALTURA_BOLETO = 0.08;
+
+/**
+ * Fase 22 — a composição para onde é carregada e descarregada.
+ *
+ * Até aqui o trem dava voltas em velocidade constante, e era isso que mais
+ * denunciava a animação: um trem de minério passa a maior parte do dia parado.
+ * Ele frea antes do ponto, fica parado o tempo do serviço e sai acelerando.
+ *
+ * Os pontos estão em coordenadas de planta (as do `geometria.ts`, Z ainda não
+ * espelhado) e são casados com a rota vigente em tempo de montagem: quando o
+ * desvio da mina não está aberto, o ramal não faz parte da rota e a parada da
+ * mina simplesmente não existe naquele giro. Os dois primeiros são as pontas
+ * dos balões — a moega da mina e o virador do porto, onde o serviço é longo;
+ * os dois últimos são as plataformas dentro do oval (`Plat0`/`Plat1` em
+ * `railway.py`), onde a parada é curta, de estação.
+ */
+const PARADAS: { ponto: [number, number]; espera: number }[] = [
+  { ponto: [-18.8, -8.25], espera: 6.5 },
+  { ponto: [19.95, 8.15], espera: 6.5 },
+  { ponto: [-8.55, -1.45], espera: 2.6 },
+  { ponto: [8.55, 2.55], espera: 2.6 },
+];
+/** Distância máxima entre o ponto de serviço e a rota para a parada valer. */
+const RAIO_PARADA = 1.4;
+/** Trecho de frenagem antes da parada, em fração de volta. */
+const FREIO = 0.045;
+/** Fração de volta abaixo da qual a composição é considerada no ponto. */
+const NO_PONTO = 0.0015;
 
 /**
  * Fase 5 — o modelo do Blender chegava sem sombra nenhuma: esta função tinha o
@@ -138,7 +166,19 @@ function prepararSombras(obj: Object3D, leve: boolean) {
       const names = `${child.name} ${m.name || ''}`.toLowerCase();
       // Reflexão do ambiente ligada — o IBL vem dos Lightformers em Maquete3D.
       if ('envMapIntensity' in m) m.envMapIntensity = 0.55;
-      if (names.includes('grama') || names.includes('copa') || names.includes('grass')) {
+      if (
+        names.includes('grama') ||
+        names.includes('copa') ||
+        names.includes('grass') ||
+        // O entorno (`TerrenoLonge`, material `Mata`) nascia num verde escuro
+        // dessaturado que, sob o sol de dia e o tonemapping, lia como um
+        // amarelo-mostarda: a maquete ficava numa ilha verde no meio de um
+        // descampado seco. Entra no mesmo ramo da grama e recebe exatamente a
+        // mesma cor, para que o solo do tabuleiro e a serra ao redor sejam a
+        // mesma paisagem. A névoa continua apagando a serra ao longe.
+        names.includes('mata') ||
+        names.includes('terrenolonge')
+      ) {
         if ('metalness' in m) m.metalness = 0;
         if ('roughness' in m) m.roughness = 1;
         if ('envMapIntensity' in m) m.envMapIntensity = 0.12;
@@ -175,6 +215,10 @@ export function MaqueteBlender({
   const cacambaRef = useRef<Object3D | null>(null);
   const progresso = useRef(0);
   const haulCiclo = useRef(0);
+  /** Segundos restantes de serviço; > 0 significa composição parada. */
+  const espera = useRef(0);
+  /** Fator de velocidade suavizado, de 0 (parado) a 1 (em trânsito). */
+  const fatorVel = useRef(1);
   // Traçado no espaço do GLB (Z espelhado pelo export Blender→glTF).
   const rota = useMemo(() => {
     const r = tracadoComDesvio(criarTracado(), desvios ?? [0, 0, 0, 0]);
@@ -184,6 +228,18 @@ export function MaqueteBlender({
     () => PONTOS_HAUL_MINA.map(([x, y, z]) => new Vector3(x, y, -z)),
     []
   );
+  /** Paradas que a rota vigente de fato serve, já em fração de volta. */
+  const paradas = useMemo(() => {
+    const alvo = new Vector3();
+    return PARADAS.flatMap(({ ponto, espera: seg }) => {
+      alvo.set(ponto[0], 0, -ponto[1]);
+      // Amostragem fina: com as 220 amostras padrao o ponto de parada erra ate
+      // 20 cm ao longo da via, e 20 cm numa plataforma de 1,85 aparecem.
+      const t = tMaisProximo(rota, alvo, 2400);
+      const dist = rota.getPointAt(t).distanceTo(alvo);
+      return dist <= RAIO_PARADA ? [{ t, espera: seg }] : [];
+    });
+  }, [rota]);
 
   useLayoutEffect(() => {
     prepararSombras(scene, leve);
@@ -230,7 +286,48 @@ export function MaqueteBlender({
   useFrame((_, delta) => {
     mixer.timeScale = rodando ? velocidade : 0;
     if (rodando) {
-      progresso.current += delta * 0.046 * velocidade;
+      // Distância, em fração de volta, até a próxima parada À FRENTE. Só olhar
+      // para a frente é o que impede a composição de frear de novo assim que
+      // sai do ponto: um passo depois de servir a parada, ela está a quase uma
+      // volta inteira dali.
+      const frac = ((progresso.current % 1) + 1) % 1;
+      let vao = Infinity;
+      let servico = 0;
+      for (const p of paradas) {
+        let d = p.t - frac;
+        if (d < 0) d += 1;
+        if (d < vao) {
+          vao = d;
+          servico = p.espera;
+        }
+      }
+
+      let alvo = 1;
+      if (espera.current > 0) {
+        // Parada: o serviço corre no tempo do relógio, mas acompanha o
+        // acelerador da interface para não parecer travamento quando alguém
+        // põe a simulação em 3x.
+        espera.current -= delta * velocidade;
+        alvo = 0;
+        if (espera.current <= 0) {
+          espera.current = 0;
+          // Empurrãozinho para sair do ponto: sem ele `vao` continuaria zero
+          // por um quadro e a parada dispararia de novo.
+          progresso.current += NO_PONTO * 2;
+        }
+      } else if (vao < FREIO) {
+        // Frenagem quadrática: solta cedo, aperta perto do ponto.
+        const u = vao / FREIO;
+        alvo = Math.max(u * u, 0.04);
+        if (vao < NO_PONTO) {
+          espera.current = servico;
+          alvo = 0;
+        }
+      }
+      // A inércia da própria composição: nem o freio nem a partida são degraus.
+      fatorVel.current += (alvo - fatorVel.current) * Math.min(delta * 2.6, 1);
+
+      progresso.current += delta * 0.046 * velocidade * fatorVel.current;
       haulCiclo.current += delta * 0.055 * velocidade;
     }
     const veiculos = veiculosRef.current;

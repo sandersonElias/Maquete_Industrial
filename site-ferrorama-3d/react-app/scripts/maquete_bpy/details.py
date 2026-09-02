@@ -240,7 +240,11 @@ def build_details(m):
     # A balanca foi para o acesso do porto: na garganta da mina os dois ramos
     # da alca e a estrada correm colados, e nao havia 0,6 de folga para ela.
     balanca("BalancaPorto", 10.8, 8.4, m, yaw=0.54)
-    sucata("SucataOficina", -22.9, -7.55, m)
+    # Estava em x = -22,9, ou seja 0,50 alem da borda do tabuleiro. Herdou o
+    # canto que o barracao desocupou, encostada na oficina: ferro-velho ao lado
+    # da oficina e onde ele fica mesmo num patio de verdade, e ali sobra 0,83
+    # de folga para o vizinho mais proximo.
+    sucata("SucataOficina", -22.35, -9.45, m)
     tambores("TamboresOficina", -18.9, -10.6, m, yaw=0.3)
     tambores("TamboresPorto", 14.5, 4.2, m, n=4, yaw=-0.4)
     palete("PaleteOficina", -17.8, -10.3, m, yaw=0.2)

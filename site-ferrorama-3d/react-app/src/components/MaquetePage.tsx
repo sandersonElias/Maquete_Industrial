@@ -59,7 +59,7 @@ export default function MaquetePage() {
 
       {mostrarAviso && (
         <div className="maquete-vire" role="dialog" aria-label="Dica de orientação">
-          <p>De lado (paisagem) a maquete fica maior — mas dá para usar em pé.</p>
+          <p>De lado (paisagem) a maquete fica maior, mas dá para usar em pé.</p>
           <div className="maquete-vire__acoes">
             <button type="button" className="maquete3d-btn maquete3d-btn-tour" onClick={abrirPaisagem}>
               Tentar tela cheia

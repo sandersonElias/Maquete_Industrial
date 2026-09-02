@@ -308,18 +308,15 @@ def usina_beneficiamento(m):
     p.append(barra("PeneiraCorreia", (-20.75, 0.98, -8.35), (px + 0.05, 1.06, pz - 0.3), 0.2, 0.05, m["belt"]))
     join("PeneiraUsina", p)
 
-    # Espessador: recupera a água do processo. O tanque raso com a ponte de
-    # raspagem atravessando o diâmetro é a silhueta mais reconhecível de uma
-    # usina de tratamento.
-    ex, ez = -22.2, -7.9
-    q = [
-        cyl("EspessadorTanque", 0.36, 0.26, (ex, 0.13, ez), m["conc_dirty"], 26),
-        cyl("EspessadorAgua", 0.33, 0.02, (ex, 0.25, ez), m["tailings"], 26),
-        cyl("EspessadorColuna", 0.05, 0.42, (ex, 0.29, ez), m["steel_rust"], 10),
-        barra("EspessadorPonte", (ex - 0.38, 0.32, ez), (ex + 0.38, 0.32, ez), 0.1, 0.05, m["steel_rust"]),
-        cube("EspessadorGuarda", (0.78, 0.06, 0.02), (ex, 0.37, ez + 0.05), m["steel"], 0.0),
-    ]
-    join("Espessador", q)
+    # O espessador desta fase saiu daqui. Existiam dois na maquete: este, no
+    # canto da britagem, e o `MinaEspessador` que a fase 19 plantou ao lado da
+    # bacia de decantacao. O segundo esta certo — o espessador recupera a agua
+    # do rejeito, entao ele mora junto da bacia, nao encostado num barracao.
+    #
+    # Alem de duplicado, era ele que impedia o canto de fechar: barracao,
+    # oficina, espessador e sucata somam 4,2 m de profundidade num vao de 3,8
+    # entre a saia da cava de ferro e o poco de carvao. Com ele fora, as
+    # outras tres pecas cabem com folga de verdade.
 
 
 def estrada_cava(m):

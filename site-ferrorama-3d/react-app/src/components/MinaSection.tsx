@@ -6,7 +6,7 @@ const strata = [
   {
     depth: '0 m',
     title: 'Mina real',
-    text: 'Extração a céu aberto, britagem e beneficiamento — o Brasil entre os maiores exportadores de ferro do mundo.',
+    text: 'Extração a céu aberto, britagem e beneficiamento. O Brasil está entre os maiores exportadores de ferro do mundo.',
     accent: 'terra',
   },
   {
@@ -18,7 +18,7 @@ const strata = [
   {
     depth: '−2',
     title: 'Até o trem',
-    text: 'Extração → caminhão → trilhos HO → porto (único destino de exportação).',
+    text: 'Extração, caminhão, trilhos HO e porto (único destino de exportação).',
     accent: 'trilhos',
   },
 ];
@@ -78,7 +78,7 @@ export default function MinaSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Dois poços na placa — ferro e carvão — até o CAT e o trem
+            Dois poços na placa: ferro e carvão, até o CAT e o trem
           </motion.p>
         </div>
 

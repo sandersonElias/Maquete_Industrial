@@ -45,7 +45,6 @@ TOLERADOS = (
     ("CavaSump", "CavaBomba"),
     ("PeneiraUsina", "Britador"),
     ("PeneiraUsina", "CaminhaoServico"),
-    ("Espessador", "Barracao"),
     ("BaciaAgua", "BaciaVertedor"),
     ("BaciaTubo", "BaciaVertedor"),
     ("EsterilRampa", "EsterilDozer"),

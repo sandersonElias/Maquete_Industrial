@@ -33,14 +33,14 @@ const cards: Array<{
     image: '/images/caminhoes-mini-dump.jpg',
     alt: 'Caminhões Mini Dump branco e laranja com faróis LED',
     title: 'Caminhões 3D',
-    text: 'Basculantes Mini Dump em PLA com motor DC, caçamba móvel e Bluetooth — levam o minério da mina aos trilhos.',
+    text: 'Basculantes Mini Dump em PLA com motor DC, caçamba móvel e Bluetooth. Levam o minério da mina aos trilhos.',
     tag: 'PLA',
   },
   {
     image: '/images/escavadeira-mini-dig.jpg',
     alt: 'Escavadeira Mini Dig laranja e preta impressa em 3D',
     title: 'Escavadeira',
-    text: 'Mini Dig na boca da mina: esteiras, braço articulado e caçamba — o primeiro elo da extração na maquete.',
+    text: 'Mini Dig na boca da mina: esteiras, braço articulado e caçamba, e é o primeiro elo da extração na maquete.',
     tag: 'Mina',
   },
   {
@@ -61,7 +61,7 @@ const cards: Array<{
     image: '/images/caminhao-eletronica.jpg',
     alt: 'Interior do Mini Dump com fiação, motor e placa de controle',
     title: 'Bluetooth HC-05',
-    text: 'App e caminhão no mesmo canal serial — faróis, direção e caçamba no protocolo curto da feira.',
+    text: 'App e caminhão no mesmo canal serial: faróis, direção e caçamba no protocolo curto da feira.',
     tag: 'Wireless',
   },
 ];
@@ -108,13 +108,13 @@ export default function MontagemSection() {
         >
           <div className="montagem-hero-card">
             <img
-              src="/images/pecas-conjunto.jpg"
-              alt="Peças da maquete: caminhão, escavadeira, navio, locomotiva e guindaste"
+              src="/images/montagem-oficina.jpg"
+              alt="Montagem do caminhão basculante na oficina, com fiação e Arduino"
               className="montagem-hero-image"
               loading="lazy"
             />
             <p className="montagem-hero-caption">
-              Base 120&nbsp;cm · escala HO · cinco áreas interligadas
+              Oficina da equipe · impressão 3D, fiação e testes antes da feira
             </p>
           </div>
         </motion.div>

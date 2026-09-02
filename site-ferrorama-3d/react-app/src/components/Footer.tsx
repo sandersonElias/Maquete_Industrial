@@ -4,6 +4,7 @@ import { scrollToSection } from '../lib/scroll';
 const FOOTER_LINKS = [
   { id: 'inicio', label: 'Início' },
   { id: 'maquete', label: 'Maquete' },
+  { id: 'preparacao', label: 'Preparação' },
   { id: 'montagem', label: 'Montagem' },
   { id: 'codigo', label: 'Automação' },
   { id: 'mina', label: 'Mina' },
@@ -60,6 +61,10 @@ export default function Footer() {
           <li>
             <span className="site-footer__credit-name">Sanderson</span>
             <span className="site-footer__credit-role">App e sistemas</span>
+          </li>
+          <li>
+            <span className="site-footer__credit-name">Davi</span>
+            <span className="site-footer__credit-role">Performance web</span>
           </li>
         </ul>
 

@@ -22,7 +22,7 @@ const consoles: Array<{
     id: 'app',
     role: 'OPS',
     title: 'App mobile',
-    text: 'Controle na mão — Bluetooth manda o basculante avançar, virar e descarregar.',
+    text: 'Controle na mão: Bluetooth manda o basculante avançar, virar e descarregar.',
     image: '/images/scada-app.jpg',
     alt: 'Celular com app de monitoramento e controle',
   },
@@ -32,15 +32,15 @@ const consoles: Array<{
     title: 'Gateway',
     text: 'Ponte Serial ↔ rede. O que o Mega fala vira evento; o que o painel manda vira pino.',
     image: '/images/scada-gateway.jpg',
-    alt: 'Placa eletrônica — ponte entre o hardware e a rede',
+    alt: 'Placa eletrônica, ponte entre o hardware e a rede',
   },
   {
     id: 'data',
     role: 'CORE',
     title: 'Backend',
-    text: 'Express, Postgres e Redis — memória e API da usina em escala escolar.',
+    text: 'Express, Postgres e Redis: memória e API da usina em escala escolar.',
     image: '/images/scada-backend.jpg',
-    alt: 'Racks de servidor — API, banco e tempo real',
+    alt: 'Racks de servidor: API, banco e tempo real',
   },
 ];
 
@@ -48,12 +48,12 @@ const modes = [
   {
     id: 'manual',
     title: 'Manual',
-    blurb: 'Cada subsistema no botão — ideal para explicar peça a peça.',
+    blurb: 'Cada subsistema no botão, ideal para explicar peça a peça.',
   },
   {
     id: 'auto',
     title: 'Automático',
-    blurb: 'Sequência mina → trem → exportação sem intervenção.',
+    blurb: 'Sequência mina, trem e exportação sem intervenção.',
   },
   {
     id: 'e-stop',
@@ -92,7 +92,7 @@ export default function ControleSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Sala SCADA — quatro monitores (Volvo, CAT, MRS, navio) e o stack da operação
+            Sala SCADA: quatro monitores (Volvo, CAT, MRS, navio) e o stack da operação
           </motion.p>
         </div>
 
@@ -124,7 +124,7 @@ export default function ControleSection() {
           <div className="scada-banner__copy">
             <p className="scada-banner__eyebrow">LINHA AO VIVO</p>
             <p className="scada-banner__line">
-              Arduino → Gateway → Backend → Dashboard / App
+              Arduino, Gateway, Backend, Dashboard e App
             </p>
             <p className="scada-banner__sub">
               O mesmo pulso que move o trem aparece no painel em milissegundos.

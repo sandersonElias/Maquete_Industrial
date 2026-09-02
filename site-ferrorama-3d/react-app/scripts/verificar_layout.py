@@ -13,6 +13,9 @@ Confere três coisas:
 2. **Interpenetração em planta** — sobreposição de caixas envolventes entre os
    equipamentos e as construções.
 3. **Terra e água** — nada além do navio pode estar além da borda do cais.
+4. **Borda do tabuleiro** — nenhuma construção pode passar do retângulo de
+   45,4 x 33,4. Esta checagem faltou desde sempre, e foi por isso que o
+   barracão da britagem pôde avançar 1,17 m para fora dele sem alerta.
 
 O `checks.py` faz a conferência definitiva em 3D dentro do Blender, no fim do
 build; este aqui é o pré-voo.
@@ -24,6 +27,10 @@ import math
 
 MIN_FOLGA = 0.60
 X_BORDA_CAIS = 21.0
+# Espelha `LARG, PROF = 45.4, 33.4` de terrain.py. Fora deste retangulo
+# nao ha tabuleiro: comeca a malha do relevo distante, que sobe como serra.
+# Uma construcao ali nao fica "quase fora" — ela fica pendurada no morro.
+TAB_X, TAB_Z = 22.7, 16.7
 CAIS = (13.35, 21.0, 3.4, 13.8)
 
 # --------------------------------------------------------------------------
@@ -150,7 +157,7 @@ PECAS = [
     ("MastroLuzPorto1", quad(17.35, 4.2, 0.4, 0.4), "normal"),
     # --- Fase 6/7: detalhes e sitio ---
     ("BalancaPorto", ret(10.8, 8.4, 0.54, 0.78, 0.4), "normal"),
-    ("SucataOficina", quad(-22.9, -7.55, 0.6, 0.6), "normal"),
+    ("SucataOficina", quad(-22.35, -9.45, 0.6, 0.6), "normal"),
     ("ObraMina", ret(-18.4, -11.0, 0.28, 0.27, 0.14), "normal"),
     ("ObraPorto", ret(13.9, 3.6, -0.42, 0.27, 0.14), "normal"),
     ("PickupMina", ret(-10.6, -10.4, 0.35, 0.19, 0.09), "normal"),
@@ -165,7 +172,6 @@ PECAS = [
     ("TamboresPorto", quad(14.5, 4.2, 0.22, 0.16), "normal"),
     # --- Fase 8: cava, disposicao e usina ---
     ("PeneiraUsina", quad(-20.6, -9.05, 0.62, 0.62), "normal"),
-    ("Espessador", quad(-22.2, -7.9, 0.78, 0.72), "normal"),
     ("CaminhaoServico", ret(-20.5, -9.45, 1.9, 0.3, 0.2), "normal"),
     # --- Fase 9: aparelhos de via (os que montam na via sao "straddle") ---
     ("Desvio0", ret(5.10, -3.05, -0.5027, 0.56, 0.42), "straddle"),
@@ -351,11 +357,12 @@ for _i, _p in enumerate([(-19.6, -9.9), (-19.45, -10.05), (-19.3, -10.2), (14.2,
 
 # Construções e obstáculos que já existiam e não podem ser invadidos.
 FIXOS = {
-    # Medidos no `.glb`. O barracao vai a x = -23,87, ou seja 1,17 alem da borda
-    # do tabuleiro (-22,7), e a oficina engole a pilha de minerio: sao defeitos
-    # antigos do patio de britagem, a parte que vem depois da mina. Declarar a
-    # medida certa e o primeiro passo para consertar.
-    "Barracao": quad(-22.39, -9.2, 2.96, 1.87),
+    # Medidos no `.glb`, e agora tambem calculaveis: a caixa do `galpao` e
+    #   x de cx - d/2 - 0.12 (cumeeira) ate cx + d/2 + 0.54 (doca de carga)
+    #   z de cz - w/2 - 0.11 ate cz + w/2 + 0.11 (calha do beiral)
+    # A assimetria em x e a doca, e foi ela que escondeu o defeito: quem lia
+    # `galpao(..., -22.6, ...)` supunha um retangulo centrado em -22,6.
+    "Barracao": quad(-9.79, -15.0, 2.96, 1.87),
     "MinaOficina": quad(-21.59, -6.8, 2.01, 1.27),
     "CentroControle": quad(-16.2, 11.1, 11.2, 9.0),
     "PatioPlat": quad(0.0, 3.2, 8.6, 0.55),
@@ -367,7 +374,7 @@ CONES = {
     # `MinaCava` saiu na fase 8: era um morro de 1,86 centrado em IRON, e a
     # alca do ramal passava a 0,81 desse centro — o trem corria dentro da rocha.
     "CarvaoCava": (-19.4, -6.15, 1.28),
-    "PilharOre": (-20.35, -7.0, 0.44),
+    "PilharOre": (-20.15, -7.0, 0.44),
     # Raio onde a saia ja tem altura relevante, nao o pe do talude.
     "CavaFerro": (-20.3, -11.8, 1.62),
     "EsterilPilha": (-17.2, -12.7, 1.24),
@@ -394,7 +401,7 @@ def main():
     # Pares que se tocam de proposito, ou que ja se tocavam antes destas fases.
     tolerados = (
         ("PatioTrilhos", "PilhaPatio"), ("PatioTrilhos", "EmpilhPortico"),
-        ("Britador", "PilharOre"), ("PilharOre", "MinaOficina"),
+        ("Britador", "PilharOre"),
         ("Britador", "MinaOficina"),
         # Fase 8: a estrada de servico nasce dentro da cava e morre no britador,
         # e o ramal do esteril encosta no pe da pilha — e para isso que servem.
@@ -402,7 +409,7 @@ def main():
         ("EsterilPilha", "EstradaEsteril 2"), ("CavaFerro", "EsterilPilha"),
         ("Britador", "EstradaCava 3"), ("Britador", "PeneiraUsina"),
         ("PeneiraUsina", "CaminhaoServico"), ("EstradaCava 2", "CaminhaoServico"),
-        ("EstradaCava 1", "CaminhaoServico"), ("Barracao", "Espessador"),
+        ("EstradaCava 1", "CaminhaoServico"),
         # Fase 9: o AMV do ramal da mina e a passagem de nivel do oval ficam a
         # 0,81 um do outro — encostam de proposito, é o mesmo entroncamento.
         ("Desvio3", "PNMinaOval"),
@@ -482,12 +489,11 @@ def main():
 
     print()
     print("2c) FORMAS DE REVOLUCAO (circulo x caixa, sem exagero de AABB)")
-    # Divida conhecida do patio de britagem, nomeada em vez de escondida: com a
-    # caixa medida do barracao (a antiga era 22% menor), a saia da cava raspa 8 cm
-    # nele. O barracao ainda vaza 1,17 alem da borda do tabuleiro e a oficina
-    # engole a pilha de minerio — tres defeitos do mesmo canto, que sai na rodada
-    # em que o patio de britagem for refeito como a mina foi nesta.
-    divida_britagem = {("CavaFerro", "Barracao")}
+    # A divida da britagem foi paga na fase 21: o barracao voltou para dentro
+    # do tabuleiro, a saia da cava deixou de raspar nele, o espessador
+    # duplicado saiu e a pilha de minerio saiu da doca da oficina. O conjunto
+    # fica aqui vazio de proposito, como lugar para a proxima divida nomeada.
+    divida_britagem = set()
     achou_r = 0
     itens = list(REDONDOS.items())
     for i, (na, (ax, az, ar)) in enumerate(itens):
@@ -548,6 +554,29 @@ def main():
                 print(f"  ALERTA  {na} x {nb} se tocam ({ox:.2f} x {oz:.2f} m)")
     if not fora:
         print("  nenhum")
+
+    print()
+    print("4) BORDA DO TABULEIRO (x +-%.2f, z +-%.2f)" % (TAB_X, TAB_Z))
+    # As construcoes fixas entram pela caixa medida; os equipamentos, pelos
+    # pontos de apoio. O navio e as barcacas ficam de fora de proposito: a
+    # faixa de agua do porto e o unico lugar onde passar da borda e correto.
+    vazando = 0
+    caixas = [(n, p) for n, p in FIXOS.items()]
+    caixas += [(n, p) for n, p, _ in PECAS]
+    for nome, pts in caixas:
+        dx = max(abs(p[0]) for p in pts) - TAB_X
+        dz = max(abs(p[1]) for p in pts) - TAB_Z
+        if max(dx, dz) > 0.0:
+            vazando += 1
+            eixo = "x" if dx >= dz else "z"
+            print(f"  ALERTA  {nome} passa {max(dx, dz):.2f} m da borda em {eixo}")
+    for nome, (cx, cz, r) in list(CONES.items()) + list(REDONDOS.items()):
+        d = max(abs(cx) + r - TAB_X, abs(cz) + r - TAB_Z)
+        if d > 0.0:
+            vazando += 1
+            print(f"  ALERTA  {nome} passa {d:.2f} m da borda")
+    if not vazando:
+        print("  nenhuma")
 
     print("=" * 68)
 
