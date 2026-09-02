@@ -95,7 +95,10 @@ INDUSTRIAIS = (
     "Terminal", "Pilha", "Pilhar", "Cerca", "Tanque", "Subest", "PipeRack",
     "MastroLuz", "Portaria", "Balanca", "Sucata", "Pier", "Defensa", "Meio",
     # Fase 8: cava, estruturas de disposicao e usina.
-    "Cava", "Esteril", "Bacia", "Peneira", "Espessador", "EstradaCava",
+    # `MinaEspessador` por extenso: a comparacao aqui e `startswith`, entao o
+    # prefixo antigo nunca pegou a peca da fase 19 — ela era a unica estrutura
+    # da usina que saia do build limpa, sem uma marca de uso.
+    "Cava", "Esteril", "Bacia", "Peneira", "MinaEspessador", "EstradaCava",
     # Fase 9: aparelhos de via e a composicao.
     "Desvio", "PN", "ParaChoque", "TremVagao", "TremLoco",
     # Fase 12: equipamento novo de cais e de cava.

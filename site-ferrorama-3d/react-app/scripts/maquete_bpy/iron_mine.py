@@ -213,7 +213,10 @@ def patio_britagem(m):
     """
     mx, mz = IRON
     plantar("britador-conico", "MinaBritadorConico", mx - 3.55, mz + 1.55, m, yaw=0.4, escala=0.52, y=Y_PATIO)
-    plantar("monte-minerio", "PilharOre", mx - 3.15, mz + 2.4, m, escala=1.0, sal=2.2, y=Y_PATIO, raio=0.62, altura=0.42)
+    # A pilha estava a 0,20 dentro da doca da MinaOficina — a doca sai 0,54
+    # alem da empena e ia parar no meio do minerio. Afastou 0,20 em x, o que
+    # zera a invasao sem tirar a pilha do alcance da correia do britador.
+    plantar("monte-minerio", "PilharOre", mx - 2.95, mz + 2.4, m, escala=1.0, sal=2.2, y=Y_PATIO, raio=0.62, altura=0.42)
     # A segunda pilha saiu: com o britador, a peneira e a correia no mesmo
     # canto, ela so cabia a 0,55 do eixo da via — abaixo do gabarito de 0,60.
     # A correia agora descarrega na pilha que ficou, subindo do britador.

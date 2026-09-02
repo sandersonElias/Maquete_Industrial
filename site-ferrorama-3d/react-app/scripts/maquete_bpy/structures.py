@@ -245,11 +245,24 @@ def torre_luz(name, cx, cz, m, altura=2.6, lado=0.13):
 def build_structures(m):
     """Instalações da fase 3. Os galpões substituem as caixas antigas."""
     # Mina
-    # Barracao e MinaOficina ficam nas coordenadas e no tamanho exatos das
-    # caixas antigas (piso=0): o canto da mina e apertado entre a saia da cava,
-    # o poco de carvao e a borda do tabuleiro, e qualquer folga extra na laje
-    # criaria interpenetracoes que nao existiam antes.
-    galpao("Barracao", -22.6, -9.2, 2.3, 1.65, 1.0, 1.36, m, vaos=5, mat_telha=m["roof_r"], piso=0.0)
+    # O barracao herdou as coordenadas da caixa que ele substituiu, e a caixa
+    # estava errada: ele avancava 1,17 m alem de x = -22,7, onde a laje do
+    # tabuleiro termina e comeca a malha do relevo distante. Nao era folga de
+    # borda: era um galpao pendurado no morro. Nenhum teste via, porque o
+    # pre-voo so ganhou a checagem de borda agora.
+    #
+    # Recuar nao resolvia. Uma varredura do tabuleiro inteiro contra as caixas
+    # do pre-voo nao achou UMA posicao livre para ele no canto da mina — nem
+    # encolhido para 0,8 de comprimento. O canto so o comportava porque metade
+    # dele estava fora do tabuleiro; entre a saia da cava de ferro, o poco de
+    # carvao, a oficina e a usina de tratamento nao sobra vao para um galpao.
+    #
+    # Foi para a ponta leste da usina que a fase 19 construiu, onde ha 1,06 de
+    # folga para o vizinho mais proximo e 6,22 para o eixo da via. E o lugar
+    # certo tambem pela historia que a maquete conta: no fim da linha de
+    # beneficiamento, o galpao e o almoxarifado — o produto sai da peneira e
+    # dos silos e passa por ele antes do terminal.
+    galpao("Barracao", -10.0, -15.0, 2.3, 1.65, 1.0, 1.36, m, vaos=5, mat_telha=m["roof_r"], piso=0.0)
     galpao("MinaOficina", -21.8, -6.8, 1.35, 1.05, 0.62, 0.86, m, vaos=3, piso=0.0)
     subestacao("SubestMina", -12.2, -10.4, m, yaw=0.25)
     tancagem("TanqueMina", -9.6, -8.2, m, yaw=0.18)
