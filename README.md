@@ -43,6 +43,7 @@ maquete_industrial/
 ├── gateway_bluetooth/           # Gateway Node.js (Raspberry Pi)
 ├── app_kotlin/                  # App Android (Kotlin) - controle BT do caminhão
 ├── site-ferrorama-3d/           # Site 3D da maquete (React + Three.js)
+├── cco_ferrovia/                # CCO local Wi-Fi: supervisório + Arduino Uno + ESP-12E
 ├── firmware_arduino_ferrovia/   # Arduino - 3 servos SG90 + 7 sensores + semáforo + HC-05
 └── firmware_arduino_caminhao_basculante/  # Arduino - carrinho basculante RC
 ```
@@ -107,6 +108,19 @@ npm start               # Porta 3000
 - Para ferrovia: `firmware_arduino_ferrovia/ferrovia_firmware.ino` (v4.0 - 3 switches + semáforo + 7 sensores)
 - Para caminhão: `firmware_arduino_caminhao_basculante/caminhao_basculante_firmware.ino`
 - Conecte o HC-05 e carregue o sketch
+
+### 7. CCO Ferrovia Wi-Fi (módulo Willian)
+
+O diretório `cco_ferrovia/` contém uma implementação autônoma do Centro de Controle Operacional da ferrovia. Ela usa Arduino Uno por USB para sensores, chaves e faróis, e ESP-12E por Wi-Fi para até três locomotivas.
+
+Para testar sem componentes:
+
+```bat
+cd cco_ferrovia\software\cco
+INICIAR_SIMULACAO.cmd
+```
+
+A tela fica disponível em `http://127.0.0.1:8080`. Consulte `cco_ferrovia/README.md` para montagem, operação com hardware, testes e limitações de segurança.
 
 ## Variáveis de Ambiente
 
