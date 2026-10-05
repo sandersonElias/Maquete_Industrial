@@ -59,5 +59,9 @@ app_kotlin/local.properties
 Thumbs.db
 
 # Python (scripts de geração da maquete 3D)
+
+# CCO Ferrovia local
+cco_ferrovia/software/cco/data/*.jsonl
+cco_ferrovia/firmware/esp12e-locomotiva/locomotiva_esp12e/secrets.h
 __pycache__/
 *.pyc

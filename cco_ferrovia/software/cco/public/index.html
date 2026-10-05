@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CCO Ferrovia</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/overrides.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="logo">CCO</span><div><strong>FERROVIA MINIATURA</strong><small>Centro de Controle Operacional</small></div></div>
+      <div class="health"><span id="arduinoHealth" class="status bad">Arduino offline</span><span id="systemMode" class="status">Automático</span><span id="operatorName">Operador não identificado</span></div>
+      <div class="clock"><strong id="clock">--:--:--</strong><small id="date">--</small></div>
+    </header>
+
+    <section class="commandbar">
+      <div class="session-actions"><button id="startSession">Iniciar turno</button><button id="changeOperator">Operador</button><a class="button-link" href="/api/reports/current.html" target="_blank">Relatório</a><a class="button-link" href="/api/reports/current.csv">CSV</a></div>
+      <p id="systemMessage" class="system-message" aria-live="polite">Sistema aguardando início do turno</p>
+      <button id="emergency" class="emergency">PARADA DE EMERGÊNCIA</button>
+    </section>
+
+    <main class="workspace">
+      <section class="map-panel">
+        <div class="panel-head"><span>Malha ferroviária</span><div class="legend"><span><i class="line occupied"></i>Ocupado</span><span><i class="line route"></i>Rota</span><span><i class="dot sensor"></i>Sensor</span><span><i class="dot fault"></i>Falha</span></div></div>
+        <div class="map-wrap">
+          <svg id="railMap" viewBox="0 0 780 430" role="img" aria-label="Malha do CCO com circuitos plano e elevado">
+            <defs>
+              <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <rect x="18" y="42" width="744" height="346" class="zone"/>
+            <text x="30" y="27" class="map-title">ESTADO EM TEMPO REAL</text>
+
+            <path class="bed" d="M350 85 L180 85 C95 85 35 145 35 225 C35 290 95 330 180 330 L360 330"/>
+            <path class="rail" d="M350 85 L180 85 C95 85 35 145 35 225 C35 290 95 330 180 330 L360 330"/>
+            <path class="bed" d="M350 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L360 330"/>
+            <path class="rail" d="M350 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L360 330"/>
+            <path class="cross-gap" d="M632 140 C651 140 669 144 684 153"/>
+            <path class="bed elevated" d="M350 85 C385 85 385 140 455 140 L620 140 C697 140 745 210 745 285 C745 350 700 380 640 380 L470 380 C410 380 405 330 360 330"/>
+            <path class="rail elevated" d="M350 85 C385 85 385 140 455 140 L620 140 C697 140 745 210 745 285 C745 350 700 380 640 380 L470 380 C410 380 405 330 360 330"/>
+            <path class="bed" d="M520 330 L310 205"/><path class="rail siding" d="M520 330 L310 205"/>
+
+            <path id="path-PLANO" class="motion-path" d="M305 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L360 330 C300 330 250 330 180 330 C95 330 35 290 35 225 C35 145 95 85 180 85 Z"/>
+            <path id="path-ELEVADO" class="motion-path" d="M305 85 L350 85 C385 85 385 140 455 140 L620 140 C697 140 745 210 745 285 C745 350 700 380 640 380 L470 380 C410 380 405 330 360 330 C300 330 250 330 180 330 C95 330 35 290 35 225 C35 145 95 85 180 85 Z"/>
+            <path id="path-OFICINA" class="motion-path" d="M305 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L310 205"/>
+
+            <g class="office" transform="translate(250 170) rotate(30 52 25)"><rect width="104" height="50"/><text x="52" y="23">OFICINA</text><text x="52" y="38" class="small">VIA MORTA</text></g>
+            <g class="crossing" transform="translate(160 306)"><rect width="72" height="48"/><line x1="18" y1="0" x2="18" y2="48"/><line x1="54" y1="0" x2="54" y2="48"/><text x="36" y="-27">PASSAGEM DE NÍVEL</text></g>
+
+            <g class="turnout" data-switch="C3" transform="translate(350 85)"><circle r="9"/><circle r="3"/><text x="-16" y="-20">C3</text></g>
+            <g class="turnout" data-switch="C2" transform="translate(360 330)"><circle r="9"/><circle r="3"/><text x="-16" y="28">C2</text></g>
+            <g class="turnout" data-switch="C1" transform="translate(520 330)"><circle r="9"/><circle r="3"/><text x="-16" y="28">C1</text></g>
+
+            <g id="sensor-S01" class="sensor-node" transform="translate(330 330)"><circle r="7"/><text x="-12" y="27">S01</text></g>
+            <g id="sensor-S02" class="sensor-node" transform="translate(260 330)"><circle r="7"/><text x="-12" y="27">S02</text></g>
+            <g id="sensor-S03" class="sensor-node" transform="translate(305 85)"><circle r="7"/><text x="-12" y="25">S03</text></g>
+            <g id="sensor-S04" class="sensor-node" transform="translate(420 85)"><circle r="7"/><text x="-12" y="25">S04</text></g>
+            <g id="sensor-S05" class="sensor-node" transform="translate(430 135)"><circle r="7"/><text x="-12" y="25">S05</text></g>
+            <g id="sensor-S06" class="sensor-node" transform="translate(570 330)"><circle r="7"/><text x="-12" y="27">S06</text></g>
+            <g id="sensor-S07" class="sensor-node" transform="translate(570 380)"><circle r="7"/><text x="-12" y="25">S07</text></g>
+
+            <g id="signal-F2_INTERNO" class="signal" transform="translate(285 285)"><text x="-20" y="-14">INTERNO</text><rect x="-20" y="-9" width="40" height="18"/><circle data-color="RED" cx="-12" r="4"/><circle data-color="YELLOW" r="4"/><circle data-color="GREEN" cx="12" r="4"/></g>
+            <g id="signal-F1_EXTERNO" class="signal" transform="translate(285 382)"><text x="-20" y="-14">EXTERNO</text><rect x="-20" y="-9" width="40" height="18"/><circle data-color="RED" cx="-12" r="4"/><circle data-color="YELLOW" r="4"/><circle data-color="GREEN" cx="12" r="4"/></g>
+
+            <g id="map-L01" class="loco-marker"><rect x="-22" y="-11" width="44" height="22"/><text y="1">L01</text></g>
+            <g id="map-L02" class="loco-marker loco-two"><rect x="-22" y="-11" width="44" height="22"/><text y="1">L02</text></g>
+            <g id="map-L03" class="loco-marker loco-three"><rect x="-22" y="-11" width="44" height="22"/><text y="1">L03</text></g>
+          </svg>
+        </div>
+
+        <section class="event-panel"><div class="panel-head"><span>Eventos operacionais</span><span id="eventCount">0 registros</span></div><ul id="events"></ul></section>
+      </section>
+
+      <aside class="sidebar">
+        <section><h2>Locomotivas</h2><div id="locomotiveList" class="loco-list"></div></section>
+        <section id="controlPanel"><h2 id="selectedTitle">Comandos L01</h2>
+          <label>Rota<select id="routeSelect"><option>PLANO_FRENTE</option><option>PLANO_RE</option><option>ELEVADO_FRENTE</option><option>ELEVADO_RE</option><option>OFICINA</option></select></label>
+          <div class="position-row"><label>Posição inicial<select id="positionSelect"><option>S01</option><option>S02</option><option>S03</option><option>S04</option><option>S05</option><option>S06</option><option>S07</option></select></label><button id="confirmPosition">Confirmar</button></div>
+          <small id="positionHint" class="position-hint">Posição ainda não confirmada</small>
+          <div class="control-grid"><button data-action="REVERSE">Ré</button><button data-action="STOP" class="stop">Parar</button><button data-action="FORWARD">Frente</button><button data-action="WAIT">Aguardar</button><button data-action="OFFICE">Ir à oficina</button><button data-action="AVAILABLE">Disponível</button></div>
+          <label>Prioridade<select id="prioritySelect"><option>BAIXA</option><option selected>NORMAL</option><option>ALTA</option><option>EMERGENCIA</option></select></label>
+          <div class="maintenance-grid"><button id="batterySwap">Registrar troca de bateria</button><button id="correctiveStop">Registrar parada corretiva</button></div>
+        </section>
+        <section><h2>Chaves</h2><div id="switchControls" class="switch-controls"></div></section>
+        <section><h2>Sensores</h2><div id="sensorSummary" class="sensor-summary"></div><details><summary>Diagnóstico detalhado</summary><div id="sensorDiagnostics"></div></details></section>
+        <section><h2>Semáforos combinados da passagem</h2><div id="signalControls"></div></section>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="operatorDialog"><form method="dialog"><h2>Identificação do operador</h2><p>Informe o nome do aluno responsável pelo CCO.</p><label>Nome<input id="operatorInput" maxlength="80" autocomplete="name" required></label><div class="dialog-actions"><button value="cancel">Cancelar</button><button id="saveOperator" value="default" class="primary">Confirmar</button></div></form></dialog>
+  <script src="/app.js"></script>
+</body>
+</html>

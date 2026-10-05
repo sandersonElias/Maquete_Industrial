@@ -1,0 +1,46 @@
+{
+  "http_port": 8080,
+  "serial": {
+    "port": "AUTO",
+    "baud": 115200
+  },
+  "udp": {
+    "listen_port": 4210,
+    "locomotive_port": 4211
+  },
+  "safety": {
+    "max_moving_locomotives": 2,
+    "locomotive_timeout_ms": 1800,
+    "sensor_timeout_multiplier": 1.8,
+    "office_stop_delay_ms": 1500,
+    "sensor_consecutive_failures": 3
+  },
+  "routes": {
+    "PLANO_FRENTE": {
+      "sensors": ["S03", "S04", "S06", "S01", "S02"],
+      "expected_segment_ms": 6500,
+      "switches": {"C1": "NORMAL", "C2": "NORMAL", "C3": "NORMAL"}
+    },
+    "PLANO_RE": {
+      "sensors": ["S02", "S01", "S06", "S04", "S03"],
+      "expected_segment_ms": 6500,
+      "switches": {"C1": "NORMAL", "C2": "NORMAL", "C3": "NORMAL"}
+    },
+    "ELEVADO_FRENTE": {
+      "sensors": ["S03", "S05", "S07", "S01", "S02"],
+      "expected_segment_ms": 8000,
+      "switches": {"C1": "NORMAL", "C2": "REVERSA", "C3": "REVERSA"}
+    },
+    "ELEVADO_RE": {
+      "sensors": ["S02", "S01", "S07", "S05", "S03"],
+      "expected_segment_ms": 8000,
+      "switches": {"C1": "NORMAL", "C2": "REVERSA", "C3": "REVERSA"}
+    },
+    "OFICINA": {
+      "sensors": ["S03", "S04", "S06"],
+      "expected_segment_ms": 6000,
+      "switches": {"C1": "REVERSA", "C2": "NORMAL", "C3": "NORMAL"},
+      "timed_stop_after": "S06"
+    }
+  }
+}
