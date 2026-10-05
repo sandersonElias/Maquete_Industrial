@@ -124,7 +124,7 @@ class CCOSystem:
             "switches": {"C1": "NORMAL", "C2": "NORMAL", "C3": "NORMAL"},
             "signals": {
                 "F1_EXTERNO": "RED",
-                "F2_INTERNO": "GREEN",
+                "F2_INTERNO": "RED",
             },
             "sensors": sensors,
             "locomotives": locomotives,
@@ -411,17 +411,16 @@ class CCOSystem:
         if signal_id not in self.state["signals"] or color not in ("RED", "YELLOW", "GREEN"):
             raise ValueError("Comando de farol inválido")
         with self.lock:
-            self.state["signals"][signal_id] = color
-        hardware_id = "F1" if signal_id == "F1_EXTERNO" else "F2"
-        self.send_arduino(f"SIGNAL|{hardware_id}|{color}|{self.next_sequence()}")
-        self.log("FAROL", f"{signal_id} em {color}")
+            self.state["signals"]["F1_EXTERNO"] = color
+            self.state["signals"]["F2_INTERNO"] = color
+        self.send_arduino(f"SIGNAL|F1|{color}|{self.next_sequence()}")
+        self.log("FAROL", f"Semáforos combinados em {color}")
 
     def set_passage_signals(self, color: str, reason: str):
         with self.lock:
             self.state["signals"]["F1_EXTERNO"] = color
             self.state["signals"]["F2_INTERNO"] = color
         self.send_arduino(f"SIGNAL|F1|{color}|{self.next_sequence()}")
-        self.send_arduino(f"SIGNAL|F2|{color}|{self.next_sequence()}")
         self.log("PASSAGEM", f"Faróis em {color}: {reason}")
 
     def on_sensor(self, sensor_id: str, active: bool):
@@ -524,9 +523,9 @@ class CCOSystem:
                 with self.lock:
                     self.state["switches"][parts[1].upper()] = parts[2].upper()
             elif kind == "SIGNAL" and len(parts) >= 3:
-                key = "F1_EXTERNO" if parts[1].upper() == "F1" else "F2_INTERNO"
                 with self.lock:
-                    self.state["signals"][key] = parts[2].upper()
+                    self.state["signals"]["F1_EXTERNO"] = parts[2].upper()
+                    self.state["signals"]["F2_INTERNO"] = parts[2].upper()
             elif kind == "FAULT":
                 self.log("ARDUINO", "|".join(parts[1:]), "ERROR")
         except Exception as exc:

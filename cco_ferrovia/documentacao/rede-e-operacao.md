@@ -10,7 +10,7 @@ O navegador não conversa diretamente com as locomotivas. O serviço local do CC
 
 ## Sequência de início do turno
 
-1. Energizar a fonte de 5 V da via e verificar se os dois faróis iniciam vermelhos.
+1. Energizar a fonte de 5 V da via e verificar se os dois semáforos combinados iniciam vermelhos.
 2. Ligar o hotspot do notebook.
 3. Ligar as locomotivas e aguardar a indicação de Wi-Fi na tela.
 4. Executar `INICIAR_SISTEMA.cmd`.
@@ -26,7 +26,7 @@ O navegador não conversa diretamente com as locomotivas. O serviço local do CC
 - Se um sensor esperado for pulado, a locomotiva para e sua posição passa a ser incerta.
 - Três falhas consecutivas deixam o sensor marcado como `FALHA`.
 - Se a comunicação Wi-Fi for perdida, o próprio ESP-12E para o motor.
-- Se a comunicação com o computador for perdida, o Arduino coloca os faróis em vermelho.
+- Se a comunicação com o computador for perdida, o Arduino coloca os dois semáforos combinados em vermelho.
 - Chaves próximas a um sensor ativo não são movimentadas pelo Arduino.
 - A parada na oficina é temporizada e exige confirmação visual porque não há sensor dentro dela.
 

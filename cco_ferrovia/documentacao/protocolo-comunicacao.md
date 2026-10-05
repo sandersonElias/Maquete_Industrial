@@ -9,13 +9,15 @@ PING|sequencia
 SWITCH|C1|NORMAL|sequencia
 SWITCH|C1|REVERSA|sequencia
 SIGNAL|F1|RED|sequencia
-SIGNAL|F2|GREEN|sequencia
 EMERGENCY|ON|sequencia
 EMERGENCY|OFF|sequencia
 SNAPSHOT|sequencia
 ```
 
 O Arduino responde com `SENSOR`, `SWITCH`, `SIGNAL`, `PONG` ou `FAULT`.
+
+`F1` representa o sinal unico da passagem de nivel. Os semaforos externo e interno
+sao combinados eletricamente e sempre exibem a mesma cor.
 
 ## Computador para ESP-12E
 

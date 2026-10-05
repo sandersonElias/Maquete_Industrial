@@ -1,13 +1,13 @@
 # Projeto CCO Ferrovia
 
-Sistema supervisório local para uma maquete ferroviária com Arduino Uno, sete sensores HW-201, três servos SG90, dois faróis de passagem de nível e até três locomotivas com ESP-12E e MX1508.
+Sistema supervisório local para uma maquete ferroviária com Arduino Uno, sete sensores HW-201, três servos SG90, dois semáforos combinados da passagem de nível e até três locomotivas com ESP-12E e MX1508.
 
 Este módulo é independente do dashboard e do gateway Bluetooth existentes na raiz do repositório. Ele preserva esses sistemas e oferece a alternativa Wi-Fi desenvolvida para o CCO do Ferrorama.
 
 ## Pastas
 
 - `software/cco`: serviço local e tela principal.
-- `firmware/arduino-uno`: controle dos sensores, chaves e faróis.
+- `firmware/arduino-uno`: controle dos sensores, chaves e dos semáforos combinados.
 - `firmware/esp12e-locomotiva`: firmware comum das locomotivas.
 - `documentacao`: pinagem e protocolo.
 - `output/pdf`: etiquetas ópticas imprimíveis.
@@ -40,7 +40,7 @@ Este módulo é independente do dashboard e do gateway Bluetooth existentes na r
 - rotas plana, elevada e oficina;
 - diagnóstico da sequência dos sete sensores;
 - bloqueio local das chaves próximas a sensores ativos;
-- faróis interno e externo da Passagem de Nível;
+- semáforos interno e externo combinados em um único conjunto de três saídas;
 - sinalização automática: amarelo na aproximação, vermelho na ocupação e verde após a liberação;
 - parada de emergência;
 - watchdog de comunicação do Arduino e de cada locomotiva;

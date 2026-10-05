@@ -3,7 +3,7 @@
 ## Alimentação da via
 
 - Arduino Uno alimentado pelo USB do computador.
-- Fonte externa regulada de 5 V para sensores, servos e faróis.
+- Fonte externa regulada de 5 V para sensores, servos e os dois semáforos combinados.
 - Unir o GND da fonte externa ao GND do Arduino.
 - Não ligar o positivo de 5 V da fonte ao pino 5 V do Uno enquanto ele estiver alimentado pelo USB.
 - Não alimentar os servos pelo pino 5 V do Arduino.
@@ -17,10 +17,21 @@
 | Servo C1 | D9 |
 | Servo C2 | D10 |
 | Servo C3 | D11 |
-| Farol externo: vermelho, amarelo, verde | D12, D13, A0 |
-| Farol interno: vermelho, amarelo, verde | A1, A2, A3 |
+| Sinal combinado da passagem: vermelho, amarelo, verde | D12, D13, A0 |
 | Comunicação com o computador | USB / serial |
-| Reserva | A4 e A5 |
+| Reserva | A1, A2, A3, A4 e A5 |
+
+## Semáforos combinados da passagem de nível
+
+Os semáforos externo e interno sempre exibem a mesma cor. O Uno fornece apenas
+três sinais lógicos: D12 para vermelho, D13 para amarelo e A0 para verde. Cada
+sinal deve ser distribuído aos dois módulos por um estágio de acionamento adequado
+à corrente e à polaridade dos semáforos.
+
+Não ligue dois LEDs de 8 mm diretamente em paralelo no mesmo pino sem confirmar a
+corrente total. Use resistores individuais quando eles não existirem no módulo e,
+se a soma ultrapassar a capacidade segura do pino, use transistores ou um driver.
+Os dois módulos compartilham a fonte externa de 5 V e o GND comum com o Arduino.
 
 ## Proteção local das chaves
 

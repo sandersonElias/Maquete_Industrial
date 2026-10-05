@@ -14,10 +14,10 @@ constexpr unsigned long SERVO_SETTLE_MS = 700;
 
 const uint8_t SENSOR_PINS[7] = {2, 3, 4, 5, 6, 7, 8};
 const uint8_t SERVO_PINS[3] = {9, 10, 11};
-const uint8_t SIGNAL_PINS[2][3] = {
-  {12, 13, A0}, // F1 externo: vermelho, amarelo, verde
-  {A1, A2, A3}  // F2 interno: vermelho, amarelo, verde
-};
+// Um unico conjunto de saidas comanda os dois semaforos combinados da passagem.
+// Cada cor deve ser distribuida aos dois modulos por um driver adequado a corrente
+// e a polaridade dos semaforos; nao some a corrente diretamente no pino do Uno.
+const uint8_t SIGNAL_PINS[3] = {12, 13, A0}; // vermelho, amarelo, verde
 
 // Valores iniciais. Calibre individualmente antes de ligar os servos as chaves.
 uint8_t SERVO_NORMAL_ANGLE[3] = {45, 45, 45};
@@ -36,7 +36,7 @@ SensorState sensors[7];
 bool servoAttached[3] = {false, false, false};
 bool switchReverse[3] = {false, false, false};
 unsigned long servoCommandAt[3] = {0, 0, 0};
-SignalColor signalState[2] = {RED, RED};
+SignalColor signalState = RED;
 bool emergencyActive = false;
 bool timeoutReported = false;
 unsigned long lastPcPing = 0;
@@ -52,22 +52,20 @@ void writeSignalPin(uint8_t pin, bool on) {
   digitalWrite(pin, SIGNAL_ACTIVE_HIGH ? (on ? HIGH : LOW) : (on ? LOW : HIGH));
 }
 
-void setSignal(uint8_t index, SignalColor color, bool report = true) {
-  if (index >= 2) return;
-  signalState[index] = color;
+void setSignal(SignalColor color, bool report = true) {
+  signalState = color;
   for (uint8_t channel = 0; channel < 3; channel++) {
-    writeSignalPin(SIGNAL_PINS[index][channel], channel == color);
+    writeSignalPin(SIGNAL_PINS[channel], channel == color);
   }
   if (report) {
-    Serial.print(F("SIGNAL|F")); Serial.print(index + 1); Serial.print('|');
+    Serial.print(F("SIGNAL|F1|"));
     Serial.print(color == RED ? F("RED") : color == YELLOW ? F("YELLOW") : F("GREEN"));
     Serial.print('|'); Serial.println(millis());
   }
 }
 
 void allSignalsRed() {
-  setSignal(0, RED);
-  setSignal(1, RED);
+  setSignal(RED);
 }
 
 bool sensorProtectsSwitch(uint8_t switchIndex) {
@@ -117,7 +115,7 @@ void sendSnapshot() {
     Serial.print(F("SWITCH|C")); Serial.print(i + 1); Serial.print('|');
     Serial.print(switchReverse[i] ? F("REVERSA") : F("NORMAL")); Serial.print('|'); Serial.println(millis());
   }
-  for (uint8_t i = 0; i < 2; i++) setSignal(i, signalState[i]);
+  setSignal(signalState);
 }
 
 void handleCommand(char *line) {
@@ -154,8 +152,8 @@ void handleCommand(char *line) {
   }
   if (strcmp(kind, "SIGNAL") == 0) {
     char *id = strtok(nullptr, "|"); char *color = strtok(nullptr, "|");
-    if (id && color && id[0] == 'F' && id[1] >= '1' && id[1] <= '2') {
-      setSignal(id[1] - '1', parseColor(color));
+    if (id && color && strcmp(id, "F1") == 0) {
+      setSignal(parseColor(color));
       lastPcPing = millis();
     }
   }
@@ -220,9 +218,7 @@ void setup() {
     bool initial = logicalSensorRead(i);
     sensors[i] = {initial, initial, millis()};
   }
-  for (uint8_t signal = 0; signal < 2; signal++) {
-    for (uint8_t channel = 0; channel < 3; channel++) pinMode(SIGNAL_PINS[signal][channel], OUTPUT);
-  }
+  for (uint8_t channel = 0; channel < 3; channel++) pinMode(SIGNAL_PINS[channel], OUTPUT);
   allSignalsRed();
   for (uint8_t i = 0; i < 3; i++) {
     ensureServoAttached(i);

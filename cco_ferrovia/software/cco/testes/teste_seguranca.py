@@ -46,16 +46,19 @@ class CCOTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Limite de duas"):
             self.system.command_locomotive("L03", "FORWARD")
 
-    def test_automatiza_farol_da_passagem(self):
+    def test_automatiza_semaforos_combinados_da_passagem(self):
         self.system.confirm_position("L01", "S03")
         self.system.command_locomotive("L01", "FORWARD")
         self.system.on_sensor("S04", True)
         self.system.on_sensor("S06", True)
         self.assertEqual(self.system.state["signals"]["F1_EXTERNO"], "YELLOW")
+        self.assertEqual(self.system.state["signals"]["F2_INTERNO"], "YELLOW")
         self.system.on_sensor("S01", True)
         self.assertEqual(self.system.state["signals"]["F1_EXTERNO"], "RED")
+        self.assertEqual(self.system.state["signals"]["F2_INTERNO"], "RED")
         self.system.on_sensor("S02", True)
         self.assertEqual(self.system.state["signals"]["F1_EXTERNO"], "GREEN")
+        self.assertEqual(self.system.state["signals"]["F2_INTERNO"], "GREEN")
 
 
 if __name__ == "__main__":

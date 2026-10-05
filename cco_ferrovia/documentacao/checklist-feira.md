@@ -7,7 +7,7 @@
 - [ ] Fonte de 5 V e GND comum conferidos.
 - [ ] Cabos dos servos firmes e ângulos de C1, C2 e C3 calibrados.
 - [ ] S01 a S07 testados individualmente.
-- [ ] Faróis interno e externo testados nas três cores.
+- [ ] Semáforos interno e externo, ligados ao mesmo conjunto de saídas, testados nas três cores.
 - [ ] Hotspot `CCO_FERROVIA` ligado em 2,4 GHz.
 - [ ] Arduino conectado por USB e três ESPs visíveis no CCO.
 - [ ] Posição inicial das locomotivas confirmada na tela.
