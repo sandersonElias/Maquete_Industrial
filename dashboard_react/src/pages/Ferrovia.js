@@ -1,8 +1,116 @@
 import React, { useState, useEffect } from 'react';
-import { Train, ArrowLeft, ArrowRight, RotateCcw, AlertOctagon, Loader, Box, Zap, CircleDot } from 'lucide-react';
+import { Train, ArrowLeft, ArrowRight, RotateCcw, AlertOctagon, Loader, Box, Zap, CircleDot, Play, Square, Battery, Wifi } from 'lucide-react';
 import axios from 'axios';
 import { useSocket } from '../contexts/SocketContext';
 import toast from 'react-hot-toast';
+
+const LOCOMOTIVE_IDS = ['loco-01', 'loco-02'];
+
+const LocomotiveControl = ({ loco, onCommand, loading }) => {
+  const [speed, setSpeed] = useState(200);
+  const { name, loco_id, direction, speed: currentSpeed, battery_voltage, connected } = loco || {};
+
+  const getStateColor = () => {
+    if (!connected) return 'text-danger';
+    if (direction === 'forward') return 'text-[#22C55E]';
+    if (direction === 'backward') return 'text-[#A855F7]';
+    return 'text-muted';
+  };
+
+  const getStateLabel = () => {
+    if (!connected) return 'OFFLINE';
+    if (direction === 'forward') return 'FRENTE';
+    if (direction === 'backward') return 'RÉ';
+    return 'PARADA';
+  };
+
+  return (
+    <div className={`bg-surface border border-border rounded-lg p-4 ${!connected ? 'opacity-70' : ''}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${connected ? 'bg-[#F59E0B]/10' : 'bg-card'}`}>
+            <Train size={16} className={connected ? 'text-[#F59E0B]' : 'text-muted'} />
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-text">{name || loco_id}</h3>
+            <p className="text-xs text-muted">{loco_id}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded flex items-center gap-1 ${
+            connected ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+          }`}>
+            <Wifi size={10} />
+            {connected ? 'ONLINE' : 'OFFLINE'}
+          </span>
+        </div>
+      </div>
+
+      {/* Status */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="bg-card rounded-lg p-2 border border-border text-center">
+          <p className="text-[10px] text-muted mb-0.5">Estado</p>
+          <p className={`text-xs font-bold ${getStateColor()}`}>{getStateLabel()}</p>
+        </div>
+        <div className="bg-card rounded-lg p-2 border border-border text-center">
+          <p className="text-[10px] text-muted mb-0.5">PWM</p>
+          <p className="text-sm font-mono text-text">{currentSpeed ?? 0}</p>
+        </div>
+        <div className="bg-card rounded-lg p-2 border border-border text-center">
+          <p className="text-[10px] text-muted mb-0.5">Bateria</p>
+          <p className="text-xs font-mono flex items-center justify-center gap-1 text-text">
+            <Battery size={11} className="text-[#22C55E]" />
+            {battery_voltage != null ? `${Number(battery_voltage).toFixed(1)}V` : '--'}
+          </p>
+        </div>
+      </div>
+
+      {/* Controles */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between text-xs text-muted mb-1">
+          <span>Velocidade</span>
+          <span className="font-mono text-text">{speed}</span>
+        </div>
+        <input
+          type="range"
+          min="60"
+          max="255"
+          value={speed}
+          onChange={(e) => setSpeed(Number(e.target.value))}
+          disabled={!connected}
+          className="w-full accent-[#F59E0B] disabled:opacity-40"
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          onClick={() => onCommand(loco_id, 'forward', speed)}
+          disabled={loading || !connected}
+          className="flex items-center justify-center gap-1.5 py-2 bg-card border border-border hover:border-success/40 hover:bg-success/5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+        >
+          <Play size={12} className="text-success" />
+          <span>Frente</span>
+        </button>
+        <button
+          onClick={() => onCommand(loco_id, 'stop', 0)}
+          disabled={loading || !connected}
+          className="flex items-center justify-center gap-1.5 py-2 bg-card border border-border hover:border-danger/40 hover:bg-danger/5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+        >
+          <Square size={12} className="text-danger" />
+          <span>Parar</span>
+        </button>
+        <button
+          onClick={() => onCommand(loco_id, 'backward', speed)}
+          disabled={loading || !connected}
+          className="flex items-center justify-center gap-1.5 py-2 bg-card border border-border hover:border-[#A855F7]/40 hover:bg-[#A855F7]/5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+        >
+          <ArrowLeft size={12} className="text-[#A855F7]" />
+          <span>Ré</span>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const SwitchControl = ({ switchData, onCommand, loading }) => {
   const getStateColor = (state) => {
@@ -451,13 +559,16 @@ export default function Ferrovia() {
   const [sensors, setSensors] = useState([]);
   const [semaphore, setSemaphore] = useState('RED');
   const [locomotiveSensor, setLocomotiveSensor] = useState(null);
+  const [locomotives, setLocomotives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cmdLoading, setCmdLoading] = useState(false);
+  const [locoLoading, setLocoLoading] = useState(false);
   const { socket } = useSocket();
 
   useEffect(() => {
     fetchSwitches();
     fetchSensors();
+    fetchLocomotives();
 
     if (socket) {
       const onUpdate = (data) => {
@@ -495,16 +606,34 @@ export default function Ferrovia() {
         setSemaphore(data.state);
       };
 
+      const onLocoUpdate = (data) => {
+        setLocomotives(prev => prev.map(loco => {
+          if (loco.loco_id === data.locoId) {
+            return {
+              ...loco,
+              direction: data.direction ?? loco.direction,
+              speed: data.speed ?? loco.speed,
+              battery_voltage: data.battery ?? loco.battery_voltage,
+              connected: data.connected ?? loco.connected,
+              last_seen: Date.now(),
+            };
+          }
+          return loco;
+        }));
+      };
+
       socket.on('switch:update', onUpdate);
       socket.on('switch:status', onStatus);
       socket.on('sensor:update', onSensor);
       socket.on('semaphore:update', onSemaphore);
+      socket.on('loco:update', onLocoUpdate);
 
       return () => {
         socket.off('switch:update', onUpdate);
         socket.off('switch:status', onStatus);
         socket.off('sensor:update', onSensor);
         socket.off('semaphore:update', onSemaphore);
+        socket.off('loco:update', onLocoUpdate);
       };
     }
   }, [socket]);
@@ -526,6 +655,35 @@ export default function Ferrovia() {
       setSensors(res.data);
     } catch (e) {
       console.log('Sensores não disponíveis');
+    }
+  };
+
+  const fetchLocomotives = async () => {
+    try {
+      const res = await axios.get('/api/locomotive/state');
+      // Garantir que ambas as locomotivas existam no estado, mesmo offline
+      const estados = [...res.data];
+      for (const id of LOCOMOTIVE_IDS) {
+        if (!estados.some(s => s.loco_id === id)) {
+          estados.push({ loco_id: id, name: `Locomotiva ${id.slice(-1)}`, speed: 0, direction: 'stop', connected: false });
+        }
+      }
+      setLocomotives(estados);
+    } catch (e) {
+      console.log('Estados das locomotivas não disponíveis', e);
+    }
+  };
+
+  const sendLocoCommand = async (locoId, command, speed) => {
+    setLocoLoading(true);
+    try {
+      const res = await axios.post('/api/locomotive/command', { locoId, command, speed });
+      toast.success(`${locoId}: ${command} (${speed})`);
+      return res.data;
+    } catch (e) {
+      toast.error(e.response?.data?.error || 'Falha ao enviar comando à locomotiva');
+    } finally {
+      setLocoLoading(false);
     }
   };
 
@@ -570,6 +728,39 @@ export default function Ferrovia() {
       </div>
 
       <RailwayMap switches={switches} sensors={sensors} semaphore={semaphore} locomotiveSensor={locomotiveSensor} />
+
+      {/* Locomotivas Wi-Fi */}
+      <div className="bg-surface border border-border rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-medium text-muted uppercase tracking-wider flex items-center gap-2">
+            <Zap size={12} className="text-[#F59E0B]" />
+            Locomotivas Wi-Fi (ESP-12E)
+          </h3>
+          <button
+            onClick={fetchLocomotives}
+            className="text-[10px] text-muted hover:text-text transition-colors"
+          >
+            Atualizar
+          </button>
+        </div>
+        {locomotives.length === 0 ? (
+          <div className="text-center py-6">
+            <Loader size={20} className="mx-auto mb-2 text-muted animate-spin" />
+            <p className="text-xs text-muted">Carregando locomotivas...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {locomotives.map(loco => (
+              <LocomotiveControl
+                key={loco.loco_id}
+                loco={loco}
+                onCommand={sendLocoCommand}
+                loading={locoLoading}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

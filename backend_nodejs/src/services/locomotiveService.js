@@ -1,6 +1,74 @@
 const pool = require("../config/db");
 const logger = require("../config/logger");
 
+// ── Estado das locomotivas Wi-Fi (ESP-12E) ─────────────────
+
+// Atualizar estado da locomotiva (enviado pelo ESP)
+async function updateLocomotiveState(locoId, { speed, direction, batteryVoltage }) {
+  const result = await pool.query(
+    `UPDATE locomotive_state
+       SET speed = $2, direction = $3, battery_voltage = $4,
+           connected = TRUE, last_seen = NOW()
+     WHERE loco_id = $1
+     RETURNING *`,
+    [locoId, speed ?? 0, direction ?? "stop", batteryVoltage ?? 0],
+  );
+
+  if (result.rows.length === 0) {
+    // Locomotiva não registrada no schema: cria registro
+    const inserted = await pool.query(
+      `INSERT INTO locomotive_state (loco_id, speed, direction, battery_voltage, connected)
+       VALUES ($1, $2, $3, $4, TRUE) RETURNING *`,
+      [locoId, speed ?? 0, direction ?? "stop", batteryVoltage ?? 0],
+    );
+    return inserted.rows[0];
+  }
+
+  return result.rows[0];
+}
+
+// Buscar estado de todas as locomotivas
+async function getAllLocomotiveStates() {
+  const result = await pool.query(
+    "SELECT * FROM locomotive_state ORDER BY loco_id"
+  );
+  return result.rows;
+}
+
+// Buscar estado de uma locomotiva
+async function getLocomotiveState(locoId) {
+  const result = await pool.query(
+    "SELECT * FROM locomotive_state WHERE loco_id = $1",
+    [locoId],
+  );
+  return result.rows[0] || null;
+}
+
+// Marcar locomotivas offline (sem status há mais de N segundos)
+async function markLocomotivesOffline(timeoutSeconds = 15) {
+  const result = await pool.query(
+    `UPDATE locomotive_state
+        SET connected = FALSE, direction = 'stop'
+      WHERE connected = TRUE
+        AND last_seen < NOW() - ($1 * INTERVAL '1 second')
+      RETURNING loco_id`,
+    [timeoutSeconds],
+  );
+  return result.rows.map((r) => r.loco_id);
+}
+
+// Registrar comando enviado (auditoria)
+async function recordLocomotiveCommand(locoId, command, speed, issuedBy) {
+  const result = await pool.query(
+    `INSERT INTO locomotive_commands (loco_id, command, speed, issued_by, status)
+     VALUES ($1, $2, $3, $4, 'sent') RETURNING *`,
+    [locoId, command, speed, issuedBy],
+  );
+  return result.rows[0];
+}
+
+// ── Posição da locomotiva (herdado, usado pela simulação/dashboard) ──
+
 // Registrar posição da locomotiva
 async function recordLocomotivePosition(x, y, speed, heading, trackSegment) {
   await pool.query(
@@ -88,6 +156,11 @@ async function simulateLocomotive() {
 }
 
 module.exports = {
+  updateLocomotiveState,
+  getAllLocomotiveStates,
+  getLocomotiveState,
+  markLocomotivesOffline,
+  recordLocomotiveCommand,
   recordLocomotivePosition,
   getLatestPosition,
   getPositionHistory,

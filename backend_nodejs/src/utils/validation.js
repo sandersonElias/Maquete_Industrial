@@ -65,6 +65,14 @@ const locomotivePositionSchema = Joi.object({
   trackSegment: Joi.string().max(50).allow(null, "").optional(),
 });
 
+const LOCOMOTIVE_COMMANDS = ["forward", "backward", "stop"];
+
+const locomotiveCommandSchema = Joi.object({
+  locoId: Joi.string().max(20).required(),
+  command: Joi.string().valid(...LOCOMOTIVE_COMMANDS).required(),
+  speed: Joi.number().min(0).max(255).optional().default(200),
+});
+
 const reportExportSchema = Joi.object({
   reportType: Joi.string().valid("switches", "trucks", "locomotive", "port", "alerts", "all").required(),
   format: Joi.string().valid("csv", "xlsx", "pdf").required(),
@@ -112,10 +120,12 @@ module.exports = {
   telemetrySchema,
   truckCommandSchema,
   locomotivePositionSchema,
+  locomotiveCommandSchema,
   reportExportSchema,
   alertSchema,
   alertQuerySchema,
   shipSchema,
   TRUCK_COMMANDS,
   SWITCH_ACTIONS,
+  LOCOMOTIVE_COMMANDS,
 };

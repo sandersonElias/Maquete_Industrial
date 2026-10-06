@@ -2,6 +2,59 @@ const locomotiveService = require("../services/locomotiveService");
 const logger = require("../config/logger");
 
 module.exports = (io) => ({
+  // POST /api/locomotive/command - Enviar comando a uma locomotiva
+  async postLocomotiveCommand(req, res) {
+    try {
+      const { locoId, command, speed } = req.body;
+
+      // Salva no banco para auditoria
+      await locomotiveService.recordLocomotiveCommand(locoId, command, speed, req.user?.id);
+
+      // Emite comando para a sala da locomotiva (ESP conectado via WebSocket)
+      const room = `loco-${locoId}`;
+      io.to(room).emit("loco:command", { command, speed });
+
+      res.json({
+        success: true,
+        locoId,
+        command,
+        speed,
+        timestamp: Date.now(),
+      });
+
+      logger.info(`Comando locomotiva ${locoId}: ${command} (${speed})`);
+    } catch (e) {
+      logger.error(`Erro ao enviar comando a locomotiva: ${e.message}`);
+      res.status(500).json({ error: e.message });
+    }
+  },
+
+  // GET /api/locomotive/state - Estado de todas as locomotivas
+  async getAllStates(req, res) {
+    try {
+      const states = await locomotiveService.getAllLocomotiveStates();
+      res.json(states);
+    } catch (e) {
+      logger.error(`Erro buscando estados das locomotivas: ${e.message}`);
+      res.status(500).json({ error: e.message });
+    }
+  },
+
+  // GET /api/locomotive/state/:locoId - Estado de uma locomotiva
+  async getState(req, res) {
+    try {
+      const { locoId } = req.params;
+      const state = await locomotiveService.getLocomotiveState(locoId);
+      if (!state) {
+        return res.status(404).json({ error: "Locomotiva não encontrada" });
+      }
+      res.json(state);
+    } catch (e) {
+      logger.error(`Erro buscando estado da locomotiva ${req.params.locoId}: ${e.message}`);
+      res.status(500).json({ error: e.message });
+    }
+  },
+
   // POST /api/locomotive/position - Registrar posição
   async postLocomotivePosition(req, res) {
     try {

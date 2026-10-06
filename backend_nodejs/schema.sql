@@ -99,6 +99,33 @@ CREATE TABLE IF NOT EXISTS locomotive_position (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Estado das locomotivas Wi-Fi (ESP-12E)
+CREATE TABLE IF NOT EXISTS locomotive_state (
+    loco_id VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL DEFAULT 'Locomotiva',
+    speed INTEGER DEFAULT 0,
+    direction VARCHAR(10) DEFAULT 'stop', -- forward, backward, stop
+    battery_voltage FLOAT DEFAULT 0,
+    connected BOOLEAN DEFAULT FALSE,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO locomotive_state (loco_id, name) VALUES
+('loco-01', 'Locomotiva 01'),
+('loco-02', 'Locomotiva 02')
+ON CONFLICT (loco_id) DO NOTHING;
+
+-- Comandos enviados às locomotivas Wi-Fi (auditoria)
+CREATE TABLE IF NOT EXISTS locomotive_commands (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    loco_id VARCHAR(20) REFERENCES locomotive_state(loco_id),
+    command VARCHAR(20) NOT NULL, -- forward, backward, stop
+    speed INTEGER DEFAULT 200,
+    issued_by UUID REFERENCES users(id),
+    issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'sent'
+);
+
 -- Tabela de Navios (Porto)
 CREATE TABLE IF NOT EXISTS ships (
     id VARCHAR(20) PRIMARY KEY,
