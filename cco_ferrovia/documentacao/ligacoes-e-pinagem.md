@@ -40,21 +40,21 @@ Os dois módulos compartilham a fonte externa de 5 V e o GND comum com o Arduino
 - C3 é protegida pelos sensores S03, S04 e S05.
 - O Arduino recusa uma mudança de posição se um sensor de proteção estiver ativo.
 
-## Locomotiva com ESP-12E e MX1508
+## Locomotiva com ESP-12E e HW-354
 
 ```text
 18650 protegida
        |
    chave geral
-       +-----------------------> alimentação do MX1508
+       +-----------------------> alimentação da HW-354
        |                              |
        |                              +----> motor DC 5 V
        |
        +--> regulador 3,3 V --> ESP-12E
 
-ESP GPIO12 --------------------> MX1508 IN1
-ESP GPIO13 --------------------> MX1508 IN2
-GND da bateria, regulador, ESP e MX1508 interligados
+ESP GPIO13 (D7) ---------------> HW-354 IN1
+ESP GPIO12 (D6) ---------------> HW-354 IN2
+GND da bateria, regulador, ESP e HW-354 interligados
 ```
 
 ### Ligações mínimas do ESP-12E avulso
@@ -70,8 +70,8 @@ O ESP-12E avulso não é uma placa pronta como a NodeMCU. Para iniciar normalmen
 | GPIO0 | 3,3 V por 10 kΩ; levar ao GND somente para gravação |
 | GPIO2 | 3,3 V por resistor de 10 kΩ |
 | GPIO15 | GND por resistor de 10 kΩ |
-| GPIO12 | IN1 do MX1508 |
-| GPIO13 | IN2 do MX1508 |
+| GPIO13 / D7 | IN1 da HW-354 |
+| GPIO12 / D6 | IN2 da HW-354 |
 | A0 | divisor resistivo da bateria, somente após calibração |
 
 Para gravar o módulo avulso também é necessário um conversor USB–serial de **3,3 V**, com GND comum. Nunca aplique 5 V nos pinos do ESP-12E.
@@ -92,6 +92,18 @@ Recomendações ainda dependentes da confirmação física:
 - resistores de 10 kΩ mantendo IN1 e IN2 em nível baixo durante a inicialização;
 - capacitor eletrolítico próximo ao ESP e capacitor de 100 nF nos terminais do motor;
 - divisor resistivo no A0 somente após confirmar que o módulo é um ESP-12E avulso.
+
+### Sentido validado na Locomotiva 1
+
+| Estado | GPIO13 / IN1 | GPIO12 / IN2 |
+|---|---:|---:|
+| Parada | LOW | LOW |
+| Frente | HIGH | LOW |
+| Trás | LOW | HIGH |
+
+Essa combinação reproduz o teste físico aprovado. Caso outra locomotiva tenha o
+motor montado com polaridade invertida, prefira inverter os dois fios do motor na
+saída da HW-354, mantendo a mesma pinagem e o mesmo firmware.
 
 ## Limitação atual da oficina
 

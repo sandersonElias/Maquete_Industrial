@@ -1,6 +1,6 @@
 # Projeto CCO Ferrovia
 
-Sistema supervisório local para uma maquete ferroviária com Arduino Uno, sete sensores HW-201, três servos SG90, dois semáforos combinados da passagem de nível e até três locomotivas com ESP-12E e MX1508.
+Sistema supervisório local para uma maquete ferroviária com Arduino Uno, sete sensores HW-201, três servos SG90, dois semáforos combinados da passagem de nível e até três locomotivas com ESP-12E e ponte H HW-354.
 
 Este módulo é independente do dashboard e do gateway Bluetooth existentes na raiz do repositório. Ele preserva esses sistemas e oferece a alternativa Wi-Fi desenvolvida para o CCO do Ferrorama.
 
@@ -25,7 +25,7 @@ Este módulo é independente do dashboard e do gateway Bluetooth existentes na r
 1. Instale o pacote indicado em `software/cco/requirements.txt`.
 2. Grave o firmware do Arduino Uno.
 3. Copie `secrets.example.h` para `secrets.h` e informe o nome e a senha do hotspot.
-4. Copie e grave o firmware do ESP-12E em cada locomotiva, alterando `LOCO_ID` para L01, L02 e L03.
+4. Copie e grave o firmware do ESP-12E em cada locomotiva, alterando `LOCO_ID` para L01, L02 e L03. A ligação validada é GPIO13/D7 em IN1 e GPIO12/D6 em IN2 da HW-354.
 5. Configure o hotspot de 2,4 GHz com os mesmos dados do arquivo `secrets.h`.
 6. Execute `software/cco/INICIAR_SISTEMA.cmd`.
 

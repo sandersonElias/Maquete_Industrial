@@ -3,9 +3,10 @@
 // Altere para L02 ou L03 antes de gravar as outras locomotivas.
 #define LOCO_ID "L01"
 
-// GPIO12 -> IN1 do MX1508; GPIO13 -> IN2 do MX1508.
-#define MOTOR_IN1_PIN 12
-#define MOTOR_IN2_PIN 13
+// Ligacao validada no teste fisico da Locomotiva 1 com a ponte H HW-354:
+// GPIO13 (D7) -> IN1; GPIO12 (D6) -> IN2.
+#define MOTOR_IN1_PIN 13
+#define MOTOR_IN2_PIN 12
 
 // Ative somente depois de instalar e calibrar o divisor resistivo no A0.
 #define BATTERY_MONITOR_ENABLED false

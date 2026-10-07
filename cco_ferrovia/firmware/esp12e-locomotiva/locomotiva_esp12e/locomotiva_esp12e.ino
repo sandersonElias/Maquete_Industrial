@@ -3,12 +3,14 @@
 #include "secrets.h"
 #include "locomotive_config.h"
 
-// CCO Ferrovia - firmware comum para L01, L02 e L03.
+// CCO Ferrovia - firmware Wi-Fi comum para L01, L02 e L03.
 // ESP-12E trabalha em 3,3 V e nao tolera 5 V nos GPIOs.
-// Use regulador 3,3 V adequado e GND comum entre ESP, MX1508 e bateria.
+// Use regulador 3,3 V adequado e GND comum entre ESP, HW-354 e bateria.
+// Ligacao validada na L01: GPIO13 (D7) -> IN1 e GPIO12 (D6) -> IN2.
 
 constexpr uint16_t SERVER_PORT = 4210;
 constexpr uint16_t LOCAL_PORT = 4211;
+constexpr uint8_t FIRMWARE_VERSION = 2;
 constexpr unsigned long COMMAND_TIMEOUT_MS = 1800;
 constexpr unsigned long STATUS_INTERVAL_MS = 500;
 constexpr unsigned long DISCOVERY_INTERVAL_MS = 2000;
@@ -31,6 +33,8 @@ uint32_t lastSequence = 0;
 uint16_t batteryMv = 0;
 uint8_t batteryPct = 0;
 char faultCode[24] = "NONE";
+
+static_assert(MOTOR_IN1_PIN != MOTOR_IN2_PIN, "Os pinos IN1 e IN2 devem ser diferentes");
 
 const char *motionName(Motion value) {
   if (value == FORWARD) return "FORWARD";
@@ -102,7 +106,7 @@ void sendPacket(const String &message, const IPAddress &destination) {
 }
 
 void sendHello() {
-  String packet = String("HELLO|") + LOCO_ID + "|1";
+  String packet = String("HELLO|") + LOCO_ID + "|" + String(FIRMWARE_VERSION);
   sendPacket(packet, IPAddress(255, 255, 255, 255));
 }
 
@@ -176,16 +180,37 @@ void updateSafety() {
 }
 
 void connectWiFi() {
+  motorStop();
+  serverKnown = false;
   WiFi.persistent(false);
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
+  WiFi.hostname(LOCO_ID);
+  Serial.print(F("\n[WIFI] Conectando "));
+  Serial.print(LOCO_ID);
+  Serial.print(F(" ao hotspot "));
+  Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     motorStop();
+    Serial.print('.');
     delay(250);
   }
+  Serial.println();
+  Serial.print(F("[WIFI] Conectado. IP: "));
+  Serial.println(WiFi.localIP());
+  Serial.print(F("[UDP] Telemetria: "));
+  Serial.print(SERVER_PORT);
+  Serial.print(F(" | Comandos: "));
+  Serial.println(LOCAL_PORT);
+  udp.stop();
   udp.begin(LOCAL_PORT);
+  if (strcmp(faultCode, "WIFI_OFFLINE") == 0) {
+    strncpy(faultCode, "NONE", sizeof(faultCode));
+  }
+  lastDiscovery = millis();
   sendHello();
+  sendStatus();
 }
 
 void setup() {
@@ -193,7 +218,13 @@ void setup() {
   pinMode(MOTOR_IN2_PIN, OUTPUT);
   motorStop();
   Serial.begin(115200);
-  delay(50);
+  delay(500);
+  Serial.println();
+  Serial.println(F("=== CCO FERROVIA - LOCOMOTIVA WI-FI ==="));
+  Serial.print(F("ID: ")); Serial.println(LOCO_ID);
+  Serial.println(F("Ponte H: HW-354 sem PWM"));
+  Serial.println(F("IN1: GPIO13 (D7) | IN2: GPIO12 (D6)"));
+  Serial.println(F("Motor inicia parado e para se perder comunicacao."));
   lastValidCommand = millis();
   connectWiFi();
 }
@@ -202,9 +233,8 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     motorStop();
     strncpy(faultCode, "WIFI_OFFLINE", sizeof(faultCode));
-    WiFi.reconnect();
-    delay(100);
-    return;
+    Serial.println(F("[WIFI] Conexao perdida. Motor parado."));
+    connectWiFi();
   }
   receivePackets();
   updateSafety();

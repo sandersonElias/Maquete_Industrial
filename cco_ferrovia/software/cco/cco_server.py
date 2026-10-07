@@ -99,6 +99,7 @@ class CCOSystem:
                 "last_seen": now_iso() if self.mock else None,
                 "priority": "NORMAL",
                 "fault": None,
+                "firmware_version": "SIM" if self.mock else None,
                 "mission": None,
                 "office_stop_at": None,
                 "stats": {
@@ -557,6 +558,8 @@ class CCOSystem:
                 if loco["fault"]:
                     loco["operational_state"] = "FALHA"
             elif kind == "HELLO":
+                if len(parts) >= 3:
+                    loco["firmware_version"] = parts[2]
                 self.log("COMUNICACAO", f"{loco_id} conectada em {address[0]}", loco=loco_id)
         self.broadcast()
 

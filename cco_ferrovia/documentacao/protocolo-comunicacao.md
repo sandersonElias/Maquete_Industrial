@@ -39,3 +39,5 @@ ACK|L01|sequencia|comando
 ```
 
 Cada ESP para localmente o motor se os comandos de manutenção de comunicação deixarem de chegar.
+Ao iniciar ou recuperar o Wi-Fi, o ESP envia `HELLO` por broadcast. O CCO associa o
+IP de origem ao identificador L01, L02 ou L03 e começa a enviar `PING` a cada 500 ms.

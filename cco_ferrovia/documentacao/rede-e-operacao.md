@@ -8,6 +8,11 @@ No primeiro uso, permita o acesso do Python em redes privadas quando o Firewall 
 
 O navegador não conversa diretamente com as locomotivas. O serviço local do CCO recebe os comandos da tela, comunica-se com o Arduino pelo cabo USB e com os ESP-12E pelo Wi-Fi.
 
+Cada locomotiva usa a ponte H HW-354 sem PWM. O firmware validado liga GPIO13/D7
+ao IN1 e GPIO12/D6 ao IN2. Ao conectar, a locomotiva envia `HELLO` por UDP, o CCO
+aprende automaticamente seu endereço IP e passa a enviar comandos pela porta 4211.
+Não é necessário configurar IP fixo.
+
 ## Sequência de início do turno
 
 1. Energizar a fonte de 5 V da via e verificar se os dois semáforos combinados iniciam vermelhos.

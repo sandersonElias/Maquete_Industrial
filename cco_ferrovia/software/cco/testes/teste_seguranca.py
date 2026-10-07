@@ -46,6 +46,15 @@ class CCOTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Limite de duas"):
             self.system.command_locomotive("L03", "FORWARD")
 
+    def test_reconhece_locomotiva_pelo_hello_wifi(self):
+        self.system.state["locomotives"]["L01"]["connected"] = False
+        self.system.state["locomotives"]["L01"]["ip"] = None
+        self.system.on_udp("HELLO|L01|2", ("192.168.137.10", 4211))
+        loco = self.system.state["locomotives"]["L01"]
+        self.assertTrue(loco["connected"])
+        self.assertEqual(loco["ip"], "192.168.137.10")
+        self.assertEqual(loco["firmware_version"], "2")
+
     def test_automatiza_semaforos_combinados_da_passagem(self):
         self.system.confirm_position("L01", "S03")
         self.system.command_locomotive("L01", "FORWARD")
