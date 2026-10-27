@@ -28,7 +28,19 @@ def apply_mods(obj):
     obj.select_set(False)
 
 
-def bevel(obj, width=0.03, segments=3):
+def bevel(obj, width=0.03, segments=None):
+    """Chanfro. O numero de segmentos acompanha a largura do chanfro.
+
+    Tres segmentos em toda caixa do tabuleiro custavam ~150 vertices por
+    cubo, contra ~36 de um segmento so. Num chanfro de 3 mm — que e o que
+    346 das 516 caixas do catalogo de assets pedem — a diferenca entre um e
+    tres segmentos nao existe na tela, mas na conta ela e a diferenca entre
+    caber e nao caber no orcamento do `.glb`, que e servido no 4G da feira.
+    Chanfro largo (0,02 para cima: galpao, muro, predio) continua com tres,
+    porque ali ele aparece de verdade na silhueta.
+    """
+    if segments is None:
+        segments = 3 if width >= 0.02 else (2 if width >= 0.008 else 1)
     m = obj.modifiers.new("Bevel", "BEVEL")
     m.width = width
     m.segments = segments
@@ -75,7 +87,20 @@ def cube(name, dims, loc, mat, bevel_w=0.025, rot=(0, 0, 0)):
     return ob
 
 
+# Fase 13 — piso de segmentos. Muitas chamadas pediam 6 ou 8 lados para poupar
+# poligono, o que dava postes com cara de prisma hexagonal. Com a camera podendo
+# descer ao nivel do chao isso aparece, e o custo e irrisorio: um cilindro de 16
+# lados tem 32 vertices contra 16 de um de 8.
+MIN_VERTS_CIL = 16
+MIN_SEGS_LATHE = 32
+
+
 def cyl(name, r, depth, loc, mat, verts=24, rot=(0, 0, 0), r2=None):
+    # O piso de 16 lados vale do raio de poste para cima. Um fio de cerca de
+    # 2 mm de raio com 16 lados e poligono jogado fora: ele ocupa menos de um
+    # pixel de largura na tela do celular. Entre 1,5 e 5 cm de raio — tubo de
+    # trelica, camada de conifera, haste — doze lados ja fecham a silhueta.
+    verts = max(verts, 8 if r < 0.015 else (12 if r < 0.05 else MIN_VERTS_CIL))
     kw = dict(radius=r, depth=depth, location=tloc(*loc), rotation=(rot[0], rot[2], rot[1]), vertices=verts)
     if r2 is not None:
         bpy.ops.mesh.primitive_cone_add(
@@ -92,6 +117,7 @@ def cyl(name, r, depth, loc, mat, verts=24, rot=(0, 0, 0), r2=None):
 
 
 def sphere(name, r, loc, mat, scale=(1, 1, 1), segs=28):
+    segs = max(segs, 24)
     bpy.ops.mesh.primitive_uv_sphere_add(radius=r, location=tloc(*loc), segments=segs, ring_count=max(12, segs // 2))
     ob = bpy.context.object
     ob.name = name
@@ -151,13 +177,21 @@ def parent_keep(child, parent_ob):
 
 
 def wheels(root, mat, xs, zs, r=0.08, y=0.08, depth=0.07):
+    """Rodas em `xs` (lateral) x `zs` (longitudinal), eixo na transversal.
+
+    A rotacao era `(math.pi/2, 0, 0)`, que no par (roll, yaw, pitch) desta
+    base e *roll*: deitava o cilindro ao longo de z e as rodas apareciam de
+    frente, como discos girados 90 graus. O correto e pitch — `(0, 0, pi/2)`
+    poe o eixo em x, que e a transversal de um veiculo que anda em z.
+    """
     for x in xs:
         for z in zs:
-            w = cyl(f"w{x}{z}", r, depth, (0, 0, 0), mat, 16, (math.pi / 2, 0, 0))
+            w = cyl(f"w{x}{z}", r, depth, (0, 0, 0), mat, 16, (0, 0, math.pi / 2))
             parent(w, root, (x, y, z))
 
 
 def lathe_solid(name, profile, segs, loc, mat, displace=0.0, noise=1.4):
+    segs = max(segs, MIN_SEGS_LATHE)
     verts, faces = [], []
     rings = len(profile)
     for i in range(segs):

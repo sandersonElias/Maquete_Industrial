@@ -10,7 +10,7 @@
   },
   "safety": {
     "max_moving_locomotives": 2,
-    "locomotive_timeout_ms": 1800,
+    "locomotive_timeout_ms": 5000,
     "sensor_timeout_multiplier": 1.8,
     "office_stop_delay_ms": 1500,
     "sensor_consecutive_failures": 3

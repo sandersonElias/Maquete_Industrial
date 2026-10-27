@@ -121,10 +121,29 @@ module.exports = (io) => {
     }
   }
 
+  // Marcar locomotivas offline (sem status há 15s)
+  async function markLocomotivesOffline() {
+    try {
+      const offline = await locomotiveService.markLocomotivesOffline(15);
+      for (const locoId of offline) {
+        logger.warn(`Locomotiva offline (sem status): ${locoId}`);
+        io.to("dashboard").emit("loco:update", {
+          locoId,
+          connected: false,
+          direction: "stop",
+          timestamp: Date.now(),
+        });
+      }
+    } catch (e) {
+      logger.error(`Erro marcando locomotivas offline: ${e.message}`);
+    }
+  }
+
   return {
     markTimedOutCommands,
     simulateChemistry,
     simulatePort,
     simulateLocomotive,
+    markLocomotivesOffline,
   };
 };

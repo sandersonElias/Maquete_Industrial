@@ -1,4 +1,10 @@
-require("dotenv").config();
+const path = require("path");
+
+// Sempre carrega o .env da raiz do monorepo, nunca o do cwd. Sem isso, rodar
+// `npm run dev` de dentro de backend_nodejs/ procuraria backend_nodejs/.env
+// (que nao existe) e ignoraria silenciosamente o .env da raiz, deixando
+// DATABASE_URL undefined sem nenhum aviso claro do motivo.
+require("dotenv").config({ path: path.resolve(__dirname, "../../../.env") });
 
 const isProduction = process.env.NODE_ENV === "production";
 

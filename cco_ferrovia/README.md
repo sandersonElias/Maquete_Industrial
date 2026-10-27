@@ -22,12 +22,13 @@ Este módulo é independente do dashboard e do gateway Bluetooth existentes na r
 
 ## Executar com o hardware
 
-1. Instale o pacote indicado em `software/cco/requirements.txt`.
+1. Instale o pacote indicado em `software/cco/requirements.txt` (ou use `py -3`, que já vem com o Python do sistema).
 2. Grave o firmware do Arduino Uno.
 3. Copie `secrets.example.h` para `secrets.h` e informe o nome e a senha do hotspot.
 4. Copie e grave o firmware do ESP-12E em cada locomotiva, alterando `LOCO_ID` para L01, L02 e L03. A ligação validada é GPIO13/D7 em IN1 e GPIO12/D6 em IN2 da HW-354.
 5. Configure o hotspot de 2,4 GHz com os mesmos dados do arquivo `secrets.h`.
-6. Execute `software/cco/INICIAR_SISTEMA.cmd`.
+6. Na primeira execução, rode `software/cco/LIBERAR_FIREWALL.cmd` como administrador para liberar UDP 4210 (telemetria) e TCP 8080 (tela).
+7. Execute `software/cco/INICIAR_SISTEMA.cmd`.
 
 ## Funções implementadas
 
@@ -39,6 +40,7 @@ Este módulo é independente do dashboard e do gateway Bluetooth existentes na r
 - limite de duas locomotivas simultaneamente em movimento, mantendo a terceira disponível;
 - rotas plana, elevada e oficina;
 - diagnóstico da sequência dos sete sensores;
+- confirmação única por passagem, sem repetir a cada barra da etiqueta óptica;
 - bloqueio local das chaves próximas a sensores ativos;
 - semáforos interno e externo combinados em um único conjunto de três saídas;
 - sinalização automática: amarelo na aproximação, vermelho na ocupação e verde após a liberação;
@@ -66,3 +68,4 @@ py -3 software/cco/testes/teste_seguranca.py
 - calibrar os ângulos dos três servos sem conectar a haste às chaves;
 - calibrar os tempos entre sensores e a parada temporizada da oficina.
 - verificar fisicamente a sequência de sensores de cada rota e corrigir `software/cco/config.json` se necessário.
+- conferir se os sete sensores ficam CLEAR sem trem e geram uma única confirmação por passagem.

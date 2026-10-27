@@ -3,10 +3,12 @@ const { JWT_SECRET, GATEWAY_API_KEY } = require("../config");
 const logger = require("../config/logger");
 const ferroviaService = require("../services/ferroviaService");
 const trucksService = require("../services/trucksService");
+const locomotiveService = require("../services/locomotiveService");
 const { delRedisKey } = require("../services/redisService");
 
 const dashboardClients = new Map();
 const gatewayClients = new Map();
+const locomotiveClients = new Map();
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -63,13 +65,79 @@ module.exports = (io) => {
       handleGatewayData(data, io, socket);
     });
 
+    // ── Locomotivas Wi-Fi (ESP-12E) ──
+    socket.on("loco:register", (data) => handleLocoRegister(data, io, socket));
+    socket.on("loco:status", (data) => handleLocoStatus(data, io, socket));
+
     socket.on("disconnect", () => {
       dashboardClients.delete(socket.id);
       gatewayClients.delete(socket.id);
+      if (socket.locoId) {
+        locomotiveClients.delete(socket.locoId);
+        logger.info(`Locomotiva desconectada: ${socket.locoId}`);
+      }
       logger.info(`Cliente desconectado: ${socket.id}`);
     });
   });
 };
+
+// ── Locomotiva (ESP-12E) registra conexão ──
+async function handleLocoRegister(data, io, socket) {
+  if (!data || !data.locoId || !data.apiKey) {
+    socket.emit("loco:registered", { success: false, error: "locoId e apiKey obrigatorios" });
+    return;
+  }
+
+  if (data.apiKey !== GATEWAY_API_KEY) {
+    socket.emit("loco:registered", { success: false, error: "API Key invalida" });
+    return;
+  }
+
+  const locoId = data.locoId;
+  socket.locoId = locoId;
+  socket.join(`loco-${locoId}`);
+  locomotiveClients.set(locoId, socket);
+  socket.emit("loco:registered", { success: true, locoId });
+  logger.info(`Locomotiva registrada: ${locoId}`);
+
+  // Avisa o dashboard que a locomotiva está online
+  io.to("dashboard").emit("loco:update", {
+    locoId,
+    connected: true,
+    timestamp: Date.now(),
+  });
+}
+
+// ── Locomotiva envia status (velocidade, direção, bateria) ──
+async function handleLocoStatus(data, io, socket) {
+  if (!socket.locoId) {
+    return;
+  }
+
+  try {
+    const { speed, direction, battery } = data || {};
+    const locoId = socket.locoId;
+
+    // Persiste estado no banco
+    const state = await locomotiveService.updateLocomotiveState(locoId, {
+      speed: Number(speed) || 0,
+      direction: direction || "stop",
+      batteryVoltage: Number(battery) || 0,
+    });
+
+    // Repassa ao dashboard
+    io.to("dashboard").emit("loco:update", {
+      locoId,
+      speed: state.speed,
+      direction: state.direction,
+      battery: state.battery_voltage,
+      connected: true,
+      timestamp: Date.now(),
+    });
+  } catch (e) {
+    logger.error(`Erro processando status da locomotiva: ${e.message}`);
+  }
+}
 
 async function handleGatewayData(data, io, socket) {
   if (!socket.gatewayId) {
@@ -127,6 +195,66 @@ async function handleGatewayData(data, io, socket) {
         state,
         timestamp: Date.now(),
       });
+    }
+
+    // ── Sensores (EVENT|SENSOR|<id>|<DETECTED|CLEAR>|<ts>) ──
+    if (rawData.startsWith("EVENT|SENSOR")) {
+      const sensorId = parts[2];
+      const state = parts[3];
+
+      if (!sensorId || !["DETECTED", "CLEAR"].includes(state)) {
+        logger.warn(`Evento de sensor invalido: ${rawData}`);
+        return;
+      }
+
+      const active = state === "DETECTED";
+      await ferroviaService.updateSensor(sensorId, active);
+
+      io.to("dashboard").emit("sensor:update", {
+        sensorId,
+        active,
+        timestamp: Date.now(),
+      });
+
+      logger.info(`Sensor ${sensorId}: ${state}`);
+    }
+
+    // ── Status completo dos sensores (STATUS|SENSOR|<id>|<0|1>|<ts>) ──
+    if (rawData.startsWith("STATUS|SENSOR")) {
+      const sensorId = parts[2];
+      const active = parts[3] === "1";
+
+      if (!sensorId) {
+        logger.warn(`Status de sensor invalido: ${rawData}`);
+        return;
+      }
+
+      await ferroviaService.updateSensor(sensorId, active);
+
+      io.to("dashboard").emit("sensor:update", {
+        sensorId,
+        active,
+        timestamp: Date.now(),
+      });
+    }
+
+    // ── Semáforo (STATUS|GATE|<RED|YELLOW|GREEN>) ──
+    if (rawData.startsWith("STATUS|GATE")) {
+      const gateState = parts[2];
+
+      if (!["RED", "YELLOW", "GREEN"].includes(gateState)) {
+        logger.warn(`Estado do gate invalido: ${gateState}`);
+        return;
+      }
+
+      await ferroviaService.setSemaphore(gateState);
+
+      io.to("dashboard").emit("semaphore:update", {
+        state: gateState,
+        timestamp: Date.now(),
+      });
+
+      logger.info(`Semaforo: ${gateState}`);
     }
 
     // ── Dados do Caminhão ──

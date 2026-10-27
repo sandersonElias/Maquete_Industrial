@@ -9,6 +9,8 @@ module.exports = (io) => {
   const router = express.Router();
 
   router.get("/status", authenticateToken, ferroviaController.getStatus);
+  router.get("/sensors", authenticateToken, ferroviaController.getSensors);
+  router.get("/semaphore", authenticateToken, ferroviaController.getSemaphore);
   router.post(
     "/switch",
     authenticateToken,

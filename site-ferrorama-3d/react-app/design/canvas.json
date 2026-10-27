@@ -1,0 +1,19 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1360, "h": 1010 },
+    { "file": "Elevacoes.dc.html", "x": 1480, "y": 0, "w": 1180, "h": 700 },
+    { "file": "Paleta.dc.html", "x": 0, "y": 1180, "w": 1180, "h": 900 },
+    { "file": "Camera.dc.html", "x": 1300, "y": 1180, "w": 1180, "h": 820 },
+    { "file": "Celular.dc.html", "x": 2600, "y": 1180, "w": 1180, "h": 860 }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 1480,
+      "y": 820,
+      "w": 460,
+      "text": "Referências: dois dioramas HO (porto e cava) + um render de sítio industrial.\n\nO que a foto do porto pede e a maquete não tem: guindaste treliçado, bloco de contêineres no cais, barcaça com garra, rebocador — e água com ondulação.\n\nPosições são propostas: passam pelo verificador de layout antes de virar código."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

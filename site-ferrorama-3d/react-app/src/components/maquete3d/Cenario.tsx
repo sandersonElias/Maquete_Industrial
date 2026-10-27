@@ -1,7 +1,7 @@
 import { useRef, useMemo, useLayoutEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { VITRINE } from './modulos';
+import { PALETA } from './modulos';
 
 /**
  * A "casca" do diorama: vitrine de acrílico, pedestal, terreno com grama,
@@ -39,8 +39,8 @@ export function Pedestal() {
       <mesh position={[0, -0.66, 0]}>
         <boxGeometry args={[largura + 1.5, 0.12, profundidade + 1.5]} />
         <meshStandardMaterial
-          color={VITRINE.ciano}
-          emissive={VITRINE.ciano}
+          color={PALETA.accent}
+          emissive={PALETA.accent}
           emissiveIntensity={2.2}
           toneMapped={false}
         />
@@ -52,7 +52,7 @@ export function Pedestal() {
           <planeGeometry args={[13, 2.6]} />
           <meshStandardMaterial
             color="#0a0c10"
-            emissive={VITRINE.azul}
+            emissive={PALETA.accent}
             emissiveIntensity={0.35}
             roughness={0.5}
           />
@@ -72,7 +72,7 @@ export function Pedestal() {
   );
 }
 
-/** Letreiro "FERRORAMA" desenhado em canvas — sem baixar fonte nem imagem. */
+/** Letreiro do projeto desenhado em canvas — sem baixar fonte nem imagem. */
 function useTexturaLetreiro() {
   return useMemo(() => {
     const c = document.createElement('canvas');
@@ -81,16 +81,27 @@ function useTexturaLetreiro() {
     const ctx = c.getContext('2d')!;
     ctx.clearRect(0, 0, c.width, c.height);
 
-    ctx.font = 'bold 112px Archivo, Inter, sans-serif';
+    const texto = 'MAQUETE INDUSTRIAL';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    // A fonte se ajusta ao texto em vez de ser fixa: 'MAQUETE INDUSTRIAL' tem o
+    // dobro das letras do nome antigo e, com os 112px de antes, transbordava a
+    // textura pelas duas pontas. Mede-se uma vez e encolhe o corpo se precisar.
+    const largura = c.width * 0.9;
+    let corpo = 112;
+    ctx.font = `bold ${corpo}px Archivo, Inter, sans-serif`;
+    const medida = ctx.measureText(texto).width;
+    if (medida > largura) {
+      corpo = Math.floor(corpo * (largura / medida));
+      ctx.font = `bold ${corpo}px Archivo, Inter, sans-serif`;
+    }
     // Halo azul em volta das letras, como letreiro de acrílico iluminado
-    ctx.shadowColor = VITRINE.azul;
+    ctx.shadowColor = PALETA.accent;
     ctx.shadowBlur = 34;
     ctx.fillStyle = '#eaf4ff';
-    ctx.fillText('FERRORAMA', c.width / 2, c.height / 2);
+    ctx.fillText(texto, c.width / 2, c.height / 2);
     ctx.shadowBlur = 0;
-    ctx.fillText('FERRORAMA', c.width / 2, c.height / 2);
+    ctx.fillText(texto, c.width / 2, c.height / 2);
 
     const t = new THREE.CanvasTexture(c);
     t.anisotropy = 4;
@@ -235,8 +246,8 @@ export function Terreno() {
         <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.02, z]}>
           <planeGeometry args={[w, d]} />
           <meshStandardMaterial
-            color={VITRINE.verde}
-            emissive={VITRINE.verde}
+            color={PALETA.glow}
+            emissive={PALETA.glow}
             emissiveIntensity={1.5}
             transparent
             opacity={0.55}
@@ -508,14 +519,14 @@ export function EsferasArmazenamento({ position }: { position: [number, number, 
           <mesh position={[0, 0.14, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <circleGeometry args={[0.75, 20]} />
             <meshBasicMaterial
-              color={VITRINE.azul}
+              color={PALETA.accent}
               transparent
               opacity={0.5}
               blending={THREE.AdditiveBlending}
               depthWrite={false}
             />
           </mesh>
-          <pointLight position={[0, 0.5, 0]} color={VITRINE.azul} intensity={1.6} distance={2.6} />
+          <pointLight position={[0, 0.5, 0]} color={PALETA.accent} intensity={1.6} distance={2.6} />
         </group>
       ))}
     </group>
@@ -528,7 +539,7 @@ export function EsferasArmazenamento({ position }: { position: [number, number, 
 
 export function FeixeLuz({
   position,
-  cor = VITRINE.azul,
+  cor = PALETA.accent,
   altura = 5,
   raio = 0.65,
 }: {
@@ -582,8 +593,8 @@ export function TubulacaoNeon({ pontos }: { pontos: Array<[number, number]> }) {
       <mesh raycast={() => null}>
         <tubeGeometry args={[curva, 60, 0.075, 6, false]} />
         <meshStandardMaterial
-          color={VITRINE.ciano}
-          emissive={VITRINE.ciano}
+          color={PALETA.accent}
+          emissive={PALETA.accent}
           emissiveIntensity={2.4}
           toneMapped={false}
         />
@@ -592,7 +603,7 @@ export function TubulacaoNeon({ pontos }: { pontos: Array<[number, number]> }) {
       <mesh raycast={() => null}>
         <tubeGeometry args={[curva, 60, 0.2, 6, false]} />
         <meshBasicMaterial
-          color={VITRINE.ciano}
+          color={PALETA.accent}
           transparent
           opacity={0.14}
           blending={THREE.AdditiveBlending}

@@ -69,5 +69,6 @@ def build_roads(m):
     poste_luz("LuzEstrada0", -10.4, -5.4, m["black"], m["glow"], 1.35)
     poste_luz("LuzEstrada1", -9.0, -4.55, m["black"], m["glow"], 1.35)
     poste_luz("LuzEstrada2", 10.2, 5.7, m["black"], m["glow"], 1.4)
-    poste_luz("LuzEstrada3", 13.4, 7.1, m["black"], m["glow"], 1.4)
+    # LuzEstrada3 nascia dentro do virador de vagoes.
+    poste_luz("LuzEstrada3", 13.2, 6.3, m["black"], m["glow"], 1.4)
     return road_mine, road_port

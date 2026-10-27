@@ -1,0 +1,20 @@
+---
+description: Maquete 3D é do Caio — Marco não edita maquete3d sem ele pedir
+alwaysApply: true
+---
+
+# Maquete 3D — responsabilidade do Caio
+
+**A partir de agora a maquete 3D é do Caio.** Não editar `site-ferrorama-3d/react-app/src/components/maquete3d/**` no fluxo do Marco, salvo se o Caio (ou o Marco falando por ele) pedir explicitamente.
+
+Também evitar mudanças “de maquete” em:
+
+- `site-ferrorama-3d/react-app/scripts/maquete_bpy/**`
+- `site-ferrorama-3d/react-app/scripts/build_maquete_blender.py`
+- `site-ferrorama-3d/react-app/public/models/maquete-blender.glb`
+
+Branch típica do Caio: `feat/dev-Caio`.
+
+Resto do site (`Hero`, seções, nav, CSS, motion, textos) continua livre pro Marco.
+
+Publicar: se ele pedir “publica o site”, deploy Vercel em `site-ferrorama-3d/react-app` (`npx vercel --prod`). Link: https://react-app-nine-weld.vercel.app

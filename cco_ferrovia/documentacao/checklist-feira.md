@@ -7,6 +7,9 @@
 - [ ] Fonte de 5 V e GND comum conferidos.
 - [ ] Cabos dos servos firmes e ângulos de C1, C2 e C3 calibrados.
 - [ ] S01 a S07 testados individualmente.
+- [ ] Sensores em CLEAR sem trem; uma única confirmação por passagem.
+- [ ] Se algum sensor piscar ACTIVE sem trem, ajustar o potenciômetro; se as chaves ficarem bloqueadas em repouso, inverter `SENSOR_ACTIVE_LOW`.
+- [ ] Etiquetas ópticas planas, sem brilho, passando sobre o centro dos sensores e a 2–4 mm deles.
 - [ ] Semáforos interno e externo, ligados ao mesmo conjunto de saídas, testados nas três cores.
 - [ ] Hotspot `CCO_FERROVIA` ligado em 2,4 GHz.
 - [ ] Arduino conectado por USB e três ESPs visíveis no CCO.

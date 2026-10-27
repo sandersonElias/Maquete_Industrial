@@ -10,8 +10,11 @@ Multi-module industrial model monitoring system. No monorepo tooling ÔÇö each
 | `dashboard_react/` | React (CRA), Tailwind, Socket.IO client | `src/index.js` |
 | `gateway_bluetooth/` | Node.js, SerialPort, Socket.IO client | `index.js` |
 | `app_react_native/` | Expo (React Native), Bluetooth fallback | `App.js` |
+| `app_kotlin/` | Android nativo (Jetpack Compose, caminhão basculante) | `app/src/main/java/.../MainActivity.kt` |
+| `app_ferrorama/` | Android nativo (Jetpack Compose, agulhas BT + locomotivas Wi-Fi) | `app/src/main/java/com/maquete/industrial/ferrorama/MainActivity.kt` |
 | `firmware_arduino_ferrovia/` | Arduino sketch (4 servos + HC-05) | `ferrovia_firmware.ino` |
 | `firmware_arduino_caminhao_basculante/` | Arduino sketch (dump truck, DC motor + L298M) | `caminhao_basculante_firmware.ino` |
+| `firmware_arduino_locomotiva/` | ESP-12E sketch (L298M, 2 locomotivas Wi-Fi) | `locomotiva_firmware.ino` |
 
 ## Startup Order
 

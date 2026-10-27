@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /**
- * Rede de trilhos do Ferrorama, seguindo a planta do Figma.
+ * Rede de trilhos da Maquete Industrial, seguindo a planta do Figma.
  *
  * O circuito NÃO é um oval simples: são 6 trechos ligando 3 nós de desvio
  * (SW1, SW2 e SW3), com duas diagonais que se cruzam no miolo. Cada desvio

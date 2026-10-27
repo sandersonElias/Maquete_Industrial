@@ -13,7 +13,6 @@
 backend_nodejs/.env
 gateway_bluetooth/.env
 dashboard_react/.env
-app_react_native/.env
 
 # Docker volumes
 postgres_data/
@@ -28,6 +27,8 @@ node_modules/
 # Build outputs
 build/
 dist/
+.vite/
+Site _Ferrorama/
 .next/
 .nuxt/
 
@@ -56,6 +57,8 @@ app_kotlin/local.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# Python (scripts de geração da maquete 3D)
 
 # CCO Ferrovia local
 cco_ferrovia/software/cco/data/*.jsonl

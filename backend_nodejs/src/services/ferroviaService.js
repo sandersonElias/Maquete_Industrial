@@ -100,10 +100,40 @@ async function markTimedOutCommands() {
   return result.rows;
 }
 
+async function getSensors() {
+  const result = await pool.query("SELECT * FROM sensors ORDER BY sensor_id");
+  return result.rows;
+}
+
+async function updateSensor(sensorId, active) {
+  await pool.query(
+    "UPDATE sensors SET active = $1, triggered_at = CASE WHEN $1 THEN NOW() ELSE triggered_at END WHERE sensor_id = $2",
+    [active, sensorId],
+  );
+}
+
+async function getSemaphore() {
+  const result = await pool.query(
+    "SELECT state FROM ferrovia_semaphore ORDER BY id DESC LIMIT 1",
+  );
+  return result.rows[0]?.state || "RED";
+}
+
+async function setSemaphore(state) {
+  await pool.query(
+    "INSERT INTO ferrovia_semaphore (state, changed_at) VALUES ($1, NOW())",
+    [state],
+  );
+}
+
 module.exports = {
   getSwitchStatus,
   handleSwitchCommand,
   updateSwitchStatus,
   updateSwitchAngleAndState,
   markTimedOutCommands,
+  getSensors,
+  updateSensor,
+  getSemaphore,
+  setSemaphore,
 };

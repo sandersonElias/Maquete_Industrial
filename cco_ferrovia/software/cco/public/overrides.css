@@ -4,6 +4,14 @@
 .position-hint{display:block;color:var(--muted);margin:5px 0 2px}
 .maintenance-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
 .maintenance-grid button{padding-inline:5px;font-size:10px}
+button,.button-link{transition:background .15s,border-color .15s,opacity .15s,transform .08s}
+button:hover:not(:disabled),.button-link:hover{background:rgba(38,143,197,.22);border-color:var(--blue)}
+button:active:not(:disabled),.button-link:active{background:rgba(38,143,197,.3);transform:translateY(1px)}
+button.busy{opacity:.55;cursor:progress}
+.loco-card:hover{border-color:var(--blue)}
+.loco-card:active{transform:scale(.99)}
+.switch-row button.active,.signal-row button.active{border-color:var(--green);color:var(--green)}
+.loco-bars{display:contents}
 @media(min-width:901px){
   body{overflow:hidden}
   .workspace{height:calc(100vh - 116px);min-height:600px;overflow:hidden}

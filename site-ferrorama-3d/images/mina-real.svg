@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Mina a c�u aberto">
-  <rect width="800" height="500" fill="#0a0e14"/>
-  <ellipse cx="400" cy="350" rx="320" ry="80" fill="#2a1810"/>
-  <path d="M150 350 Q250 150 400 200 Q550 150 650 350" fill="#1a222d" stroke="#e87722" stroke-width="2"/>
-  <rect x="350" y="120" width="100" height="60" fill="#64748b" opacity="0.5"/>
-  <text x="400" y="440" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="16">Mina real  images/mina-real.jpg</text>
-</svg>

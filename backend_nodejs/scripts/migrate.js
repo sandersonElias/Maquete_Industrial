@@ -1,24 +1,40 @@
 #!/usr/bin/env node
-// backend_nodejs/scripts/migrate.js
-// Executa as migrations do banco de dados
-
+/**
+ * Aplica schema.sql e cada arquivo de migrations/, em ordem, contra
+ * DATABASE_URL, pulando o que já foi executado (rastreado na tabela
+ * `_migrations`). Statements são separados respeitando blocos `$$ ... $$`
+ * (DO blocks do Postgres), e erros de "já existe" (tabela/coluna/constraint
+ * duplicada) são ignorados por statement — permite rodar de novo com
+ * segurança mesmo em cima de um banco parcialmente migrado.
+ */
 const fs = require("fs");
 const path = require("path");
 const { Pool } = require("pg");
 
-require("dotenv").config({ path: path.join(__dirname, "../.env") });
+// Sempre a raiz do monorepo, nunca backend_nodejs/.env — é lá que o
+// DATABASE_URL do Supabase vive (mesma convenção do docker-compose).
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 
-// SSL necessario para Render PostgreSQL
-const isRemoteDB = process.env.DATABASE_URL && process.env.DATABASE_URL.includes("render.com");
+const DATABASE_URL = process.env.DATABASE_URL;
 
+if (!DATABASE_URL) {
+  console.error(
+    "DATABASE_URL nao definida. Crie um .env na raiz do repositorio " +
+      "(nao em backend_nodejs/) com a connection string do Supabase."
+  );
+  process.exit(1);
+}
+
+// SSL por qualquer host remoto, não só Render — hoje o banco é Supabase.
+const useSSL = !DATABASE_URL.includes("localhost");
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: isRemoteDB ? { rejectUnauthorized: false } : false,
+  connectionString: DATABASE_URL,
+  ssl: useSSL ? { rejectUnauthorized: false } : false,
   connectionTimeoutMillis: 30000,
 });
 
-const MIGRATIONS_DIR = path.join(__dirname, "../migrations");
-const SCHEMA_FILE = path.join(__dirname, "../schema.sql");
+const MIGRATIONS_DIR = path.resolve(__dirname, "../migrations");
+const SCHEMA_FILE = path.resolve(__dirname, "../schema.sql");
 
 async function fileExists(filePath) {
   try {
@@ -29,54 +45,41 @@ async function fileExists(filePath) {
   }
 }
 
+/** Separa um arquivo SQL em statements, respeitando blocos $$ ... $$ (DO blocks). */
 async function readSQLFile(filePath) {
   const content = await fs.promises.readFile(filePath, "utf-8");
 
-  // Remove comments (lines starting with --)
-  const lines = content.split("\n");
-  const withoutComments = lines
-    .map(line => {
-      // Remove inline comments but preserve -- inside strings
+  const withoutComments = content
+    .split("\n")
+    .map((line) => {
       const commentIndex = line.indexOf("--");
-      if (commentIndex >= 0) {
-        return line.substring(0, commentIndex);
-      }
-      return line;
+      return commentIndex >= 0 ? line.substring(0, commentIndex) : line;
     })
     .join("\n");
 
-  // Split by semicolons, but respect $$ delimiters (PostgreSQL DO blocks)
   const statements = [];
   let current = "";
   let inDollarQuote = false;
 
   for (let i = 0; i < withoutComments.length; i++) {
     const char = withoutComments[i];
-    const nextChars = withoutComments.substring(i, i + 2);
-
-    if (nextChars === "$$") {
+    if (withoutComments.substring(i, i + 2) === "$$") {
       inDollarQuote = !inDollarQuote;
       current += "$$";
-      i++; // Skip next $
+      i++;
       continue;
     }
-
     if (char === ";" && !inDollarQuote) {
       const trimmed = current.trim();
-      if (trimmed.length > 0) {
-        statements.push(trimmed);
-      }
+      if (trimmed.length > 0) statements.push(trimmed);
       current = "";
     } else {
       current += char;
     }
   }
 
-  // Add last statement if any
   const trimmed = current.trim();
-  if (trimmed.length > 0) {
-    statements.push(trimmed);
-  }
+  if (trimmed.length > 0) statements.push(trimmed);
 
   return statements;
 }
@@ -93,28 +96,27 @@ async function createMigrationsTable(client) {
 
 async function getExecutedMigrations(client) {
   const result = await client.query("SELECT filename FROM _migrations ORDER BY id");
-  return result.rows.map(r => r.filename);
+  return result.rows.map((r) => r.filename);
 }
 
 async function runMigration(client, filename, sqlStatements) {
   console.log(`  Executando: ${filename}`);
 
+  // Códigos que significam "já existe" — seguros de ignorar ao reaplicar.
+  const ignoredErrors = new Set([
+    "42710", // duplicate_object
+    "42P07", // duplicate_table
+    "42701", // duplicate_column
+    "42P16", // duplicate_constraint
+    "23505", // unique_violation
+    "42P01", // undefined_table (para DROP IF EXISTS)
+  ]);
+
   for (const sql of sqlStatements) {
     try {
       await client.query(sql);
     } catch (e) {
-      // Ignorar erros comuns de tabelas/constraints ja existentes
-      const ignoredErrors = [
-        "42710", // duplicate_object
-        "42P07", // duplicate_table
-        "42701", // duplicate_column
-        "42P16", // duplicate_constraint
-        "23505", // unique_violation
-        "42P01", // undefined_table (para DROP IF EXISTS)
-      ];
-      if (ignoredErrors.includes(e.code)) {
-        // Ignorar silenciosamente
-      } else {
+      if (!ignoredErrors.has(e.code)) {
         console.error(`  Erro ao executar SQL: ${e.message}`);
         console.error(`  SQL: ${sql.substring(0, 100)}...`);
         throw e;
@@ -136,16 +138,13 @@ async function migrate() {
     console.log("  MIGRATE - Maquete Industrial");
     console.log("========================================\n");
 
-    // Verificar conexao
     await client.query("SELECT NOW()");
     console.log("  PostgreSQL conectado\n");
 
-    // Criar tabela de migrations
     await createMigrationsTable(client);
+    const executed = await getExecutedMigrations(client);
 
-    // Executar schema.sql primeiro
     if (await fileExists(SCHEMA_FILE)) {
-      const executed = await getExecutedMigrations(client);
       if (!executed.includes("schema.sql")) {
         console.log("Executando schema.sql...");
         const statements = await readSQLFile(SCHEMA_FILE);
@@ -156,17 +155,14 @@ async function migrate() {
       }
     }
 
-    // Executar migrations adicionais
     if (await fileExists(MIGRATIONS_DIR)) {
-      const files = await fs.promises.readdir(MIGRATIONS_DIR);
-      const sqlFiles = files
-        .filter(f => f.endsWith(".sql"))
+      const files = (await fs.promises.readdir(MIGRATIONS_DIR))
+        .filter((f) => f.endsWith(".sql"))
         .sort();
 
-      const executed = await getExecutedMigrations(client);
-
-      for (const file of sqlFiles) {
-        if (!executed.includes(file)) {
+      const jaExecutadas = await getExecutedMigrations(client);
+      for (const file of files) {
+        if (!jaExecutadas.includes(file)) {
           const filePath = path.join(MIGRATIONS_DIR, file);
           const statements = await readSQLFile(filePath);
           await runMigration(client, file, statements);

@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; }
+    a { color: #ff8844; } a:hover { color: #ff9e6b; }
+    .sw { height: 74px; border-radius: 10px 10px 0 0; }
+    .cell { background: #11111c; border: 1px solid #1d1a2a; border-radius: 12px; overflow: hidden; }
+    .meta { padding: 11px 13px 13px; }
+    .hex { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #f0ebe4; margin: 0 0 3px; }
+    .key { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #ff8844; margin: 0 0 5px; letter-spacing: 0.06em; }
+    .use { font-size: 11.5px; line-height: 1.45; color: #8a7f74; margin: 0; }
+  </style>
+</helmet>
+
+<div style="width: 1180px; min-height: 900px; box-sizing: border-box; background: #08080d; color: #f0ebe4; padding: 40px 44px; display: flex; flex-direction: column; gap: 28px;">
+
+  <div style="border-bottom: 1px solid #1d1a2a; padding-bottom: 18px;">
+    <p style="margin: 0 0 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #ff8844;">MATERIAIS · PALETA DA MAQUETE</p>
+    <h1 style="margin: 0; font-family: 'Archivo', system-ui, sans-serif; font-weight: 800; font-size: 34px; line-height: 1.05; letter-spacing: -0.02em;">As cores vêm do diorama, não do gosto</h1>
+    <p style="margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: #8a7f74; max-width: 760px; text-wrap: pretty;">Cada chave é a de <code style="font-family: 'JetBrains Mono', monospace; color: #f0ebe4;">materials.py</code>. Onde a cor muda em relação ao que está no código, o motivo está escrito.</p>
+  </div>
+
+  <div>
+    <p style="margin: 0 0 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #4db8b8;">PORTO — TIRADAS DA FOTO DE REFERÊNCIA</p>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+      <div class="cell"><div class="sw" style="background: #1c4a3a;"></div><div class="meta"><p class="hex">#1C4A3A</p><p class="key">ship</p><p class="use">Casco do navio. Verde-escuro fosco, quase sem brilho — casco pintado e batido, não esmalte.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #d4a017;"></div><div class="meta"><p class="hex">#D4A017</p><p class="key">crane_y · novo</p><p class="use">Amarelo de guindaste. Saturado, mas com rugosidade alta: é chapa pintada exposta ao sal.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #2b3f52;"></div><div class="meta"><p class="hex">#2B3F52</p><p class="key">water</p><p class="use">Água de doca. Azul acinzentado sujo, nunca azul-piscina — porto tem sedimento.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #9a9691;"></div><div class="meta"><p class="hex">#9A9691</p><p class="key">conc</p><p class="use">Laje do cais. Cinza levemente quente; a versão suja já existe em <code>conc_dirty</code>.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #b5442e;"></div><div class="meta"><p class="hex">#B5442E</p><p class="key">steel_rust</p><p class="use">Ferrugem de defensa, cabeço e chute. Sempre nas partes baixas e nas quinas.</p></div></div>
+    </div>
+  </div>
+
+  <div>
+    <p style="margin: 0 0 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #4db8b8;">MINA — DA FOTO DA CAVA</p>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+      <div class="cell"><div class="sw" style="background: #c9a25c;"></div><div class="meta"><p class="hex">#C9A25C</p><p class="key">rock</p><p class="use">Rocha de bancada. Ocre claro, não cinza. É a cor que domina a foto inteira da cava.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #8f5a33;"></div><div class="meta"><p class="hex">#8F5A33</p><p class="key">dirt</p><p class="use">Laterita de pista e berma. Mais escura e mais vermelha que a rocha exposta.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #6e2f22;"></div><div class="meta"><p class="hex">#6E2F22</p><p class="key">ore</p><p class="use">Minério de ferro. Vermelho-arroxeado escuro — o corpo lavrado, não o estéril.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #e0b019;"></div><div class="meta"><p class="hex">#E0B019</p><p class="key">cat</p><p class="use">Amarelo de máquina pesada. Um degrau mais vivo que o do guindaste de porto.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #35507a;"></div><div class="meta"><p class="hex">#35507A</p><p class="key">shovel_b · novo</p><p class="use">Azul das escavadeiras a cabo da foto. Uma máquina em cor diferente quebra o campo amarelo.</p></div></div>
+    </div>
+  </div>
+
+  <div>
+    <p style="margin: 0 0 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #4db8b8;">SEGURANÇA E VEGETAÇÃO</p>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+      <div class="cell"><div class="sw" style="background: #f26a05;"></div><div class="meta"><p class="hex">#F26A05</p><p class="key">hi_vis</p><p class="use">Colete. A única cor da maquete que pode saltar — é para saltar mesmo.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #e6dc33;"></div><div class="meta"><p class="hex">#E6DC33</p><p class="key">helmet</p><p class="use">Capacete. Amarelo esverdeado, distinto do amarelo de máquina.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #47761f;"></div><div class="meta"><p class="hex">#47761F</p><p class="key">grass</p><p class="use">Capim e revegetação. Verde-oliva, nunca verde-grama de jardim.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #24471c;"></div><div class="meta"><p class="hex">#24471C</p><p class="key">leaf</p><p class="use">Copa. Escura o bastante para a cortina arbórea virar massa e não pontos.</p></div></div>
+      <div class="cell"><div class="sw" style="background: #4f2f1b;"></div><div class="meta"><p class="hex">#4F2F1B</p><p class="key">Col (sujeira)</p><p class="use">Poeira de minério gravada em cor de vértice, escurecendo pé de equipamento e face inferior.</p></div></div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px;">
+    <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 22px 24px;">
+      <p style="margin: 0 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">O QUE ESTA PALETA CORRIGE</p>
+      <p style="margin: 0 0 12px; font-size: 13px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">A maquete hoje tem rocha cinza. Nas duas fotos de referência — o diorama de cava e o de porto — não existe cinza no terreno: é tudo ocre, laterita e vermelho de minério. Cinza fica reservado para concreto e aço.</p>
+      <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Duas chaves novas entram: <code style="font-family: 'JetBrains Mono', monospace; color: #f0ebe4;">crane_y</code> para o amarelo de guindaste portuário e <code style="font-family: 'JetBrains Mono', monospace; color: #f0ebe4;">shovel_b</code> para o azul das escavadeiras a cabo.</p>
+    </div>
+    <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 22px 24px;">
+      <p style="margin: 0 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">REGRA DE BRILHO</p>
+      <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Nada numa área industrial é liso. Rugosidade mínima 0,35 em qualquer superfície pintada, 0,85 em terreno, 0,9 em concreto. O único material com rugosidade baixa é a lâmina d'água — e é por isso que ela precisa de ondulação na malha, senão vira espelho.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

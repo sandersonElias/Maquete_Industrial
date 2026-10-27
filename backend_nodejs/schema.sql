@@ -99,6 +99,33 @@ CREATE TABLE IF NOT EXISTS locomotive_position (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Estado das locomotivas Wi-Fi (ESP-12E)
+CREATE TABLE IF NOT EXISTS locomotive_state (
+    loco_id VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL DEFAULT 'Locomotiva',
+    speed INTEGER DEFAULT 0,
+    direction VARCHAR(10) DEFAULT 'stop', -- forward, backward, stop
+    battery_voltage FLOAT DEFAULT 0,
+    connected BOOLEAN DEFAULT FALSE,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO locomotive_state (loco_id, name) VALUES
+('loco-01', 'Locomotiva 01'),
+('loco-02', 'Locomotiva 02')
+ON CONFLICT (loco_id) DO NOTHING;
+
+-- Comandos enviados às locomotivas Wi-Fi (auditoria)
+CREATE TABLE IF NOT EXISTS locomotive_commands (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    loco_id VARCHAR(20) REFERENCES locomotive_state(loco_id),
+    command VARCHAR(20) NOT NULL, -- forward, backward, stop
+    speed INTEGER DEFAULT 200,
+    issued_by UUID REFERENCES users(id),
+    issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'sent'
+);
+
 -- Tabela de Navios (Porto)
 CREATE TABLE IF NOT EXISTS ships (
     id VARCHAR(20) PRIMARY KEY,
@@ -147,9 +174,9 @@ CREATE INDEX IF NOT EXISTS idx_alerts_module ON alerts(module, severity, created
 
 -- Dados iniciais
 INSERT INTO switches (switch_id, name, current_angle, current_state) VALUES
-(1, 'Desvio Norte', 90, 'CENTER'),
-(2, 'Desvio Leste', 90, 'CENTER'),
-(3, 'Desvio Sul', 90, 'CENTER')
+(1, 'Desvio Superior', 90, 'CENTER'),
+(2, 'Desvio Central', 90, 'CENTER'),
+(3, 'Desvio Direito', 90, 'CENTER')
 ON CONFLICT (switch_id) DO NOTHING;
 
 INSERT INTO trucks (id, name, origin_x, origin_y, max_load) VALUES
@@ -159,6 +186,43 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO ships (id, name, cargo_type, cargo_weight, eta, dock_number) VALUES
 ('SHIP-001', 'Navio Cargueiro Alpha', 'Minério de Ferro', 15000, NOW() + INTERVAL '2 hours', 1)
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+--  Tabelas de Sensores e Semáforo (Ferrovia)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS sensors (
+    id SERIAL PRIMARY KEY,
+    sensor_id VARCHAR(5) UNIQUE NOT NULL, -- S1, S2, ..., S7
+    name VARCHAR(50) NOT NULL,
+    location VARCHAR(50) NOT NULL, -- reta_superior, reta_inferior, via_secundaria
+    active BOOLEAN DEFAULT FALSE,
+    triggered_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ferrovia_semaphore (
+    id SERIAL PRIMARY KEY,
+    state VARCHAR(10) DEFAULT 'RED' CHECK (state IN ('RED', 'YELLOW', 'GREEN')),
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_sensors_active ON sensors(sensor_id);
+
+-- Sensores iniciais (7 sensores HW-201)
+INSERT INTO sensors (sensor_id, name, location) VALUES
+('S1', 'Sensor Entrada Superior', 'reta_superior'),
+('S2', 'Sensor Meio Superior', 'reta_superior'),
+('S3', 'Sensor Curva Direita', 'reta_superior'),
+('S4', 'Sensor Saída SW3', 'reta_inferior'),
+('S5', 'Sensor Via Secundária', 'via_secundaria'),
+('S6', 'Sensor Antes Estação', 'reta_inferior'),
+('S7', 'Sensor Chegada Estação', 'reta_inferior')
+ON CONFLICT (sensor_id) DO NOTHING;
+
+-- Semáforo inicial
+INSERT INTO ferrovia_semaphore (state) VALUES ('RED')
+ON CONFLICT DO NOTHING;
 
 -- ============================================================
 --  Tabelas de Química

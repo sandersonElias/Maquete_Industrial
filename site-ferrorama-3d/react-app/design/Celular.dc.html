@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; }
+    a { color: #ff8844; } a:hover { color: #ff9e6b; }
+    .tier { background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; gap: 11px; }
+    .row { display: flex; justify-content: space-between; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+    .row span:first-child { color: #5e554b; }
+    .row span:last-child { color: #f0ebe4; }
+  </style>
+</helmet>
+
+<div style="width: 1180px; min-height: 860px; box-sizing: border-box; background: #08080d; color: #f0ebe4; padding: 40px 44px; display: flex; flex-direction: column; gap: 26px;">
+
+  <div style="border-bottom: 1px solid #1d1a2a; padding-bottom: 18px;">
+    <p style="margin: 0 0 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #ff8844;">CELULAR · COMPORTAMENTO</p>
+    <h1 style="margin: 0; font-family: 'Archivo', system-ui, sans-serif; font-weight: 800; font-size: 34px; line-height: 1.05; letter-spacing: -0.02em;">Um aparelho por vez, medido</h1>
+    <p style="margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: #8a7f74; max-width: 760px; text-wrap: pretty;">O visitante abre por QR code, na 4G da feira, num aparelho que ninguém escolheu. A qualidade não é decidida por largura de tela: um tablet largo pode ser mais fraco que um celular novo.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;">
+    <div class="tier">
+      <p style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 17px; color: #ff8844;">leve</p>
+      <p style="margin: 0 0 4px; font-size: 12px; line-height: 1.5; color: #8a7f74;">Tela ≤ 768 px, ou ≤ 4 GB, ou ≤ 4 núcleos.</p>
+      <div class="row"><span>dpr</span><span>1 → 1,25</span></div>
+      <div class="row"><span>sombras</span><span>desligadas</span></div>
+      <div class="row"><span>antialias</span><span>não</span></div>
+      <div class="row"><span>IBL</span><span>32 px</span></div>
+      <div class="row"><span>estrelas</span><span>500</span></div>
+      <div class="row"><span>adereços</span><span>ocultos</span></div>
+    </div>
+    <div class="tier">
+      <p style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 17px; color: #4db8b8;">média</p>
+      <p style="margin: 0 0 4px; font-size: 12px; line-height: 1.5; color: #8a7f74;">Ponteiro grosso, ou ≤ 8 GB.</p>
+      <div class="row"><span>dpr</span><span>1 → 1,5</span></div>
+      <div class="row"><span>sombras</span><span>1024 px</span></div>
+      <div class="row"><span>antialias</span><span>sim</span></div>
+      <div class="row"><span>IBL</span><span>32 px</span></div>
+      <div class="row"><span>estrelas</span><span>1200</span></div>
+      <div class="row"><span>adereços</span><span>visíveis</span></div>
+    </div>
+    <div class="tier">
+      <p style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 17px; color: #f0ebe4;">alta</p>
+      <p style="margin: 0 0 4px; font-size: 12px; line-height: 1.5; color: #8a7f74;">Mouse, mais de 8 GB, mais de 4 núcleos.</p>
+      <div class="row"><span>dpr</span><span>1 → 1,75</span></div>
+      <div class="row"><span>sombras</span><span>2048 px</span></div>
+      <div class="row"><span>antialias</span><span>sim</span></div>
+      <div class="row"><span>IBL</span><span>64 px</span></div>
+      <div class="row"><span>estrelas</span><span>1200</span></div>
+      <div class="row"><span>adereços</span><span>visíveis</span></div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 26px; align-items: flex-start;">
+
+    <div style="display: flex; gap: 18px; flex-shrink: 0;">
+      <div>
+        <div style="width: 190px; height: 400px; background: #0e0e16; border: 1px solid #3a3444; border-radius: 22px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px;">
+          <div style="height: 232px; background: #12121c; border: 1px solid #1d1a2a; border-radius: 12px; position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(160deg, #16202b, #0e0e16);"></div>
+            <div style="position: absolute; left: 12px; right: 12px; bottom: 44px; height: 2px; background: #2d8b8b; opacity: 0.5;"></div>
+            <div style="position: absolute; left: 26px; bottom: 46px; width: 58px; height: 14px; background: #1c4a3a; border-radius: 2px;"></div>
+            <div style="position: absolute; right: 22px; bottom: 46px; width: 12px; height: 44px; background: #d4a017; border-radius: 1px;"></div>
+            <p style="position: absolute; left: 10px; top: 9px; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; color: #8a7f74;">58svh</p>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <div style="flex-grow: 1; height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+            <div style="width: 44px; height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+            <div style="width: 44px; height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+          </div>
+          <div style="height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+          <div style="flex-grow: 1; background: #11111c; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+        </div>
+        <p style="margin: 10px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8a7f74; text-align: center;">RETRATO · ≤ 480 px</p>
+      </div>
+      <div>
+        <div style="width: 300px; height: 400px; background: #0e0e16; border: 1px solid #3a3444; border-radius: 22px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px;">
+          <div style="height: 318px; background: #12121c; border: 1px solid #1d1a2a; border-radius: 12px; position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(160deg, #16202b, #0e0e16);"></div>
+            <div style="position: absolute; left: 16px; right: 16px; bottom: 58px; height: 2px; background: #2d8b8b; opacity: 0.5;"></div>
+            <div style="position: absolute; left: 40px; bottom: 60px; width: 96px; height: 20px; background: #1c4a3a; border-radius: 2px;"></div>
+            <div style="position: absolute; right: 40px; bottom: 60px; width: 16px; height: 62px; background: #d4a017; border-radius: 1px;"></div>
+            <p style="position: absolute; left: 10px; top: 9px; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; color: #8a7f74;">78svh</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <div style="flex-grow: 1; height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+            <div style="width: 44px; height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+            <div style="width: 44px; height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+            <div style="width: 44px; height: 44px; background: #16162a; border: 1px solid #1d1a2a; border-radius: 10px;"></div>
+          </div>
+        </div>
+        <p style="margin: 10px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8a7f74; text-align: center;">PAISAGEM · ≤ 768 px</p>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; flex-grow: 1;">
+      <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+        <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">ALTURA EM SVH, NUNCA EM VH</p>
+        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">A barra do navegador entra e sai durante a rolagem. Com <code style="font-family: 'JetBrains Mono', monospace; color: #f0ebe4;">vh</code> o canvas muda de tamanho no meio do gesto e o WebGL refaz o buffer; com <code style="font-family: 'JetBrains Mono', monospace; color: #f0ebe4;">svh</code> ele fica parado.</p>
+      </div>
+      <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+        <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">44 px É PISO, NÃO META</p>
+        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Todo controle da maquete — play, velocidade, desvios, noite, tela cheia — tem alvo de toque de 44 px no mínimo, com espaçamento por <code style="font-family: 'JetBrains Mono', monospace; color: #f0ebe4;">gap</code> e não por margem, para o dedo não pegar dois.</p>
+      </div>
+      <div style="background: #11111c; border: 1px solid #1d1a2a; border-radius: 14px; padding: 20px 22px;">
+        <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #ff8844;">FOV HORIZONTAL CONSTANTE</p>
+        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">Em retrato o tabuleiro é largo e a tela é estreita. Em vez de afastar a câmera, abre-se o FOV vertical até o horizontal ficar igual ao do desktop — assim o enquadramento é o mesmo em qualquer proporção, sem brigar com o zoom do visitante.</p>
+      </div>
+      <div style="background: #11111c; border: 1px solid #4db8b8; border-radius: 14px; padding: 20px 22px;">
+        <p style="margin: 0 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; color: #4db8b8;">O GARGALO CONTINUA SENDO O MODELO</p>
+        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7f74; text-wrap: pretty;">O bundle está em 303 KB comprimido, dentro do teto. O <code style="font-family: 'JetBrains Mono', monospace; color: #f0ebe4;">.glb</code> tem ~5 MB e é ele que decide quanto tempo a tela fica vazia. Draco já está ligado nos dois lados; falta só regerar o modelo para medir o ganho.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

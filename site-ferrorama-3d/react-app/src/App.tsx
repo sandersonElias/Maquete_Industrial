@@ -3,6 +3,7 @@ import Navigation from './components/Navigation';
 import HeroSection from './components/HeroSection';
 import SectionDivider from './components/SectionDivider';
 import MaqueteSection from './components/MaqueteSection';
+import PreparacaoSection from './components/PreparacaoSection';
 import MontagemSection from './components/MontagemSection';
 import CodigoSection from './components/CodigoSection';
 import PortoSection from './components/PortoSection';
@@ -12,63 +13,69 @@ import BackToTop from './components/BackToTop';
 import Footer from './components/Footer';
 import PageRails from './components/PageRails';
 import MaquetePage from './components/MaquetePage';
-import useScrollAnimations from './hooks/useScrollAnimations';
+import PullToRefresh from './components/PullToRefresh';
 
 export default function App() {
   const soMaquete =
     typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') === '/maquete';
 
   if (soMaquete) {
-    return <MaquetePage />;
+    return (
+      <>
+        <PullToRefresh />
+        <MaquetePage />
+      </>
+    );
   }
 
   return <Site />;
 }
 
 function Site() {
-  useScrollAnimations();
-
   return (
     <>
-      {/* Primeiro item focável: permite pular a navegação com o teclado */}
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
 
+      <PullToRefresh />
       <Loader />
       <PageRails />
       <Navigation />
 
       <main id="conteudo">
-        {/* Section 00: Hero / Início */}
         <HeroSection />
 
         <SectionDivider />
 
-        {/* Section 01: Maquete 3D interativa */}
         <MaqueteSection />
 
         <SectionDivider />
 
-        {/* Section 02: Montagem */}
+        {/* Section 02: Preparação do projeto */}
+        <PreparacaoSection />
+
+        <SectionDivider />
+
+        {/* Section 03: Montagem */}
         <MontagemSection />
 
         <SectionDivider />
 
-        {/* Section 03: Código & Automação */}
+        {/* Section 04: Código & Automação */}
         <CodigoSection />
 
         <SectionDivider />
 
-        {/* Section 04: Mina de Ferro */}
+        {/* Section 05: Mina de Ferro */}
         <MinaSection />
 
         <SectionDivider />
 
-        {/* Section 05: Porto */}
+        {/* Section 06: Porto */}
         <PortoSection />
 
         <SectionDivider />
 
-        {/* Section 06: Central de Controle */}
+        {/* Section 07: Central de Controle */}
         <ControleSection />
       </main>
 

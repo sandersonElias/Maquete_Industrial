@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Caminh�es impressos em 3D">
-  <rect width="800" height="500" fill="#0a0e14"/>
-  <rect x="200" y="100" width="400" height="280" rx="12" fill="#141b24" stroke="#2a3444"/>
-  <rect x="240" y="160" width="320" height="120" fill="#0a0e14" stroke="#004a8f"/>
-  <rect x="280" y="320" width="80" height="40" rx="4" fill="#e87722" opacity="0.8"/>
-  <rect x="400" y="320" width="80" height="40" rx="4" fill="#64748b"/>
-  <text x="400" y="430" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="16">Impress�o 3D  images/caminhoes-3d.jpg</text>
-</svg>
