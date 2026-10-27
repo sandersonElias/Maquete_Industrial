@@ -1,0 +1,40 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+  const browser=await chromium.launch({channel:'msedge',headless:true});
+  try{
+    const page=await browser.newPage({viewport:{width:1440,height:1000}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const base=process.env.CCO_TEST_URL||'http://127.0.0.1:18080';
+    await page.request.post(base+'/api/mock/reset');
+    await page.goto(base);await page.locator('.loco-card').nth(1).waitFor();
+    assert.equal(await page.locator('.loco-card').count(),2);
+    await page.locator('#prepareOperation').click();
+    await page.locator('#setupOperator').fill('Operador de teste');
+    await page.locator('#setupSimple').selectOption('L03');
+    await page.locator('#setupForm button[type=submit]').click();
+    await page.waitForFunction(()=>!document.querySelector('#setupDialog').open||document.querySelector('#setupMessage').textContent);
+    assert.equal(await page.locator('#setupMessage').innerText(),'');
+    assert.match(await page.locator('#pairHint').innerText(),/LC03/);
+    await page.locator('#loco-card-L01 [data-quick-action=FORWARD]').click();
+    await page.waitForFunction(()=>document.querySelector('#loco-card-L01 .loco-state').textContent==='EM MOVIMENTO');
+    await page.locator('#loco-card-L01 [data-quick-action=STOP]').click();
+    await page.waitForFunction(()=>document.querySelector('#loco-card-L01 .loco-state').textContent==='PARADA');
+    await page.locator('#openCalibration').click();
+    await page.locator('#calibrationTrackClear').check();
+    await page.locator('#calibrationStart').click();
+    await page.waitForFunction(()=>document.querySelector('#calibrationStart').disabled);
+    await page.locator('#calibrationClose').click();
+    assert.equal(await page.locator('#loco-card-L03 [data-quick-action=FORWARD]').isDisabled(),true);
+    await page.locator('#openCalibration').click();await page.locator('#calibrationCancel').click();
+    await page.waitForFunction(()=>!document.querySelector('#calibrationStart').disabled);
+    await page.screenshot({path:process.env.TEMP+'/cco-calibracao.png',fullPage:true});
+    await page.locator('#calibrationClose').click();
+    await page.screenshot({path:process.env.TEMP+'/cco-painel.png',fullPage:true});
+    await page.setViewportSize({width:390,height:844});
+    await page.screenshot({path:process.env.TEMP+'/cco-mobile.png',fullPage:true});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    assert.deepEqual(errors,[]);
+    console.log('Painel: preparação, troca de simples, movimento, parada, calibração e tela móvel OK');
+  }finally{await browser.close()}
+})().catch(error=>{console.error(error);process.exitCode=1});

@@ -16,7 +16,7 @@
     </header>
 
     <section class="commandbar">
-      <div class="session-actions"><button id="startSession">Iniciar turno</button><button id="changeOperator">Operador</button><a class="button-link" href="/api/reports/current.html" target="_blank">Relatório</a><a class="button-link" href="/api/reports/current.csv">CSV</a></div>
+      <div class="session-actions"><button id="prepareOperation" class="primary">Preparar operação</button><button id="openCalibration">Calibrar</button><button id="startSession">Iniciar turno</button><button id="changeOperator">Operador</button><a class="button-link" href="/api/reports/current.html" target="_blank">Relatório</a><a class="button-link" href="/api/reports/current.csv">CSV</a></div>
       <p id="systemMessage" class="system-message" aria-live="polite">Sistema aguardando início do turno</p>
       <button id="emergency" class="emergency">PARADA DE EMERGÊNCIA</button>
     </section>
@@ -63,9 +63,9 @@
             <g id="signal-F2_INTERNO" class="signal" transform="translate(285 285)"><text x="-20" y="-14">INTERNO</text><rect x="-20" y="-9" width="40" height="18"/><circle data-color="RED" cx="-12" r="4"/><circle data-color="YELLOW" r="4"/><circle data-color="GREEN" cx="12" r="4"/></g>
             <g id="signal-F1_EXTERNO" class="signal" transform="translate(285 382)"><text x="-20" y="-14">EXTERNO</text><rect x="-20" y="-9" width="40" height="18"/><circle data-color="RED" cx="-12" r="4"/><circle data-color="YELLOW" r="4"/><circle data-color="GREEN" cx="12" r="4"/></g>
 
-            <g id="map-L01" class="loco-marker"><rect x="-22" y="-11" width="44" height="22"/><text y="1">L01</text></g>
-            <g id="map-L02" class="loco-marker loco-two"><rect x="-22" y="-11" width="44" height="22"/><text y="1">L02</text></g>
-            <g id="map-L03" class="loco-marker loco-three"><rect x="-22" y="-11" width="44" height="22"/><text y="1">L03</text></g>
+            <g id="map-L01" class="loco-marker"><rect x="-22" y="-11" width="44" height="22"/><text y="1">LC01</text></g>
+            <g id="map-L02" class="loco-marker loco-two"><rect x="-22" y="-11" width="44" height="22"/><text y="1">LC02</text></g>
+            <g id="map-L03" class="loco-marker loco-three"><rect x="-22" y="-11" width="44" height="22"/><text y="1">LC03</text></g>
           </svg>
         </div>
 
@@ -73,15 +73,15 @@
       </section>
 
       <aside class="sidebar">
-        <section><h2>Locomotivas</h2><div id="locomotiveList" class="loco-list"></div></section>
-        <section id="controlPanel"><h2 id="selectedTitle">Comandos L01</h2>
+        <section><h2>Dupla + simples</h2><p id="pairHint" class="position-hint"></p><div id="locomotiveList" class="loco-list"></div></section>
+        <section id="controlPanel"><details><summary id="selectedTitle">Ajustes da locomotiva</summary>
           <label>Rota<select id="routeSelect"><option>PLANO_FRENTE</option><option>PLANO_RE</option><option>ELEVADO_FRENTE</option><option>ELEVADO_RE</option><option>OFICINA</option></select></label>
           <div class="position-row"><label>Posição inicial<select id="positionSelect"><option>S01</option><option>S02</option><option>S03</option><option>S04</option><option>S05</option><option>S06</option><option>S07</option></select></label><button id="confirmPosition">Confirmar</button></div>
           <small id="positionHint" class="position-hint">Posição ainda não confirmada</small>
           <div class="control-grid"><button data-action="REVERSE">Ré</button><button data-action="STOP" class="stop">Parar</button><button data-action="FORWARD">Frente</button><button data-action="WAIT">Aguardar</button><button data-action="OFFICE">Ir à oficina</button><button data-action="AVAILABLE">Disponível</button></div>
           <label>Prioridade<select id="prioritySelect"><option>BAIXA</option><option selected>NORMAL</option><option>ALTA</option><option>EMERGENCIA</option></select></label>
           <div class="maintenance-grid"><button id="batterySwap">Registrar troca de bateria</button><button id="correctiveStop">Registrar parada corretiva</button></div>
-        </section>
+        </details></section>
         <section><h2>Chaves</h2><div id="switchControls" class="switch-controls"></div></section>
         <section><h2>Sensores</h2><div id="sensorSummary" class="sensor-summary"></div><details><summary>Diagnóstico detalhado</summary><div id="sensorDiagnostics"></div></details></section>
         <section><h2>Semáforos combinados da passagem</h2><div id="signalControls"></div></section>
@@ -90,6 +90,34 @@
   </div>
 
   <dialog id="operatorDialog"><form method="dialog"><h2>Identificação do operador</h2><p>Informe o nome do aluno responsável pelo CCO.</p><label>Nome<input id="operatorInput" maxlength="80" autocomplete="name" required></label><div class="dialog-actions"><button value="cancel">Cancelar</button><button id="saveOperator" value="default" class="primary">Confirmar</button></div></form></dialog>
+  <dialog id="setupDialog"><form id="setupForm"><h2>Preparar operação</h2>
+    <p>LC01 é a dupla. Escolha a simples e confirme as posições com as locomotivas paradas. Faça isto uma vez por operação.</p>
+    <label>Operador<input id="setupOperator" maxlength="80" required autocomplete="name"></label>
+    <label>Locomotiva simples<select id="setupSimple"><option value="L02">LC02</option><option value="L03">LC03</option></select></label>
+    <label>Rota inicial<select id="setupRoute"><option value="PLANO_FRENTE">Circuito plano</option><option value="ELEVADO_FRENTE">Circuito elevado</option></select></label>
+    <label>Posição da dupla LC01<select id="setupDoublePosition"></select></label>
+    <label>Posição da simples<select id="setupSimplePosition"></select></label>
+    <p>Ao confirmar, o turno será iniciado. Depois use Frente, Parar ou Ré em cada cartão.</p>
+    <div class="dialog-actions"><button type="button" id="closeSetup">Cancelar</button><button class="primary" type="submit">Iniciar operação</button></div>
+    <p id="setupMessage" role="status"></p>
+  </form></dialog>
+  <dialog id="calibrationDialog"><h2>Calibrar identificação e percursos</h2>
+    <p>Passe uma locomotiva por vez, em velocidade constante e sem vagões. O tempo é uma estimativa de tamanho e depende da velocidade.</p>
+    <label>Locomotiva<select id="calibrationLoco"></select></label>
+    <label>Sensor de identificação<select id="calibrationSensor"><option>S01</option><option>S02</option><option selected>S03</option><option>S04</option><option>S05</option><option>S06</option><option>S07</option></select></label>
+    <p>Faça pelo menos 3 passagens completas pelo sensor escolhido. Não pare sobre ele. Para calibrar percursos, complete pelo menos 3 vezes cada trecho sem paradas.</p>
+    <label class="track-confirm"><input id="calibrationTrackClear" type="checkbox"> Retirei a outra locomotiva da via para a calibração</label>
+    <p>Depois da calibração, use Preparar operação para recolocar as duas e confirmar suas posições.</p>
+    <p id="calibrationStatus" role="status"></p><div id="calibrationProfiles"></div>
+    <div class="dialog-actions"><button id="calibrationStart">Iniciar coleta</button><button id="calibrationSave">Salvar</button><button id="calibrationCancel">Descartar coleta</button><button id="calibrationClose">Voltar aos controles</button></div>
+    <p id="calibrationMessage" role="status"></p>
+    <details><summary>Ajustar tempo entre sensores</summary>
+      <p>Se o percurso real demora mais que o previsto, informe o tempo medido antes de calibrar. A parada por ausência do sensor continua ativa, com a margem configurada.</p>
+      <label>Rota<select id="timingRoute"><option>PLANO_FRENTE</option><option>PLANO_RE</option><option>ELEVADO_FRENTE</option><option>ELEVADO_RE</option><option>OFICINA</option></select></label>
+      <label>Tempo esperado por trecho (segundos)<input id="timingSeconds" type="number" min="1" max="120" step="0.1" value="6.5"></label>
+      <button id="timingSave">Salvar tempo de referência</button><p id="timingStatus" role="status"></p>
+    </details>
+  </dialog>
   <script src="/app.js"></script>
 </body>
 </html>

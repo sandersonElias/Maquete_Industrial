@@ -69,3 +69,52 @@ py -3 software/cco/testes/teste_seguranca.py
 - calibrar os tempos entre sensores e a parada temporizada da oficina.
 - verificar fisicamente a sequência de sensores de cada rota e corrigir `software/cco/config.json` se necessário.
 - conferir se os sete sensores ficam CLEAR sem trem e geram uma única confirmação por passagem.
+
+## Operação simplificada: LC01 dupla + uma simples
+
+1. Regrave o Arduino Uno com `firmware/arduino-uno/cco_via/cco_via.ino`. O firmware
+   anterior não envia a duração necessária à calibração. Os ESPs mantêm os IDs
+   L01/L02/L03; a tela os apresenta como LC01/LC02/LC03.
+2. Reinicie o CCO e clique em **Preparar operação**. Informe o operador, escolha
+   LC02 ou LC03 como simples ativa, a rota e as posições iniciais distintas.
+   A simples restante fica fora da malha e não pode receber comandos de movimento.
+3. Use **Frente**, **Parar** e **Ré** diretamente nos dois cartões. A rota acompanha
+   o sentido; a inversão mantém a pausa de proteção do firmware do ESP. As chaves
+   não podem ser alteradas para uma rota incompatível enquanto a outra loco se move.
+4. O motivo da parada aparece no cartão. O prazo do próximo sensor começa na partida,
+   e não no momento em que a posição foi confirmada manualmente. Os watchdogs Wi-Fi
+   e os bloqueios por sensor ou trecho reservado continuam ativos.
+
+### Calibrar os tempos
+
+- Pare as locomotivas fora dos sensores, retire a outra locomotiva da via e confirme
+  a pista livre no diálogo. Abra **Calibrar**, selecione a locomotiva
+  e o sensor e inicie a coleta. Volte aos controles e faça pelo menos três passagens
+  completas, em velocidade aproximadamente constante e sem vagões. Só a locomotiva
+  escolhida pode se movimentar durante a coleta.
+- Pare fora do sensor, reabra o diálogo e salve. Repita para a outra locomotiva no
+  mesmo sensor. A dupla deve ter duração maior; variação excessiva e faixas que se
+  sobrepõem são rejeitadas. Não se assume automaticamente a proporção exata de 2:1.
+- A calibração de identificação é específica de cada sensor. Sensores sem as duas
+  faixas cadastradas mostram identidade incerta. O tempo confirma a identidade
+  prevista pela rota; não troca automaticamente nomes ou posições. Divergência
+  com uma faixa válida para a outra loco gera parada e pedido de confirmação.
+- Durante a coleta, trechos percorridos sem interrupção também são medidos. Um trecho
+  exige três medições para ser salvo. Em **Ajustar tempo entre sensores**, informe
+  um tempo de referência realista (1–120 s) para a rota antes de percorrê-la, caso o
+  valor inicial seja curto. A margem de segurança do `config.json` permanece aplicada.
+- Perfis, tempos de trechos e referências ficam em `software/cco/data/calibration.json`,
+  arquivo local ignorado pelo Git. Cancelar uma coleta preserva a calibração anterior.
+- O botão não regula o potenciômetro do HW-201. Ajuste o módulo para ficar livre sem
+  trem e ativo enquanto a carroceria estiver diante dele. Não foi validado em hardware
+  nesta atualização; as faixas e a estabilização de 150 ms precisam de teste na maquete.
+
+### Verificação
+
+`py -3 -m unittest discover -s software/cco/testes -v` executa os testes do servidor.
+`node software/cco/testes/verificar_painel.cjs` testa o painel com uma instância de
+simulação em `http://127.0.0.1:18080`, Playwright e Edge instalados; pode-se configurar
+`CCO_TEST_URL` e `PLAYWRIGHT_MODULE`. Esse teste reinicia apenas o estado da simulação.
+
+Após calibrar, recoloque as locomotivas e execute **Preparar operação** novamente.
+A confirmação de pista livre remove a posição antiga da outra locomotiva no mapa.

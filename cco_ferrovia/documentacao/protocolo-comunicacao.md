@@ -16,12 +16,18 @@ CAL|START
 CAL|STOP
 ```
 
-O Arduino responde com `SENSOR`, `SWITCH`, `SIGNAL`, `PONG`, `CAL` ou `FAULT`.
+O Arduino responde com `SENSOR`, `PASS`, `SWITCH`, `SIGNAL`, `PONG`, `CAL` ou `FAULT`.
 
-`SENSOR|Sx|ACTIVE|ms` e `SENSOR|Sx|CLEAR|ms` são enviados uma vez por passagem.
-O Arduino espera 2 s sem transições para considerar o sensor livre; as transições
-internas da etiqueta óptica não são enviadas separadamente. A decodificação do
-código óptico ainda não está implementada.
+`SENSOR|4|ACTIVE|ms` marca a chegada do objeto ao S04. Enquanto houver presença,
+o sensor permanece ocupado. Após 150 ms de ausência contínua, envia
+`PASS|4|duracao_ms` e `SENSOR|4|CLEAR|ms`. A duração vai da primeira ativação
+até a última transição para livre, sem incluir os 150 ms de estabilização.
+Espaços menores que esse intervalo são agrupados; a distância e a montagem
+precisam ser validadas para que o corpo da locomotiva gere uma passagem contínua.
+Não há decodificação de etiqueta preto/branco.
+
+O painel usa os nomes LC01/LC02/LC03, mas mantém L01/L02/L03 no protocolo Wi-Fi
+para compatibilidade com os firmwares já gravados.
 
 `CAL|START` inicia um diagnóstico de 30 s: a cada 100 ms o Arduino envia
 `CAL|<lógico>|<bruto>|ms` para os sete sensores. Use com o CCO fechado, pelo

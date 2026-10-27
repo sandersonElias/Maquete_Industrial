@@ -65,3 +65,6 @@ cco_ferrovia/software/cco/data/*.jsonl
 cco_ferrovia/firmware/esp12e-locomotiva/locomotiva_esp12e/secrets.h
 __pycache__/
 *.pyc
+
+cco_ferrovia/software/cco/data/calibration.json
+cco_ferrovia/software/cco/data/calibration.tmp

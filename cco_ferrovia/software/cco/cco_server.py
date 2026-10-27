@@ -55,6 +55,15 @@ class CCOSystem:
         DATA.mkdir(parents=True, exist_ok=True)
         self.event_file = DATA / "events.jsonl"
         self._load_recent_events()
+        self.calibration_path = Path(config.get("calibration_path", DATA / "calibration.json"))
+        if self.calibration_path.exists():
+            try:
+                saved = load_json(self.calibration_path)
+                self.state["calibration"]["profiles"] = saved.get("profiles", {})
+                self.state["calibration"]["segments"] = saved.get("segments", {})
+                self.state["calibration"]["route_times"] = saved.get("route_times", {})
+            except (OSError, ValueError):
+                pass
 
     def _initial_state(self) -> dict:
         sensors = {
@@ -83,6 +92,11 @@ class CCOSystem:
         locomotives = {}
         for loco_id in ("L01", "L02", "L03"):
             locomotives[loco_id] = {
+                "label": loco_id.replace("L", "LC", 1),
+                "size": "DUPLA" if loco_id == "L01" else "SIMPLES",
+                "stop_reason": None,
+                "segment_interrupted": True,
+                "motion_generation": 0,
                 "connected": bool(self.mock),
                 "ip": "simulado" if self.mock else None,
                 "motion": "STOP",
@@ -118,7 +132,11 @@ class CCOSystem:
                 },
             }
         return {
-            "version": "0.1.0",
+            "version": "0.2.0",
+            "operation": {"simple": "L02", "active_ids": ["L01", "L02"]},
+            "calibration": {"active": False, "loco": None, "sensor": "S03", "samples": [],
+                            "profiles": {}, "segments": {}, "route_times": {}, "pending_segments": {},
+                            "message": "Selecione a locomotiva e faça pelo menos 3 passagens no mesmo sensor."},
             "started_at": now_iso(),
             "operator": None,
             "session": {"active": False, "started_at": None, "ended_at": None},
@@ -274,6 +292,8 @@ class CCOSystem:
         if active:
             for loco_id in self.state["locomotives"]:
                 self.send_loco(loco_id, "STOP")
+                self.state["locomotives"][loco_id]["motion"] = "STOP"
+                self.state["locomotives"][loco_id]["stop_reason"] = reason
             self.send_arduino(f"EMERGENCY|ON|{self.next_sequence()}")
             self.log("EMERGENCIA", reason, "CRITICAL")
         else:
@@ -291,6 +311,11 @@ class CCOSystem:
             loco = self.state["locomotives"][loco_id]
             if loco["motion"] != "STOP":
                 raise ValueError("Pare a locomotiva antes de alterar a rota")
+            for other_id, other in self.state["locomotives"].items():
+                if other_id != loco_id and other["motion"] != "STOP":
+                    other_switches = self.config["routes"][other["route"]]["switches"]
+                    if other_switches != route["switches"]:
+                        raise ValueError("Pare a outra locomotiva antes de mudar as chaves da rota")
             loco["route"] = route_name
             if loco.get("last_sensor") in route["sensors"]:
                 loco["route_index"] = route["sensors"].index(loco["last_sensor"])
@@ -330,8 +355,26 @@ class CCOSystem:
             if action in ("FORWARD", "REVERSE"):
                 if not self.state["session"]["active"]:
                     raise ValueError("Inicie o turno antes de movimentar")
+                if loco_id not in self.state["operation"]["active_ids"]:
+                    raise ValueError("Locomotiva reserva: selecione a simples ativa antes de movimentar")
+                calibration = self.state["calibration"]
+                if calibration["active"] and calibration["loco"] != loco_id:
+                    raise ValueError("Somente a locomotiva em calibração pode se mover")
+                if loco["fault"]:
+                    raise ValueError(f"Falha ativa: {loco['fault']}. Verifique e confirme a posição")
+                if not self.state["arduino"]["connected"]:
+                    raise ValueError("Arduino desconectado")
+                if not loco["connected"]:
+                    raise ValueError("Locomotiva sem comunicação")
                 if loco["confidence"] != "CONFIRMADA":
                     raise ValueError("Confirme a posição inicial da locomotiva antes de movimentar")
+                if loco["motion"] != "STOP" and loco["motion"] != action:
+                    self.command_locomotive(loco_id, "STOP")
+                desired_route = loco["route"]
+                if desired_route != "OFICINA":
+                    desired_route = desired_route.rsplit("_", 1)[0] + ("_RE" if action == "REVERSE" else "_FRENTE")
+                if loco["motion"] == "STOP":
+                    self.configure_route(loco_id, desired_route)
                 moving_others = sum(
                     1 for other_id, other in self.state["locomotives"].items()
                     if other_id != loco_id and other["motion"] != "STOP"
@@ -341,7 +384,10 @@ class CCOSystem:
                 # Reserva o próximo ponto esperado para impedir dois trens no mesmo bloco lógico.
                 next_sensor = loco.get("next_sensor")
                 for other_id, other in self.state["locomotives"].items():
-                    if other_id != loco_id and next_sensor and other.get("next_sensor") == next_sensor and other["motion"] != "STOP":
+                    if other_id != loco_id and next_sensor and (
+                        (other.get("next_sensor") == next_sensor and other["motion"] != "STOP")
+                        or (other.get("last_sensor") == next_sensor and other["confidence"] != "DESCONHECIDA")
+                    ):
                         raise ValueError(f"Trecho reservado por {other_id}")
             if action not in ("FORWARD", "REVERSE", "STOP"):
                 raise ValueError("Comando inválido")
@@ -353,11 +399,17 @@ class CCOSystem:
                 loco["motion"] = action
                 loco["direction"] = action
                 loco["operational_state"] = "EM_MOVIMENTO"
-                if loco["confirmed_at"] is None:
-                    loco["confirmed_at"] = time.monotonic()
+                loco["confirmed_at"] = time.monotonic()
+                loco["motion_generation"] += 1
+                loco["segment_interrupted"] = True
+                loco["stop_reason"] = None
+                loco["expected_segment_ms"] = self.segment_time(loco_id)
             elif action == "STOP":
                 loco["motion"] = "STOP"
                 loco["operational_state"] = desired_stop_state or "PARADA"
+                loco["segment_interrupted"] = True
+                loco["motion_generation"] += 1
+                loco["stop_reason"] = "Parada solicitada pelo operador"
         self.log("COMANDO", action, loco=loco_id)
         self.broadcast()
 
@@ -382,6 +434,8 @@ class CCOSystem:
             loco["confirmed_at"] = time.monotonic()
             loco["confidence"] = "CONFIRMADA"
             loco["fault"] = None
+            loco["stop_reason"] = None
+            loco["segment_interrupted"] = True
             if loco["operational_state"] == "FALHA":
                 loco["operational_state"] = "PARADA"
         self.log("POSICAO", f"Posição confirmada manualmente em {sensor_id}", loco=loco_id)
@@ -451,6 +505,8 @@ class CCOSystem:
             return
         with self.lock:
             sensor = self.state["sensors"][sensor_id]
+            if sensor["active"] == active:
+                return
             sensor["active"] = active
             sensor["last_event"] = now_iso()
             if not active:
@@ -458,6 +514,7 @@ class CCOSystem:
                 return
             sensor["hits"] += 1
 
+            sensor["passage_loco"] = None
             candidates = []
             skipped_candidates = []
             for loco_id, loco in self.state["locomotives"].items():
@@ -484,6 +541,12 @@ class CCOSystem:
                     skipped_candidates.append((loco_id, actual_index, skipped))
 
             selected = candidates if len(candidates) == 1 else skipped_candidates if not candidates and len(skipped_candidates) == 1 else []
+            if len(candidates) > 1:
+                for ambiguous_id, _, _ in candidates:
+                    self.command_locomotive(ambiguous_id, "STOP")
+                    ambiguous = self.state["locomotives"][ambiguous_id]
+                    ambiguous["confidence"] = "INCERTA"
+                    ambiguous["stop_reason"] = f"Passagem ambígua em {sensor_id}; confirme as posições"
             if selected:
                 loco_id, index, skipped = selected[0]
                 loco = self.state["locomotives"][loco_id]
@@ -491,6 +554,12 @@ class CCOSystem:
                     self._mark_sensor_missed(missed_id, loco_id)
                 sensor["consecutive_misses"] = 0
                 sensor["health"] = "OK"
+                sensor["passage_loco"] = loco_id if not skipped else None
+                sensor["passage_motion"] = loco["motion"]
+                sensor["passage_generation"] = loco["motion_generation"]
+                if not skipped and not loco["segment_interrupted"] and loco["confirmed_at"]:
+                    self.record_segment(loco_id, sensor_id, (time.monotonic() - loco["confirmed_at"]) * 1000)
+                loco["segment_interrupted"] = bool(skipped)
                 loco["route_index"] = index
                 loco["last_sensor"] = sensor_id
                 loco["confirmed_at"] = time.monotonic()
@@ -502,6 +571,7 @@ class CCOSystem:
                     if loco["route"] != "OFICINA":
                         loco["stats"]["routes_completed"] += 1
                 loco["next_sensor"] = route["sensors"][next_index]
+                loco["expected_segment_ms"] = self.segment_time(loco_id)
                 reverse_route = loco["route"].endswith("_RE")
                 if (not reverse_route and sensor_id in ("S06", "S07")):
                     self.set_passage_signals("YELLOW", f"{loco_id} aproximando-se")
@@ -511,6 +581,14 @@ class CCOSystem:
                     self.set_passage_signals("GREEN", f"{loco_id} liberou a passagem")
                 if loco.get("mission") == "OFICINA" and sensor_id == route.get("timed_stop_after"):
                     loco["office_stop_at"] = time.monotonic() + self.config["safety"]["office_stop_delay_ms"] / 1000
+                for other_id in self.state["operation"]["active_ids"]:
+                    other = self.state["locomotives"][other_id]
+                    if other_id != loco_id and loco["motion"] != "STOP" and (
+                        (other["last_sensor"] == loco["next_sensor"] and other["confidence"] != "DESCONHECIDA")
+                        or (other["next_sensor"] == loco["next_sensor"] and other["motion"] != "STOP")
+                    ):
+                        self.command_locomotive(loco_id, "STOP")
+                        loco["stop_reason"] = f"Próximo trecho reservado por {other['label']}"
                 self.log("SENSOR", f"{sensor_id} confirmou posição", loco=loco_id)
             else:
                 sensor["health"] = "SUSPEITO"
@@ -526,6 +604,8 @@ class CCOSystem:
         limit = int(self.config["safety"]["sensor_consecutive_failures"])
         sensor["health"] = "FALHA" if sensor["consecutive_misses"] >= limit else "SUSPEITO"
         self.state["locomotives"][loco_id]["confidence"] = "INCERTA"
+        self.state["locomotives"][loco_id]["stop_reason"] = f"Sensor {sensor_id} não confirmou a passagem"
+        self.state["locomotives"][loco_id]["motion"] = "STOP"
         self.state["alerts"].append({"time": now_iso(), "severity": "CRITICAL", "message": f"Leitura esperada não recebida em {sensor_id}"})
         self.log("SENSOR", f"{sensor_id} não confirmou a passagem", "CRITICAL", loco_id)
         self.send_loco(loco_id, "STOP")
@@ -548,6 +628,8 @@ class CCOSystem:
                 with self.lock:
                     self.state["signals"]["F1_EXTERNO"] = parts[2].upper()
                     self.state["signals"]["F2_INTERNO"] = parts[2].upper()
+            elif kind == "PASS" and len(parts) >= 3:
+                self.on_passage(f"S{int(parts[1]):02d}", float(parts[2]))
             elif kind == "FAULT":
                 self.log("ARDUINO", "|".join(parts[1:]), "ERROR")
         except Exception as exc:
@@ -589,6 +671,7 @@ class CCOSystem:
                 loco["fault"] = None if fault == "NONE" else fault
                 if loco["fault"]:
                     loco["operational_state"] = "FALHA"
+                    loco["stop_reason"] = f"Falha reportada pela locomotiva: {loco['fault']}"
                     if loco["fault"] != previous_fault:
                         self.log("COMUNICACAO", f"{loco_id} reportou falha {loco['fault']}", "CRITICAL", loco_id)
                 elif loco["operational_state"] == "FALHA":
@@ -624,6 +707,7 @@ class CCOSystem:
                         loco["motion"] = "STOP"
                         loco["operational_state"] = "OFICINA"
                         loco["confidence"] = "ESTIMADA"
+                        loco["stop_reason"] = "Chegada à oficina; confirme a posição visualmente"
                         self.log("OFICINA", "Parada temporizada concluída; confirmação visual necessária", "WARNING", loco_id)
                         changed = True
                     if not self.mock and loco["connected"] and now - loco["last_seen_monotonic"] > self.config["safety"]["locomotive_timeout_ms"] / 1000:
@@ -631,6 +715,7 @@ class CCOSystem:
                         loco["motion"] = "STOP"
                         loco["operational_state"] = "FALHA"
                         loco["fault"] = "COMM_TIMEOUT"
+                        loco["stop_reason"] = "Comunicação Wi-Fi perdida"
                         loco["stats"]["communication_losses"] += 1
                         self.log("COMUNICACAO", "Locomotiva sem telemetria", "CRITICAL", loco_id)
                         changed = True
@@ -641,6 +726,7 @@ class CCOSystem:
                             self.send_loco(loco_id, "STOP")
                             loco["motion"] = "STOP"
                             loco["operational_state"] = "FALHA"
+                            loco["stop_reason"] = f"Tempo excedido aguardando {loco['next_sensor']} ({max_ms / 1000:.1f} s)"
                             loco["stats"]["corrective_stops"] += 1
                             self.log("SEGURANCA", f"Tempo excedido aguardando {loco['next_sensor']}", "CRITICAL", loco_id)
                             changed = True
@@ -658,6 +744,150 @@ class CCOSystem:
                     changed = True
             if changed:
                 self.broadcast()
+
+    def set_route_time(self, route_name: str, seconds: float):
+        seconds = float(seconds)
+        if route_name not in self.config["routes"] or not 1 <= seconds <= 120:
+            raise ValueError("Informe um tempo entre 1 e 120 segundos e uma rota válida")
+        with self.lock:
+            if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
+                raise ValueError("Pare as locomotivas antes de ajustar os tempos")
+            cal = self.state["calibration"]
+            route_times = dict(cal["route_times"])
+            route_times[route_name] = round(seconds * 1000)
+            temporary = self.calibration_path.with_suffix(".tmp")
+            temporary.parent.mkdir(parents=True, exist_ok=True)
+            temporary.write_text(json.dumps({"profiles": cal["profiles"], "segments": cal["segments"], "route_times": route_times}, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(temporary, self.calibration_path)
+            cal["route_times"] = route_times
+            for loco_id, loco in self.state["locomotives"].items():
+                if loco["route"] == route_name:
+                    loco["expected_segment_ms"] = self.segment_time(loco_id)
+        self.log("CALIBRACAO", f"Tempo de referência de {route_name}: {seconds:g} s (trechos já calibrados mantêm sua medição)")
+
+    def select_pair(self, simple: str):
+        with self.lock:
+            if simple not in ("L02", "L03"):
+                raise ValueError("Selecione LC02 ou LC03")
+            if self.state["calibration"]["active"]:
+                raise ValueError("Encerre a calibração antes de trocar a simples")
+            if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
+                raise ValueError("Pare as locomotivas antes de trocar a simples")
+            previous_ids = self.state["operation"]["active_ids"]
+            active_ids = ["L01", simple]
+            for loco_id, loco in self.state["locomotives"].items():
+                if loco_id not in active_ids or loco_id not in previous_ids:
+                    loco.update(last_sensor=None, next_sensor="S03", route_index=-1,
+                                confidence="DESCONHECIDA", confirmed_at=None,
+                                operational_state="DISPONIVEL" if loco_id in active_ids else "FORA_DA_MALHA")
+            self.state["operation"] = {"simple": simple, "active_ids": active_ids}
+        self.log("OPERACAO", f"Dupla LC01 e simples {simple.replace('L', 'LC', 1)} selecionadas")
+
+    def segment_time(self, loco_id: str) -> float:
+        loco = self.state["locomotives"][loco_id]
+        key = f"{loco_id}:{loco['route']}:{loco['last_sensor']}:{loco['next_sensor']}"
+        return self.state["calibration"]["segments"].get(key, self.state["calibration"]["route_times"].get(loco["route"], self.config["routes"][loco["route"]]["expected_segment_ms"]))
+
+    def record_segment(self, loco_id: str, sensor_id: str, duration_ms: float):
+        cal = self.state["calibration"]
+        if cal["active"] and cal["loco"] == loco_id and 300 <= duration_ms <= 120000:
+            loco = self.state["locomotives"][loco_id]
+            key = f"{loco_id}:{loco['route']}:{loco['last_sensor']}:{sensor_id}"
+            values = cal["pending_segments"].setdefault(key, [])
+            values.append(round(duration_ms))
+
+    def calibration_command(self, action: str, loco_id: str = "L01", sensor_id: str = "S03", track_clear: bool = False):
+        with self.lock:
+            cal = self.state["calibration"]
+            if action == "START":
+                if cal["active"]:
+                    raise ValueError("Já existe uma calibração em andamento")
+                if loco_id not in self.state["operation"]["active_ids"] or sensor_id not in self.state["sensors"]:
+                    raise ValueError("Escolha uma locomotiva ativa e um sensor válido")
+                if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
+                    raise ValueError("Pare as locomotivas antes de calibrar")
+                if any(sensor["active"] for sensor in self.state["sensors"].values()):
+                    raise ValueError("Libere os sensores antes de iniciar a calibração")
+                if track_clear is not True:
+                    raise ValueError("Retire a outra locomotiva da via e confirme a pista livre para calibrar")
+                for other_id in self.state["operation"]["active_ids"]:
+                    if other_id != loco_id:
+                        self.state["locomotives"][other_id].update(last_sensor=None, route_index=-1,
+                            confidence="DESCONHECIDA", confirmed_at=None, operational_state="FORA_DA_MALHA")
+                cal.update(active=True, loco=loco_id, sensor=sensor_id, samples=[], pending_segments={},
+                           message="Faça 3 ou mais passagens contínuas, na mesma velocidade e sem vagões. Depois pare e salve.")
+            elif action in ("SAVE", "CANCEL"):
+                if not cal["active"]:
+                    raise ValueError("Não há calibração em andamento")
+                if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
+                    raise ValueError("Pare a locomotiva antes de encerrar a calibração")
+                if any(sensor["active"] for sensor in self.state["sensors"].values()):
+                    raise ValueError("Libere os sensores antes de encerrar a calibração")
+                if action == "SAVE":
+                    samples = cal["samples"]
+                    if len(samples) < 3:
+                        raise ValueError("São necessárias pelo menos 3 passagens válidas")
+                    mean = sum(samples) / len(samples)
+                    if max(samples) > mean * 1.25 or min(samples) < mean * .75:
+                        raise ValueError("Tempos variaram demais. Cancele e repita em velocidade constante")
+                    profile = {"mean_ms": round(mean), "min_ms": round(mean * .75),
+                               "max_ms": round(mean * 1.25), "count": len(samples), "updated_at": now_iso()}
+                    profiles = copy.deepcopy(cal["profiles"])
+                    profiles.setdefault(cal["sensor"], {})[cal["loco"]] = profile
+                    pair = profiles[cal["sensor"]]
+                    other_id = self.state["operation"]["simple"] if cal["loco"] == "L01" else "L01"
+                    other = pair.get(other_id)
+                    if other and ((cal["loco"] == "L01" and profile["mean_ms"] <= other["mean_ms"])
+                                  or (cal["loco"] != "L01" and profile["mean_ms"] >= other["mean_ms"])):
+                        raise ValueError("A dupla deve ter duração maior que a simples. Confira a locomotiva e a velocidade")
+                    if other and max(profile["min_ms"], other["min_ms"]) <= min(profile["max_ms"], other["max_ms"]):
+                        raise ValueError("Faixas da dupla e simples se sobrepõem. Não é possível identificar com confiança")
+                    segments = copy.deepcopy(cal["segments"])
+                    for key, values in cal["pending_segments"].items():
+                        if len(values) >= 3:
+                            segments[key] = round(sum(values) / len(values))
+                    self.calibration_path.parent.mkdir(parents=True, exist_ok=True)
+                    temporary = self.calibration_path.with_suffix(".tmp")
+                    temporary.write_text(json.dumps({"profiles": profiles, "segments": segments, "route_times": cal["route_times"]}, ensure_ascii=False, indent=2), encoding="utf-8")
+                    os.replace(temporary, self.calibration_path)
+                    cal.update(profiles=profiles, segments=segments)
+                cal.update(active=False, message="Calibração salva" if action == "SAVE" else "Calibração cancelada; valores anteriores preservados")
+            else:
+                raise ValueError("Ação de calibração inválida")
+        self.log("CALIBRACAO", cal["message"])
+
+    def on_passage(self, sensor_id: str, duration_ms: float):
+        if sensor_id not in self.state["sensors"] or not 30 <= duration_ms <= 60000:
+            raise ValueError("Tempo de passagem inválido")
+        with self.lock:
+            sensor = self.state["sensors"][sensor_id]
+            loco_id = sensor.pop("passage_loco", None)
+            sensor["duration_ms"] = round(duration_ms)
+            cal = self.state["calibration"]
+            valid = (loco_id and self.state["locomotives"][loco_id]["motion"] == sensor.get("passage_motion")
+                     and self.state["locomotives"][loco_id]["motion"] != "STOP"
+                     and self.state["locomotives"][loco_id]["motion_generation"] == sensor.get("passage_generation")
+                     and self.state["locomotives"][loco_id]["confidence"] == "CONFIRMADA")
+            if cal["active"] and cal["sensor"] == sensor_id:
+                if valid and loco_id == cal["loco"]:
+                    cal["samples"].append(round(duration_ms))
+                    cal["samples"] = cal["samples"][-20:]
+                    cal["message"] = f"{len(cal['samples'])} passagens coletadas em {sensor_id}"
+                else:
+                    cal["message"] = "Leitura descartada: mantenha a locomotiva em movimento contínuo na sequência da rota"
+            profiles = cal["profiles"].get(sensor_id, {})
+            active_ids = self.state["operation"]["active_ids"]
+            matches = [key for key in active_ids if key in profiles and profiles[key]["min_ms"] <= duration_ms <= profiles[key]["max_ms"]]
+            identified = matches[0] if all(key in profiles for key in active_ids) and len(matches) == 1 else None
+            sensor["identity"] = identified
+            sensor["identity_status"] = "COMPATIVEL" if valid and identified == loco_id else "INCERTA"
+            if not cal["active"] and identified and valid and identified != loco_id:
+                self.state["locomotives"][loco_id]["confidence"] = "INCERTA"
+                self.state["locomotives"][loco_id]["stop_reason"] = f"Identificação por tempo divergiu em {sensor_id}; confirme a posição"
+                self.command_locomotive(loco_id, "STOP")
+                self.state["locomotives"][loco_id]["stop_reason"] = f"Identificação por tempo divergiu em {sensor_id}; confirme a posição"
+                self.log("IDENTIFICACAO", "Tempo incompatível com a locomotiva esperada; identidade preservada", "WARNING", loco_id)
+        self.broadcast()
 
     def report_csv(self) -> bytes:
         output = io.StringIO()
@@ -871,7 +1101,13 @@ class CCOHandler(BaseHTTPRequestHandler):
         try:
             body = self.read_json()
             parts = [part for part in path.split("/") if part]
-            if path == "/api/operator":
+            if path == "/api/operation":
+                self.system.select_pair(body.get("simple", "L02"))
+            elif path == "/api/timing":
+                self.system.set_route_time(body.get("route", ""), body.get("seconds", 0))
+            elif path == "/api/calibration":
+                self.system.calibration_command(body.get("action", ""), body.get("loco", "L01"), body.get("sensor", "S03"), body.get("track_clear", False))
+            elif path == "/api/operator":
                 self.system.set_operator(body.get("name", ""))
             elif path == "/api/session/start":
                 self.system.start_session()

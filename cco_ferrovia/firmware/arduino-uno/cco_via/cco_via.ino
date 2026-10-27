@@ -6,7 +6,7 @@
 
 constexpr unsigned long SERIAL_BAUD = 115200;
 constexpr unsigned long SENSOR_DEBOUNCE_MS = 3;
-constexpr unsigned long SENSOR_HOLD_MS = 2000;
+constexpr unsigned long SENSOR_HOLD_MS = 150;
 constexpr unsigned long PC_TIMEOUT_MS = 4000;
 constexpr unsigned long CAL_INTERVAL_MS = 100;
 constexpr unsigned long CAL_DURATION_MS = 30000;
@@ -34,6 +34,7 @@ struct SensorState {
   bool occupied;
   unsigned long changedAt;
   unsigned long lastTransition;
+  unsigned long passageStartedAt;
 };
 
 Servo servos[3];
@@ -210,13 +211,16 @@ void updateSensors() {
     if (current != sensors[i].stable && now - sensors[i].changedAt >= SENSOR_DEBOUNCE_MS) {
       sensors[i].stable = current;
       sensors[i].lastTransition = now;
-      if (!sensors[i].occupied) {
+      if (current && !sensors[i].occupied) {
         sensors[i].occupied = true;
+        sensors[i].passageStartedAt = now;
         Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print(F("|ACTIVE|")); Serial.println(now);
       }
     }
-    if (sensors[i].occupied && now - sensors[i].lastTransition >= SENSOR_HOLD_MS) {
+    if (sensors[i].occupied && !sensors[i].stable && now - sensors[i].lastTransition >= SENSOR_HOLD_MS) {
       sensors[i].occupied = false;
+      unsigned long duration = sensors[i].lastTransition - sensors[i].passageStartedAt;
+      Serial.print(F("PASS|")); Serial.print(i + 1); Serial.print('|'); Serial.println(duration);
       Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print(F("|CLEAR|")); Serial.println(now);
     }
   }

@@ -33,7 +33,7 @@ Não é necessário configurar IP fixo.
 - Se a comunicação Wi-Fi for perdida, o próprio ESP-12E para o motor.
 - Se a comunicação com o computador for perdida, o Arduino coloca os dois semáforos combinados em vermelho.
 - Chaves próximas a um sensor ativo não são movimentadas pelo Arduino.
-- Cada passagem gera uma única confirmação por sensor: o Arduino só considera o sensor livre após 2 s sem transições. As transições internas da etiqueta óptica não são enviadas.
+- Cada passagem gera uma única confirmação por sensor: o Arduino só considera o sensor livre após 150 ms de ausência contínua e envia a duração em `PASS`. Não é necessário usar etiqueta óptica.
 - Se um sensor piscar ativo sem trem, ajustar o potenciômetro do HW-201; se as chaves ficarem bloqueadas em repouso, inverter `SENSOR_ACTIVE_LOW` no firmware.
 - A parada na oficina é temporizada e exige confirmação visual porque não há sensor dentro dela.
 

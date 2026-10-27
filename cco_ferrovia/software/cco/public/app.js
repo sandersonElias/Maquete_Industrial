@@ -13,24 +13,39 @@ function formatState(value){return String(value||'--').replaceAll('_',' ')}
 function scheduleRender(immediate=false){if(immediate){if(renderTimer){clearTimeout(renderTimer);renderTimer=null}render();return}if(renderTimer)return;const wait=Math.max(0,REFRESH_MS-(performance.now()-lastRendered));renderTimer=setTimeout(()=>{renderTimer=null;render()},wait)}
 
 function render(){if(!state)return;lastRendered=performance.now();$('#operatorName').textContent=state.operator?`Operador: ${state.operator}`:'Operador não identificado';$('#arduinoHealth').textContent=state.arduino.connected?`Arduino ${state.arduino.port||'online'}`:'Arduino offline';$('#arduinoHealth').classList.toggle('bad',!state.arduino.connected);$('#systemMode').textContent=state.mode;$('#emergency').classList.toggle('active',state.emergency);$('#emergency').textContent=state.emergency?'REARMAR EMERGÊNCIA':'PARADA DE EMERGÊNCIA';$('#startSession').textContent=state.session.active?'Encerrar turno':'Iniciar turno';
-  renderLocomotives();renderControls();renderSwitches();renderSensors();renderSignals();renderEvents();renderMapLocomotives();
+  renderLocomotives();renderCalibration();renderControls();renderSwitches();renderSensors();renderSignals();renderEvents();renderMapLocomotives();
 }
 
 function renderLocomotives(){
-  const list=$('#locomotiveList');const ids=Object.keys(state.locomotives);
+  const list=$('#locomotiveList');const ids=state.operation.active_ids;
+  $('#pairHint').textContent=`LC01 dupla + ${state.locomotives[state.operation.simple].label} simples · a outra fica na reserva`;
+  list.querySelectorAll('.loco-card').forEach(card=>{if(!ids.includes(card.dataset.loco))card.remove()});
   if(ids.length&&!state.locomotives[selectedLoco])selectedLoco=ids[0];
   for(const id of ids){
     let card=document.getElementById(`loco-card-${id}`);
     if(!card){
-      card=document.createElement('button');card.id=`loco-card-${id}`;card.className='loco-card';
+      card=document.createElement('div');card.dataset.loco=id;card.id=`loco-card-${id}`;card.className='loco-card';
       card.innerHTML='<strong class="loco-id"></strong><span><strong class="loco-state"></strong><small class="loco-meta"></small></span><span><span class="loco-bars"></span><small class="loco-pct"></small></span>';
-      card.querySelector('.loco-id').textContent=id;
+      card.querySelector('.loco-id').textContent=state.locomotives[id].label;
+      const reason=document.createElement('p');reason.className='stop-reason';card.append(reason);
+      const actions=document.createElement('div');actions.className='quick-actions';
+      for(const [action,title] of [['REVERSE','Ré'],['STOP','Parar'],['FORWARD','Frente']]){
+        const button=document.createElement('button');button.textContent=title;button.dataset.quickAction=action;
+        if(action==='STOP')button.className='stop';
+        button.onclick=event=>{event.stopPropagation();selectedLoco=id;run(()=>api(`/api/locomotives/${id}/command`,{action}),`${state.locomotives[id].label}: ${title}`)};
+        actions.append(button);
+      }
+      card.append(actions);
       card.onclick=()=>{selectedLoco=id;render()};
       list.append(card);
     }
     const loco=state.locomotives[id];
     card.classList.toggle('selected',id===selectedLoco);
     card.querySelector('.loco-state').textContent=formatState(loco.operational_state);
+    card.querySelector('.stop-reason').textContent=loco.stop_reason||(loco.motion!=='STOP'?'Em movimento até parar ou ocorrer um bloqueio':loco.confidence==='DESCONHECIDA'?'Prepare a operação para confirmar a posição':'Pronta para receber comando');
+    card.querySelectorAll('[data-quick-action]').forEach(button=>{
+      button.disabled=button.dataset.quickAction!=='STOP'&&(!state.session.active||state.emergency||!loco.connected||(state.calibration.active&&state.calibration.loco!==id));
+    });
     card.querySelector('.loco-meta').textContent=`${loco.connected?'Wi-Fi '+(loco.rssi??'')+' dBm'+(loco.firmware_version?' · FW '+loco.firmware_version:''):'OFFLINE'} · ${loco.confidence}${loco.last_seen?' · '+new Date(loco.last_seen).toLocaleTimeString('pt-BR'):''}`;
     card.querySelector('.loco-bars').innerHTML=bars(loco.battery_pct);
     card.querySelector('.loco-pct').textContent=`${loco.battery_pct??'?'}%`;
@@ -39,10 +54,10 @@ function renderLocomotives(){
 
 function renderControls(){
   const loco=state.locomotives[selectedLoco];if(!loco)return;
-  $('#selectedTitle').textContent=`Comandos ${selectedLoco}`;
+  $('#selectedTitle').textContent=`Ajustes de ${loco.label}`;
   if($('#routeSelect').value!==loco.route)$('#routeSelect').value=loco.route;
   if($('#prioritySelect').value!==loco.priority)$('#prioritySelect').value=loco.priority;
-  if(loco.last_sensor&&$('#positionSelect').value!==loco.last_sensor)$('#positionSelect').value=loco.last_sensor;
+  if(document.activeElement!==$('#positionSelect')&&loco.last_sensor&&$('#positionSelect').value!==loco.last_sensor)$('#positionSelect').value=loco.last_sensor;
   $('#positionHint').textContent=loco.last_sensor?`Confirmada em ${loco.last_sensor} · próxima leitura ${loco.next_sensor}`:'Confirme a posição antes de movimentar';
   $('#confirmPosition').disabled=loco.motion!=='STOP';
   $$('[data-action]').forEach(button=>button.disabled=state.emergency&&button.dataset.action!=='STOP');
@@ -73,7 +88,7 @@ function renderSensors(){
     let row=document.getElementById(`diag-${id}`);
     if(!row){row=document.createElement('div');row.id=`diag-${id}`;row.className='diag-row';row.innerHTML='<strong></strong><span class="diag-health"></span><span class="diag-miss"></span>';row.querySelector('strong').textContent=id;details.append(row)}
     row.querySelector('.diag-health').textContent=`${sensor.health} · ${sensor.hits} leituras`;
-    row.querySelector('.diag-miss').textContent=`${sensor.misses} falhas`;
+    row.querySelector('.diag-miss').textContent=`${sensor.misses} falhas${sensor.duration_ms?' · '+(sensor.duration_ms/1000).toFixed(2)+' s · '+(sensor.identity_status==='COMPATIVEL'?state.locomotives[sensor.identity].label:'identidade incerta'):''}`;
     const node=document.getElementById(`sensor-${id}`);
     if(node){node.classList.toggle('active',sensor.active);node.classList.toggle('suspect',sensor.health==='SUSPEITO');node.classList.toggle('failed',sensor.health==='FALHA')}
   }
@@ -106,9 +121,9 @@ const pathMetrics=new Map();
 function pathInfo(path){let info=pathMetrics.get(path.id);if(!info){info={total:path.getTotalLength(),lengths:new Map()};pathMetrics.set(path.id,info)}return info}
 function routePath(route){if(route.startsWith('ELEVADO'))return $('#path-ELEVADO');if(route==='OFICINA')return $('#path-OFICINA');return $('#path-PLANO')}
 function closestLength(path,coord){const info=pathInfo(path),key=coord.join(',');if(info.lengths.has(key))return info.lengths.get(key);let best=0,bestDistance=Infinity;for(let i=0;i<=300;i++){const length=info.total*i/300,p=path.getPointAtLength(length),distance=(p.x-coord[0])**2+(p.y-coord[1])**2;if(distance<bestDistance){bestDistance=distance;best=length}}info.lengths.set(key,best);return best}
-function pointForLoco(loco,index){const path=routePath(loco.route),total=pathInfo(path).total,fallback=[260+index*28,85];if(!loco.last_sensor&&!loco.next_sensor)return fallback;const start=sensorCoordinates[loco.last_sensor]||sensorCoordinates[loco.next_sensor]||fallback,end=sensorCoordinates[loco.next_sensor]||start;let a=closestLength(path,start),b=closestLength(path,end),progress=loco.progress||0,reverse=loco.route.endsWith('_RE');if(reverse){if(b>a)b-=total;return path.getPointAtLength((a+(b-a)*progress+total)%total)}if(b<a)b+=total;return path.getPointAtLength((a+(b-a)*progress)%total)}
+function pointForLoco(loco,index){const path=routePath(loco.route),total=pathInfo(path).total,fallback=[260+index*28,85];if(!loco.last_sensor&&!loco.next_sensor)return {x:fallback[0],y:fallback[1]};const start=sensorCoordinates[loco.last_sensor]||sensorCoordinates[loco.next_sensor]||fallback,end=sensorCoordinates[loco.next_sensor]||start;let a=closestLength(path,start),b=closestLength(path,end),progress=loco.progress||0,reverse=loco.route.endsWith('_RE');if(reverse){if(b>a)b-=total;return path.getPointAtLength((a+(b-a)*progress+total)%total)}if(b<a)b+=total;return path.getPointAtLength((a+(b-a)*progress)%total)}
 
-function renderMapLocomotives(){Object.entries(state.locomotives).forEach(([id,loco],index)=>{const marker=document.getElementById(`map-${id}`);if(!marker)return;const point=pointForLoco(loco,index);marker.setAttribute('transform',`translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})`);marker.classList.toggle('estimated',loco.confidence==='ESTIMADA');marker.classList.toggle('uncertain',loco.confidence==='INCERTA');marker.style.display=loco.operational_state==='FORA_DA_MALHA'||loco.confidence==='DESCONHECIDA'?'none':''})}
+function renderMapLocomotives(){Object.entries(state.locomotives).forEach(([id,loco],index)=>{const marker=document.getElementById(`map-${id}`);if(!marker)return;const point=pointForLoco(loco,index);marker.setAttribute('transform',`translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})`);marker.classList.toggle('estimated',loco.confidence==='ESTIMADA');marker.classList.toggle('uncertain',loco.confidence==='INCERTA');marker.style.display=!state.operation.active_ids.includes(id)||loco.operational_state==='FORA_DA_MALHA'||loco.confidence==='DESCONHECIDA'?'none':''})}
 
 async function run(action,success){const el=document.activeElement&&document.activeElement.tagName==='BUTTON'?document.activeElement:null;if(el)el.classList.add('busy');notice('Processando...','warning');try{await action();notice(success)}catch(error){notice(error.message,'error')}finally{if(el)el.classList.remove('busy')}}
 
@@ -125,3 +140,56 @@ $('#startSession').onclick=()=>{if(!state){notice('Aguardando o serviço local..
 
 function connect(){const events=new EventSource('/api/events');events.onmessage=event=>{state=JSON.parse(event.data);scheduleRender()};events.onerror=()=>notice('Reconectando ao serviço local...','warning')}
 function updateClock(){const now=new Date();$('#clock').textContent=now.toLocaleTimeString('pt-BR');$('#date').textContent=now.toLocaleDateString('pt-BR')}setInterval(updateClock,1000);updateClock();connect();
+
+function setupPositions(){
+  const sensors=$('#setupRoute').value==='PLANO_FRENTE'?['S03','S04','S06','S01','S02']:['S03','S05','S07','S01','S02'];
+  for(const selector of ['#setupDoublePosition','#setupSimplePosition']){
+    const select=$(selector);select.replaceChildren(...sensors.map(id=>new Option(id,id)));
+  }
+  $('#setupSimplePosition').selectedIndex=2;
+}
+$('#setupRoute').onchange=setupPositions;
+$('#prepareOperation').onclick=()=>{
+  if(!state)return;
+  $('#setupOperator').value=state.operator||'';$('#setupSimple').value=state.operation.simple;
+  setupPositions();$('#setupMessage').textContent='';$('#setupDialog').showModal();
+};
+$('#closeSetup').onclick=()=>$('#setupDialog').close();
+$('#setupForm').onsubmit=async event=>{
+  event.preventDefault();const submit=event.submitter;submit.disabled=true;
+  try{
+    const simple=$('#setupSimple').value,a=$('#setupDoublePosition').value,b=$('#setupSimplePosition').value;
+    if(a===b)throw new Error('Escolha posições diferentes para as duas locomotivas');
+    await api('/api/operation',{simple});
+    await api('/api/operator',{name:$('#setupOperator').value});
+    for(const [id,sensor] of [['L01',a],[simple,b]]){
+      await api(`/api/locomotives/${id}/route`,{route:$('#setupRoute').value});
+      await api(`/api/locomotives/${id}/position`,{sensor});
+    }
+    if(state.emergency)await api('/api/emergency',{active:false});
+    await api('/api/session/start');$('#setupDialog').close();notice('Operação pronta. Use Frente ou Ré nos cartões.');
+  }catch(error){$('#setupMessage').textContent=error.message}finally{submit.disabled=false}
+};
+function renderCalibration(){
+  const cal=state.calibration,select=$('#calibrationLoco');
+  const ids=state.operation.active_ids;
+  if([...select.options].map(option=>option.value).join()!==ids.join())select.replaceChildren(...ids.map(id=>new Option(state.locomotives[id].label,id)));
+  if(cal.active){select.value=cal.loco;$('#calibrationSensor').value=cal.sensor}
+  select.disabled=cal.active;$('#calibrationSensor').disabled=cal.active;$('#calibrationTrackClear').disabled=cal.active;
+  $('#calibrationStatus').textContent=`${cal.active?'Coleta em andamento · ':''}${cal.message} (${cal.samples.length}/3 passagens mínimas)`;
+  $('#calibrationStart').disabled=cal.active;$('#calibrationSave').disabled=!cal.active||cal.samples.length<3;$('#calibrationCancel').disabled=!cal.active;
+  const profiles=$('#calibrationProfiles');profiles.replaceChildren();
+  const timing=document.createElement('p');timing.textContent=`${Object.keys(cal.segments).length} trechos com tempo calibrado salvo`;profiles.append(timing);
+  for(const [sensor,entries] of Object.entries(cal.profiles))for(const [id,profile] of Object.entries(entries)){
+    const line=document.createElement('p');line.textContent=`${sensor} · ${state.locomotives[id].label}: ${(profile.min_ms/1000).toFixed(2)}–${(profile.max_ms/1000).toFixed(2)} s (${profile.count} passagens)`;profiles.append(line);
+  }
+}
+$('#openCalibration').onclick=()=>{if(state){renderCalibration();$('#calibrationMessage').textContent='';$('#calibrationDialog').showModal()}};
+$('#calibrationClose').onclick=()=>$('#calibrationDialog').close();
+for(const [selector,action] of [['#calibrationStart','START'],['#calibrationSave','SAVE'],['#calibrationCancel','CANCEL']])$(selector).onclick=async()=>{
+  try{await api('/api/calibration',{action,loco:$('#calibrationLoco').value,sensor:$('#calibrationSensor').value,track_clear:$('#calibrationTrackClear').checked});$('#calibrationMessage').textContent=''}catch(error){$('#calibrationMessage').textContent=error.message}
+};
+
+$('#timingSave').onclick=async()=>{
+  try{await api('/api/timing',{route:$('#timingRoute').value,seconds:Number($('#timingSeconds').value)});$('#timingStatus').textContent='Tempo salvo. Os trechos com medição própria mantêm o valor calibrado.'}catch(error){$('#timingStatus').textContent=error.message}
+};
