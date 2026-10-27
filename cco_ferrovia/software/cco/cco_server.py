@@ -47,6 +47,9 @@ class CCOSystem:
         self.command_sequence = 0
         self.last_arduino_ping = 0.0
         self.last_loco_ping = 0.0
+        self.last_serial_warning = 0.0
+        self.last_unknown_loco_log = 0.0
+        self.last_payload: str | None = None
         self.events: list[dict] = []
         self.state = self._initial_state()
         DATA.mkdir(parents=True, exist_ok=True)
@@ -156,6 +159,8 @@ class CCOSystem:
             self.events = self.events[-1000:]
             with self.event_file.open("a", encoding="utf-8") as stream:
                 stream.write(json.dumps(event, ensure_ascii=False) + "\n")
+        target = f" [{loco}]" if loco else ""
+        print(f"{event['time'][11:19]} {severity:<8} {category:<13}{target} {message}", flush=True)
         self.broadcast()
 
     def snapshot(self) -> dict:
@@ -176,17 +181,22 @@ class CCOSystem:
 
     def broadcast(self):
         payload = json.dumps(self.snapshot(), ensure_ascii=False)
-        stale = []
+        with self.lock:
+            if payload == self.last_payload:
+                return
+            self.last_payload = payload
         for subscriber in list(self.subscribers):
             try:
                 subscriber.put_nowait(payload)
             except queue.Full:
-                stale.append(subscriber)
-        for subscriber in stale:
-            try:
-                self.subscribers.remove(subscriber)
-            except ValueError:
-                pass
+                try:
+                    subscriber.get_nowait()
+                except queue.Empty:
+                    pass
+                try:
+                    subscriber.put_nowait(payload)
+                except queue.Full:
+                    pass
 
     def next_sequence(self) -> int:
         with self.lock:
@@ -194,6 +204,11 @@ class CCOSystem:
             return self.command_sequence
 
     def send_arduino(self, line: str):
+        if not self.mock and not self.state["arduino"]["connected"]:
+            now = time.monotonic()
+            if now - self.last_serial_warning > 5:
+                self.last_serial_warning = now
+                self.log("ARDUINO", "Comando enfileirado, mas Arduino está desconectado", "WARNING")
         self.serial_write.put(line.rstrip("\r\n") + "\n")
 
     def send_loco(self, loco_id: str, action: str) -> bool:
@@ -269,6 +284,8 @@ class CCOSystem:
         route = self.config["routes"].get(route_name)
         if not route:
             raise ValueError("Rota desconhecida")
+        if not self.mock and not self.state["arduino"]["connected"]:
+            raise ValueError("Arduino desconectado; não é possível preparar as chaves da rota")
         with self.lock:
             loco = self.state["locomotives"][loco_id]
             if loco["motion"] != "STOP":
@@ -399,6 +416,8 @@ class CCOSystem:
         switch_id, position = switch_id.upper(), position.upper()
         if switch_id not in self.state["switches"] or position not in ("NORMAL", "REVERSA"):
             raise ValueError("Comando de chave inválido")
+        if not self.mock and not self.state["arduino"]["connected"]:
+            raise ValueError("Arduino desconectado; verifique o cabo USB")
         if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
             raise ValueError("Pare as locomotivas antes de comandar uma chave manualmente")
         with self.lock:
@@ -410,6 +429,8 @@ class CCOSystem:
         signal_id, color = signal_id.upper(), color.upper()
         if signal_id not in self.state["signals"] or color not in ("RED", "YELLOW", "GREEN"):
             raise ValueError("Comando de farol inválido")
+        if not self.mock and not self.state["arduino"]["connected"]:
+            raise ValueError("Arduino desconectado; verifique o cabo USB")
         with self.lock:
             self.state["signals"]["F1_EXTERNO"] = color
             self.state["signals"]["F2_INTERNO"] = color
@@ -538,13 +559,23 @@ class CCOSystem:
             return
         kind, loco_id = parts[0].upper(), parts[1].upper()
         if loco_id not in self.state["locomotives"]:
+            now = time.monotonic()
+            if now - self.last_unknown_loco_log > 10:
+                self.last_unknown_loco_log = now
+                self.log("COMUNICACAO", f"Pacote de locomotiva desconhecida {loco_id} em {address[0]}", "WARNING")
             return
         with self.lock:
             loco = self.state["locomotives"][loco_id]
+            previous_ip = loco.get("ip")
+            was_offline = not loco["connected"]
             loco["connected"] = True
             loco["ip"] = address[0]
             loco["last_seen_monotonic"] = time.monotonic()
             loco["last_seen"] = now_iso()
+            if was_offline:
+                self.log("COMUNICACAO", f"{loco_id} com telemetria ativa em {address[0]}", loco=loco_id)
+            elif previous_ip and previous_ip not in (None, "simulado") and previous_ip != address[0]:
+                self.log("COMUNICACAO", f"{loco_id} mudou de {previous_ip} para {address[0]} (verifique LOCO_ID duplicado)", "WARNING", loco_id)
             if kind == "STATUS" and len(parts) >= 7:
                 loco["motion"] = parts[2].upper()
                 loco["battery_mv"] = int(parts[3])
@@ -552,11 +583,18 @@ class CCOSystem:
                 current_min = loco["stats"].get("battery_min_pct")
                 loco["stats"]["battery_min_pct"] = loco["battery_pct"] if current_min is None else min(current_min, loco["battery_pct"])
                 loco["rssi"] = int(parts[5])
-                fault = parts[6]
+                fault = parts[6].upper()
+                previous_fault = loco["fault"]
                 loco["fault"] = None if fault == "NONE" else fault
                 if loco["fault"]:
                     loco["operational_state"] = "FALHA"
-            elif kind == "HELLO":
+                    if loco["fault"] != previous_fault:
+                        self.log("COMUNICACAO", f"{loco_id} reportou falha {loco['fault']}", "CRITICAL", loco_id)
+                elif loco["operational_state"] == "FALHA":
+                    loco["operational_state"] = "EM_MOVIMENTO" if loco["motion"] != "STOP" else "PARADA"
+                    if previous_fault:
+                        self.log("COMUNICACAO", f"{loco_id} sem falhas ativas", loco=loco_id)
+            elif kind == "HELLO" and not was_offline:
                 self.log("COMUNICACAO", f"{loco_id} conectada em {address[0]}", loco=loco_id)
         self.broadcast()
 
@@ -675,12 +713,30 @@ class SerialWorker(threading.Thread):
         except ImportError:
             self.system.log("ARDUINO", "pyserial não instalado; comunicação USB desativada", "ERROR")
             return
+        reported_ports: set[str] = set()
+        last_port_warning = 0.0
         while not self.system.stop_event.is_set():
             port_name = self.system.config["serial"]["port"]
             if port_name == "AUTO":
                 ports = list(list_ports.comports())
-                preferred = [p for p in ports if any(key in (p.description or "").lower() for key in ("arduino", "ch340", "usb serial"))]
-                port_name = (preferred or ports)[0].device if ports else None
+                if not ports:
+                    if time.monotonic() - last_port_warning > 10:
+                        last_port_warning = time.monotonic()
+                        self.system.log("ARDUINO", "Nenhuma porta serial encontrada; verifique o cabo USB", "WARNING")
+                    time.sleep(2)
+                    continue
+                preferred = [
+                    p for p in ports
+                    if any(
+                        key in ((p.description or "") + " " + (p.hwid or "")).lower()
+                        for key in ("arduino", "ch340", "ch341", "usb serial", "usb-serial", "ft232")
+                    )
+                ]
+                chosen = (preferred or ports)[0]
+                port_name = chosen.device
+                if port_name not in reported_ports:
+                    reported_ports.add(port_name)
+                    self.system.log("ARDUINO", f"Porta detectada: {port_name} ({chosen.description})")
             if not port_name:
                 time.sleep(2)
                 continue
@@ -701,7 +757,7 @@ class SerialWorker(threading.Thread):
             except Exception as exc:
                 with self.system.lock:
                     self.system.state["arduino"]["connected"] = False
-                self.system.log("ARDUINO", f"Conexão indisponível: {exc}", "WARNING")
+                self.system.log("ARDUINO", f"{port_name}: {exc}", "WARNING")
                 time.sleep(2)
 
 
@@ -738,6 +794,12 @@ class CCOHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
         return
+
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except (ConnectionAbortedError, ConnectionResetError):
+            self.close_connection = True
 
     def send_bytes(self, body: bytes, content_type: str, status: int = 200, filename: str | None = None):
         self.send_response(status)
@@ -780,7 +842,7 @@ class CCOHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
         self.end_headers()
-        subscriber: queue.Queue[str] = queue.Queue(maxsize=4)
+        subscriber: queue.Queue[str] = queue.Queue(maxsize=8)
         self.system.subscribers.append(subscriber)
         try:
             self.wfile.write(f"data: {json.dumps(self.system.snapshot(), ensure_ascii=False)}\n\n".encode("utf-8"))
@@ -857,6 +919,7 @@ def main():
     if args.port:
         config["http_port"] = args.port
     system = CCOSystem(config, mock=args.mock)
+    system.log("SISTEMA", f"Servidor CCO iniciado em modo {'SIMULAÇÃO' if args.mock else 'HARDWARE'}")
     SerialWorker(system).start()
     UDPWorker(system).start()
     threading.Thread(target=system.background_loop, name="cco-watchdog", daemon=True).start()

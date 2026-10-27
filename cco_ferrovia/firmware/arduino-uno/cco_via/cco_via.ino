@@ -5,8 +5,11 @@
 // Interligue apenas os GNDs. Nao alimente os servos pelo pino 5 V do Uno.
 
 constexpr unsigned long SERIAL_BAUD = 115200;
-constexpr unsigned long SENSOR_DEBOUNCE_MS = 35;
+constexpr unsigned long SENSOR_DEBOUNCE_MS = 3;
+constexpr unsigned long SENSOR_HOLD_MS = 2000;
 constexpr unsigned long PC_TIMEOUT_MS = 4000;
+constexpr unsigned long CAL_INTERVAL_MS = 100;
+constexpr unsigned long CAL_DURATION_MS = 30000;
 constexpr bool SENSOR_ACTIVE_LOW = true;
 constexpr bool SIGNAL_ACTIVE_HIGH = true; // Troque para false se o modulo for acionado em nivel baixo.
 constexpr bool DETACH_SERVOS_AFTER_MOVE = false;
@@ -28,7 +31,9 @@ enum SignalColor : uint8_t { RED = 0, YELLOW = 1, GREEN = 2 };
 struct SensorState {
   bool raw;
   bool stable;
+  bool occupied;
   unsigned long changedAt;
+  unsigned long lastTransition;
 };
 
 Servo servos[3];
@@ -39,7 +44,10 @@ unsigned long servoCommandAt[3] = {0, 0, 0};
 SignalColor signalState = RED;
 bool emergencyActive = false;
 bool timeoutReported = false;
+bool calibrationActive = false;
 unsigned long lastPcPing = 0;
+unsigned long calibrationStartedAt = 0;
+unsigned long calibrationLastPrint = 0;
 char serialBuffer[96];
 uint8_t serialLength = 0;
 
@@ -68,11 +76,15 @@ void allSignalsRed() {
   setSignal(RED);
 }
 
+bool sensorOccupied(uint8_t index) {
+  return sensors[index].occupied || sensors[index].stable;
+}
+
 bool sensorProtectsSwitch(uint8_t switchIndex) {
   // C1: S06/S07; C2: S01; C3: S03/S04/S05.
-  if (switchIndex == 0) return sensors[5].stable || sensors[6].stable;
-  if (switchIndex == 1) return sensors[0].stable;
-  return sensors[2].stable || sensors[3].stable || sensors[4].stable;
+  if (switchIndex == 0) return sensorOccupied(5) || sensorOccupied(6);
+  if (switchIndex == 1) return sensorOccupied(0);
+  return sensorOccupied(2) || sensorOccupied(3) || sensorOccupied(4);
 }
 
 void ensureServoAttached(uint8_t index) {
@@ -109,7 +121,7 @@ void sendSnapshot() {
   Serial.print(F("HELLO|UNO|1|")); Serial.println(millis());
   for (uint8_t i = 0; i < 7; i++) {
     Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print('|');
-    Serial.print(sensors[i].stable ? F("ACTIVE") : F("CLEAR")); Serial.print('|'); Serial.println(millis());
+    Serial.print(sensors[i].occupied ? F("ACTIVE") : F("CLEAR")); Serial.print('|'); Serial.println(millis());
   }
   for (uint8_t i = 0; i < 3; i++) {
     Serial.print(F("SWITCH|C")); Serial.print(i + 1); Serial.print('|');
@@ -129,6 +141,17 @@ void handleCommand(char *line) {
   }
   if (strcmp(kind, "SNAPSHOT") == 0) {
     lastPcPing = millis(); sendSnapshot(); return;
+  }
+  if (strcmp(kind, "CAL") == 0) {
+    char *value = strtok(nullptr, "|");
+    calibrationActive = value && strcmp(value, "START") == 0;
+    if (calibrationActive) {
+      calibrationStartedAt = millis();
+      calibrationLastPrint = 0;
+    }
+    lastPcPing = millis();
+    Serial.print(F("CAL|")); Serial.println(calibrationActive ? F("ON") : F("OFF"));
+    return;
   }
   if (strcmp(kind, "EMERGENCY") == 0) {
     char *value = strtok(nullptr, "|");
@@ -186,10 +209,34 @@ void updateSensors() {
     }
     if (current != sensors[i].stable && now - sensors[i].changedAt >= SENSOR_DEBOUNCE_MS) {
       sensors[i].stable = current;
-      Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print('|');
-      Serial.print(current ? F("ACTIVE") : F("CLEAR")); Serial.print('|'); Serial.println(now);
+      sensors[i].lastTransition = now;
+      if (!sensors[i].occupied) {
+        sensors[i].occupied = true;
+        Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print(F("|ACTIVE|")); Serial.println(now);
+      }
+    }
+    if (sensors[i].occupied && now - sensors[i].lastTransition >= SENSOR_HOLD_MS) {
+      sensors[i].occupied = false;
+      Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print(F("|CLEAR|")); Serial.println(now);
     }
   }
+}
+
+void updateCalibration() {
+  if (!calibrationActive) return;
+  unsigned long now = millis();
+  if (now - calibrationStartedAt >= CAL_DURATION_MS) {
+    calibrationActive = false;
+    Serial.println(F("CAL|TIMEOUT"));
+    return;
+  }
+  if (now - calibrationLastPrint < CAL_INTERVAL_MS) return;
+  calibrationLastPrint = now;
+  Serial.print(F("CAL|"));
+  for (uint8_t i = 0; i < 7; i++) Serial.print(logicalSensorRead(i) ? '1' : '0');
+  Serial.print('|');
+  for (uint8_t i = 0; i < 7; i++) Serial.print(digitalRead(SENSOR_PINS[i]) ? '1' : '0');
+  Serial.print('|'); Serial.println(now);
 }
 
 void updateServoDetach() {
@@ -216,7 +263,7 @@ void setup() {
   for (uint8_t i = 0; i < 7; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
     bool initial = logicalSensorRead(i);
-    sensors[i] = {initial, initial, millis()};
+    sensors[i] = {initial, initial, false, millis(), 0};
   }
   for (uint8_t channel = 0; channel < 3; channel++) pinMode(SIGNAL_PINS[channel], OUTPUT);
   allSignalsRed();
@@ -233,6 +280,7 @@ void setup() {
 void loop() {
   readSerialCommands();
   updateSensors();
+  updateCalibration();
   updateServoDetach();
   updatePcFailsafe();
 }

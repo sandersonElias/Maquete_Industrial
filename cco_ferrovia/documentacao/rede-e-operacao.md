@@ -4,7 +4,7 @@
 
 O notebook pode criar o ponto de acesso usado pelas locomotivas. Configure o **Hotspot móvel** do Windows em 2,4 GHz com o nome `CCO_FERROVIA` e uma senha própria. Copie exatamente esses dados para o arquivo `secrets.h` antes de gravar cada ESP-12E.
 
-No primeiro uso, permita o acesso do Python em redes privadas quando o Firewall do Windows perguntar. O CCO usa a porta UDP 4210 para receber telemetria, UDP 4211 para comandos das locomotivas e HTTP local 8080 para a tela.
+No primeiro uso, permita o acesso do Python em redes privadas quando o Firewall do Windows perguntar. Se a locomotiva aparecer na tela e depois cair em `FALHA` com "sem telemetria", rode `software/cco/LIBERAR_FIREWALL.cmd` como administrador: ele libera a porta UDP 4210 (telemetria) e a TCP 8080 (tela). O CCO usa UDP 4210 para receber telemetria, UDP 4211 para comandos das locomotivas e HTTP local 8080 para a tela.
 
 O navegador não conversa diretamente com as locomotivas. O serviço local do CCO recebe os comandos da tela, comunica-se com o Arduino pelo cabo USB e com os ESP-12E pelo Wi-Fi.
 
@@ -28,6 +28,8 @@ O navegador não conversa diretamente com as locomotivas. O serviço local do CC
 - Se a comunicação Wi-Fi for perdida, o próprio ESP-12E para o motor.
 - Se a comunicação com o computador for perdida, o Arduino coloca os dois semáforos combinados em vermelho.
 - Chaves próximas a um sensor ativo não são movimentadas pelo Arduino.
+- Cada passagem gera uma única confirmação por sensor: o Arduino só considera o sensor livre após 2 s sem transições. As transições internas da etiqueta óptica não são enviadas.
+- Se um sensor piscar ativo sem trem, ajustar o potenciômetro do HW-201; se as chaves ficarem bloqueadas em repouso, inverter `SENSOR_ACTIVE_LOW` no firmware.
 - A parada na oficina é temporizada e exige confirmação visual porque não há sensor dentro dela.
 
 ## Encerramento

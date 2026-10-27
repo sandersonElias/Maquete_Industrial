@@ -1,8 +1,6 @@
 @echo off
+chcp 65001 >nul
 cd /d "%~dp0"
-set "PYTHON=%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
-set "PYARGS="
-if exist "%PYTHON%" goto dependencias
 set "PYTHON=py"
 set "PYARGS=-3"
 :dependencias

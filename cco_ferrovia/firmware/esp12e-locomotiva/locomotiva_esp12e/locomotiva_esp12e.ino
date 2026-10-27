@@ -1,7 +1,32 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-#include "secrets.h"
-#include "locomotive_config.h"
+
+// ── Configuração embutida (sketch de arquivo único) ────────
+// Os valores de "secrets.h" e "locomotive_config.h" foram
+// incorporados aqui para o sketch compilar sozinho.
+// - Troque LOCO_ID para L02/L03 antes de gravar as outras locos.
+// - Preencha WIFI_SSID/WIFI_PASSWORD com o ponto de acesso do CCO
+//   (mantenha placeholder no repo — senha real só na hora de gravar).
+
+// Wi-Fi (antes em secrets.h)
+#define WIFI_SSID "CCO_FERROVIA"
+#define WIFI_PASSWORD "TROQUE_AQUI"
+
+// Locomotiva (antes em locomotive_config.h)
+#define LOCO_ID "L01"
+
+// GPIO12 -> IN1 do MX1508; GPIO13 -> IN2 do MX1508.
+#define MOTOR_IN1_PIN 12
+#define MOTOR_IN2_PIN 13
+
+// Ative somente depois de instalar e calibrar o divisor resistivo no A0.
+#define BATTERY_MONITOR_ENABLED false
+
+// Exemplo para 220 kohm (superior) e 56 kohm (inferior): (220 + 56) / 56.
+#define BATTERY_DIVIDER_RATIO 4.9286f
+#define ADC_REFERENCE_MV 1000.0f
+#define BATTERY_WARNING_MV 3500
+#define BATTERY_CRITICAL_MV 3300
 
 // CCO Ferrovia - firmware comum para L01, L02 e L03.
 // ESP-12E trabalha em 3,3 V e nao tolera 5 V nos GPIOs.

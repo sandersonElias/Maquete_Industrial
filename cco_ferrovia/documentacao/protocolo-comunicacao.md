@@ -12,9 +12,22 @@ SIGNAL|F1|RED|sequencia
 EMERGENCY|ON|sequencia
 EMERGENCY|OFF|sequencia
 SNAPSHOT|sequencia
+CAL|START
+CAL|STOP
 ```
 
-O Arduino responde com `SENSOR`, `SWITCH`, `SIGNAL`, `PONG` ou `FAULT`.
+O Arduino responde com `SENSOR`, `SWITCH`, `SIGNAL`, `PONG`, `CAL` ou `FAULT`.
+
+`SENSOR|Sx|ACTIVE|ms` e `SENSOR|Sx|CLEAR|ms` são enviados uma vez por passagem.
+O Arduino espera 2 s sem transições para considerar o sensor livre; as transições
+internas da etiqueta óptica não são enviadas separadamente. A decodificação do
+código óptico ainda não está implementada.
+
+`CAL|START` inicia um diagnóstico de 30 s: a cada 100 ms o Arduino envia
+`CAL|<lógico>|<bruto>|ms` para os sete sensores. Use com o CCO fechado, pelo
+Monitor Serial, para conferir a polaridade e ajustar o potenciômetro do HW-201.
+Com o CCO fechado, o Arduino pode reportar `FAULT|PC_TIMEOUT` após 4 s; isso é
+normal e desaparece no próximo `PING`.
 
 `F1` representa o sinal unico da passagem de nivel. Os semaforos externo e interno
 sao combinados eletricamente e sempre exibem a mesma cor.
