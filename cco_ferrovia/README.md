@@ -118,3 +118,45 @@ simulação em `http://127.0.0.1:18080`, Playwright e Edge instalados; pode-se c
 
 Após calibrar, recoloque as locomotivas e execute **Preparar operação** novamente.
 A confirmação de pista livre remove a posição antiga da outra locomotiva no mapa.
+
+## Tela secundária: Configurar ferrovia
+
+Acesse **Configurar ferrovia** na barra superior do CCO (`/configurar.html`).
+As locomotivas precisam estar paradas e a calibração de identificação encerrada.
+Entrar nessa tela ativa um bloqueio global de movimento; fechar a aba não remove
+esse bloqueio. Reabra a tela e use **Encerrar ajustes e voltar ao CCO** para sair.
+A parada de emergência também está disponível nessa tela.
+
+1. **Identificar sensores:** passe um objeto diante de um HW-201 e observe a entrada
+   que ficou verde (por exemplo, D3). Associe esse pino ao ponto S01–S07 correspondente
+   no mapa. O diagnóstico observa as sete entradas atualmente salvas. Se o sensor foi
+   ligado a um pino diferente dessas entradas, selecione manualmente esse pino,
+   salve e faça o teste novamente. Não é feita uma varredura de pinos de saída.
+2. **Associar servos:** escolha o pino de sinal de C1, C2 e C3. Cada pino só pode ser
+   usado por um componente. D2–D11 e A1–A5 estão disponíveis; D0/D1, D12/D13 e A0
+   ficam reservados para serial e semáforos. A1–A5 também funcionam como pinos
+   digitais. A configuração trata os fios de sinal; alimentação e GND são físicos.
+3. **Salvar ligações e ângulos:** salve a associação completa. O servidor envia a
+   pinagem e os ângulos ao Uno e espera `HWACK` da revisão atual. Salvar não aciona
+   os servos. Não há persistência em EEPROM: o computador reaplica a configuração
+   sempre que o Arduino reconecta. Um firmware antigo sem `HWACK` mantém a operação
+   bloqueada e precisa ser substituído pelo firmware desta versão.
+4. **Testar servos:** com todos os sensores livres, teste Normal, Reversa ou um ângulo
+   específico. Apenas um servo é testado por vez, com rampa de 1° a cada 20 ms.
+   Os botões −5°/+5° permitem ajustes pequenos. O primeiro acionamento pode ir à
+   referência de 90°; solte a haste se a montagem ainda não está calibrada. Os limites
+   aceitos são 0–180°, mas os limites mecânicos precisam ser observados na montagem.
+   Emergência, sensor ocupado ou perda dos pings interrompem o teste no Arduino.
+5. **Conferir o mapa:** clique nos pontos e chaves para localizar suas linhas.
+   Ao terminar, encerre os ajustes. Depois de salvar, use **Preparar operação** para
+   confirmar as posições iniciais novamente. Trocar a pinagem dos sensores invalida
+   as calibrações de duração e de percurso; trocar apenas servos preserva esses perfis.
+
+As associações ficam em `software/cco/data/hardware.json`, ignorado pelo Git.
+O arquivo deve ficar no computador do CCO. É possível usar `CCO_DATA_DIR` para
+escolher uma pasta de dados separada, inclusive em testes de simulação.
+
+A verificação da tela pode ser repetida com
+`node software/cco/testes/verificar_configuracao.cjs`, usando Playwright, Edge e
+uma instância **isolada de simulação** indicada por `CCO_TEST_URL`. Esse teste
+altera e salva pinagens nos dados dessa instância; não use os dados da montagem real.

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configurar ferrovia · CCO</title><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/configurar.css"></head>
+<body><header class="config-header"><div><h1>Configurar ferrovia</h1><p>Identifique as ligações e ajuste uma chave por vez.</p></div><div class="config-header-actions"><button id="configEmergency" class="stop">Parada de emergência</button><button id="backToCCO">Encerrar ajustes e voltar ao CCO</button></div></header>
+<main class="config-layout"><section class="config-main">
+<div class="config-status"><strong id="modeStatus">Conectando…</strong><p id="hardwareStatus"></p><button id="enterSetup">Entrar no modo de configuração</button><p id="configMessage" role="status" aria-live="polite"></p></div>
+<section class="config-section"><h2>1. Identificar sensores</h2><p>Passe um objeto diante de um sensor. A entrada que responder ficará verde. Escolha o pino dessa entrada na posição correta do mapa.</p><p>Se o fio está em um pino diferente dos atuais, selecione esse pino, salve e repita o teste. A tela observa as sete entradas configuradas.</p>
+<div id="inputMonitor" class="input-monitor"></div><p id="lastInput" aria-live="polite">Nenhuma entrada acionada nesta configuração.</p><div id="sensorRows"></div>
+<details><summary>Pinos disponíveis</summary><p>D2–D11 e A1–A5 podem receber sinais de sensores ou servos. Cada componente precisa de um pino exclusivo. D0/D1 estão reservados para USB/serial; D12/D13 e A0, para os semáforos. VCC e GND são alimentação, não entram nesta associação.</p></details></section>
+<section class="config-section"><h2>2. Associar e ajustar os servos</h2><p>Escolha o pino de sinal de cada chave e seus ângulos Normal e Reversa. Salve as ligações antes de testar. Use −5° e +5° para ajustes pequenos; observe a haste e evite os limites mecânicos.</p><p>O primeiro acionamento pode levar o servo à referência de 90°. Se a montagem ainda não está calibrada, solte a haste antes do primeiro teste.</p><div id="servoRows"></div>
+<div class="servo-test"><label>Chave<select id="testServo"><option>C1</option><option>C2</option><option>C3</option></select></label><label>Ângulo de teste<input id="testAngle" type="number" min="0" max="180" step="1" value="90"></label><button id="minusAngle">−5°</button><button id="plusAngle">+5°</button><button id="testAngleButton">Testar ângulo</button></div>
+<p id="servoStatus" role="status">Os testes movimentam somente um servo por vez.</p></section>
+<div class="save-bar"><button id="saveHardware" class="primary">Salvar ligações e ângulos</button><span id="dirtyStatus">Configuração salva</span></div>
+<p>Salvar novas ligações exige confirmar novamente as posições das locomotivas. Mudar os sensores também invalida a calibração de identificação e dos tempos de percurso.</p>
+</section><aside class="config-map"><h2>3. Conferir no mapa</h2>          <svg id="railMap" viewBox="0 0 780 430" role="img" aria-label="Malha do CCO com circuitos plano e elevado">
+            <defs>
+              <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <rect x="18" y="42" width="744" height="346" class="zone"/>
+            <text x="30" y="27" class="map-title">ESTADO EM TEMPO REAL</text>
+
+            <path class="bed" d="M350 85 L180 85 C95 85 35 145 35 225 C35 290 95 330 180 330 L360 330"/>
+            <path class="rail" d="M350 85 L180 85 C95 85 35 145 35 225 C35 290 95 330 180 330 L360 330"/>
+            <path class="bed" d="M350 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L360 330"/>
+            <path class="rail" d="M350 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L360 330"/>
+            <path class="cross-gap" d="M632 140 C651 140 669 144 684 153"/>
+            <path class="bed elevated" d="M350 85 C385 85 385 140 455 140 L620 140 C697 140 745 210 745 285 C745 350 700 380 640 380 L470 380 C410 380 405 330 360 330"/>
+            <path class="rail elevated" d="M350 85 C385 85 385 140 455 140 L620 140 C697 140 745 210 745 285 C745 350 700 380 640 380 L470 380 C410 380 405 330 360 330"/>
+            <path class="bed" d="M520 330 L310 205"/><path class="rail siding" d="M520 330 L310 205"/>
+
+            <path id="path-PLANO" class="motion-path" d="M305 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L360 330 C300 330 250 330 180 330 C95 330 35 290 35 225 C35 145 95 85 180 85 Z"/>
+            <path id="path-ELEVADO" class="motion-path" d="M305 85 L350 85 C385 85 385 140 455 140 L620 140 C697 140 745 210 745 285 C745 350 700 380 640 380 L470 380 C410 380 405 330 360 330 C300 330 250 330 180 330 C95 330 35 290 35 225 C35 145 95 85 180 85 Z"/>
+            <path id="path-OFICINA" class="motion-path" d="M305 85 L535 85 C625 85 680 140 680 225 C680 290 625 330 520 330 L310 205"/>
+
+            <g class="office" transform="translate(250 170) rotate(30 52 25)"><rect width="104" height="50"/><text x="52" y="23">OFICINA</text><text x="52" y="38" class="small">VIA MORTA</text></g>
+            <g class="crossing" transform="translate(160 306)"><rect width="72" height="48"/><line x1="18" y1="0" x2="18" y2="48"/><line x1="54" y1="0" x2="54" y2="48"/><text x="36" y="-27">PASSAGEM DE NÍVEL</text></g>
+
+            <g class="turnout" data-switch="C3" transform="translate(350 85)"><circle r="9"/><circle r="3"/><text x="-16" y="-20">C3</text></g>
+            <g class="turnout" data-switch="C2" transform="translate(360 330)"><circle r="9"/><circle r="3"/><text x="-16" y="28">C2</text></g>
+            <g class="turnout" data-switch="C1" transform="translate(520 330)"><circle r="9"/><circle r="3"/><text x="-16" y="28">C1</text></g>
+
+            <g id="sensor-S01" class="sensor-node" transform="translate(330 330)"><circle r="7"/><text x="-12" y="27">S01</text></g>
+            <g id="sensor-S02" class="sensor-node" transform="translate(260 330)"><circle r="7"/><text x="-12" y="27">S02</text></g>
+            <g id="sensor-S03" class="sensor-node" transform="translate(305 85)"><circle r="7"/><text x="-12" y="25">S03</text></g>
+            <g id="sensor-S04" class="sensor-node" transform="translate(420 85)"><circle r="7"/><text x="-12" y="25">S04</text></g>
+            <g id="sensor-S05" class="sensor-node" transform="translate(430 135)"><circle r="7"/><text x="-12" y="25">S05</text></g>
+            <g id="sensor-S06" class="sensor-node" transform="translate(570 330)"><circle r="7"/><text x="-12" y="27">S06</text></g>
+            <g id="sensor-S07" class="sensor-node" transform="translate(570 380)"><circle r="7"/><text x="-12" y="25">S07</text></g>
+
+            <g id="signal-F2_INTERNO" class="signal" transform="translate(285 285)"><text x="-20" y="-14">INTERNO</text><rect x="-20" y="-9" width="40" height="18"/><circle data-color="RED" cx="-12" r="4"/><circle data-color="YELLOW" r="4"/><circle data-color="GREEN" cx="12" r="4"/></g>
+            <g id="signal-F1_EXTERNO" class="signal" transform="translate(285 382)"><text x="-20" y="-14">EXTERNO</text><rect x="-20" y="-9" width="40" height="18"/><circle data-color="RED" cx="-12" r="4"/><circle data-color="YELLOW" r="4"/><circle data-color="GREEN" cx="12" r="4"/></g>
+          </svg><p>O ponto verde indica um sensor ocupado. Clique em um sensor ou chave no mapa para localizar sua linha de configuração.</p><p id="mapSelection">Selecione um componente no mapa.</p></aside></main>
+<script src="/configurar.js"></script></body></html>

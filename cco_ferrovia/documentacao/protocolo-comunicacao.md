@@ -38,6 +38,42 @@ normal e desaparece no próximo `PING`.
 `F1` representa o sinal unico da passagem de nivel. Os semaforos externo e interno
 sao combinados eletricamente e sempre exibem a mesma cor.
 
+## Configuração de hardware (Arduino Uno, firmware 2)
+
+```text
+HWCONFIG|revisao|pinosSensoresCSV|pinosServosCSV|angulosNormalCSV|angulosReversaCSV
+HWCONFIG|2|2,3,4,5,6,7,8|9,10,11|45,45,45|90,90,90
+SETUP|ON
+SERVO_TEST|C1|85
+SETUP|OFF
+```
+
+Os sete pinos de sensores seguem a ordem lógica S01–S07; os três pinos de servos
+seguem C1–C3. A1–A5 são codificados como 15–19. O firmware valida cardinalidade,
+pinos reservados, duplicações entre sensores/servos e ângulos 0–180 antes de aplicar.
+`HWCONFIG` não aciona os servos. A pinagem dos sensores também é usada nos
+bloqueios locais das chaves, mantendo os intertravamentos após uma troca de ligação.
+
+Respostas:
+
+```text
+HELLO|UNO|2|ms
+HWACK|revisao
+SETUP|ON
+INPUT|pinoFisico|ACTIVE
+INPUT|pinoFisico|CLEAR
+SERVO|C1|85|DONE
+SETUP|OFF
+FAULT|SERVO_TEST_SENSOR_ACTIVE
+```
+
+`INPUT` identifica a entrada física para a tela de ajustes. `SENSOR` e `PASS`
+continuam usando o número lógico do ponto no mapa. O servidor só libera comandos
+de movimento após `HWACK` da revisão atual e confirmação de saída do modo `SETUP`.
+Durante `SETUP`, comandos normais de chave/sinal são bloqueados no firmware;
+`SERVO_TEST` exige sensores livres e um único movimento em andamento. O servo
+avança 1°/20 ms; ocupação, emergência ou falta de pings interrompem o teste.
+
 ## Computador para ESP-12E
 
 UDP local:

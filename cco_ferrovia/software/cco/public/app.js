@@ -13,7 +13,7 @@ function formatState(value){return String(value||'--').replaceAll('_',' ')}
 function scheduleRender(immediate=false){if(immediate){if(renderTimer){clearTimeout(renderTimer);renderTimer=null}render();return}if(renderTimer)return;const wait=Math.max(0,REFRESH_MS-(performance.now()-lastRendered));renderTimer=setTimeout(()=>{renderTimer=null;render()},wait)}
 
 function render(){if(!state)return;lastRendered=performance.now();$('#operatorName').textContent=state.operator?`Operador: ${state.operator}`:'Operador não identificado';$('#arduinoHealth').textContent=state.arduino.connected?`Arduino ${state.arduino.port||'online'}`:'Arduino offline';$('#arduinoHealth').classList.toggle('bad',!state.arduino.connected);$('#systemMode').textContent=state.mode;$('#emergency').classList.toggle('active',state.emergency);$('#emergency').textContent=state.emergency?'REARMAR EMERGÊNCIA':'PARADA DE EMERGÊNCIA';$('#startSession').textContent=state.session.active?'Encerrar turno':'Iniciar turno';
-  renderLocomotives();renderCalibration();renderControls();renderSwitches();renderSensors();renderSignals();renderEvents();renderMapLocomotives();
+  renderLocomotives();renderCalibration();renderControls();if(state.hardware_setup.active)notice('Configuração da ferrovia aberta. Encerre os ajustes para operar.','warning');else if(!state.hardware.ready)notice(state.hardware.message,'warning');renderSwitches();renderSensors();renderSignals();renderEvents();renderMapLocomotives();
 }
 
 function renderLocomotives(){
@@ -44,7 +44,7 @@ function renderLocomotives(){
     card.querySelector('.loco-state').textContent=formatState(loco.operational_state);
     card.querySelector('.stop-reason').textContent=loco.stop_reason||(loco.motion!=='STOP'?'Em movimento até parar ou ocorrer um bloqueio':loco.confidence==='DESCONHECIDA'?'Prepare a operação para confirmar a posição':'Pronta para receber comando');
     card.querySelectorAll('[data-quick-action]').forEach(button=>{
-      button.disabled=button.dataset.quickAction!=='STOP'&&(!state.session.active||state.emergency||!loco.connected||(state.calibration.active&&state.calibration.loco!==id));
+      button.disabled=button.dataset.quickAction!=='STOP'&&(!state.session.active||state.emergency||!loco.connected||state.hardware_setup.active||state.hardware_setup.firmware_active||!state.hardware.ready||(state.calibration.active&&state.calibration.loco!==id));
     });
     card.querySelector('.loco-meta').textContent=`${loco.connected?'Wi-Fi '+(loco.rssi??'')+' dBm'+(loco.firmware_version?' · FW '+loco.firmware_version:''):'OFFLINE'} · ${loco.confidence}${loco.last_seen?' · '+new Date(loco.last_seen).toLocaleTimeString('pt-BR'):''}`;
     card.querySelector('.loco-bars').innerHTML=bars(loco.battery_pct);

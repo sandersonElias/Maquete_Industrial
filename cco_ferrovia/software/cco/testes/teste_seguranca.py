@@ -17,6 +17,7 @@ class CCOTestCase(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         config = MODULE.load_json(ROOT / "config.json")
+        config["hardware_path"] = str(Path(self.temp_dir.name) / "hardware.json")
         config["calibration_path"] = str(Path(self.temp_dir.name) / "calibration.json")
         self.system = MODULE.CCOSystem(copy.deepcopy(config), mock=True)
         self.system.event_file = Path(self.temp_dir.name) / "events.jsonl"
@@ -215,6 +216,112 @@ class CCOTestCase(unittest.TestCase):
         cal["samples"] = [2000, 2000, 2000]
         self.system.calibration_command("SAVE")
         self.assertEqual(cal["segments"]["L01:PLANO_FRENTE:S03:S04"], 9000)
+
+
+    def test_configuracao_bloqueia_operacao_e_calibracao(self):
+        self.system.confirm_position("L01", "S03")
+        self.system.hardware_command("START", {})
+        for operation in (lambda: self.system.command_locomotive("L01", "FORWARD"),
+                          lambda: self.system.configure_route("L01", "PLANO_FRENTE"),
+                          lambda: self.system.set_switch("C1", "NORMAL"),
+                          lambda: self.system.calibration_command("START", "L01", "S04", True)):
+            with self.assertRaisesRegex(ValueError, "Configuração"):
+                operation()
+        self.system.hardware_command("END", {})
+        self.system.command_locomotive("L01", "FORWARD")
+
+    def test_nao_abre_configuracao_em_movimento(self):
+        self.system.confirm_position("L01", "S03")
+        self.system.command_locomotive("L01", "FORWARD")
+        with self.assertRaisesRegex(ValueError, "Pare"):
+            self.system.hardware_command("START", {})
+        self.assertFalse(self.system.state["hardware_setup"]["active"])
+
+    def test_configuracao_rejeita_pinos_duplicados_reservados_e_angulos(self):
+        original = copy.deepcopy(self.system.state["hardware"]["config"])
+        self.system.hardware_command("START", {})
+        for pin in ("D3", "D0", "D12", "D13", "A0", "A6"):
+            config = copy.deepcopy(original)
+            config["sensors"]["S01"] = pin
+            with self.assertRaises(ValueError):
+                self.system.hardware_command("SAVE", {"config": config})
+            self.assertEqual(self.system.state["hardware"]["config"], original)
+        config = copy.deepcopy(original)
+        config["servos"]["C1"]["normal"] = 181
+        with self.assertRaises(ValueError):
+            self.system.hardware_command("SAVE", {"config": config})
+        self.assertFalse(self.system.hardware_path.exists())
+
+    def test_salva_ligacoes_recarrega_e_invalida_identificacao(self):
+        self.system.confirm_position("L01", "S03")
+        self.system.hardware_command("START", {})
+        config = copy.deepcopy(self.system.state["hardware"]["config"])
+        config["sensors"]["S01"], config["sensors"]["S07"] = config["sensors"]["S07"], config["sensors"]["S01"]
+        config["servos"]["C1"]["pin"] = "A1"
+        config["servos"]["C1"]["normal"] = 55
+        self.system.state["calibration"]["profiles"] = {"S01": {"L01": {"mean_ms": 2000}}}
+        self.system.hardware_command("SAVE", {"config": config})
+        self.assertEqual(self.system.state["hardware"]["config"]["revision"], 2)
+        self.assertEqual(self.system.state["calibration"]["profiles"], {})
+        self.assertEqual(self.system.state["locomotives"]["L01"]["confidence"], "DESCONHECIDA")
+        restored = MODULE.CCOSystem(copy.deepcopy(self.system.config), mock=True)
+        self.assertEqual(restored.state["hardware"]["config"]["servos"]["C1"]["pin"], "A1")
+        queued = list(self.system.serial_write.queue)
+        self.assertTrue(any(line.startswith("HWCONFIG|2|8,3,4,5,6,7,2|15,10,11|55,45,45|") for line in queued))
+
+    def test_nao_recarrega_perfis_antigos_apos_troca_de_sensor(self):
+        self.collect()
+        self.system.calibration_command("SAVE")
+        self.system.hardware_command("START", {})
+        config = copy.deepcopy(self.system.state["hardware"]["config"])
+        config["sensors"]["S04"] = "A2"
+        self.system.hardware_command("SAVE", {"config": config})
+        restored = MODULE.CCOSystem(copy.deepcopy(self.system.config), mock=True)
+        self.assertEqual(restored.state["calibration"]["profiles"], {})
+
+    def test_entrada_fisica_identifica_pino(self):
+        self.system.hardware_command("START", {})
+        self.system.on_arduino_line("INPUT|3|ACTIVE")
+        self.assertTrue(self.system.state["hardware"]["inputs"]["D3"]["active"])
+        self.assertEqual(self.system.state["hardware"]["last_input"]["pin"], "D3")
+        self.system.on_arduino_line("INPUT|3|CLEAR")
+        self.assertFalse(self.system.state["hardware"]["inputs"]["D3"]["active"])
+
+    def test_servo_exige_modo_exclusivo_e_sensor_livre(self):
+        with self.assertRaisesRegex(ValueError, "Abra"):
+            self.system.hardware_command("TEST", {"id": "C1", "angle": 90})
+        self.system.hardware_command("START", {})
+        self.system.state["sensors"]["S01"]["active"] = True
+        with self.assertRaisesRegex(ValueError, "Libere"):
+            self.system.hardware_command("TEST", {"id": "C1", "angle": 90})
+        self.system.state["sensors"]["S01"]["active"] = False
+        self.system.hardware_command("TEST", {"id": "C2", "angle": 85})
+        self.assertEqual(self.system.state["hardware_setup"]["test"]["id"], "C2")
+        self.assertIn("SERVO_TEST|C2|85\n", list(self.system.serial_write.queue))
+        self.system.emergency(True)
+        with self.assertRaisesRegex(ValueError, "emergência"):
+            self.system.hardware_command("TEST", {"id": "C1", "angle": 90})
+
+    def test_configuracao_exige_ack_da_revisao_atual(self):
+        self.system.hardware_command("START", {})
+        self.system.mock = False
+        self.system.sync_hardware()
+        self.assertFalse(self.system.state["hardware"]["ready"])
+        self.system.on_arduino_line("HWACK|999")
+        self.assertFalse(self.system.state["hardware"]["ready"])
+        with self.assertRaisesRegex(ValueError, "confirmar"):
+            self.system.hardware_command("END", {})
+        self.system.on_arduino_line("HWACK|1")
+        self.system.on_arduino_line("SETUP|ON")
+        self.system.hardware_command("TEST", {"id": "C1", "angle": 90})
+        with self.assertRaisesRegex(ValueError, "Aguarde"):
+            self.system.hardware_command("TEST", {"id": "C2", "angle": 90})
+        self.system.on_arduino_line("SERVO|C1|90|DONE")
+        self.system.hardware_command("END", {})
+        with self.assertRaisesRegex(ValueError, "Configuração"):
+            self.system.require_operation_hardware()
+        self.system.on_arduino_line("SETUP|OFF")
+        self.system.require_operation_hardware()
 
 
 if __name__ == "__main__":

@@ -68,3 +68,6 @@ __pycache__/
 
 cco_ferrovia/software/cco/data/calibration.json
 cco_ferrovia/software/cco/data/calibration.tmp
+
+cco_ferrovia/software/cco/data/hardware.json
+cco_ferrovia/software/cco/data/hardware.tmp

@@ -15,8 +15,8 @@ constexpr bool SIGNAL_ACTIVE_HIGH = true; // Troque para false se o modulo for a
 constexpr bool DETACH_SERVOS_AFTER_MOVE = false;
 constexpr unsigned long SERVO_SETTLE_MS = 700;
 
-const uint8_t SENSOR_PINS[7] = {2, 3, 4, 5, 6, 7, 8};
-const uint8_t SERVO_PINS[3] = {9, 10, 11};
+uint8_t SENSOR_PINS[7] = {2, 3, 4, 5, 6, 7, 8};
+uint8_t SERVO_PINS[3] = {9, 10, 11};
 // Um unico conjunto de saidas comanda os dois semaforos combinados da passagem.
 // Cada cor deve ser distribuida aos dois modulos por um driver adequado a corrente
 // e a polaridade dos semaforos; nao some a corrente diretamente no pino do Uno.
@@ -46,6 +46,14 @@ SignalColor signalState = RED;
 bool emergencyActive = false;
 bool timeoutReported = false;
 bool calibrationActive = false;
+bool hardwareConfigured = false;
+bool setupMode = false;
+uint32_t hardwareRevision = 0;
+uint8_t servoCurrent[3] = {90, 90, 90};
+uint8_t servoTarget[3] = {90, 90, 90};
+bool servoMoving[3] = {false, false, false};
+bool servoTest[3] = {false, false, false};
+unsigned long lastServoStep = 0;
 unsigned long lastPcPing = 0;
 unsigned long calibrationStartedAt = 0;
 unsigned long calibrationLastPrint = 0;
@@ -91,18 +99,24 @@ bool sensorProtectsSwitch(uint8_t switchIndex) {
 void ensureServoAttached(uint8_t index) {
   if (!servoAttached[index]) {
     servos[index].attach(SERVO_PINS[index]);
+    servos[index].write(servoCurrent[index]);
     servoAttached[index] = true;
   }
 }
 
 bool setSwitch(uint8_t index, bool reverse, bool report = true) {
-  if (index >= 3 || emergencyActive) return false;
-  if (switchReverse[index] != reverse && sensorProtectsSwitch(index)) {
+  if (index >= 3 || emergencyActive || setupMode || !hardwareConfigured) return false;
+  uint8_t requestedAngle = reverse ? SERVO_REVERSE_ANGLE[index] : SERVO_NORMAL_ANGLE[index];
+  if (sensorProtectsSwitch(index) && (switchReverse[index] != reverse || !servoAttached[index] || servoCurrent[index] != requestedAngle)) {
     Serial.print(F("FAULT|SWITCH_BLOCKED|C")); Serial.println(index + 1);
     return false;
   }
   ensureServoAttached(index);
-  servos[index].write(reverse ? SERVO_REVERSE_ANGLE[index] : SERVO_NORMAL_ANGLE[index]);
+  servoTarget[index] = reverse ? SERVO_REVERSE_ANGLE[index] : SERVO_NORMAL_ANGLE[index];
+  servoCurrent[index] = servoTarget[index];
+  servos[index].write(servoCurrent[index]);
+  servoMoving[index] = false;
+  servoTest[index] = false;
   switchReverse[index] = reverse;
   servoCommandAt[index] = millis();
   if (report) {
@@ -119,10 +133,11 @@ SignalColor parseColor(const char *value) {
 }
 
 void sendSnapshot() {
-  Serial.print(F("HELLO|UNO|1|")); Serial.println(millis());
   for (uint8_t i = 0; i < 7; i++) {
     Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print('|');
     Serial.print(sensors[i].occupied ? F("ACTIVE") : F("CLEAR")); Serial.print('|'); Serial.println(millis());
+    Serial.print(F("INPUT|")); Serial.print(SENSOR_PINS[i]); Serial.print('|');
+    Serial.println(sensors[i].occupied ? F("ACTIVE") : F("CLEAR"));
   }
   for (uint8_t i = 0; i < 3; i++) {
     Serial.print(F("SWITCH|C")); Serial.print(i + 1); Serial.print('|');
@@ -131,9 +146,129 @@ void sendSnapshot() {
   setSignal(signalState);
 }
 
+bool safeHardwarePin(uint8_t pin) {
+  return (pin >= 2 && pin <= 11) || (pin >= A1 && pin <= A5);
+}
+
+bool parseNumbers(char *text, uint8_t *values, uint8_t count, uint8_t maximum) {
+  if (!text) return false;
+  char *cursor = text;
+  for (uint8_t i = 0; i < count; i++) {
+    if (*cursor < '0' || *cursor > '9') return false;
+    char *end;
+    unsigned long value = strtoul(cursor, &end, 10);
+    if (value > maximum) return false;
+    values[i] = static_cast<uint8_t>(value);
+    if (i + 1 == count) return *end == '\0';
+    if (*end != ',') return false;
+    cursor = end + 1;
+  }
+  return false;
+}
+
+void applyHardwareConfig() {
+  char *revisionText = strtok(nullptr, "|");
+  char *sensorText = strtok(nullptr, "|");
+  char *servoText = strtok(nullptr, "|");
+  char *normalText = strtok(nullptr, "|");
+  char *reverseText = strtok(nullptr, "|");
+  uint8_t sensorPins[7], servoPins[3], normal[3], reverse[3];
+  if (!revisionText || !parseNumbers(sensorText, sensorPins, 7, A5) ||
+      !parseNumbers(servoText, servoPins, 3, A5) ||
+      !parseNumbers(normalText, normal, 3, 180) || !parseNumbers(reverseText, reverse, 3, 180)) {
+    Serial.println(F("FAULT|HWCONFIG_INVALID")); return;
+  }
+  uint32_t used = 0;
+  for (uint8_t i = 0; i < 10; i++) {
+    uint8_t pin = i < 7 ? sensorPins[i] : servoPins[i - 7];
+    if (!safeHardwarePin(pin) || (used & (1UL << pin))) {
+      Serial.println(F("FAULT|HWCONFIG_INVALID")); return;
+    }
+    used |= 1UL << pin;
+  }
+  for (uint8_t i = 0; i < 3; i++) {
+    servos[i].detach(); servoAttached[i] = false;
+    servoMoving[i] = false; servoTest[i] = false;
+    pinMode(SERVO_PINS[i], INPUT);
+  }
+  for (uint8_t i = 0; i < 7; i++) pinMode(SENSOR_PINS[i], INPUT);
+  for (uint8_t i = 0; i < 7; i++) {
+    SENSOR_PINS[i] = sensorPins[i]; pinMode(SENSOR_PINS[i], INPUT_PULLUP);
+    bool initial = logicalSensorRead(i);
+    unsigned long now = millis();
+    sensors[i] = {initial, initial, initial, now, now, now};
+  }
+  for (uint8_t i = 0; i < 3; i++) {
+    SERVO_PINS[i] = servoPins[i];
+    SERVO_NORMAL_ANGLE[i] = normal[i]; SERVO_REVERSE_ANGLE[i] = reverse[i];
+  }
+  hardwareRevision = strtoul(revisionText, nullptr, 10);
+  hardwareConfigured = true; lastPcPing = millis();
+  Serial.print(F("HWACK|")); Serial.println(hardwareRevision);
+  sendSnapshot();
+}
+
+void handleServoTest() {
+  char *id = strtok(nullptr, "|"); char *angleText = strtok(nullptr, "|");
+  if (!setupMode || !hardwareConfigured || emergencyActive || !id || !angleText ||
+      strlen(id) != 2 || id[0] != 'C' || id[1] < '1' || id[1] > '3') {
+    Serial.println(F("FAULT|SERVO_TEST_BLOCKED")); return;
+  }
+  uint8_t angle[1];
+  if (!parseNumbers(angleText, angle, 1, 180)) {
+    Serial.println(F("FAULT|SERVO_TEST_ANGLE")); return;
+  }
+  for (uint8_t i = 0; i < 7; i++) {
+    if (logicalSensorRead(i) || sensorOccupied(i)) {
+      Serial.println(F("FAULT|SERVO_TEST_SENSOR_ACTIVE")); return;
+    }
+  }
+  for (uint8_t i = 0; i < 3; i++) {
+    if (servoMoving[i]) { Serial.println(F("FAULT|SERVO_TEST_BUSY")); return; }
+  }
+  uint8_t index = id[1] - '1';
+  ensureServoAttached(index);
+  servoTarget[index] = angle[0]; servoMoving[index] = true; servoTest[index] = true;
+  lastPcPing = millis();
+}
+
+void updateServoMovement() {
+  unsigned long now = millis();
+  if (now - lastServoStep < 20) return;
+  lastServoStep = now;
+  for (uint8_t i = 0; i < 3; i++) {
+    if (!servoMoving[i]) continue;
+    bool blocked = emergencyActive || now - lastPcPing > PC_TIMEOUT_MS;
+    if (servoTest[i]) {
+      for (uint8_t sensor = 0; sensor < 7; sensor++) if (logicalSensorRead(sensor) || sensorOccupied(sensor)) blocked = true;
+    } else if (sensorProtectsSwitch(i)) blocked = true;
+    if (blocked) {
+      servoMoving[i] = false; servoTest[i] = false; servoTarget[i] = servoCurrent[i];
+      Serial.println(F("FAULT|SERVO_MOVEMENT_BLOCKED")); continue;
+    }
+    if (servoCurrent[i] < servoTarget[i]) servoCurrent[i]++;
+    else if (servoCurrent[i] > servoTarget[i]) servoCurrent[i]--;
+    servos[i].write(servoCurrent[i]); servoCommandAt[i] = now;
+    if (servoCurrent[i] == servoTarget[i]) {
+      servoMoving[i] = false;
+      if (servoTest[i]) {
+        Serial.print(F("SERVO|C")); Serial.print(i + 1); Serial.print('|');
+        Serial.print(servoCurrent[i]); Serial.println(F("|DONE")); servoTest[i] = false;
+      }
+    }
+  }
+}
+
 void handleCommand(char *line) {
   char *kind = strtok(line, "|");
   if (!kind) return;
+  if (strcmp(kind, "HWCONFIG") == 0) { applyHardwareConfig(); return; }
+  if (strcmp(kind, "SETUP") == 0) {
+    char *value = strtok(nullptr, "|"); setupMode = value && strcmp(value, "ON") == 0;
+    lastPcPing = millis();
+    Serial.print(F("SETUP|")); Serial.println(setupMode ? F("ON") : F("OFF")); return;
+  }
+  if (strcmp(kind, "SERVO_TEST") == 0) { handleServoTest(); return; }
   if (strcmp(kind, "PING") == 0) {
     lastPcPing = millis(); timeoutReported = false;
     char *sequence = strtok(nullptr, "|");
@@ -166,6 +301,8 @@ void handleCommand(char *line) {
     Serial.println(F("FAULT|EMERGENCY_ACTIVE"));
     return;
   }
+  if (!hardwareConfigured) { Serial.println(F("FAULT|HWCONFIG_REQUIRED")); return; }
+  if (setupMode) { Serial.println(F("FAULT|SETUP_ACTIVE")); return; }
   if (strcmp(kind, "SWITCH") == 0) {
     char *id = strtok(nullptr, "|"); char *position = strtok(nullptr, "|");
     if (id && position && id[0] == 'C' && id[1] >= '1' && id[1] <= '3') {
@@ -214,11 +351,13 @@ void updateSensors() {
       if (current && !sensors[i].occupied) {
         sensors[i].occupied = true;
         sensors[i].passageStartedAt = now;
+        Serial.print(F("INPUT|")); Serial.print(SENSOR_PINS[i]); Serial.println(F("|ACTIVE"));
         Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print(F("|ACTIVE|")); Serial.println(now);
       }
     }
     if (sensors[i].occupied && !sensors[i].stable && now - sensors[i].lastTransition >= SENSOR_HOLD_MS) {
       sensors[i].occupied = false;
+      Serial.print(F("INPUT|")); Serial.print(SENSOR_PINS[i]); Serial.println(F("|CLEAR"));
       unsigned long duration = sensors[i].lastTransition - sensors[i].passageStartedAt;
       Serial.print(F("PASS|")); Serial.print(i + 1); Serial.print('|'); Serial.println(duration);
       Serial.print(F("SENSOR|")); Serial.print(i + 1); Serial.print(F("|CLEAR|")); Serial.println(now);
@@ -267,17 +406,13 @@ void setup() {
   for (uint8_t i = 0; i < 7; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
     bool initial = logicalSensorRead(i);
-    sensors[i] = {initial, initial, false, millis(), 0};
+    sensors[i] = {initial, initial, initial, millis(), millis(), millis()};
   }
   for (uint8_t channel = 0; channel < 3; channel++) pinMode(SIGNAL_PINS[channel], OUTPUT);
   allSignalsRed();
-  for (uint8_t i = 0; i < 3; i++) {
-    ensureServoAttached(i);
-    servos[i].write(SERVO_NORMAL_ANGLE[i]);
-    servoCommandAt[i] = millis();
-  }
   lastPcPing = millis();
   delay(300);
+  Serial.print(F("HELLO|UNO|2|")); Serial.println(millis());
   sendSnapshot();
 }
 
@@ -285,6 +420,7 @@ void loop() {
   readSerialCommands();
   updateSensors();
   updateCalibration();
+  updateServoMovement();
   updateServoDetach();
   updatePcFailsafe();
 }

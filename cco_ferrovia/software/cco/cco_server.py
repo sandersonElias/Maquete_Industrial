@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC = ROOT / "public"
-DATA = ROOT / "data"
+DATA = Path(os.environ.get("CCO_DATA_DIR", ROOT / "data"))
 CONFIG_PATH = ROOT / "config.json"
 
 
@@ -55,12 +55,16 @@ class CCOSystem:
         DATA.mkdir(parents=True, exist_ok=True)
         self.event_file = DATA / "events.jsonl"
         self._load_recent_events()
+        self.hardware_path = Path(config.get("hardware_path", DATA / "hardware.json"))
+        if self.hardware_path.exists():
+            self.state["hardware"]["config"] = self.validate_hardware(load_json(self.hardware_path))
         self.calibration_path = Path(config.get("calibration_path", DATA / "calibration.json"))
         if self.calibration_path.exists():
             try:
                 saved = load_json(self.calibration_path)
-                self.state["calibration"]["profiles"] = saved.get("profiles", {})
-                self.state["calibration"]["segments"] = saved.get("segments", {})
+                if saved.get("sensor_pins", {f"S{i:02d}": f"D{i+1}" for i in range(1, 8)}) == self.state["hardware"]["config"]["sensors"]:
+                    self.state["calibration"]["profiles"] = saved.get("profiles", {})
+                    self.state["calibration"]["segments"] = saved.get("segments", {})
                 self.state["calibration"]["route_times"] = saved.get("route_times", {})
             except (OSError, ValueError):
                 pass
@@ -132,7 +136,14 @@ class CCOSystem:
                 },
             }
         return {
-            "version": "0.2.0",
+            "version": "0.3.0",
+            "hardware": {"config": {
+                "revision": 1,
+                "sensors": {f"S{i:02d}": f"D{i+1}" for i in range(1, 8)},
+                "servos": {f"C{i+1}": {"pin": f"D{i+9}", "normal": 45, "reverse": 90} for i in range(3)}},
+                "ready": bool(self.mock), "inputs": {}, "last_input": None,
+                "message": "Simulação" if self.mock else "Aguardando confirmação da configuração pelo Arduino"},
+            "hardware_setup": {"active": False, "firmware_active": False, "test": None},
             "operation": {"simple": "L02", "active_ids": ["L01", "L02"]},
             "calibration": {"active": False, "loco": None, "sensor": "S03", "samples": [],
                             "profiles": {}, "segments": {}, "route_times": {}, "pending_segments": {},
@@ -179,7 +190,10 @@ class CCOSystem:
             with self.event_file.open("a", encoding="utf-8") as stream:
                 stream.write(json.dumps(event, ensure_ascii=False) + "\n")
         target = f" [{loco}]" if loco else ""
-        print(f"{event['time'][11:19]} {severity:<8} {category:<13}{target} {message}", flush=True)
+        try:
+            print(f"{event['time'][11:19]} {severity:<8} {category:<13}{target} {message}", flush=True)
+        except OSError:
+            pass
         self.broadcast()
 
     def snapshot(self) -> dict:
@@ -302,6 +316,7 @@ class CCOSystem:
         self.broadcast()
 
     def configure_route(self, loco_id: str, route_name: str):
+        self.require_operation_hardware()
         route = self.config["routes"].get(route_name)
         if not route:
             raise ValueError("Rota desconhecida")
@@ -353,6 +368,7 @@ class CCOSystem:
             if self.state["emergency"] and action != "STOP":
                 raise ValueError("Sistema em emergência")
             if action in ("FORWARD", "REVERSE"):
+                self.require_operation_hardware()
                 if not self.state["session"]["active"]:
                     raise ValueError("Inicie o turno antes de movimentar")
                 if loco_id not in self.state["operation"]["active_ids"]:
@@ -468,6 +484,7 @@ class CCOSystem:
         self.log("PRIORIDADE", f"Prioridade alterada para {priority}", loco=loco_id)
 
     def set_switch(self, switch_id: str, position: str):
+        self.require_operation_hardware()
         switch_id, position = switch_id.upper(), position.upper()
         if switch_id not in self.state["switches"] or position not in ("NORMAL", "REVERSA"):
             raise ValueError("Comando de chave inválido")
@@ -481,6 +498,7 @@ class CCOSystem:
         self.log("CHAVE", f"{switch_id} em {position}")
 
     def set_signal(self, signal_id: str, color: str):
+        self.require_operation_hardware()
         signal_id, color = signal_id.upper(), color.upper()
         if signal_id not in self.state["signals"] or color not in ("RED", "YELLOW", "GREEN"):
             raise ValueError("Comando de farol inválido")
@@ -509,6 +527,9 @@ class CCOSystem:
                 return
             sensor["active"] = active
             sensor["last_event"] = now_iso()
+            if self.state["hardware_setup"]["active"]:
+                self.broadcast()
+                return
             if not active:
                 self.broadcast()
                 return
@@ -619,7 +640,24 @@ class CCOSystem:
             self.state["arduino"]["last_seen"] = now_iso()
         kind = parts[0].upper()
         try:
-            if kind == "SENSOR" and len(parts) >= 3:
+            if kind == "HELLO" and len(parts) >= 2 and parts[1] == "UNO":
+                self.sync_hardware()
+            elif kind == "HWACK" and len(parts) >= 2:
+                with self.lock:
+                    if int(parts[1]) == self.state["hardware"]["config"]["revision"]:
+                        self.state["hardware"]["ready"] = True
+                        self.state["hardware"]["message"] = "Configuração confirmada pelo Arduino"
+            elif kind == "SETUP" and len(parts) >= 2:
+                self.state["hardware_setup"]["firmware_active"] = parts[1] == "ON"
+            elif kind == "INPUT" and len(parts) >= 3:
+                pin_number = int(parts[1])
+                pin = f"D{pin_number}" if pin_number < 14 else f"A{pin_number - 14}"
+                self.record_input(pin, parts[2] == "ACTIVE")
+            elif kind == "SERVO" and len(parts) >= 4:
+                test = self.state["hardware_setup"]["test"]
+                if test and test["id"] == parts[1] and test["angle"] == int(parts[2]) and parts[3] == "DONE":
+                    test.update(busy=False, message="Movimento de teste concluído")
+            elif kind == "SENSOR" and len(parts) >= 3:
                 self.on_sensor(f"S{int(parts[1]):02d}", parts[2].upper() == "ACTIVE")
             elif kind == "SWITCH" and len(parts) >= 3:
                 with self.lock:
@@ -631,6 +669,11 @@ class CCOSystem:
             elif kind == "PASS" and len(parts) >= 3:
                 self.on_passage(f"S{int(parts[1]):02d}", float(parts[2]))
             elif kind == "FAULT":
+                if len(parts) >= 2 and parts[1] in ("HWCONFIG_INVALID", "HWCONFIG_REQUIRED"):
+                    self.state["hardware"]["ready"] = False
+                    self.state["hardware"]["message"] = "Arduino recusou a configuração; confira a pinagem e o firmware"
+                if self.state["hardware_setup"]["test"]:
+                    self.state["hardware_setup"]["test"].update(busy=False, message="Teste recusado pelo Arduino: " + "|".join(parts[1:]))
                 self.log("ARDUINO", "|".join(parts[1:]), "ERROR")
         except Exception as exc:
             self.log("ARDUINO", f"Mensagem inválida: {line} ({exc})", "WARNING")
@@ -661,6 +704,10 @@ class CCOSystem:
                 self.log("COMUNICACAO", f"{loco_id} mudou de {previous_ip} para {address[0]} (verifique LOCO_ID duplicado)", "WARNING", loco_id)
             if kind == "STATUS" and len(parts) >= 7:
                 loco["motion"] = parts[2].upper()
+                if self.state["hardware_setup"]["active"] and loco["motion"] != "STOP":
+                    self.send_loco(loco_id, "STOP")
+                    loco["motion"] = "STOP"
+                    loco["stop_reason"] = "Movimento bloqueado durante a configuração da ferrovia"
                 loco["battery_mv"] = int(parts[3])
                 loco["battery_pct"] = int(parts[4])
                 current_min = loco["stats"].get("battery_min_pct")
@@ -700,6 +747,10 @@ class CCOSystem:
 
             changed = False
             with self.lock:
+                test = self.state["hardware_setup"]["test"]
+                if test and test["busy"] and now - test["started"] > 8:
+                    test.update(busy=False, message="Sem confirmação do servo; confira conexão e firmware")
+                    changed = True
                 for loco_id, loco in self.state["locomotives"].items():
                     if loco["office_stop_at"] and now >= loco["office_stop_at"]:
                         loco["office_stop_at"] = None
@@ -745,6 +796,136 @@ class CCOSystem:
             if changed:
                 self.broadcast()
 
+    @staticmethod
+    def hardware_pin_number(pin: str) -> int:
+        allowed = {**{f"D{i}": i for i in range(2, 12)}, **{f"A{i}": 14 + i for i in range(1, 6)}}
+        if pin not in allowed:
+            raise ValueError("Use D2–D11 ou A1–A5. D0/D1, D12/D13 e A0 estão reservados")
+        return allowed[pin]
+
+    @classmethod
+    def validate_hardware(cls, config: dict) -> dict:
+        if not isinstance(config, dict) or set(config.get("sensors", {})) != {f"S{i:02d}" for i in range(1, 8)} or set(config.get("servos", {})) != {"C1", "C2", "C3"}:
+            raise ValueError("Informe os sete sensores e os três servos")
+        pins = []
+        for pin in config["sensors"].values():
+            pins.append(cls.hardware_pin_number(pin))
+        for servo in config["servos"].values():
+            pins.append(cls.hardware_pin_number(servo["pin"]))
+            for name in ("normal", "reverse"):
+                angle = servo.get(name)
+                if type(angle) is not int or not 0 <= angle <= 180:
+                    raise ValueError("Os ângulos dos servos devem ser inteiros de 0 a 180 graus")
+        if len(set(pins)) != len(pins):
+            raise ValueError("Cada sensor e servo precisa usar um pino diferente")
+        result = copy.deepcopy(config)
+        result["revision"] = int(config.get("revision", 1))
+        return result
+
+    def require_operation_hardware(self):
+        if self.state["hardware_setup"]["active"] or self.state["hardware_setup"]["firmware_active"]:
+            raise ValueError("Configuração da ferrovia aberta: encerre os ajustes antes de operar")
+        if not self.state["hardware"]["ready"]:
+            raise ValueError("Arduino ainda não confirmou a configuração. Grave o novo firmware e confira a conexão")
+
+    def sync_hardware(self):
+        with self.lock:
+            hardware = self.state["hardware"]
+            hardware["ready"] = bool(self.mock)
+            if not self.mock:
+                for loco_id, loco in self.state["locomotives"].items():
+                    if loco["motion"] != "STOP":
+                        self.send_loco(loco_id, "STOP")
+                        loco.update(motion="STOP", confidence="INCERTA", stop_reason="Arduino reconectado; confirme novamente a posição")
+            hardware["message"] = "Simulação: configuração aplicada" if self.mock else "Aguardando confirmação do Arduino; regrave o firmware se necessário"
+            config = hardware["config"]
+            sensors = ",".join(str(self.hardware_pin_number(config["sensors"][f"S{i:02d}"])) for i in range(1, 8))
+            servos = ",".join(str(self.hardware_pin_number(config["servos"][f"C{i}"]["pin"])) for i in range(1, 4))
+            normal = ",".join(str(config["servos"][f"C{i}"]["normal"]) for i in range(1, 4))
+            reverse = ",".join(str(config["servos"][f"C{i}"]["reverse"]) for i in range(1, 4))
+            self.send_arduino(f"HWCONFIG|{config['revision']}|{sensors}|{servos}|{normal}|{reverse}")
+            self.send_arduino("SETUP|" + ("ON" if self.state["hardware_setup"]["active"] else "OFF"))
+            if self.mock:
+                self.state["hardware_setup"]["firmware_active"] = self.state["hardware_setup"]["active"]
+        self.broadcast()
+
+    def record_input(self, pin: str, active: bool):
+        self.hardware_pin_number(pin)
+        with self.lock:
+            hardware = self.state["hardware"]
+            hardware["inputs"][pin] = {"active": active, "time": now_iso()}
+            if active:
+                hardware["last_input"] = {"pin": pin, "time": now_iso()}
+        self.broadcast()
+
+    def hardware_command(self, action: str, body: dict):
+        with self.lock:
+            setup = self.state["hardware_setup"]
+            if action == "START":
+                if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
+                    raise ValueError("Pare as locomotivas antes de configurar a ferrovia")
+                if self.state["calibration"]["active"]:
+                    raise ValueError("Encerre a calibração de identificação antes de configurar a ferrovia")
+                setup["active"] = True
+                self.state["hardware"]["last_input"] = None
+                self.send_arduino("SETUP|ON")
+                if self.mock:
+                    setup["firmware_active"] = True
+            else:
+                if not setup["active"]:
+                    raise ValueError("Abra o modo de configuração primeiro")
+                test = setup["test"]
+                if test and test["busy"]:
+                    if time.monotonic() - test["started"] > 8:
+                        test.update(busy=False, message="Sem confirmação do servo; confira a conexão")
+                    else:
+                        raise ValueError("Aguarde o servo concluir o movimento antes de continuar")
+                if action == "SAVE":
+                    if any(sensor["active"] for sensor in self.state["sensors"].values()):
+                        raise ValueError("Libere os sensores antes de aplicar novas ligações")
+                    config = self.validate_hardware(body.get("config", {}))
+                    previous = self.state["hardware"]["config"]
+                    config["revision"] = previous["revision"] + 1
+                    self.hardware_path.parent.mkdir(parents=True, exist_ok=True)
+                    temporary = self.hardware_path.with_suffix(".tmp")
+                    temporary.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+                    os.replace(temporary, self.hardware_path)
+                    if config["sensors"] != previous["sensors"]:
+                        self.state["calibration"].update(profiles={}, segments={})
+                        for sensor in self.state["sensors"].values():
+                            for key in ("duration_ms", "identity", "identity_status", "passage_loco"):
+                                sensor.pop(key, None)
+                    self.state["hardware"].update(config=config, inputs={}, last_input=None)
+                    setup["test"] = None
+                    for loco in self.state["locomotives"].values():
+                        loco.update(confidence="DESCONHECIDA", last_sensor=None, route_index=-1, confirmed_at=None)
+                    self.sync_hardware()
+                elif action == "TEST":
+                    if self.state["emergency"]:
+                        raise ValueError("Sistema em emergência; não é permitido testar servos")
+                    if not self.state["hardware"]["ready"] or not setup["firmware_active"]:
+                        raise ValueError("Aguarde o Arduino confirmar o modo de configuração e os pinos salvos")
+                    if not self.state["arduino"]["connected"]:
+                        raise ValueError("Arduino desconectado")
+                    if any(sensor["active"] for sensor in self.state["sensors"].values()):
+                        raise ValueError("Libere todos os sensores antes de testar um servo")
+                    switch_id, angle = body.get("id"), body.get("angle")
+                    if switch_id not in ("C1", "C2", "C3") or type(angle) is not int or not 0 <= angle <= 180:
+                        raise ValueError("Escolha um servo e um ângulo inteiro de 0 a 180 graus")
+                    setup["test"] = {"id": switch_id, "angle": angle, "busy": not self.mock,
+                                     "started": time.monotonic(), "message": "Teste simulado concluído" if self.mock else "Movimentando um servo por vez"}
+                    self.send_arduino(f"SERVO_TEST|{switch_id}|{angle}")
+                elif action == "END":
+                    if not self.state["hardware"]["ready"]:
+                        raise ValueError("O Arduino precisa confirmar a configuração antes de sair. Confira o firmware e a conexão")
+                    setup["active"] = False
+                    self.send_arduino("SETUP|OFF")
+                    if self.mock:
+                        setup["firmware_active"] = False
+                else:
+                    raise ValueError("Ação de configuração inválida")
+        self.log("CONFIGURACAO", {"START": "Modo de configuração aberto; movimentos bloqueados", "SAVE": "Ligações e ângulos salvos; confirme novamente as posições das locomotivas", "TEST": "Teste individual de servo solicitado", "END": "Configuração encerrada"}[action])
+
     def set_route_time(self, route_name: str, seconds: float):
         seconds = float(seconds)
         if route_name not in self.config["routes"] or not 1 <= seconds <= 120:
@@ -757,7 +938,7 @@ class CCOSystem:
             route_times[route_name] = round(seconds * 1000)
             temporary = self.calibration_path.with_suffix(".tmp")
             temporary.parent.mkdir(parents=True, exist_ok=True)
-            temporary.write_text(json.dumps({"profiles": cal["profiles"], "segments": cal["segments"], "route_times": route_times}, ensure_ascii=False, indent=2), encoding="utf-8")
+            temporary.write_text(json.dumps({"profiles": cal["profiles"], "segments": cal["segments"], "route_times": route_times, "sensor_pins": self.state["hardware"]["config"]["sensors"]}, ensure_ascii=False, indent=2), encoding="utf-8")
             os.replace(temporary, self.calibration_path)
             cal["route_times"] = route_times
             for loco_id, loco in self.state["locomotives"].items():
@@ -800,6 +981,7 @@ class CCOSystem:
         with self.lock:
             cal = self.state["calibration"]
             if action == "START":
+                self.require_operation_hardware()
                 if cal["active"]:
                     raise ValueError("Já existe uma calibração em andamento")
                 if loco_id not in self.state["operation"]["active_ids"] or sensor_id not in self.state["sensors"]:
@@ -848,7 +1030,7 @@ class CCOSystem:
                             segments[key] = round(sum(values) / len(values))
                     self.calibration_path.parent.mkdir(parents=True, exist_ok=True)
                     temporary = self.calibration_path.with_suffix(".tmp")
-                    temporary.write_text(json.dumps({"profiles": profiles, "segments": segments, "route_times": cal["route_times"]}, ensure_ascii=False, indent=2), encoding="utf-8")
+                    temporary.write_text(json.dumps({"profiles": profiles, "segments": segments, "route_times": cal["route_times"], "sensor_pins": self.state["hardware"]["config"]["sensors"]}, ensure_ascii=False, indent=2), encoding="utf-8")
                     os.replace(temporary, self.calibration_path)
                     cal.update(profiles=profiles, segments=segments)
                 cal.update(active=False, message="Calibração salva" if action == "SAVE" else "Calibração cancelada; valores anteriores preservados")
@@ -857,6 +1039,8 @@ class CCOSystem:
         self.log("CALIBRACAO", cal["message"])
 
     def on_passage(self, sensor_id: str, duration_ms: float):
+        if self.state["hardware_setup"]["active"]:
+            return
         if sensor_id not in self.state["sensors"] or not 30 <= duration_ms <= 60000:
             raise ValueError("Tempo de passagem inválido")
         with self.lock:
@@ -978,6 +1162,7 @@ class SerialWorker(threading.Thread):
                 with serial.Serial(port_name, self.system.config["serial"]["baud"], timeout=0.15) as connection:
                     with self.system.lock:
                         self.system.state["arduino"].update({"connected": True, "port": port_name, "last_seen": now_iso()})
+                    self.system.sync_hardware()
                     self.system.log("ARDUINO", f"Conectado em {port_name}")
                     while not self.system.stop_event.is_set():
                         try:
@@ -991,6 +1176,7 @@ class SerialWorker(threading.Thread):
             except Exception as exc:
                 with self.system.lock:
                     self.system.state["arduino"]["connected"] = False
+                    self.system.state["hardware"]["ready"] = False
                 self.system.log("ARDUINO", f"{port_name}: {exc}", "WARNING")
                 time.sleep(2)
 
@@ -1101,7 +1287,15 @@ class CCOHandler(BaseHTTPRequestHandler):
         try:
             body = self.read_json()
             parts = [part for part in path.split("/") if part]
-            if path == "/api/operation":
+            if path == "/api/hardware":
+                self.system.hardware_command(body.get("action", ""), body)
+            elif path == "/api/mock/input" and self.system.mock:
+                pin, active = body.get("pin", "D2"), bool(body.get("active", True))
+                self.system.record_input(pin, active)
+                for sensor_id, assigned in self.system.state["hardware"]["config"]["sensors"].items():
+                    if assigned == pin:
+                        self.system.on_sensor(sensor_id, active)
+            elif path == "/api/operation":
                 self.system.select_pair(body.get("simple", "L02"))
             elif path == "/api/timing":
                 self.system.set_route_time(body.get("route", ""), body.get("seconds", 0))
