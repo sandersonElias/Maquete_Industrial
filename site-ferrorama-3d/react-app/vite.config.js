@@ -5,8 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    // O bundle inclui three.js + drei + framer-motion + gsap, todos necessários.
-    // O warning de >600KB é esperado para um site 3D single-page.
+    // O bundle inclui three.js + drei + framer-motion, todos necessários.
+    // O warning de >600KB é esperado para um site 3D single-page; o orçamento
+    // real (gzip) está no CLAUDE.md — 165KB iniciais / 330KB no chunk da maquete.
     chunkSizeWarningLimit: 1500,
   },
 })

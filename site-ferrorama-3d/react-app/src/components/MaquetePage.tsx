@@ -1,13 +1,17 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-
-const Maquete3D = lazy(() => import('./maquete3d/Maquete3D'));
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import ErroDeCarga from './ErroDeCarga';
 
 // A chave mantem o prefixo antigo de proposito: trocar por 'maquete-...' faria
 // o aviso de virar o celular reaparecer para quem ja o dispensou.
 const DISMISS_KEY = 'ferrorama-maquete-vire-ok';
 
-function podeTravarPaisagem() {
-  return typeof screen !== 'undefined' && 'orientation' in screen && 'lock' in (screen.orientation ?? {});
+type OrientacaoComLock = ScreenOrientation & { lock?: (orientacao: string) => Promise<void> };
+
+function orientacaoTravavel(): OrientacaoComLock | null {
+  if (typeof screen === 'undefined') return null;
+  const orientacao = screen.orientation as OrientacaoComLock | undefined;
+  // O type cast acima não prova que `lock` existe: Safari e Firefox não o têm.
+  return orientacao && typeof orientacao.lock === 'function' ? orientacao : null;
 }
 
 export default function MaquetePage() {
@@ -38,15 +42,15 @@ export default function MaquetePage() {
       /* iOS muitas vezes bloqueia */
     }
     try {
-      if (podeTravarPaisagem()) {
-        await (screen.orientation as ScreenOrientation & { lock: (o: string) => Promise<void> }).lock('landscape');
-      }
+      await orientacaoTravavel()?.lock('landscape');
     } catch {
       /* Safari: usuário vira o celular na mão */
     }
   }, [dispensar]);
 
   const mostrarAviso = retrato && !avisoOk;
+  const [tentativa, setTentativa] = useState(0);
+  const Maquete3D = useMemo(() => lazy(() => import('./maquete3d/Maquete3D')), [tentativa]);
 
   return (
     <div className="maquete-page">
@@ -54,11 +58,11 @@ export default function MaquetePage() {
         <a className="maquete-page__voltar" href="/">
           Voltar ao site
         </a>
-        <span className="maquete-page__titulo">Maquete Industrial · 3D</span>
+        <h1 className="maquete-page__titulo">Maquete Industrial · 3D</h1>
       </header>
 
       {mostrarAviso && (
-        <div className="maquete-vire" role="dialog" aria-label="Dica de orientação">
+        <aside className="maquete-vire" aria-label="Dica de orientação">
           <p>De lado (paisagem) a maquete fica maior, mas dá para usar em pé.</p>
           <div className="maquete-vire__acoes">
             <button type="button" className="maquete3d-btn maquete3d-btn-tour" onClick={abrirPaisagem}>
@@ -68,7 +72,7 @@ export default function MaquetePage() {
               Continuar assim
             </button>
           </div>
-        </div>
+        </aside>
       )}
 
       {retrato && avisoOk && (
@@ -77,18 +81,24 @@ export default function MaquetePage() {
         </p>
       )}
 
-      <div className="maquete-page__palco">
-        <Suspense
-          fallback={
-            <div className="maquete3d-carregando" role="status">
-              <span className="maquete3d-spinner" aria-hidden="true" />
-              <p>Montando a maquete 3D…</p>
-            </div>
-          }
+      <main className="maquete-page__palco">
+        <ErroDeCarga
+          key={tentativa}
+          mensagem="Não foi possível carregar a maquete 3D."
+          aoTentar={() => setTentativa((t) => t + 1)}
         >
-          <Maquete3D telaCheia />
-        </Suspense>
-      </div>
+          <Suspense
+            fallback={
+              <div className="maquete3d-carregando" role="status">
+                <span className="maquete3d-spinner" aria-hidden="true" />
+                <p>Montando a maquete 3D…</p>
+              </div>
+            }
+          >
+            <Maquete3D telaCheia />
+          </Suspense>
+        </ErroDeCarga>
+      </main>
     </div>
   );
 }

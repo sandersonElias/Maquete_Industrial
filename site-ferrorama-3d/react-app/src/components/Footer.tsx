@@ -1,16 +1,6 @@
 import { useRef } from 'react';
 import { scrollToSection } from '../lib/scroll';
-
-const FOOTER_LINKS = [
-  { id: 'inicio', label: 'Início' },
-  { id: 'maquete', label: 'Maquete' },
-  { id: 'preparacao', label: 'Preparação' },
-  { id: 'montagem', label: 'Montagem' },
-  { id: 'codigo', label: 'Automação' },
-  { id: 'mina', label: 'Mina' },
-  { id: 'porto', label: 'Porto' },
-  { id: 'controle', label: 'Controle' },
-];
+import { SECOES } from '../lib/nav';
 
 const INSTAGRAM_URL = 'https://www.instagram.com/projeto3sis2';
 
@@ -69,7 +59,7 @@ export default function Footer() {
         </ul>
 
         <nav className="site-footer__nav" aria-label="Rodapé">
-          {FOOTER_LINKS.map(({ id, label }, i) => (
+          {SECOES.map(({ id, label }, i) => (
             <span key={id} className="site-footer__item">
               {i > 0 && <span className="site-footer__sep" aria-hidden="true">·</span>}
               <a

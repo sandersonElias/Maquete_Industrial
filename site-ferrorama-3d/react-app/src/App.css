@@ -24,8 +24,11 @@
   --card-hover: #16162a;
 
   --text: #f0ebe4;
-  --text-muted: #8a7f74;
-  --text-dim: #5e554b;
+  /* Escada de 3 degraus testada contra --card (#11111c): 15:1 / 6,6:1 / 5,0:1.
+     O par antigo (#8a7f74 / #5e554b) deixava o último degrau em 2,6:1 — abaixo
+     do mínimo AA em rótulos de painel, parágrafos e estados vazios. */
+  --text-muted: #a3978a;
+  --text-dim: #8d8277;
 
   --gradient: linear-gradient(135deg, #cc6600 0%, #ff8844 100%);
   --gradient-accent: linear-gradient(135deg, #ff6b35, #ff8f5e);
@@ -256,11 +259,11 @@ html { scroll-behavior: auto; }
   position: fixed;
   top: 0;
   left: 0;
+  width: calc(var(--scroll-progress, 0) * 1%);
   height: 2px;
   background: linear-gradient(90deg, var(--accent), var(--primary), var(--teal-soft));
   box-shadow: 0 0 8px rgba(255, 136, 68, 0.6);
   z-index: 1001;
-  transition: width 0.1s linear;
   will-change: width;
 }
 .nav-brand {
@@ -327,7 +330,9 @@ html { scroll-behavior: auto; }
   justify-content: center;
   gap: 0.08rem;
   min-width: 0;
+  margin: 0;
   padding: 0.22rem;
+  list-style: none;
   border-radius: 999px;
   background: rgba(6, 6, 10, 0.28);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -335,6 +340,10 @@ html { scroll-behavior: auto; }
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+.nav-links > li {
+  display: flex;
+  flex: 0 0 auto;
 }
 .nav-links::-webkit-scrollbar {
   display: none;
@@ -1547,7 +1556,7 @@ html { scroll-behavior: auto; }
 .code-function { color: #61afef; }
 .code-string { color: #98c379; }
 .code-number { color: #d19a66; }
-.code-comment { color: #5c6370; }
+.code-comment { color: #808796; }
 .code-features {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3762,17 +3771,12 @@ section[id]:focus {
    ALVOS DE TOQUE — mínimo de 44px em telas sensíveis
    ============================================ */
 @media (pointer: coarse) {
-  .train-btn,
-  .ctrl-btn,
-  .info-close,
-  .nav-menu-btn,
   .back-to-top,
-  .maquete3d-btn {
+  .maquete3d-btn,
+  .site-footer__nav a,
+  .hero-jumps a {
     min-width: 44px;
     min-height: 44px;
-  }
-.mobile-link {
-    min-height: 48px;
   }
 /* Sliders ficam mais grossos e fáceis de arrastar com o dedo */
   input[type='range'] {
@@ -4526,7 +4530,7 @@ table {
   padding-top: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.75rem;
-  color: #6b7385;
+  color: #7d8598;
   line-height: 1.5;
 }
 
@@ -5181,7 +5185,7 @@ body::after {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
   }
 
-  .nav-link--hide-mobile {
+  .nav-item--hide-mobile {
     display: none;
   }
 
@@ -7264,6 +7268,7 @@ body::after {
 }
 
 .maquete-page__titulo {
+  margin: 0;
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: 0.04em;

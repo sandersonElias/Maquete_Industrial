@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
 import { lockPageScroll, unlockPageScroll } from '../lib/scroll';
 
-/** Splash: Ferr[engrenagem]rama + trem cruzando o brand em 2s. */
+/** Splash: Maquete [engrenagem] Industrial + trem cruzando a marca em 2s. */
 export default function Loader() {
   const [hidden, setHidden] = useState(false);
   const reduced = usePrefersReducedMotion();
@@ -44,7 +44,7 @@ export default function Loader() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
               >
-                <span className="loader-brand__text">Ferr</span>
+                <span className="loader-brand__text">Maquete</span>
                 <span className="loader-brand__gear-wrap" aria-hidden="true">
                   <img
                     src="/images/loader-gear.png"
@@ -55,7 +55,7 @@ export default function Loader() {
                     decoding="async"
                   />
                 </span>
-                <span className="loader-brand__text">rama</span>
+                <span className="loader-brand__text">Industrial</span>
               </motion.p>
             </div>
 

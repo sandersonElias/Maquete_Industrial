@@ -373,3 +373,14 @@ export function MaqueteBlender({
 }
 
 useGLTF.preload(URL, DRACO);
+
+/**
+ * Esvazia o cache do `.glb` antes de uma nova tentativa.
+ *
+ * O `useGLTF` guarda a promessa rejeitada: sem limpar, um download que falhou
+ * na 4G da feira continuaria rejeitado para sempre e o "Tentar de novo" não
+ * teria efeito nenhum.
+ */
+export function limparCacheGlb() {
+  useGLTF.clear(URL);
+}

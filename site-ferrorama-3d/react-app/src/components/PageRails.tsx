@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, useMotionValueEvent, useScroll } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { EASE_OUT_EXPO, usePrefersReducedMotion } from '../lib/motion';
 
 const HEADER_SCROLL_ON = 24;
@@ -10,20 +10,21 @@ function isLoaderGone() {
   return !document.querySelector('.loader');
 }
 
+/**
+ * Desloca os trilhos conforme o scroll.
+ * `period` vem de um ref medido uma vez por resize — ler `offsetHeight` dentro
+ * do handler de scroll forçava um reflow a cada evento.
+ */
 function paintRails(
   left: HTMLDivElement | null,
   right: HTMLDivElement | null,
-  scrollY: number
+  scrollY: number,
+  period: number
 ) {
-  const period = (left?.offsetHeight ?? 0) / 2 || 800;
   const shift = (scrollY * RAIL_SPEED) % period;
-  const leftTransform = `translate3d(0, ${-shift}px, 0)`;
-  const rightTransform = `translate3d(0, ${shift - period}px, 0)`;
 
-  if (left) left.style.transform = leftTransform;
-  if (right) right.style.transform = rightTransform;
-
-  document.documentElement.style.setProperty('--rail-shift', shift.toFixed(2));
+  if (left) left.style.transform = `translate3d(0, ${-shift}px, 0)`;
+  if (right) right.style.transform = `translate3d(0, ${shift - period}px, 0)`;
 }
 
 /**
@@ -41,13 +42,15 @@ export default function PageRails() {
   const [desktop, setDesktop] = useState(() =>
     typeof window !== 'undefined' ? window.matchMedia('(min-width: 901px)').matches : true
   );
-  const { scrollY } = useScroll();
+  const periodRef = useRef(800);
 
   useEffect(() => {
     if (reduced) {
       setReady(true);
       return;
     }
+
+    let timerAguardando = 0;
 
     if (isLoaderGone()) {
       const timer = window.setTimeout(() => setReady(true), 80);
@@ -57,7 +60,7 @@ export default function PageRails() {
     const observer = new MutationObserver(() => {
       if (!isLoaderGone()) return;
       observer.disconnect();
-      window.setTimeout(() => setReady(true), 120);
+      timerAguardando = window.setTimeout(() => setReady(true), 120);
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
@@ -68,6 +71,7 @@ export default function PageRails() {
 
     return () => {
       observer.disconnect();
+      window.clearTimeout(timerAguardando);
       window.clearTimeout(fallback);
     };
   }, [reduced]);
@@ -80,18 +84,17 @@ export default function PageRails() {
     return () => mq.removeEventListener('change', onMq);
   }, []);
 
-  useMotionValueEvent(scrollY, 'change', (y) => {
-    if (!desktop) return;
-    setHeaderCovered((prev) => {
-      if (!prev && y > HEADER_SCROLL_ON) return true;
-      if (prev && y < HEADER_SCROLL_OFF) return false;
-      return prev;
-    });
-    paintRails(leftRef.current, rightRef.current, y);
-  });
-
+  /**
+   * Única via de scroll da página: rAF + medição do período uma vez por resize.
+   * Antes havia também um `useMotionValueEvent` fazendo exatamente o mesmo
+   * trabalho em paralelo — o dobro de handler por evento de scroll.
+   */
   useEffect(() => {
     if (!desktop) return;
+
+    const medirPeriodo = () => {
+      periodRef.current = (leftRef.current?.offsetHeight ?? 0) / 2 || 800;
+    };
 
     const syncHeader = () => {
       const y = window.scrollY;
@@ -100,28 +103,31 @@ export default function PageRails() {
         if (prev && y < HEADER_SCROLL_OFF) return false;
         return prev;
       });
+      return y;
     };
 
     let raf = 0;
-    const onScroll = () => {
-      if (!raf) {
-        raf = requestAnimationFrame(() => {
-          raf = 0;
-          const y = window.scrollY;
-          syncHeader();
-          paintRails(leftRef.current, rightRef.current, y);
-        });
-      }
+    const repintar = () => {
+      raf = 0;
+      paintRails(leftRef.current, rightRef.current, syncHeader(), periodRef.current);
+    };
+    const agendar = () => {
+      if (!raf) raf = requestAnimationFrame(repintar);
     };
 
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
+    medirPeriodo();
+    repintar();
+    const aoRedimensionar = () => {
+      medirPeriodo();
+      agendar();
+    };
+    window.addEventListener('scroll', agendar, { passive: true });
+    window.addEventListener('resize', aoRedimensionar, { passive: true });
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('scroll', agendar);
+      window.removeEventListener('resize', aoRedimensionar);
     };
   }, [desktop]);
 

@@ -1,40 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { EASE_OUT_EXPO } from '../lib/motion';
 import { scrollToSection } from '../lib/scroll';
-
-/**
- * `as const` sozinho fazia o array virar uma união de literais em que só o item
- * de `inicio` tem `hideMobile` e só o de `codigo` tem `shortMobile` — e aí o
- * `.map(({ id, label, hideMobile, shortMobile }) => ...)` não compila. Com o
- * tipo explícito os dois campos ficam opcionais em todos os itens.
- */
-type ItemNav = {
-  id: string;
-  label: string;
-  hideMobile?: boolean;
-  shortMobile?: string;
-};
-
-const NAV_ITEMS: readonly ItemNav[] = [
-  { id: 'inicio', label: 'Início', hideMobile: true },
-  { id: 'maquete', label: 'Maquete' },
-  { id: 'preparacao', label: 'Preparação', shortMobile: 'Prep' },
-  { id: 'montagem', label: 'Montagem' },
-  { id: 'codigo', label: 'Automação', shortMobile: 'Auto' },
-  { id: 'mina', label: 'Mina' },
-  { id: 'porto', label: 'Porto' },
-  { id: 'controle', label: 'Controle' },
-];
+import { SECOES } from '../lib/nav';
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('inicio');
+  // Só serve o `aria-valuenow` da barra. A largura visual sai de `--scroll-progress`
+  // (escrito no mesmo rAF) — sem isso a nav inteira re-renderizava a cada frame.
   const [scrollProgress, setScrollProgress] = useState(0);
-  const scrollTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let raf = 0;
+    let alturaDocumento = 0;
+
+    const medir = () => {
+      alturaDocumento = document.documentElement.scrollHeight - window.innerHeight;
+    };
+
     const handleScroll = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
@@ -43,14 +27,22 @@ export default function Navigation() {
         setScrolled(y > 50);
         const navBlend = Math.min(1, Math.max(0, y / 96));
         document.documentElement.style.setProperty('--nav-scroll', navBlend.toFixed(3));
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        setScrollProgress(docHeight > 0 ? (y / docHeight) * 100 : 0);
+        const pct = alturaDocumento > 0 ? (y / alturaDocumento) * 100 : 0;
+        document.documentElement.style.setProperty('--scroll-progress', pct.toFixed(2));
+        setScrollProgress((prev) => {
+          const arredondado = Math.round(pct);
+          return arredondado === prev ? prev : arredondado;
+        });
       });
     };
+
+    medir();
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', medir, { passive: true });
     handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', medir);
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
@@ -67,7 +59,7 @@ export default function Navigation() {
       { root: null, rootMargin: '-40% 0px -55% 0px', threshold: 0 }
     );
 
-    NAV_ITEMS.forEach(({ id }) => {
+    SECOES.forEach(({ id }) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
@@ -75,26 +67,18 @@ export default function Navigation() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
-    };
-  }, []);
-
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    if (scrollTimer.current != null) window.clearTimeout(scrollTimer.current);
-    scrollTimer.current = window.setTimeout(() => scrollToSection(id), 0);
+    scrollToSection(id);
   };
 
   return (
     <>
       <div
         className="scroll-progress-bar"
-        style={{ width: `${scrollProgress}%` }}
         role="progressbar"
         aria-label="Progresso de leitura da página"
-        aria-valuenow={Math.round(scrollProgress)}
+        aria-valuenow={scrollProgress}
         aria-valuemin={0}
         aria-valuemax={100}
       />
@@ -132,38 +116,37 @@ export default function Navigation() {
             </span>
           </a>
 
-          <div className="nav-links" role="list">
-            {NAV_ITEMS.map(({ id, label, hideMobile, shortMobile }, i) => (
-              <motion.a
-                key={id}
-                href={`#${id}`}
-                className={[
-                  'nav-link',
-                  activeSection === id ? 'active' : '',
-                  hideMobile ? 'nav-link--hide-mobile' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                aria-current={activeSection === id ? 'true' : undefined}
-                onClick={(e) => handleNavClick(e, id)}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.25 + i * 0.04, ease: EASE_OUT_EXPO }}
-                role="listitem"
-              >
-                {shortMobile ? (
-                  <>
-                    <span className="nav-link__full">{label}</span>
-                    <span className="nav-link__short" aria-hidden="true">
-                      {shortMobile}
-                    </span>
-                  </>
-                ) : (
-                  label
-                )}
-              </motion.a>
+          <ul className="nav-links">
+            {SECOES.map(({ id, label, curto, esconderNoMobile }, i) => (
+              <li key={id} className={esconderNoMobile ? 'nav-item--hide-mobile' : undefined}>
+                <motion.a
+                  href={`#${id}`}
+                  className={[
+                    'nav-link',
+                    activeSection === id ? 'active' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  aria-current={activeSection === id ? 'page' : undefined}
+                  onClick={(e) => handleNavClick(e, id)}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.25 + i * 0.04, ease: EASE_OUT_EXPO }}
+                >
+                  {curto ? (
+                    <>
+                      <span className="nav-link__full">{label}</span>
+                      <span className="nav-link__short" aria-hidden="true">
+                        {curto}
+                      </span>
+                    </>
+                  ) : (
+                    label
+                  )}
+                </motion.a>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </motion.nav>
     </>

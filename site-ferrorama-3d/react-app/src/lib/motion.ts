@@ -8,9 +8,6 @@ import { useEffect, useState } from 'react';
  */
 export const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
-/** Curva com leve overshoot, usada em entradas de cards. */
-export const EASE_SPRING = [0.34, 1.56, 0.64, 1] as const;
-
 /**
  * Retorna `true` quando o usuário pediu movimento reduzido no sistema.
  * Reage a mudanças da preferência em tempo real.

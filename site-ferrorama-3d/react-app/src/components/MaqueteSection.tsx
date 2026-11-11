@@ -1,30 +1,12 @@
-import { lazy, Suspense, useEffect, useRef, useState, Component, type ReactNode } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
+import ErroDeCarga from './ErroDeCarga';
 
 /**
- * A maquete 3D carrega em um chunk separado: three.js + drei só descem
- * quando esta seção se aproxima da tela (ou o usuário pede no celular).
+ * A maquete 3D carrega em um chunk separado: three.js + drei só descem quando
+ * o usuário pede (botão na home) ou abre o QR da feira em `/maquete`.
+ * O `lazy` é recriado por `tentativa` de propósito — o React memoiza a promessa
+ * do import, e um chunk que falhou ficaria rejeitado para sempre sem isso.
  */
-const Maquete3D = lazy(() => import('./maquete3d/Maquete3D'));
-
-class MaqueteErro extends Component<{ children: ReactNode }, { erro: Error | null }> {
-  state = { erro: null as Error | null };
-
-  static getDerivedStateFromError(erro: Error) {
-    return { erro };
-  }
-
-  render() {
-    if (this.state.erro) {
-      return (
-        <div className="maquete3d-carregando" role="alert">
-          <p>Não foi possível carregar a maquete 3D.</p>
-          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{this.state.erro.message}</p>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 function isMobileViewport() {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
@@ -35,19 +17,10 @@ function isMobileViewport() {
  * Evita baixar Three.js + GLB no meio do scroll — principal causa de travada.
  * Tela cheia (`/maquete`) continua carregando direto.
  */
-function useProximoDaTela<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
+function useProximoDaTela() {
   const [proximo, setProximo] = useState(false);
 
-  const carregar = () => setProximo(true);
-
-  useEffect(() => {
-    if (proximo) {
-      import('./maquete3d/Maquete3D');
-    }
-  }, [proximo]);
-
-  return { ref, proximo, carregar, precisaToque: !proximo };
+  return { proximo, carregar: () => setProximo(true), precisaToque: !proximo };
 }
 
 function Placeholder({
@@ -106,7 +79,9 @@ const objectives = [
 const chain = ['Mina', 'Caminhões', 'Trem', 'Porto'];
 
 export default function MaqueteSection() {
-  const { ref, proximo, carregar, precisaToque } = useProximoDaTela<HTMLDivElement>();
+  const { proximo, carregar, precisaToque } = useProximoDaTela();
+  const [tentativa, setTentativa] = useState(0);
+  const Maquete3D = useMemo(() => lazy(() => import('./maquete3d/Maquete3D')), [tentativa]);
 
   return (
     <section id="maquete" className="section">
@@ -119,13 +94,17 @@ export default function MaqueteSection() {
           </p>
         </div>
 
-        <div ref={ref} className="maquete-preview-slot">
+        <div className="maquete-preview-slot">
           {proximo ? (
-            <MaqueteErro>
+            <ErroDeCarga
+              key={tentativa}
+              mensagem="Não foi possível carregar a maquete 3D."
+              aoTentar={() => setTentativa((t) => t + 1)}
+            >
               <Suspense fallback={<Placeholder />}>
                 <Maquete3D />
               </Suspense>
-            </MaqueteErro>
+            </ErroDeCarga>
           ) : (
             <Placeholder precisaToque={precisaToque} onCarregar={carregar} />
           )}

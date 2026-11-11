@@ -12,11 +12,15 @@ import {
   GrupoInterativo,
 } from './Modulos3D';
 import { Cenario3D } from './Cenario3D';
-import { CameraPov, type PovId } from './CameraPov';
+import { CameraPov, type PovId, BASE_FOV_SOLO, BASE_FOV_VISTA } from './CameraPov';
 import { MaqueteBlender } from './MaqueteBlender';
 import { usePrefersReducedMotion } from '../../lib/motion';
 
 import { LAYOUT, ramoAtivo } from './geometria';
+
+/** Reexportado aqui de propósito: quem tenta de novo importa este módulo — o
+ *  mesmo chunk da maquete — em vez de abrir uma aresta nova no bundle. */
+export { limparCacheGlb } from './MaqueteBlender';
 
 /** Posições de cada módulo sobre a placa. */
 const POSICOES: Record<string, [number, number, number]> = LAYOUT;
@@ -36,8 +40,8 @@ const COR_DIA = '#5a7a96';
    Câmera livre: solta por natureza, volta sozinha depois de 10 s parada
    ============================================================ */
 
-/** Lente de foto de maquete, usada quando a câmera desce ao nível do solo. */
-const BASE_FOV_SOLO = 34;
+/** Lente de foto de maquete (BASE_FOV_SOLO) e de vista de cima (BASE_FOV_VISTA)
+ *  moram em CameraPov — é lá que os dois enquadramentos disputam o mesmo `fov`. */
 const RETORNO_MS = 10000;
 /** A câmera não desce abaixo disto — é o que impede ver por baixo do tabuleiro. */
 const PISO_CAMERA = 0.18;
@@ -288,7 +292,14 @@ function useQualidade(): Qualidade {
  * no OrbitControls — abrimos o fov vertical na medida exata em que o aspecto
  * encolheu. O enquadramento horizontal fica igual em qualquer tela.
  */
-function EnquadramentoResponsivo({ base = 42, aspectoBase = 16 / 10 }: { base?: number; aspectoBase?: number }) {
+/**
+ * Dono do `fov` enquanto a cena do Blender está na tela.
+ *
+ * Só existe na cena do Blender: na cena em código o `CameraPov` já cuida do
+ * enquadramento, e os dois escrevendo `camera.fov` a cada frame se anulava —
+ * este definia o alvo certo e o outro puxava de volta para 42°.
+ */
+function EnquadramentoResponsivo({ base = BASE_FOV_VISTA, aspectoBase = 16 / 10 }: { base?: number; aspectoBase?: number }) {
   const camera = useThree((s) => s.camera);
   const largura = useThree((s) => s.size.width);
   const altura = useThree((s) => s.size.height);
@@ -581,7 +592,7 @@ function Cena({
     <>
       <Ambiente noite={noite} />
       <Iluminacao noite={noite} qualidade={qualidade} />
-      <EnquadramentoResponsivo />
+      {blender && <EnquadramentoResponsivo />}
       {!noite && !blender && (
         <Sky sunPosition={[100, 42, 24]} turbidity={2.2} rayleigh={1.15} mieCoefficient={0.004} mieDirectionalG={0.82} />
       )}
@@ -859,7 +870,9 @@ export default function Maquete3D({ telaCheia = false }: { telaCheia?: boolean }
           </div>
         )}
 
-        <p className="maquete3d-dica" aria-hidden="true">
+        {/* Sem aria-hidden: é o único texto que explica como interagir com o
+            canvas, e escondê-lo deixava quem usa leitor de tela sem instrução. */}
+        <p className="maquete3d-dica">
           {pov !== 'overview'
             ? 'Você está na cabine'
             : tourAtivo

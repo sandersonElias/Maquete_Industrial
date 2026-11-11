@@ -1,8 +1,9 @@
 import { useRef, type RefObject } from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform, type MotionStyle } from 'framer-motion';
 import CtaLink from './CtaLink';
 import { EASE_OUT_EXPO, useHasFinePointer, usePrefersReducedMotion } from '../lib/motion';
 import { scrollToSection } from '../lib/scroll';
+import { SECOES } from '../lib/nav';
 
 const textReveal = {
   hidden: { y: '115%', opacity: 0 },
@@ -30,15 +31,8 @@ const fadeUp = {
   }),
 };
 
-const SECTION_JUMPS = [
-  { id: 'maquete', label: 'Maquete' },
-  { id: 'preparacao', label: 'Preparação' },
-  { id: 'montagem', label: 'Montagem' },
-  { id: 'codigo', label: 'Automação' },
-  { id: 'mina', label: 'Mina' },
-  { id: 'porto', label: 'Porto' },
-  { id: 'controle', label: 'Controle' },
-];
+/** Os saltos do hero mostram o percurso completo — sem "Início", que é o próprio hero. */
+const SECTION_JUMPS = SECOES.filter(({ id }) => id !== 'inicio');
 
 export default function HeroSection() {
   const reduced = usePrefersReducedMotion();
@@ -107,7 +101,7 @@ function HeroShell({
 }: {
   sectionRef: RefObject<HTMLElement | null>;
   isInView: boolean;
-  contentStyle?: Record<string, unknown>;
+  contentStyle?: MotionStyle;
   children: React.ReactNode;
 }) {
   const go = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -116,7 +110,13 @@ function HeroShell({
   };
 
   return (
-    <section id="inicio" className="hero-section hero-section--cinematic" data-bg="dark" ref={sectionRef}>
+    <section
+      id="inicio"
+      className="hero-section hero-section--cinematic"
+      data-bg="dark"
+      ref={sectionRef}
+      tabIndex={-1}
+    >
       <div className="hero-bg">
         {children}
         <div className="hero-bg-wash" aria-hidden="true" />
