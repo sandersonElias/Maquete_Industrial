@@ -154,7 +154,8 @@ class CCOSystem:
             "mode": "AUTOMATICO",
             "emergency": False,
             "arduino": {"connected": bool(self.mock), "port": "SIMULADO" if self.mock else None, "last_seen": None},
-            "switches": {"C1": "NORMAL", "C2": "NORMAL", "C3": "NORMAL"},
+            "switches": {key: "NORMAL" if self.mock else "UNKNOWN" for key in ("C1", "C2", "C3")},
+            "switch_commands": {},
             "signals": {
                 "F1_EXTERNO": "RED",
                 "F2_INTERNO": "RED",
@@ -317,6 +318,8 @@ class CCOSystem:
 
     def configure_route(self, loco_id: str, route_name: str):
         self.require_operation_hardware()
+        if any(item["status"] == "PENDING" for item in self.state["switch_commands"].values()):
+            raise ValueError("Aguarde a confirmação da chave antes de preparar a rota")
         route = self.config["routes"].get(route_name)
         if not route:
             raise ValueError("Rota desconhecida")
@@ -484,18 +487,58 @@ class CCOSystem:
         self.log("PRIORIDADE", f"Prioridade alterada para {priority}", loco=loco_id)
 
     def set_switch(self, switch_id: str, position: str):
-        self.require_operation_hardware()
         switch_id, position = switch_id.upper(), position.upper()
-        if switch_id not in self.state["switches"] or position not in ("NORMAL", "REVERSA"):
-            raise ValueError("Comando de chave inválido")
-        if not self.mock and not self.state["arduino"]["connected"]:
-            raise ValueError("Arduino desconectado; verifique o cabo USB")
-        if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
-            raise ValueError("Pare as locomotivas antes de comandar uma chave manualmente")
         with self.lock:
-            self.state["switches"][switch_id] = position
-        self.send_arduino(f"SWITCH|{switch_id}|{position}|{self.next_sequence()}")
-        self.log("CHAVE", f"{switch_id} em {position}")
+            self.require_operation_hardware()
+            if switch_id not in self.state["switches"] or position not in ("NORMAL", "REVERSA"):
+                raise ValueError("Comando de chave inválido")
+            if self.state["emergency"]:
+                raise ValueError("Sistema em emergência; rearmar antes de comandar as chaves")
+            if not self.mock and not self.state["arduino"]["connected"]:
+                raise ValueError("Arduino desconectado; verifique o cabo USB")
+            if any(loco["motion"] != "STOP" for loco in self.state["locomotives"].values()):
+                raise ValueError("Pare as locomotivas antes de comandar uma chave manualmente")
+            self.check_switch_commands()
+            if any(item["status"] == "PENDING" for item in self.state["switch_commands"].values()):
+                raise ValueError("Aguarde a confirmação do comando anterior da chave")
+            protected = {"C1": ("S06", "S07"), "C2": ("S01",), "C3": ("S03", "S04", "S05")}
+            occupied = [key for key in protected[switch_id] if self.state["sensors"][key]["active"]]
+            if occupied:
+                raise ValueError(f"{switch_id} bloqueada: libere " + ", ".join(occupied))
+            servo = self.state["hardware"]["config"]["servos"][switch_id]
+            if servo["normal"] == servo["reverse"]:
+                raise ValueError(f"{switch_id}: Normal e Reversa usam o mesmo ângulo ({servo['normal']}°). Ajuste em Configurar ferrovia")
+            sequence = self.next_sequence()
+            self.state["switch_commands"][switch_id] = {
+                "sequence": sequence, "position": position, "started": time.monotonic(),
+                "status": "PENDING", "message": "Aguardando confirmação do Arduino",
+                "pin": servo["pin"], "angle": servo["normal" if position == "NORMAL" else "reverse"],
+            }
+            self.send_arduino(f"SWITCH|{switch_id}|{position}|{sequence}")
+            if self.mock:
+                self.on_arduino_line(f"SWITCH_ACK|{switch_id}|{position}|{sequence}")
+        self.log("CHAVE", f"{switch_id}: comando {position} enviado; aguarde a confirmação" if not self.mock else f"{switch_id}: {position} confirmado em simulação")
+
+    def check_switch_commands(self, now=None):
+        now = time.monotonic() if now is None else now
+        for switch_id, item in self.state["switch_commands"].items():
+            if item["status"] == "PENDING" and now - item["started"] > 3:
+                item.update(status="TIMEOUT", message="Arduino não confirmou o comando. Confira USB e grave o firmware atualizado")
+                self.state["switches"][switch_id] = "UNKNOWN"
+                self.log("CHAVE", f"{switch_id}: {item['message']}", "WARNING")
+
+    def serial_command_current(self, line: str) -> bool:
+        parts = line.strip().split("|")
+        if len(parts) < 4 or parts[0] != "SWITCH":
+            return True
+        with self.lock:
+            item = self.state["switch_commands"].get(parts[1])
+            if not item:
+                return True
+            sequence = int(parts[3])
+            if sequence < item["sequence"]:
+                return False
+            return sequence != item["sequence"] or (item["status"] == "PENDING" and time.monotonic() - item["started"] <= 3)
 
     def set_signal(self, signal_id: str, color: str):
         self.require_operation_hardware()
@@ -659,9 +702,24 @@ class CCOSystem:
                     test.update(busy=False, message="Movimento de teste concluído")
             elif kind == "SENSOR" and len(parts) >= 3:
                 self.on_sensor(f"S{int(parts[1]):02d}", parts[2].upper() == "ACTIVE")
+            elif kind == "SWITCH_ACK" and len(parts) >= 4:
+                with self.lock:
+                    item = self.state["switch_commands"].get(parts[1])
+                    if item and item["status"] == "PENDING" and item["sequence"] == int(parts[3]) and item["position"] == parts[2]:
+                        item.update(status="CONFIRMED", message="Arduino confirmou o sinal de comando; confira a posição física")
+                        self.state["switches"][parts[1]] = parts[2]
+            elif kind == "SWITCH_NACK" and len(parts) >= 4:
+                with self.lock:
+                    item = self.state["switch_commands"].get(parts[1])
+                    if item and item["status"] == "PENDING" and item["sequence"] == int(parts[2]):
+                        reasons = {"SENSOR_ACTIVE": "Sensor de proteção ocupado", "EMERGENCY": "Emergência ativa", "SETUP_ACTIVE": "Modo Configurar ferrovia aberto", "HWCONFIG_REQUIRED": "Arduino sem configuração confirmada", "INVALID": "Comando inválido"}
+                        item.update(status="REJECTED", message=reasons.get(parts[3], parts[3]))
+                        self.log("CHAVE", f"{parts[1]}: {item['message']}", "WARNING")
             elif kind == "SWITCH" and len(parts) >= 3:
                 with self.lock:
-                    self.state["switches"][parts[1].upper()] = parts[2].upper()
+                    item = self.state["switch_commands"].get(parts[1])
+                    if parts[1] in self.state["switches"] and not (item and item["status"] in ("PENDING", "TIMEOUT")):
+                        self.state["switches"][parts[1]] = parts[2]
             elif kind == "SIGNAL" and len(parts) >= 3:
                 with self.lock:
                     self.state["signals"]["F1_EXTERNO"] = parts[2].upper()
@@ -747,6 +805,7 @@ class CCOSystem:
 
             changed = False
             with self.lock:
+                self.check_switch_commands(now)
                 test = self.state["hardware_setup"]["test"]
                 if test and test["busy"] and now - test["started"] > 8:
                     test.update(busy=False, message="Sem confirmação do servo; confira conexão e firmware")
@@ -1167,7 +1226,9 @@ class SerialWorker(threading.Thread):
                     while not self.system.stop_event.is_set():
                         try:
                             while True:
-                                connection.write(self.system.serial_write.get_nowait().encode("ascii", "ignore"))
+                                command = self.system.serial_write.get_nowait()
+                                if self.system.serial_command_current(command):
+                                    connection.write(command.encode("ascii", "ignore"))
                         except queue.Empty:
                             pass
                         line = connection.readline().decode("utf-8", "replace").strip()

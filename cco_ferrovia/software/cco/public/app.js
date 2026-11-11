@@ -69,13 +69,20 @@ function renderSwitches(){
     let row=document.getElementById(`switch-${id}`);
     if(!row){
       row=document.createElement('div');row.id=`switch-${id}`;row.className='switch-row';
-      row.innerHTML='<span></span><button data-pos="NORMAL">Normal</button><button data-pos="REVERSA">Reversa</button><strong></strong>';
+      row.innerHTML='<span></span><button data-pos="NORMAL">Normal</button><button data-pos="REVERSA">Reversa</button><strong></strong><small class="switch-feedback"></small>';
       row.querySelector('span').textContent=id;
-      row.querySelectorAll('button').forEach(button=>button.onclick=()=>run(()=>api(`/api/switches/${id}`,{position:button.dataset.pos}),`${id} comandada`));
+      row.querySelectorAll('button').forEach(button=>button.onclick=()=>run(()=>api(`/api/switches/${id}`,{position:button.dataset.pos}),`${id}: solicitação enviada ao Arduino`));
       root.append(row);
     }
-    row.querySelector('strong').textContent=position;
-    row.querySelectorAll('button').forEach(button=>button.classList.toggle('active',button.dataset.pos===position));
+    const command=state.switch_commands?.[id],servo=state.hardware.config.servos[id];
+    row.querySelector('strong').textContent=position==='UNKNOWN'?'Não confirmada':position;
+    const protectedSensors={C1:['S06','S07'],C2:['S01'],C3:['S03','S04','S05']}[id];
+    const occupied=protectedSensors.filter(key=>state.sensors[key].active);
+    const disabledReason=state.emergency?'Emergência ativa':state.hardware_setup.active||state.hardware_setup.firmware_active?'Encerre Configurar ferrovia antes do comando manual':!state.arduino.connected?'Arduino desconectado':!state.hardware.ready?'Arduino ainda não confirmou a configuração':Object.values(state.locomotives).some(loco=>loco.motion!=='STOP')?'Pare as locomotivas antes de mudar as chaves':occupied.length?'Bloqueada por '+occupied.join(', '):Object.values(state.switch_commands||{}).some(item=>item.status==='PENDING')?'Aguardando confirmação do comando anterior':'';
+    const blocked=Boolean(disabledReason);
+    row.querySelectorAll('button').forEach(button=>{button.classList.toggle('active',button.dataset.pos===position);button.disabled=Boolean(blocked)});
+    row.querySelector('.switch-feedback').textContent=`${servo.pin} · Normal ${servo.normal}° / Reversa ${servo.reverse}° · ${disabledReason||command?.message||'Aguardando comando'}`;
+    row.querySelector('.switch-feedback').style.color=command&&['TIMEOUT','REJECTED'].includes(command.status)?'var(--red)':'var(--muted)';
   }
 }
 

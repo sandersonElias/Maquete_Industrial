@@ -36,3 +36,5 @@ dialog p{line-height:1.5}dialog label{display:block;margin:12px 0}dialog select,
 .commandbar .session-actions{flex-wrap:wrap}
 
 .track-confirm{display:flex;align-items:center;gap:8px}dialog .track-confirm input{width:auto}
+
+.switch-feedback{grid-column:1/-1;font-size:11px;line-height:1.5;overflow-wrap:anywhere}

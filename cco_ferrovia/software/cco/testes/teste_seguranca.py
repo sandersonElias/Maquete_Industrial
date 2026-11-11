@@ -324,5 +324,71 @@ class CCOTestCase(unittest.TestCase):
         self.system.require_operation_hardware()
 
 
+    def test_comando_manual_tres_servos_so_confirma_com_ack_da_sequencia(self):
+        self.system.mock = False
+        for key in ("C1", "C2", "C3"):
+            for position in ("REVERSA", "NORMAL"):
+                with self.subTest(servo=key, position=position):
+                    before = self.system.state["switches"][key]
+                    self.system.set_switch(key, position)
+                    command = self.system.state["switch_commands"][key]
+                    self.assertEqual(self.system.state["switches"][key], before)
+                    self.assertEqual(command["status"], "PENDING")
+                    self.system.on_arduino_line(f"SWITCH|{key}|{position}|12345")
+                    self.assertEqual(command["status"], "PENDING")
+                    self.system.on_arduino_line(f"SWITCH_ACK|{key}|{position}|{command['sequence'] + 1}")
+                    self.assertEqual(command["status"], "PENDING")
+                    self.system.on_arduino_line(f"SWITCH_ACK|{key}|{position}|{command['sequence']}")
+                    self.assertEqual(command["status"], "CONFIRMED")
+                    self.assertEqual(self.system.state["switches"][key], position)
+
+    def test_comando_manual_informa_sensor_protetor_de_cada_servo(self):
+        for key, sensor in (("C1", "S06"), ("C1", "S07"), ("C2", "S01"),
+                            ("C3", "S03"), ("C3", "S04"), ("C3", "S05")):
+            with self.subTest(servo=key, sensor=sensor):
+                self.system.state["sensors"][sensor]["active"] = True
+                with self.assertRaisesRegex(ValueError, sensor):
+                    self.system.set_switch(key, "REVERSA")
+                self.system.state["sensors"][sensor]["active"] = False
+        self.assertEqual(self.system.state["switch_commands"], {})
+
+    def test_comando_manual_recusado_nao_altera_posicao_confirmada(self):
+        self.system.mock = False
+        self.system.set_switch("C1", "REVERSA")
+        command = self.system.state["switch_commands"]["C1"]
+        self.system.on_arduino_line(f"SWITCH_NACK|C1|{command['sequence']}|SENSOR_ACTIVE")
+        self.assertEqual(command["status"], "REJECTED")
+        self.assertEqual(self.system.state["switches"]["C1"], "NORMAL")
+        self.assertIn("ocupado", command["message"])
+
+    def test_comando_manual_expirado_nao_reexecuta_e_ack_tardio_nao_confirma(self):
+        self.system.mock = False
+        self.system.set_switch("C2", "REVERSA")
+        command = self.system.state["switch_commands"]["C2"]
+        line = f"SWITCH|C2|REVERSA|{command['sequence']}"
+        self.assertTrue(self.system.serial_command_current(line))
+        self.system.check_switch_commands(command["started"] + 4)
+        self.assertEqual(command["status"], "TIMEOUT")
+        self.assertFalse(self.system.serial_command_current(line))
+        self.assertEqual(self.system.state["switches"]["C2"], "UNKNOWN")
+        self.system.on_arduino_line(f"SWITCH_ACK|C2|REVERSA|{command['sequence']}")
+        self.assertEqual(command["status"], "TIMEOUT")
+
+    def test_comando_manual_emergencia_angulos_iguais_e_pendente(self):
+        self.system.emergency(True)
+        with self.assertRaisesRegex(ValueError, "emergência"):
+            self.system.set_switch("C1", "REVERSA")
+        self.system.emergency(False)
+        self.system.state["hardware"]["config"]["servos"]["C1"].update(normal=45, reverse=45)
+        with self.assertRaisesRegex(ValueError, "mesmo ângulo"):
+            self.system.set_switch("C1", "REVERSA")
+        self.system.mock = False
+        self.system.set_switch("C2", "REVERSA")
+        with self.assertRaisesRegex(ValueError, "Aguarde"):
+            self.system.set_switch("C3", "NORMAL")
+        with self.assertRaisesRegex(ValueError, "Aguarde"):
+            self.system.configure_route("L01", "PLANO_FRENTE")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

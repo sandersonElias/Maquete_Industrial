@@ -41,6 +41,7 @@ Servo servos[3];
 SensorState sensors[7];
 bool servoAttached[3] = {false, false, false};
 bool switchReverse[3] = {false, false, false};
+bool switchKnown[3] = {false, false, false};
 unsigned long servoCommandAt[3] = {0, 0, 0};
 SignalColor signalState = RED;
 bool emergencyActive = false;
@@ -86,7 +87,7 @@ void allSignalsRed() {
 }
 
 bool sensorOccupied(uint8_t index) {
-  return sensors[index].occupied || sensors[index].stable;
+  return sensors[index].occupied || sensors[index].stable || logicalSensorRead(index);
 }
 
 bool sensorProtectsSwitch(uint8_t switchIndex) {
@@ -118,6 +119,7 @@ bool setSwitch(uint8_t index, bool reverse, bool report = true) {
   servoMoving[index] = false;
   servoTest[index] = false;
   switchReverse[index] = reverse;
+  switchKnown[index] = true;
   servoCommandAt[index] = millis();
   if (report) {
     Serial.print(F("SWITCH|C")); Serial.print(index + 1); Serial.print('|');
@@ -141,7 +143,7 @@ void sendSnapshot() {
   }
   for (uint8_t i = 0; i < 3; i++) {
     Serial.print(F("SWITCH|C")); Serial.print(i + 1); Serial.print('|');
-    Serial.print(switchReverse[i] ? F("REVERSA") : F("NORMAL")); Serial.print('|'); Serial.println(millis());
+    Serial.print(!switchKnown[i] ? F("UNKNOWN") : switchReverse[i] ? F("REVERSA") : F("NORMAL")); Serial.print('|'); Serial.println(millis());
   }
   setSignal(signalState);
 }
@@ -188,7 +190,7 @@ void applyHardwareConfig() {
   }
   for (uint8_t i = 0; i < 3; i++) {
     servos[i].detach(); servoAttached[i] = false;
-    servoMoving[i] = false; servoTest[i] = false;
+    servoMoving[i] = false; servoTest[i] = false; switchKnown[i] = false;
     pinMode(SERVO_PINS[i], INPUT);
   }
   for (uint8_t i = 0; i < 7; i++) pinMode(SENSOR_PINS[i], INPUT);
@@ -227,6 +229,7 @@ void handleServoTest() {
     if (servoMoving[i]) { Serial.println(F("FAULT|SERVO_TEST_BUSY")); return; }
   }
   uint8_t index = id[1] - '1';
+  switchKnown[index] = false;
   ensureServoAttached(index);
   servoTarget[index] = angle[0]; servoMoving[index] = true; servoTest[index] = true;
   lastPcPing = millis();
@@ -297,20 +300,32 @@ void handleCommand(char *line) {
     Serial.print(F("EMERGENCY|")); Serial.println(emergencyActive ? F("ON") : F("OFF"));
     return;
   }
+  if (strcmp(kind, "SWITCH") == 0) {
+    char *id = strtok(nullptr, "|"); char *position = strtok(nullptr, "|"); char *sequence = strtok(nullptr, "|");
+    if (!id || strlen(id) != 2 || id[0] != 'C' || id[1] < '1' || id[1] > '3' || !position || !sequence) {
+      Serial.println(F("FAULT|SWITCH_INVALID")); return;
+    }
+    uint8_t index = id[1] - '1';
+    const char *reason = nullptr;
+    if (emergencyActive) reason = "EMERGENCY";
+    else if (!hardwareConfigured) reason = "HWCONFIG_REQUIRED";
+    else if (setupMode) reason = "SETUP_ACTIVE";
+    else if (strcmp(position, "NORMAL") != 0 && strcmp(position, "REVERSA") != 0) reason = "INVALID";
+    else if (sensorProtectsSwitch(index)) reason = "SENSOR_ACTIVE";
+    if (!reason && !setSwitch(index, strcmp(position, "REVERSA") == 0)) reason = "SENSOR_ACTIVE";
+    if (reason) {
+      Serial.print(F("SWITCH_NACK|")); Serial.print(id); Serial.print('|'); Serial.print(sequence); Serial.print('|'); Serial.println(reason);
+    } else {
+      Serial.print(F("SWITCH_ACK|")); Serial.print(id); Serial.print('|'); Serial.print(position); Serial.print('|'); Serial.println(sequence);
+    }
+    lastPcPing = millis(); return;
+  }
   if (emergencyActive) {
     Serial.println(F("FAULT|EMERGENCY_ACTIVE"));
     return;
   }
   if (!hardwareConfigured) { Serial.println(F("FAULT|HWCONFIG_REQUIRED")); return; }
   if (setupMode) { Serial.println(F("FAULT|SETUP_ACTIVE")); return; }
-  if (strcmp(kind, "SWITCH") == 0) {
-    char *id = strtok(nullptr, "|"); char *position = strtok(nullptr, "|");
-    if (id && position && id[0] == 'C' && id[1] >= '1' && id[1] <= '3') {
-      setSwitch(id[1] - '1', strcmp(position, "REVERSA") == 0);
-      lastPcPing = millis();
-    }
-    return;
-  }
   if (strcmp(kind, "SIGNAL") == 0) {
     char *id = strtok(nullptr, "|"); char *color = strtok(nullptr, "|");
     if (id && color && strcmp(id, "F1") == 0) {

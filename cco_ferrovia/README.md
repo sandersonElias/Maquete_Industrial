@@ -160,3 +160,30 @@ A verificação da tela pode ser repetida com
 `node software/cco/testes/verificar_configuracao.cjs`, usando Playwright, Edge e
 uma instância **isolada de simulação** indicada por `CCO_TEST_URL`. Esse teste
 altera e salva pinagens nos dados dessa instância; não use os dados da montagem real.
+
+## Verificação do comando manual dos servos (11/11/2026)
+
+- O painel principal só considera o comando manual confirmado após o Uno responder
+  `SWITCH_ACK` com a mesma sequência da solicitação. Antes, a tela mudava a posição
+  ao enfileirar o comando, mesmo quando o Arduino recusava a movimentação.
+- Abaixo de cada chave aparecem o pino e os ângulos salvos e o motivo de bloqueio.
+  C1 é protegida por S06/S07; C2 por S01; C3 por S03/S04/S05. Sensor ocupado não é
+  ignorado para forçar o servo. Também são bloqueados comandos em emergência,
+  durante a configuração ou com locomotivas em movimento.
+- Uma recusa mantém a última posição confirmada. Após 3 s sem resposta, a posição
+  passa a "Não confirmada"; comandos manuais expirados não são enviados depois
+  da reconexão. Um ACK tardio ou de outra sequência não confirma a solicitação.
+- Normal e Reversa com o mesmo ângulo geram uma mensagem para corrigir a calibração.
+- Salvar a pinagem ou testar um ângulo não faz o Uno anunciar "Normal" como se a
+  chave já estivesse posicionada. Após inicialização/reconfiguração, usa UNKNOWN
+  até receber um comando de posição válido.
+- Regrave o firmware `firmware/arduino-uno/cco_via/cco_via.ino`, feche o CCO e execute
+  novamente `software/cco/INICIAR_SISTEMA.cmd`, depois atualize o navegador na porta
+  8080. O protocolo agora inclui `SWITCH_ACK|C1|NORMAL|sequencia` e
+  `SWITCH_NACK|C1|sequencia|motivo`. A confirmação indica que o Arduino aplicou o
+  sinal; sem sensor de posição, não comprova o movimento mecânico do SG90.
+
+A verificação foi realizada com 34 testes automatizados do servidor, simulação da
+interface e compilação para Uno. Não houve acionamento físico ou medição da fonte,
+corrente, queda de tensão, GND ou esforço das hastes. Nenhuma associação/ângulo salvo
+no arquivo local `data/hardware.json` foi alterado por essa correção.
